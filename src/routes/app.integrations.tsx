@@ -112,9 +112,15 @@ function IntegrationsPage() {
                     </div>
                   ) : oauthCheck?.ok ? (
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-primary">
-                        <ShieldCheck className="h-3 w-3" /> OAuth verificado para este callback.
-                      </div>
+                      {oauthCheck.verificationStatus === "requires_manual_check" ? (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <AlertCircle className="h-3 w-3" /> Google no permite verificar esto desde servidor; si al conectar falla, falta autorizar este callback.
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-primary">
+                          <ShieldCheck className="h-3 w-3" /> OAuth preparado para este callback.
+                        </div>
+                      )}
                       <p className="font-mono text-muted-foreground break-all">{oauthCheck.callbackUri}</p>
                       <p className="text-muted-foreground">
                         Client ID: <span className="font-mono text-foreground break-all">{oauthCheck.diagnostics?.clientId ?? "No configurado"}</span>
