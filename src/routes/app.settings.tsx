@@ -16,6 +16,25 @@ export const Route = createFileRoute("/app/settings")({
 
 function Settings() {
   const qc = useQueryClient();
+
+  const { data: account } = useQuery({
+    queryKey: ["my-account"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      const user = u?.user;
+      if (!user) return null;
+      const { data: profile } = await supabase.from("profiles").select("display_name, org_id").eq("id", user.id).maybeSingle();
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+      return {
+        id: user.id,
+        email: user.email ?? "",
+        createdAt: user.created_at,
+        displayName: profile?.display_name ?? "",
+        roles: (roles ?? []).map((r: any) => r.role),
+      };
+    },
+  });
+
   const { data: org, isLoading } = useQuery({
     queryKey: ["my-org"],
     queryFn: async () => {
@@ -33,7 +52,9 @@ function Settings() {
   const [signature, setSignature] = useState("");
   const [senderEmail, setSenderEmail] = useState("");
   const [timezone, setTimezone] = useState("America/Argentina/Buenos_Aires");
+  const [displayName, setDisplayName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
 
   useEffect(() => {
     if (org) {
@@ -48,6 +69,10 @@ function Settings() {
     }
   }, [org]);
 
+  useEffect(() => {
+    if (account) setDisplayName(account.displayName);
+  }, [account]);
+
   const { data: templates } = useQuery({
     queryKey: ["templates"],
     queryFn: async () => (await supabase.from("email_templates").select("*").order("key")).data ?? [],
@@ -57,7 +82,7 @@ function Settings() {
     if (!org) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from("organizations").update({
+      const { data: updated, error } = await supabase.from("organizations").update({
         name,
         consultancy_name: consultancyName || null,
         contact_email: contactEmail || null,
@@ -66,11 +91,23 @@ function Settings() {
         signature_html: signature,
         sender_email: senderEmail,
         timezone,
-      } as any).eq("id", org.id);
+      } as any).eq("id", org.id).select("id");
       if (error) throw error;
-      toast.success("Guardado");
+      if (!updated?.length) throw new Error("No se pudieron guardar los cambios. Verificá tus permisos.");
+      toast.success("Cambios guardados");
       qc.invalidateQueries({ queryKey: ["my-org"] });
-    } catch (e: any) { toast.error(e.message); } finally { setSaving(false); }
+    } catch (e: any) { toast.error(e.message ?? "Error al guardar"); } finally { setSaving(false); }
+  }
+
+  async function saveProfile() {
+    if (!account) return;
+    setSavingProfile(true);
+    try {
+      const { error } = await supabase.from("profiles").update({ display_name: displayName }).eq("id", account.id);
+      if (error) throw error;
+      toast.success("Perfil actualizado");
+      qc.invalidateQueries({ queryKey: ["my-account"] });
+    } catch (e: any) { toast.error(e.message ?? "Error"); } finally { setSavingProfile(false); }
   }
 
   async function saveTemplate(id: string, patch: any) {
@@ -84,6 +121,18 @@ function Settings() {
     <div className="mx-auto max-w-3xl p-6 md:p-10">
       <h1 className="font-display text-4xl">Configuración</h1>
       <p className="mt-1 text-muted-foreground">Personalizá tu workspace y la comunicación con candidatos.</p>
+
+      <section className="mt-8 space-y-4 rounded-2xl border border-border bg-card p-6">
+        <h3 className="font-semibold">Mi cuenta</h3>
+        <p className="text-sm text-muted-foreground">Datos personales asociados a tu usuario.</p>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div><Label>Email</Label><Input value={account?.email ?? ""} disabled /></div>
+          <div><Label>Nombre para mostrar</Label><Input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Tu nombre" /></div>
+          <div><Label>Roles</Label><Input value={(account?.roles ?? []).join(", ") || "—"} disabled /></div>
+          <div><Label>Miembro desde</Label><Input value={account?.createdAt ? new Date(account.createdAt).toLocaleDateString("es-AR") : "—"} disabled /></div>
+        </div>
+        <Button onClick={saveProfile} disabled={savingProfile || !account}>{savingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Guardar perfil</Button>
+      </section>
 
       <section className="mt-8 space-y-4 rounded-2xl border border-border bg-card p-6">
         <h3 className="font-semibold">Empresa & marca</h3>
@@ -100,6 +149,7 @@ function Settings() {
         <div><Label>Firma (HTML simple)</Label><Textarea rows={4} value={signature} onChange={e => setSignature(e.target.value)} placeholder="<b>María Pérez</b> — Talent Lead @ Empresa" /></div>
         <Button onClick={save} disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Guardar</Button>
       </section>
+
 
       <section className="mt-6 space-y-4 rounded-2xl border border-border bg-card p-6">
         <h3 className="font-semibold">Templates de email</h3>
