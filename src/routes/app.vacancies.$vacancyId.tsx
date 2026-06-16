@@ -4,12 +4,13 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { moveApplicationStage, updateVacancy } from "@/lib/recruiting.functions";
-import { ArrowLeft, ExternalLink, Copy, Loader2, Settings as SettingsIcon } from "lucide-react";
+import { ArrowLeft, ExternalLink, Copy, Loader2, Settings as SettingsIcon, Download } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { MatchPill } from "./app.dashboard";
 import { VacancyScheduling } from "@/components/vacancy-scheduling";
+import { downloadCSV } from "@/lib/export-csv";
 
 const STAGES = [
   { id: "received", label: "Recibidos" },
