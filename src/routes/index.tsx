@@ -5,7 +5,7 @@ export const Route = createFileRoute("/")({
   component: Landing,
   head: () => ({
     meta: [
-      { title: "Hirex — ATS inteligente para equipos modernos" },
+      { title: "FLUX Talent — ATS inteligente para equipos modernos" },
       { name: "description", content: "Publicá vacantes, recibí postulaciones, y dejá que la IA haga el matching, los emails y la coordinación de entrevistas." },
     ],
   }),
@@ -18,7 +18,7 @@ function Landing() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-2 font-semibold">
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">H</div>
-            <span className="text-lg tracking-tight">Hirex</span>
+            <span className="text-lg tracking-tight">FLUX Talent</span>
           </Link>
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
             <a href="#features" className="hover:text-foreground">Producto</a>
@@ -40,7 +40,7 @@ function Landing() {
             Reclutá <em className="text-primary">10×</em> más rápido,<br/> sin tareas manuales.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-balance text-base text-muted-foreground md:text-lg">
-            Hirex es el ATS minimalista donde la IA lee los CVs, calcula el match, redacta los emails y coordina las entrevistas — vos sólo decidís.
+            FLUX Talent es el ATS minimalista donde la IA lee los CVs, calcula el match, redacta los emails y coordina las entrevistas — vos sólo decidís.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link to="/auth" className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90">
@@ -53,7 +53,7 @@ function Landing() {
         </div>
 
         <div className="relative mt-16 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-          <div className="border-b border-border bg-muted/40 px-4 py-2 text-xs text-muted-foreground">app.hirex.io / vacantes / Senior Product Designer</div>
+          <div className="border-b border-border bg-muted/40 px-4 py-2 text-xs text-muted-foreground">app.fluxtalent.com / vacantes / Senior Product Designer</div>
           <div className="grid gap-4 p-6 md:grid-cols-4">
             {[
               { stage: "Recibidos", count: 142, color: "bg-muted" },
@@ -122,7 +122,7 @@ function Landing() {
       </section>
 
       <footer className="border-t border-border py-10 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} Hirex. Hecho para reclutadores que odian el trabajo operativo.
+        © {new Date().getFullYear()} FLUX Talent. Hecho para reclutadores que odian el trabajo operativo.
       </footer>
     </div>
   );
