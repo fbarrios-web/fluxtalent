@@ -105,6 +105,31 @@ function IntegrationsPage() {
                 <p className="mt-3 rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
                   Callback autorizado requerido en Google: <span className="font-mono text-foreground">{GOOGLE_CALLBACK_URL}</span>
                 </p>
+                <div className="mt-3 rounded-md border border-border bg-muted/40 px-3 py-3 text-xs">
+                  {isVerifying ? (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Verificando OAuth con Google...
+                    </div>
+                  ) : oauthCheck?.ok ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-primary">
+                        <ShieldCheck className="h-3 w-3" /> OAuth verificado para este callback.
+                      </div>
+                      <p className="font-mono text-muted-foreground break-all">{oauthCheck.callbackUri}</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-destructive">
+                        <XCircle className="h-3 w-3" /> Google todavía bloquea el callback autorizado.
+                      </div>
+                      <div className="space-y-1 text-muted-foreground">
+                        {(oauthCheck?.requiredCallbackUris ?? [GOOGLE_CALLBACK_URL]).map((uri) => (
+                          <p key={uri} className="font-mono text-foreground break-all">{uri}</p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
