@@ -14,7 +14,13 @@ import {
 
 const WEEKDAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
-type Rule = { weekday: number; startTime: string; endTime: string };
+type Rule = {
+  weekdays: number[];
+  startTime: string;
+  endTime: string;
+  effectiveFrom: string;
+  effectiveUntil: string;
+};
 
 export function VacancyScheduling({ vacancyId }: { vacancyId: string }) {
   const qc = useQueryClient();
@@ -41,17 +47,42 @@ export function VacancyScheduling({ vacancyId }: { vacancyId: string }) {
       setDuration(data.config?.duration_minutes ?? 30);
       setInstructions(data.config?.instructions ?? "");
       setEnabled(data.config?.enabled ?? true);
-      setRules((data.rules ?? []).map((r: any) => ({
-        weekday: r.weekday,
-        startTime: r.start_time?.slice(0, 5) ?? "09:00",
-        endTime: r.end_time?.slice(0, 5) ?? "12:00",
-      })));
+      // Group rows that share start/end/from/until into a single rule with multiple weekdays
+      const groups = new Map<string, Rule>();
+      for (const r of (data.rules ?? []) as any[]) {
+        const startTime = r.start_time?.slice(0, 5) ?? "09:00";
+        const endTime = r.end_time?.slice(0, 5) ?? "12:00";
+        const effectiveFrom = r.effective_from ?? "";
+        const effectiveUntil = r.effective_until ?? "";
+        const key = `${startTime}|${endTime}|${effectiveFrom}|${effectiveUntil}`;
+        const cur = groups.get(key);
+        if (cur) cur.weekdays.push(r.weekday);
+        else groups.set(key, { weekdays: [r.weekday], startTime, endTime, effectiveFrom, effectiveUntil });
+      }
+      setRules(Array.from(groups.values()).map(g => ({ ...g, weekdays: g.weekdays.sort() })));
     }
   }, [data]);
 
+  function toggleDay(i: number, day: number) {
+    setRules(rules.map((r, j) => {
+      if (j !== i) return r;
+      const has = r.weekdays.includes(day);
+      return { ...r, weekdays: has ? r.weekdays.filter(d => d !== day) : [...r.weekdays, day].sort() };
+    }));
+  }
+
   async function onSave() {
     try {
-      await save({ data: { vacancyId, durationMinutes: duration, instructions, enabled, rules } });
+      const payload = rules
+        .filter(r => r.weekdays.length > 0)
+        .map(r => ({
+          weekdays: r.weekdays,
+          startTime: r.startTime,
+          endTime: r.endTime,
+          effectiveFrom: r.effectiveFrom || null,
+          effectiveUntil: r.effectiveUntil || null,
+        }));
+      await save({ data: { vacancyId, durationMinutes: duration, instructions, enabled, rules: payload } });
       toast.success("Configuración guardada");
       qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId] });
     } catch (e: any) { toast.error(e.message); }
