@@ -22,16 +22,35 @@ export const createVacancy = createServerFn({ method: "POST" })
     }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data: profile } = await supabase.from("profiles").select("org_id").eq("id", userId).single();
-    if (!profile?.org_id) throw new Error("No org");
+    let { data: profile } = await supabase.from("profiles").select("org_id").eq("id", userId).maybeSingle();
+
+    // Backfill: if profile/org missing (e.g. trigger failed at signup), create them now
+    if (!profile?.org_id) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: u } = await supabaseAdmin.auth.admin.getUserById(userId);
+      const email = u?.user?.email ?? "";
+      const meta = (u?.user?.user_metadata ?? {}) as Record<string, string>;
+      const { data: newOrg, error: orgErr } = await supabaseAdmin
+        .from("organizations")
+        .insert({ name: meta.org_name || "Mi empresa", trial_ends_at: new Date(Date.now() + 15 * 86400000).toISOString(), subscription_status: "trialing" })
+        .select("id").single();
+      if (orgErr) throw orgErr;
+      const { error: profErr } = await supabaseAdmin.from("profiles").upsert({
+        id: userId, org_id: newOrg.id, display_name: meta.display_name || email.split("@")[0] || "Usuario",
+      });
+      if (profErr) throw profErr;
+      await supabaseAdmin.from("user_roles").upsert({ user_id: userId, role: "recruiter" as any }, { onConflict: "user_id,role" });
+      profile = { org_id: newOrg.id };
+    }
 
     const { screening, ...rest } = data;
     const { data: vac, error } = await supabase
       .from("vacancies")
-      .insert({ ...rest, org_id: profile.org_id, created_by: userId })
+      .insert({ ...rest, org_id: profile.org_id!, created_by: userId })
       .select("id, public_slug")
       .single();
     if (error) throw error;
+
 
     if (screening.length) {
       await supabase.from("screening_questions").insert(
