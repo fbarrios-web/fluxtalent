@@ -100,6 +100,7 @@ function VacancyDetail() {
           <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
           <TabsTrigger value="table">Tabla</TabsTrigger>
           <TabsTrigger value="brief">Brief</TabsTrigger>
+          <TabsTrigger value="scheduling">Entrevistas</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pipeline" className="mt-6">
