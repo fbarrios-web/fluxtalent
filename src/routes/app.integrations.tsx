@@ -3,10 +3,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Calendar, Check, Loader2, AlertCircle } from "lucide-react";
+import { Calendar, Check, Loader2, AlertCircle, ShieldCheck, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect } from "react";
-import { getGoogleStatus, googleStartUrl, googleDisconnect } from "@/lib/scheduling.functions";
+import { getGoogleStatus, googleStartUrl, googleDisconnect, verifyGoogleOAuthConfig } from "@/lib/scheduling.functions";
 
 const GOOGLE_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/google/callback";
 
@@ -25,11 +25,17 @@ function IntegrationsPage() {
   const search = Route.useSearch();
   const getStatus = useServerFn(getGoogleStatus);
   const startUrl = useServerFn(googleStartUrl);
+  const verifyOAuth = useServerFn(verifyGoogleOAuthConfig);
   const disconnect = useServerFn(googleDisconnect);
 
   const { data, isLoading } = useQuery({
     queryKey: ["google-status"],
     queryFn: () => getStatus(),
+  });
+
+  const { data: oauthCheck, isLoading: isVerifying } = useQuery({
+    queryKey: ["google-oauth-check"],
+    queryFn: () => verifyOAuth({ data: { origin: window.location.origin } }),
   });
 
   useEffect(() => {
@@ -45,8 +51,13 @@ function IntegrationsPage() {
 
   async function connect() {
     try {
-      const { url } = await startUrl({ data: { origin: window.location.origin } });
-      window.location.href = url;
+      const result = await startUrl({ data: { origin: window.location.origin } });
+      if (!result.ok) {
+        toast.error("Google rechazó el callback configurado. Revisá la verificación OAuth.");
+        qc.invalidateQueries({ queryKey: ["google-oauth-check"] });
+        return;
+      }
+      window.location.href = result.url;
     } catch (e: any) {
       toast.error(e?.message ?? "Error al iniciar conexión");
     }
