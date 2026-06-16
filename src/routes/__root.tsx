@@ -75,12 +75,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "FLUX Talent — ATS con IA" },
+      { title: "FLUX Talent" },
       { name: "description", content: "Reclutamiento moderno con automatización inteligente y matching por IA." },
-      { property: "og:title", content: "FLUX Talent — ATS con IA" },
+      { property: "og:title", content: "FLUX Talent" },
       { property: "og:description", content: "Reclutamiento moderno con automatización inteligente y matching por IA." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "FLUX Talent" },
+      { name: "twitter:description", content: "Reclutamiento moderno con automatización inteligente y matching por IA." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4e4614e9-fde5-4351-a7d9-e3f3fa7b9c21/id-preview-e53778cb--f6700845-18a2-42a5-b8fb-c9d0dd25ca9a.lovable.app-1781580881456.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4e4614e9-fde5-4351-a7d9-e3f3fa7b9c21/id-preview-e53778cb--f6700845-18a2-42a5-b8fb-c9d0dd25ca9a.lovable.app-1781580881456.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
