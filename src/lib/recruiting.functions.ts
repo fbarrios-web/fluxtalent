@@ -98,7 +98,18 @@ export const moveApplicationStage = createServerFn({ method: "POST" })
       type: "stage_change",
       payload: { stage: data.stage },
     });
-    return { ok: true };
+
+    // Auto-trigger interview invite for interview stages
+    let inviteWarning: string | null = null;
+    if (data.stage === "interview_1" || data.stage === "interview_2" || data.stage === "interview_3") {
+      try {
+        const { inviteForInterview } = await import("@/lib/scheduling.functions");
+        await inviteForInterview(context.supabase as any, context.userId, data.id, data.stage);
+      } catch (e: any) {
+        inviteWarning = e?.message ?? "No se pudo enviar la invitación";
+      }
+    }
+    return { ok: true, inviteWarning };
   });
 
 export const saveScorecard = createServerFn({ method: "POST" })
