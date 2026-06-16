@@ -13,9 +13,13 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as ApplySlugRouteImport } from './routes/apply.$slug'
+import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppVacanciesIndexRouteImport } from './routes/app.vacancies.index'
 import { Route as AppVacanciesNewRouteImport } from './routes/app.vacancies.new'
+import { Route as AppVacanciesVacancyIdRouteImport } from './routes/app.vacancies.$vacancyId'
+import { Route as AppCandidatesIdRouteImport } from './routes/app.candidates.$id'
 import { Route as ApiPublicApplyRouteImport } from './routes/api.public.apply'
 import { Route as ApiPublicAnalyzeRouteImport } from './routes/api.public.analyze'
 
@@ -39,6 +43,16 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const ApplySlugRoute = ApplySlugRouteImport.update({
+  id: '/apply/$slug',
+  path: '/apply/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -52,6 +66,16 @@ const AppVacanciesIndexRoute = AppVacanciesIndexRouteImport.update({
 const AppVacanciesNewRoute = AppVacanciesNewRouteImport.update({
   id: '/vacancies/new',
   path: '/vacancies/new',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVacanciesVacancyIdRoute = AppVacanciesVacancyIdRouteImport.update({
+  id: '/vacancies/$vacancyId',
+  path: '/vacancies/$vacancyId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCandidatesIdRoute = AppCandidatesIdRouteImport.update({
+  id: '/candidates/$id',
+  path: '/candidates/$id',
   getParentRoute: () => AppRoute,
 } as any)
 const ApiPublicApplyRoute = ApiPublicApplyRouteImport.update({
@@ -70,9 +94,13 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/app/dashboard': typeof AppDashboardRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/apply/$slug': typeof ApplySlugRoute
   '/app/': typeof AppIndexRoute
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
+  '/app/candidates/$id': typeof AppCandidatesIdRoute
+  '/app/vacancies/$vacancyId': typeof AppVacanciesVacancyIdRoute
   '/app/vacancies/new': typeof AppVacanciesNewRoute
   '/app/vacancies/': typeof AppVacanciesIndexRoute
 }
@@ -80,9 +108,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/app/dashboard': typeof AppDashboardRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/apply/$slug': typeof ApplySlugRoute
   '/app': typeof AppIndexRoute
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
+  '/app/candidates/$id': typeof AppCandidatesIdRoute
+  '/app/vacancies/$vacancyId': typeof AppVacanciesVacancyIdRoute
   '/app/vacancies/new': typeof AppVacanciesNewRoute
   '/app/vacancies': typeof AppVacanciesIndexRoute
 }
@@ -92,9 +124,13 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/app/dashboard': typeof AppDashboardRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/apply/$slug': typeof ApplySlugRoute
   '/app/': typeof AppIndexRoute
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
+  '/app/candidates/$id': typeof AppCandidatesIdRoute
+  '/app/vacancies/$vacancyId': typeof AppVacanciesVacancyIdRoute
   '/app/vacancies/new': typeof AppVacanciesNewRoute
   '/app/vacancies/': typeof AppVacanciesIndexRoute
 }
@@ -105,9 +141,13 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth'
     | '/app/dashboard'
+    | '/app/settings'
+    | '/apply/$slug'
     | '/app/'
     | '/api/public/analyze'
     | '/api/public/apply'
+    | '/app/candidates/$id'
+    | '/app/vacancies/$vacancyId'
     | '/app/vacancies/new'
     | '/app/vacancies/'
   fileRoutesByTo: FileRoutesByTo
@@ -115,9 +155,13 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/app/dashboard'
+    | '/app/settings'
+    | '/apply/$slug'
     | '/app'
     | '/api/public/analyze'
     | '/api/public/apply'
+    | '/app/candidates/$id'
+    | '/app/vacancies/$vacancyId'
     | '/app/vacancies/new'
     | '/app/vacancies'
   id:
@@ -126,9 +170,13 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth'
     | '/app/dashboard'
+    | '/app/settings'
+    | '/apply/$slug'
     | '/app/'
     | '/api/public/analyze'
     | '/api/public/apply'
+    | '/app/candidates/$id'
+    | '/app/vacancies/$vacancyId'
     | '/app/vacancies/new'
     | '/app/vacancies/'
   fileRoutesById: FileRoutesById
@@ -137,6 +185,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApplySlugRoute: typeof ApplySlugRoute
   ApiPublicAnalyzeRoute: typeof ApiPublicAnalyzeRoute
   ApiPublicApplyRoute: typeof ApiPublicApplyRoute
 }
@@ -171,6 +220,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/apply/$slug': {
+      id: '/apply/$slug'
+      path: '/apply/$slug'
+      fullPath: '/apply/$slug'
+      preLoaderRoute: typeof ApplySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/settings': {
+      id: '/app/settings'
+      path: '/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/dashboard': {
       id: '/app/dashboard'
       path: '/dashboard'
@@ -192,6 +255,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppVacanciesNewRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/vacancies/$vacancyId': {
+      id: '/app/vacancies/$vacancyId'
+      path: '/vacancies/$vacancyId'
+      fullPath: '/app/vacancies/$vacancyId'
+      preLoaderRoute: typeof AppVacanciesVacancyIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/candidates/$id': {
+      id: '/app/candidates/$id'
+      path: '/candidates/$id'
+      fullPath: '/app/candidates/$id'
+      preLoaderRoute: typeof AppCandidatesIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/api/public/apply': {
       id: '/api/public/apply'
       path: '/api/public/apply'
@@ -211,14 +288,20 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
+  AppSettingsRoute: typeof AppSettingsRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppCandidatesIdRoute: typeof AppCandidatesIdRoute
+  AppVacanciesVacancyIdRoute: typeof AppVacanciesVacancyIdRoute
   AppVacanciesNewRoute: typeof AppVacanciesNewRoute
   AppVacanciesIndexRoute: typeof AppVacanciesIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
+  AppSettingsRoute: AppSettingsRoute,
   AppIndexRoute: AppIndexRoute,
+  AppCandidatesIdRoute: AppCandidatesIdRoute,
+  AppVacanciesVacancyIdRoute: AppVacanciesVacancyIdRoute,
   AppVacanciesNewRoute: AppVacanciesNewRoute,
   AppVacanciesIndexRoute: AppVacanciesIndexRoute,
 }
@@ -229,6 +312,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApplySlugRoute: ApplySlugRoute,
   ApiPublicAnalyzeRoute: ApiPublicAnalyzeRoute,
   ApiPublicApplyRoute: ApiPublicApplyRoute,
 }

@@ -50,6 +50,7 @@ function CandidateDetail() {
   const [genQ, setGenQ] = useState(false);
 
   if (isLoading || !app) return <div className="p-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
+  const a = app as any;
 
   async function runAi() {
     setAnalyzing(true);
