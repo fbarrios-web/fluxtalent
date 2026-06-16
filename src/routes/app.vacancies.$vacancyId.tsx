@@ -184,6 +184,9 @@ function VacancyDetail() {
             </div>
           </div>
         </TabsContent>
+        <TabsContent value="scheduling" className="mt-6">
+          <VacancyScheduling vacancyId={vacancyId} />
+        </TabsContent>
       </Tabs>
     </div>
   );
