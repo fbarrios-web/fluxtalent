@@ -45,6 +45,12 @@ function Dashboard() {
     },
   });
 
+  const getSub = useServerFn(getMySubscription);
+  const { data: sub } = useQuery({ queryKey: ["my-subscription"], queryFn: () => getSub(), refetchOnWindowFocus: false });
+  const plan = sub ? planByPrice(sub.plan_price_ars) : null;
+  const usedVacancies = vacancies?.length ?? 0;
+  const usedCvs = stats?.total ?? 0;
+
   return (
     <div className="mx-auto max-w-6xl p-6 md:p-10">
       <header className="mb-8 flex items-center justify-between">
@@ -56,6 +62,35 @@ function Dashboard() {
           <Plus className="h-4 w-4" /> Nueva vacante
         </Link>
       </header>
+
+      {sub && plan && (
+        <div className="mb-8 rounded-2xl border border-border bg-card p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Plan {sub.subscription_status === "trialing" ? "en prueba" : "activo"}</p>
+              <p className="font-display text-xl">FLUX Talent — {plan.name}</p>
+            </div>
+            <Link to="/app/subscription" className="text-sm text-primary hover:underline">Ver suscripción →</Link>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <MiniStat
+              icon={Clock}
+              label={sub.subscription_status === "trialing" ? "Días de prueba restantes" : "Próximo cobro en"}
+              value={`${sub.daysLeft} días`}
+            />
+            <MiniStat
+              icon={Briefcase}
+              label="Vacantes"
+              value={`${usedVacancies} / ${formatLimit(plan.maxVacancies)}`}
+            />
+            <MiniStat
+              icon={FileText}
+              label="CVs procesados"
+              value={`${usedCvs} / ${formatLimit(plan.maxCvsPerMonth)}`}
+            />
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-4">
         <Stat icon={Users} label="Candidatos totales" value={stats?.total ?? 0} />
