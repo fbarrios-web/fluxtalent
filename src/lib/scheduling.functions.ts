@@ -320,7 +320,12 @@ export const regenerateSlots = createServerFn({ method: "POST" })
       const weekdayMap: Record<string, number> = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
       const weekday = weekdayMap[isoWeekdayStr] ?? wd;
       const ymd = new Intl.DateTimeFormat("sv-SE", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(day);
-      for (const r of rules.filter(x => x.weekday === weekday)) {
+      for (const r of rules.filter(x => {
+        if (x.weekday !== weekday) return false;
+        if (x.effective_from && ymd < x.effective_from) return false;
+        if (x.effective_until && ymd > x.effective_until) return false;
+        return true;
+      })) {
         const startLocal = `${ymd}T${r.start_time}`;
         const endLocal = `${ymd}T${r.end_time}`;
         const startUtcBase = zonedToUtc(startLocal, tz);
