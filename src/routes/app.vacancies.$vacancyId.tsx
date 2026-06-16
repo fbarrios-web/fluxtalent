@@ -46,7 +46,7 @@ function VacancyDetail() {
     queryFn: async () => {
       const { data } = await supabase
         .from("applications")
-        .select("id, first_name, last_name, email, stage, match_score, ai_status, created_at")
+        .select("id, first_name, last_name, email, phone, cv_url, stage, match_score, ai_status, created_at")
         .eq("vacancy_id", vacancyId)
         .order("match_score", { ascending: false, nullsFirst: false });
       return data ?? [];
