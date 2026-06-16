@@ -180,6 +180,8 @@ export type Database = {
       availability_rules: {
         Row: {
           created_at: string
+          effective_from: string | null
+          effective_until: string | null
           end_time: string
           id: string
           org_id: string
@@ -189,6 +191,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          effective_from?: string | null
+          effective_until?: string | null
           end_time: string
           id?: string
           org_id: string
@@ -198,6 +202,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          effective_from?: string | null
+          effective_until?: string | null
           end_time?: string
           id?: string
           org_id?: string
