@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles, Workflow, Calendar, Mail, BarChart3, ShieldCheck } from "lucide-react";
+import { FluxLogo } from "@/components/flux-logo";
+
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -17,9 +19,10 @@ function Landing() {
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-2 font-semibold">
-            <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">H</div>
-            <span className="text-lg tracking-tight">FLUX Talent</span>
+            <FluxLogo size={32} />
+            <span className="text-lg tracking-tight">FLUX <span className="text-muted-foreground font-normal">Talent</span></span>
           </Link>
+
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
             <a href="#features" className="hover:text-foreground">Producto</a>
             <a href="#workflow" className="hover:text-foreground">Workflow</a>
@@ -122,8 +125,9 @@ function Landing() {
       </section>
 
       <footer className="border-t border-border py-10 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} FLUX Talent. Hecho para reclutadores que odian el trabajo operativo.
+        © 2026 FLUX Automatizaciones. Todos los derechos reservados.
       </footer>
+
     </div>
   );
 }

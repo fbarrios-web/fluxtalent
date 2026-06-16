@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { FluxLogo } from "@/components/flux-logo";
+
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -72,8 +74,10 @@ function AuthPage() {
     <div className="grid min-h-screen md:grid-cols-2">
       <div className="hidden flex-col justify-between bg-primary p-12 text-primary-foreground md:flex">
         <Link to="/" className="flex items-center gap-2 font-semibold">
-          <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary-foreground text-primary">H</div>
-          FLUX Talent
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary-foreground p-1.5">
+            <FluxLogo size={24} />
+          </div>
+          FLUX <span className="opacity-70 font-normal">Talent</span>
         </Link>
         <div>
           <p className="font-display text-4xl leading-tight">
@@ -81,8 +85,9 @@ function AuthPage() {
           </p>
           <p className="mt-4 text-sm opacity-80">— Lucía Méndez, Head of People @ Nimbus</p>
         </div>
-        <p className="text-xs opacity-60">© FLUX Talent {new Date().getFullYear()}</p>
+        <p className="text-xs opacity-60">© 2026 FLUX Automatizaciones. Todos los derechos reservados.</p>
       </div>
+
 
       <div className="flex items-center justify-center p-6">
         <div className="w-full max-w-sm">

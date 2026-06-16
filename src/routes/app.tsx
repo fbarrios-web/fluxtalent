@@ -3,6 +3,8 @@ import { useEffect } from "react";
 import { useAuth, signOut } from "@/lib/auth";
 import { LayoutDashboard, Briefcase, Settings, LogOut, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FluxLogo } from "@/components/flux-logo";
+
 
 export const Route = createFileRoute("/app")({
   component: AppLayout,
@@ -34,10 +36,11 @@ function AppLayout() {
   return (
     <div className="grid min-h-screen bg-background md:grid-cols-[240px_1fr]">
       <aside className="hidden border-r border-border bg-sidebar md:flex md:flex-col">
-        <Link to="/app/dashboard" className="flex items-center gap-2 px-6 py-5 font-semibold">
-          <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">H</div>
-          <span className="tracking-tight">FLUX Talent</span>
+        <Link to="/app/dashboard" className="flex items-center gap-2 px-6 py-5 font-semibold text-sidebar-foreground">
+          <FluxLogo size={28} />
+          <span className="tracking-tight">FLUX <span className="opacity-70 font-normal">Talent</span></span>
         </Link>
+
         <nav className="flex-1 px-3 py-2">
           {navItems.map(item => {
             const active = loc.pathname.startsWith(item.to);
@@ -66,9 +69,13 @@ function AppLayout() {
         </div>
       </aside>
 
-      <main className="min-w-0">
-        <Outlet />
+      <main className="min-w-0 flex flex-col">
+        <div className="flex-1"><Outlet /></div>
+        <footer className="border-t border-border px-6 py-4 text-center text-xs text-muted-foreground">
+          © 2026 FLUX Automatizaciones. Todos los derechos reservados.
+        </footer>
       </main>
+
     </div>
   );
 }

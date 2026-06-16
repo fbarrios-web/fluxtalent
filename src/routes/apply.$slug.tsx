@@ -114,6 +114,11 @@ function ApplyPage() {
         </Button>
         <p className="text-center text-xs text-muted-foreground">Powered by FLUX Talent · Tus datos sólo se usan para esta búsqueda.</p>
       </form>
+      <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">
+        © 2026 FLUX Automatizaciones. Todos los derechos reservados.
+      </footer>
+
+      </form>
     </div>
   );
 }
