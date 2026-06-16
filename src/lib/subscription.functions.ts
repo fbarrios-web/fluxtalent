@@ -104,12 +104,18 @@ export const createPreapproval = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!org) throw new Error("No pudimos cargar tu workspace. Probá recargar la página.");
 
-    const origin = process.env.PUBLIC_APP_URL || "https://project--f6700845-18a2-42a5-b8fb-c9d0dd25ca9a.lovable.app";
-    const email = (claims as any).email ?? `org+${org.id}@flux.app`;
+    const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
+    const email = ((claims as any)?.email ?? "").toString().trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new Error("Tu cuenta no tiene un email válido. Actualizá tu email en Configuración antes de suscribirte.");
+    }
     const amount = Number(org.plan_price_ars);
+    if (!amount || amount <= 0) {
+      throw new Error("El plan no tiene precio configurado. Contactanos para activar tu suscripción.");
+    }
 
     const body = {
-      reason: `FLUX Talent — ${org.name}`,
+      reason: `FLUX Talent - Plan mensual`,
       external_reference: org.id,
       payer_email: email,
       back_url: `${origin}/app/subscription?ok=1`,
