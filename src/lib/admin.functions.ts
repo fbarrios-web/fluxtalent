@@ -91,22 +91,24 @@ export const adminGrantLicense = createServerFn({ method: "POST" })
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const patch: Record<string, any> = {};
     const now = Date.now();
     const days = (d: number) => new Date(now + d * 86400000).toISOString();
+    type OrgUpdate = Parameters<typeof supabaseAdmin.from<"organizations">>[0] extends never ? any : any;
+    let patch: any = {};
 
     switch (data.action) {
-      case "activate_30": patch.subscription_status = "active"; patch.current_period_end = days(30); patch.last_payment_at = new Date().toISOString(); break;
-      case "activate_90": patch.subscription_status = "active"; patch.current_period_end = days(90); patch.last_payment_at = new Date().toISOString(); break;
-      case "activate_365": patch.subscription_status = "active"; patch.current_period_end = days(365); patch.last_payment_at = new Date().toISOString(); break;
-      case "extend_trial_15": patch.subscription_status = "trialing"; patch.trial_ends_at = days(15); break;
-      case "mark_paid_manual": patch.subscription_status = "active"; patch.current_period_end = days(30); patch.last_payment_at = new Date().toISOString(); break;
-      case "suspend": patch.subscription_status = "past_due"; break;
-      case "cancel": patch.subscription_status = "canceled"; break;
+      case "activate_30": patch = { subscription_status: "active", current_period_end: days(30), last_payment_at: new Date().toISOString() }; break;
+      case "activate_90": patch = { subscription_status: "active", current_period_end: days(90), last_payment_at: new Date().toISOString() }; break;
+      case "activate_365": patch = { subscription_status: "active", current_period_end: days(365), last_payment_at: new Date().toISOString() }; break;
+      case "extend_trial_15": patch = { subscription_status: "trialing", trial_ends_at: days(15) }; break;
+      case "mark_paid_manual": patch = { subscription_status: "active", current_period_end: days(30), last_payment_at: new Date().toISOString() }; break;
+      case "suspend": patch = { subscription_status: "past_due" }; break;
+      case "cancel": patch = { subscription_status: "canceled" }; break;
     }
 
     const { error } = await supabaseAdmin.from("organizations").update(patch).eq("id", data.org_id);
     if (error) throw error;
+
 
     if (data.action === "mark_paid_manual" || data.action.startsWith("activate_")) {
       await supabaseAdmin.from("payments").insert({
