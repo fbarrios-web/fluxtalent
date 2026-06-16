@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as ScheduleTokenRouteImport } from './routes/schedule.$token'
 import { Route as ApplySlugRouteImport } from './routes/apply.$slug'
 import { Route as AppSubscriptionRouteImport } from './routes/app.subscription'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
@@ -28,7 +29,9 @@ import { Route as AppAdminPaymentsRouteImport } from './routes/app.admin.payment
 import { Route as AppAdminOrgsRouteImport } from './routes/app.admin.orgs'
 import { Route as ApiPublicApplyRouteImport } from './routes/api.public.apply'
 import { Route as ApiPublicAnalyzeRouteImport } from './routes/api.public.analyze'
+import { Route as ApiPublicScheduleBookRouteImport } from './routes/api.public.schedule.book'
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api.public.mp.webhook'
+import { Route as ApiPublicGoogleCallbackRouteImport } from './routes/api.public.google.callback'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -49,6 +52,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppRoute,
+} as any)
+const ScheduleTokenRoute = ScheduleTokenRouteImport.update({
+  id: '/schedule/$token',
+  path: '/schedule/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApplySlugRoute = ApplySlugRouteImport.update({
   id: '/apply/$slug',
@@ -125,9 +133,19 @@ const ApiPublicAnalyzeRoute = ApiPublicAnalyzeRouteImport.update({
   path: '/api/public/analyze',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicScheduleBookRoute = ApiPublicScheduleBookRouteImport.update({
+  id: '/api/public/schedule/book',
+  path: '/api/public/schedule/book',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMpWebhookRoute = ApiPublicMpWebhookRouteImport.update({
   id: '/api/public/mp/webhook',
   path: '/api/public/mp/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicGoogleCallbackRoute = ApiPublicGoogleCallbackRouteImport.update({
+  id: '/api/public/google/callback',
+  path: '/api/public/google/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -140,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/app/settings': typeof AppSettingsRoute
   '/app/subscription': typeof AppSubscriptionRoute
   '/apply/$slug': typeof ApplySlugRoute
+  '/schedule/$token': typeof ScheduleTokenRoute
   '/app/': typeof AppIndexRoute
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
@@ -151,7 +170,9 @@ export interface FileRoutesByFullPath {
   '/app/vacancies/new': typeof AppVacanciesNewRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/vacancies/': typeof AppVacanciesIndexRoute
+  '/api/public/google/callback': typeof ApiPublicGoogleCallbackRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
+  '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -160,6 +181,7 @@ export interface FileRoutesByTo {
   '/app/settings': typeof AppSettingsRoute
   '/app/subscription': typeof AppSubscriptionRoute
   '/apply/$slug': typeof ApplySlugRoute
+  '/schedule/$token': typeof ScheduleTokenRoute
   '/app': typeof AppIndexRoute
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
@@ -171,7 +193,9 @@ export interface FileRoutesByTo {
   '/app/vacancies/new': typeof AppVacanciesNewRoute
   '/app/admin': typeof AppAdminIndexRoute
   '/app/vacancies': typeof AppVacanciesIndexRoute
+  '/api/public/google/callback': typeof ApiPublicGoogleCallbackRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
+  '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -183,6 +207,7 @@ export interface FileRoutesById {
   '/app/settings': typeof AppSettingsRoute
   '/app/subscription': typeof AppSubscriptionRoute
   '/apply/$slug': typeof ApplySlugRoute
+  '/schedule/$token': typeof ScheduleTokenRoute
   '/app/': typeof AppIndexRoute
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
@@ -194,7 +219,9 @@ export interface FileRoutesById {
   '/app/vacancies/new': typeof AppVacanciesNewRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/vacancies/': typeof AppVacanciesIndexRoute
+  '/api/public/google/callback': typeof ApiPublicGoogleCallbackRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
+  '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -207,6 +234,7 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/subscription'
     | '/apply/$slug'
+    | '/schedule/$token'
     | '/app/'
     | '/api/public/analyze'
     | '/api/public/apply'
@@ -218,7 +246,9 @@ export interface FileRouteTypes {
     | '/app/vacancies/new'
     | '/app/admin/'
     | '/app/vacancies/'
+    | '/api/public/google/callback'
     | '/api/public/mp/webhook'
+    | '/api/public/schedule/book'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -227,6 +257,7 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/subscription'
     | '/apply/$slug'
+    | '/schedule/$token'
     | '/app'
     | '/api/public/analyze'
     | '/api/public/apply'
@@ -238,7 +269,9 @@ export interface FileRouteTypes {
     | '/app/vacancies/new'
     | '/app/admin'
     | '/app/vacancies'
+    | '/api/public/google/callback'
     | '/api/public/mp/webhook'
+    | '/api/public/schedule/book'
   id:
     | '__root__'
     | '/'
@@ -249,6 +282,7 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/subscription'
     | '/apply/$slug'
+    | '/schedule/$token'
     | '/app/'
     | '/api/public/analyze'
     | '/api/public/apply'
@@ -260,7 +294,9 @@ export interface FileRouteTypes {
     | '/app/vacancies/new'
     | '/app/admin/'
     | '/app/vacancies/'
+    | '/api/public/google/callback'
     | '/api/public/mp/webhook'
+    | '/api/public/schedule/book'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -268,9 +304,12 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApplySlugRoute: typeof ApplySlugRoute
+  ScheduleTokenRoute: typeof ScheduleTokenRoute
   ApiPublicAnalyzeRoute: typeof ApiPublicAnalyzeRoute
   ApiPublicApplyRoute: typeof ApiPublicApplyRoute
+  ApiPublicGoogleCallbackRoute: typeof ApiPublicGoogleCallbackRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
+  ApiPublicScheduleBookRoute: typeof ApiPublicScheduleBookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -302,6 +341,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/schedule/$token': {
+      id: '/schedule/$token'
+      path: '/schedule/$token'
+      fullPath: '/schedule/$token'
+      preLoaderRoute: typeof ScheduleTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/apply/$slug': {
       id: '/apply/$slug'
@@ -408,11 +454,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAnalyzeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/schedule/book': {
+      id: '/api/public/schedule/book'
+      path: '/api/public/schedule/book'
+      fullPath: '/api/public/schedule/book'
+      preLoaderRoute: typeof ApiPublicScheduleBookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/mp/webhook': {
       id: '/api/public/mp/webhook'
       path: '/api/public/mp/webhook'
       fullPath: '/api/public/mp/webhook'
       preLoaderRoute: typeof ApiPublicMpWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/google/callback': {
+      id: '/api/public/google/callback'
+      path: '/api/public/google/callback'
+      fullPath: '/api/public/google/callback'
+      preLoaderRoute: typeof ApiPublicGoogleCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -467,9 +527,12 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
   ApplySlugRoute: ApplySlugRoute,
+  ScheduleTokenRoute: ScheduleTokenRoute,
   ApiPublicAnalyzeRoute: ApiPublicAnalyzeRoute,
   ApiPublicApplyRoute: ApiPublicApplyRoute,
+  ApiPublicGoogleCallbackRoute: ApiPublicGoogleCallbackRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
+  ApiPublicScheduleBookRoute: ApiPublicScheduleBookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
