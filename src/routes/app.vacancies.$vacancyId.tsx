@@ -93,6 +93,27 @@ function VacancyDetail() {
             <Button variant="outline" onClick={() => setStatus("active")}>Activar</Button>
           )}
           <Button variant="outline" onClick={copyLink}><Copy className="mr-2 h-3.5 w-3.5" /> Copiar link</Button>
+          <Button
+            variant="outline"
+            disabled={!apps?.length}
+            onClick={() => {
+              const rows = (apps ?? []).map((a: any) => [
+                `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim(),
+                a.email ?? "",
+                a.phone ?? "",
+                a.cv_url ?? "",
+                a.stage ?? "",
+                a.match_score != null ? `${a.match_score}%` : "",
+              ]);
+              downloadCSV(
+                `postulantes-${v.public_slug ?? v.id}`,
+                ["Postulante", "Email", "Teléfono", "CV", "Estado", "Match %"],
+                rows,
+              );
+            }}
+          >
+            <Download className="mr-2 h-3.5 w-3.5" /> Exportar Excel
+          </Button>
           <a href={applyUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm hover:bg-accent">
             <ExternalLink className="h-3.5 w-3.5" /> Ver form
           </a>
