@@ -510,6 +510,25 @@ export type Database = {
     }
     Functions: {
       current_org_id: { Args: never; Returns: string }
+      get_public_vacancy_by_slug: {
+        Args: { _slug: string }
+        Returns: {
+          area: string
+          description: string
+          id: string
+          location: string
+          modality: string
+          nice_to_have: string
+          org_id: string
+          org_name: string
+          requirements: string
+          responsibilities: string
+          screening_questions: Json
+          seniority: string
+          status: string
+          title: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
