@@ -175,7 +175,7 @@ export const adminCreateUser = createServerFn({ method: "POST" })
         patch.current_period_end = new Date(now + 365 * 86400000).toISOString();
         patch.last_payment_at = new Date().toISOString();
       }
-      await supabaseAdmin.from("organizations").update(patch).eq("id", orgId);
+      await supabaseAdmin.from("organizations").update(patch as never).eq("id", orgId);
     }
 
     return { user_id: newUserId, org_id: orgId };
