@@ -34,6 +34,17 @@ function VacancyDetail() {
   const move = useServerFn(moveApplicationStage);
   const update = useServerFn(updateVacancy);
 
+  const storageKey = `kanban-collapsed:${vacancyId}`;
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
+    if (typeof window === "undefined") return {};
+    try { return JSON.parse(localStorage.getItem(storageKey) ?? "{}"); } catch { return {}; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(storageKey, JSON.stringify(collapsed)); } catch {}
+  }, [collapsed, storageKey]);
+  const toggleCollapsed = (id: string) => setCollapsed(c => ({ ...c, [id]: !c[id] }));
+
+
   const { data: v } = useQuery<any>({
     queryKey: ["vacancy", vacancyId],
     queryFn: async () => {
