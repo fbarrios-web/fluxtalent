@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { MatchPill } from "./app.dashboard";
+import { VacancyScheduling } from "@/components/vacancy-scheduling";
 
 const STAGES = [
   { id: "received", label: "Recibidos" },
