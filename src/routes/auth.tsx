@@ -10,7 +10,7 @@ import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
-  head: () => ({ meta: [{ title: "Ingresar — Hirex" }] }),
+  head: () => ({ meta: [{ title: "Ingresar — FLUX Talent" }] }),
 });
 
 function AuthPage() {
@@ -73,15 +73,15 @@ function AuthPage() {
       <div className="hidden flex-col justify-between bg-primary p-12 text-primary-foreground md:flex">
         <Link to="/" className="flex items-center gap-2 font-semibold">
           <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary-foreground text-primary">H</div>
-          Hirex
+          FLUX Talent
         </Link>
         <div>
           <p className="font-display text-4xl leading-tight">
-            "Pasamos de revisar 200 CVs manualmente a contratar en 7 días con Hirex."
+            "Pasamos de revisar 200 CVs manualmente a contratar en 7 días con FLUX Talent."
           </p>
           <p className="mt-4 text-sm opacity-80">— Lucía Méndez, Head of People @ Nimbus</p>
         </div>
-        <p className="text-xs opacity-60">© Hirex {new Date().getFullYear()}</p>
+        <p className="text-xs opacity-60">© FLUX Talent {new Date().getFullYear()}</p>
       </div>
 
       <div className="flex items-center justify-center p-6">

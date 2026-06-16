@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/apply/$slug")({
   component: ApplyPage,
-  head: () => ({ meta: [{ title: "Postularme — Hirex" }] }),
+  head: () => ({ meta: [{ title: "Postularme — FLUX Talent" }] }),
 });
 
 function ApplyPage() {
@@ -112,7 +112,7 @@ function ApplyPage() {
         <Button type="submit" disabled={submitting} className="w-full" size="lg">
           {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Enviar postulación
         </Button>
-        <p className="text-center text-xs text-muted-foreground">Powered by Hirex · Tus datos sólo se usan para esta búsqueda.</p>
+        <p className="text-center text-xs text-muted-foreground">Powered by FLUX Talent · Tus datos sólo se usan para esta búsqueda.</p>
       </form>
     </div>
   );

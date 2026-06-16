@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/app/settings")({
   component: Settings,
-  head: () => ({ meta: [{ title: "Configuración — Hirex" }] }),
+  head: () => ({ meta: [{ title: "Configuración — FLUX Talent" }] }),
 });
 
 function Settings() {

@@ -5,7 +5,7 @@ import { Briefcase, Users, Sparkles, TrendingUp, Plus } from "lucide-react";
 
 export const Route = createFileRoute("/app/dashboard")({
   component: Dashboard,
-  head: () => ({ meta: [{ title: "Dashboard — Hirex" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — FLUX Talent" }] }),
 });
 
 function Dashboard() {

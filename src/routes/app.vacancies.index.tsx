@@ -5,7 +5,7 @@ import { Plus, ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/app/vacancies/")({
   component: VacanciesList,
-  head: () => ({ meta: [{ title: "Vacantes — Hirex" }] }),
+  head: () => ({ meta: [{ title: "Vacantes — FLUX Talent" }] }),
 });
 
 function VacanciesList() {
