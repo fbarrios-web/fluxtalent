@@ -14,16 +14,405 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      application_events: {
+        Row: {
+          actor_id: string | null
+          application_id: string
+          created_at: string
+          id: string
+          payload: Json | null
+          type: string
+        }
+        Insert: {
+          actor_id?: string | null
+          application_id: string
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          type: string
+        }
+        Update: {
+          actor_id?: string | null
+          application_id?: string
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_events_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      applications: {
+        Row: {
+          ai_status: string | null
+          ai_summary: string | null
+          created_at: string
+          cv_text: string | null
+          cv_url: string | null
+          email: string
+          first_name: string
+          gaps: string[] | null
+          id: string
+          last_name: string
+          linkedin: string | null
+          match_breakdown: Json | null
+          match_score: number | null
+          org_id: string
+          parsed_data: Json | null
+          phone: string | null
+          red_flags: string[] | null
+          screening_answers: Json | null
+          source: string | null
+          stage: Database["public"]["Enums"]["pipeline_stage"]
+          strengths: string[] | null
+          updated_at: string
+          vacancy_id: string
+        }
+        Insert: {
+          ai_status?: string | null
+          ai_summary?: string | null
+          created_at?: string
+          cv_text?: string | null
+          cv_url?: string | null
+          email: string
+          first_name: string
+          gaps?: string[] | null
+          id?: string
+          last_name: string
+          linkedin?: string | null
+          match_breakdown?: Json | null
+          match_score?: number | null
+          org_id: string
+          parsed_data?: Json | null
+          phone?: string | null
+          red_flags?: string[] | null
+          screening_answers?: Json | null
+          source?: string | null
+          stage?: Database["public"]["Enums"]["pipeline_stage"]
+          strengths?: string[] | null
+          updated_at?: string
+          vacancy_id: string
+        }
+        Update: {
+          ai_status?: string | null
+          ai_summary?: string | null
+          created_at?: string
+          cv_text?: string | null
+          cv_url?: string | null
+          email?: string
+          first_name?: string
+          gaps?: string[] | null
+          id?: string
+          last_name?: string
+          linkedin?: string | null
+          match_breakdown?: Json | null
+          match_score?: number | null
+          org_id?: string
+          parsed_data?: Json | null
+          phone?: string | null
+          red_flags?: string[] | null
+          screening_answers?: Json | null
+          source?: string | null
+          stage?: Database["public"]["Enums"]["pipeline_stage"]
+          strengths?: string[] | null
+          updated_at?: string
+          vacancy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_vacancy_id_fkey"
+            columns: ["vacancy_id"]
+            isOneToOne: false
+            referencedRelation: "vacancies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_templates: {
+        Row: {
+          body: string
+          id: string
+          key: string
+          org_id: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          id?: string
+          key: string
+          org_id: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          id?: string
+          key?: string
+          org_id?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_templates_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          brand_color: string | null
+          created_at: string
+          id: string
+          logo_url: string | null
+          name: string
+          sender_email: string | null
+          signature_html: string | null
+        }
+        Insert: {
+          brand_color?: string | null
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          sender_email?: string | null
+          signature_html?: string | null
+        }
+        Update: {
+          brand_color?: string | null
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          sender_email?: string | null
+          signature_html?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          org_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          org_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          org_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scorecards: {
+        Row: {
+          application_id: string
+          created_at: string
+          id: string
+          interviewer_id: string | null
+          notes: string | null
+          overall: number | null
+          ratings: Json
+          recommendation: string | null
+          stage: Database["public"]["Enums"]["pipeline_stage"]
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          id?: string
+          interviewer_id?: string | null
+          notes?: string | null
+          overall?: number | null
+          ratings: Json
+          recommendation?: string | null
+          stage: Database["public"]["Enums"]["pipeline_stage"]
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          id?: string
+          interviewer_id?: string | null
+          notes?: string | null
+          overall?: number | null
+          ratings?: Json
+          recommendation?: string | null
+          stage?: Database["public"]["Enums"]["pipeline_stage"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scorecards_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      screening_questions: {
+        Row: {
+          id: string
+          position: number
+          question: string
+          required: boolean
+          vacancy_id: string
+        }
+        Insert: {
+          id?: string
+          position?: number
+          question: string
+          required?: boolean
+          vacancy_id: string
+        }
+        Update: {
+          id?: string
+          position?: number
+          question?: string
+          required?: boolean
+          vacancy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "screening_questions_vacancy_id_fkey"
+            columns: ["vacancy_id"]
+            isOneToOne: false
+            referencedRelation: "vacancies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vacancies: {
+        Row: {
+          area: string | null
+          competencies: string[] | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          location: string | null
+          min_match: number
+          modality: Database["public"]["Enums"]["modality"] | null
+          nice_to_have: string | null
+          org_id: string
+          public_slug: string
+          requirements: string | null
+          responsibilities: string | null
+          seniority: Database["public"]["Enums"]["seniority"] | null
+          status: Database["public"]["Enums"]["vacancy_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          area?: string | null
+          competencies?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          min_match?: number
+          modality?: Database["public"]["Enums"]["modality"] | null
+          nice_to_have?: string | null
+          org_id: string
+          public_slug?: string
+          requirements?: string | null
+          responsibilities?: string | null
+          seniority?: Database["public"]["Enums"]["seniority"] | null
+          status?: Database["public"]["Enums"]["vacancy_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          area?: string | null
+          competencies?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          min_match?: number
+          modality?: Database["public"]["Enums"]["modality"] | null
+          nice_to_have?: string | null
+          org_id?: string
+          public_slug?: string
+          requirements?: string | null
+          responsibilities?: string | null
+          seniority?: Database["public"]["Enums"]["seniority"] | null
+          status?: Database["public"]["Enums"]["vacancy_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vacancies_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      current_org_id: { Args: never; Returns: string }
     }
     Enums: {
-      [_ in never]: never
+      modality: "remote" | "hybrid" | "onsite"
+      pipeline_stage:
+        | "received"
+        | "shortlisted"
+        | "interview_1"
+        | "interview_2"
+        | "interview_3"
+        | "offer"
+        | "hired"
+        | "rejected"
+      seniority:
+        | "intern"
+        | "junior"
+        | "mid"
+        | "senior"
+        | "lead"
+        | "manager"
+        | "director"
+      vacancy_status: "draft" | "active" | "paused" | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +539,28 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      modality: ["remote", "hybrid", "onsite"],
+      pipeline_stage: [
+        "received",
+        "shortlisted",
+        "interview_1",
+        "interview_2",
+        "interview_3",
+        "offer",
+        "hired",
+        "rejected",
+      ],
+      seniority: [
+        "intern",
+        "junior",
+        "mid",
+        "senior",
+        "lead",
+        "manager",
+        "director",
+      ],
+      vacancy_status: ["draft", "active", "paused", "closed"],
+    },
   },
 } as const
