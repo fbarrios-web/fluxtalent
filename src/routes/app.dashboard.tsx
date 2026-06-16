@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { Briefcase, Users, Sparkles, TrendingUp, Plus } from "lucide-react";
+import { Briefcase, Users, Sparkles, TrendingUp, Plus, Clock, FileText } from "lucide-react";
+import { getMySubscription } from "@/lib/subscription.functions";
+import { planByPrice, formatLimit } from "@/lib/plans";
 
 export const Route = createFileRoute("/app/dashboard")({
   component: Dashboard,
@@ -42,6 +45,12 @@ function Dashboard() {
     },
   });
 
+  const getSub = useServerFn(getMySubscription);
+  const { data: sub } = useQuery({ queryKey: ["my-subscription"], queryFn: () => getSub(), refetchOnWindowFocus: false });
+  const plan = sub ? planByPrice(sub.plan_price_ars) : null;
+  const usedVacancies = vacancies?.length ?? 0;
+  const usedCvs = stats?.total ?? 0;
+
   return (
     <div className="mx-auto max-w-6xl p-6 md:p-10">
       <header className="mb-8 flex items-center justify-between">
@@ -53,6 +62,35 @@ function Dashboard() {
           <Plus className="h-4 w-4" /> Nueva vacante
         </Link>
       </header>
+
+      {sub && plan && (
+        <div className="mb-8 rounded-2xl border border-border bg-card p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Plan {sub.subscription_status === "trialing" ? "en prueba" : "activo"}</p>
+              <p className="font-display text-xl">FLUX Talent — {plan.name}</p>
+            </div>
+            <Link to="/app/subscription" className="text-sm text-primary hover:underline">Ver suscripción →</Link>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <MiniStat
+              icon={Clock}
+              label={sub.subscription_status === "trialing" ? "Días de prueba restantes" : "Próximo cobro en"}
+              value={`${sub.daysLeft} días`}
+            />
+            <MiniStat
+              icon={Briefcase}
+              label="Vacantes"
+              value={`${usedVacancies} / ${formatLimit(plan.maxVacancies)}`}
+            />
+            <MiniStat
+              icon={FileText}
+              label="CVs procesados"
+              value={`${usedCvs} / ${formatLimit(plan.maxCvsPerMonth)}`}
+            />
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-4">
         <Stat icon={Users} label="Candidatos totales" value={stats?.total ?? 0} />
@@ -103,6 +141,17 @@ function Stat({ icon: Icon, label, value, accent, muted }: any) {
       <Icon className="h-4 w-4 opacity-70" />
       <div className="mt-3 font-display text-3xl">{value}</div>
       <div className="text-xs opacity-70">{label}</div>
+    </div>
+  );
+}
+function MiniStat({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-background p-3">
+      <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary"><Icon className="h-4 w-4" /></div>
+      <div>
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-sm font-semibold">{value}</p>
+      </div>
     </div>
   );
 }

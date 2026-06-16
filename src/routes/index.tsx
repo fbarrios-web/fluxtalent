@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Sparkles, Workflow, Calendar, Mail, BarChart3, ShieldCheck } from "lucide-react";
+import { ArrowRight, Sparkles, Workflow, Calendar, Mail, BarChart3, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { FluxLogo } from "@/components/flux-logo";
+import { PLANS, TRIAL_DAYS, formatArs } from "@/lib/plans";
 
 
 export const Route = createFileRoute("/")({
@@ -26,6 +27,7 @@ function Landing() {
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
             <a href="#features" className="hover:text-foreground">Producto</a>
             <a href="#workflow" className="hover:text-foreground">Workflow</a>
+            <a href="#planes" className="hover:text-foreground">Planes</a>
             <a href="#ai" className="hover:text-foreground">IA</a>
           </nav>
           <Link to="/auth" className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
@@ -121,6 +123,60 @@ function Landing() {
               </li>
             ))}
           </ol>
+        </div>
+      </section>
+
+      <section id="planes" className="border-t border-border py-20">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="font-display text-4xl">Planes y precios</h2>
+            <p className="mt-3 text-muted-foreground">
+              Empezás con <strong>{TRIAL_DAYS} días gratis</strong> en cualquier plan. Sin tarjeta para probar. Cancelás cuando quieras.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {PLANS.map(p => (
+              <div
+                key={p.id}
+                className={`relative flex flex-col rounded-2xl border bg-card p-6 ${p.highlighted ? "border-primary shadow-lg" : "border-border"}`}
+              >
+                {p.highlighted && (
+                  <span className="absolute -top-3 left-6 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
+                    <Sparkles className="h-3 w-3" /> Recomendado
+                  </span>
+                )}
+                <h3 className="font-display text-2xl">{p.name}</h3>
+                <p className="mt-1 min-h-[2.5rem] text-sm text-muted-foreground">{p.tagline}</p>
+                <div className="mt-5">
+                  <span className="font-display text-4xl">{formatArs(p.priceArs)}</span>
+                  <span className="text-sm text-muted-foreground"> /mes</span>
+                </div>
+                <ul className="mt-6 space-y-2 text-sm">
+                  {p.features.map(f => (
+                    <li key={f} className="flex items-start gap-2">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> {f}
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex-1" />
+                <Link
+                  to="/auth"
+                  className={`mt-6 inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium ${
+                    p.highlighted
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                      : "border border-border bg-background hover:bg-accent"
+                  }`}
+                >
+                  Empezar prueba <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-8 text-center text-xs text-muted-foreground">
+            Precios en pesos argentinos (ARS), facturados mensualmente vía Mercado Pago. IVA incluido.
+          </p>
         </div>
       </section>
 

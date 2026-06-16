@@ -17,18 +17,17 @@ function callbackUrl(origin: string) {
 export const googleStartUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ origin: z.string().url() }).parse(input))
-  .handler(async ({ data, context }) => {
+  .handler(async ({ context }) => {
     const { googleAuthUrl } = await import("@/lib/google.server");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // IMPORTANT: el redirect_uri tiene que coincidir EXACTAMENTE con el que está
+    // registrado en Google Cloud Console. Usamos siempre un origin canónico
+    // (PUBLIC_APP_URL o la URL publicada) para que funcione desde preview y prod.
+    const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
     const state = crypto.randomUUID();
-    // Store state→userId mapping temporarily in profiles.google_email field? No, use a tiny cache table.
-    // We'll re-use a simple signed cookie approach: encode userId + nonce; verify in callback.
-    // For simplicity here, persist in a memory-less way: include userId in state directly, signed via service-role secret.
     const payload = `${context.userId}.${state}.${Date.now()}`;
     const sig = await hmac(payload, process.env.SUPABASE_SERVICE_ROLE_KEY!);
     const fullState = `${btoa(payload)}.${sig}`;
-    void supabaseAdmin; // silence unused
-    return { url: googleAuthUrl(callbackUrl(data.origin), fullState) };
+    return { url: googleAuthUrl(callbackUrl(origin), fullState) };
   });
 
 async function hmac(payload: string, secret: string) {
