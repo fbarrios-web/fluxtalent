@@ -143,6 +143,32 @@ function VacancyDetail() {
           <div className="flex gap-3 overflow-x-auto pb-4">
             {STAGES.map(s => {
               const items = (apps ?? []).filter((a: any) => a.stage === s.id);
+              const isCollapsed = !!collapsed[s.id];
+              if (isCollapsed) {
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => toggleCollapsed(s.id)}
+                    onDragOver={e => e.preventDefault()}
+                    onDrop={e => {
+                      const id = e.dataTransfer.getData("text/plain");
+                      if (id) onDrop(id, s.id);
+                    }}
+                    title={`Expandir ${s.label}`}
+                    className="flex w-10 shrink-0 flex-col items-center gap-2 rounded-2xl bg-muted/40 p-2 hover:bg-muted/70"
+                  >
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    <span className="rounded-full bg-background px-2 text-xs">{items.length}</span>
+                    <span
+                      className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                      style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+                    >
+                      {s.label}
+                    </span>
+                  </button>
+                );
+              }
               return (
                 <div
                   key={s.id}
@@ -154,7 +180,17 @@ function VacancyDetail() {
                   className="flex w-64 shrink-0 flex-col rounded-2xl bg-muted/40 p-3"
                 >
                   <div className="mb-3 flex items-center justify-between px-1">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{s.label}</span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => toggleCollapsed(s.id)}
+                        title="Minimizar"
+                        className="rounded p-0.5 text-muted-foreground hover:bg-background hover:text-foreground"
+                      >
+                        <ChevronLeft className="h-3.5 w-3.5" />
+                      </button>
+                      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{s.label}</span>
+                    </div>
                     <span className="rounded-full bg-background px-2 text-xs">{items.length}</span>
                   </div>
                   <div className="space-y-2">
@@ -180,6 +216,7 @@ function VacancyDetail() {
             })}
           </div>
         </TabsContent>
+
 
         <TabsContent value="table" className="mt-6">
           <div className="overflow-hidden rounded-2xl border border-border bg-card">
