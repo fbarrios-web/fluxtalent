@@ -8,7 +8,7 @@ export const Route = createFileRoute("/api/public/google/callback")({
         const code = url.searchParams.get("code");
         const state = url.searchParams.get("state");
         const error = url.searchParams.get("error");
-        // Mismo origin canónico que en googleStartUrl — debe coincidir EXACTAMENTE con el redirect URI registrado en Google Cloud Console.
+        // Mismo callback estable que se usa al iniciar OAuth.
         const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
 
         if (error || !code || !state) {

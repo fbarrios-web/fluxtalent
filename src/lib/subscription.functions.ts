@@ -2,22 +2,76 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
+async function createMissingWorkspace(supabaseAdmin: any, userId: string) {
+  const { data: userRes } = await supabaseAdmin.auth.admin.getUserById(userId);
+  const user = userRes?.user;
+  const email = user?.email ?? "";
+  const meta = (user?.user_metadata ?? {}) as Record<string, string>;
+
+  const { data: newOrg, error: orgErr } = await supabaseAdmin
+    .from("organizations")
+    .insert({
+      name: meta.org_name || "Mi empresa",
+      trial_ends_at: new Date(Date.now() + 15 * 86_400_000).toISOString(),
+      subscription_status: "trialing",
+      plan_price_ars: 20000,
+    })
+    .select("id")
+    .single();
+  if (orgErr) throw orgErr;
+
+  const { error: profileErr } = await supabaseAdmin.from("profiles").upsert({
+    id: userId,
+    org_id: newOrg.id,
+    display_name: meta.display_name || email.split("@")[0] || "Usuario",
+  });
+  if (profileErr) throw profileErr;
+
+  await supabaseAdmin
+    .from("user_roles")
+    .upsert({ user_id: userId, role: "recruiter" }, { onConflict: "user_id,role" });
+
+  return newOrg.id as string;
+}
+
+async function getOrCreateOrgId(supabase: any, userId: string) {
+  const { data: profile } = await supabase.from("profiles").select("org_id").eq("id", userId).maybeSingle();
+  if (profile?.org_id) return profile.org_id as string;
+
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: adminProfile } = await supabaseAdmin.from("profiles").select("org_id").eq("id", userId).maybeSingle();
+  if (adminProfile?.org_id) return adminProfile.org_id as string;
+
+  return createMissingWorkspace(supabaseAdmin, userId);
+}
+
 /** Returns full subscription snapshot for current user's org. */
 export const getMySubscription = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const { data: profile } = await supabase.from("profiles").select("org_id").eq("id", userId).single();
-    if (!profile?.org_id) return null;
+    const orgId = await getOrCreateOrgId(supabase, userId);
 
     const { data: org, error } = await supabase
       .from("organizations")
       .select("id, name, subscription_status, trial_ends_at, plan_price_ars, current_period_end, last_payment_at, mp_preapproval_id")
-      .eq("id", profile.org_id)
-      .single();
-    if (error || !org) return null;
+      .eq("id", orgId)
+      .maybeSingle();
+    if (error || !org) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: adminOrg } = await supabaseAdmin
+        .from("organizations")
+        .select("id, name, subscription_status, trial_ends_at, plan_price_ars, current_period_end, last_payment_at, mp_preapproval_id")
+        .eq("id", orgId)
+        .maybeSingle();
+      if (!adminOrg) return null;
+      return buildSubscriptionSnapshot(adminOrg);
+    }
 
+    return buildSubscriptionSnapshot(org);
+  });
 
+function buildSubscriptionSnapshot(org: any) {
     const now = Date.now();
     const trialEnds = org.trial_ends_at ? new Date(org.trial_ends_at).getTime() : 0;
     const periodEnds = org.current_period_end ? new Date(org.current_period_end).getTime() : 0;
@@ -32,7 +86,7 @@ export const getMySubscription = createServerFn({ method: "GET" })
       (org.subscription_status === "active" && (!org.current_period_end || periodEnds > now));
 
     return { ...org, daysLeft, canWrite };
-  });
+}
 
 /** Create a Mercado Pago preapproval (suscripción mensual) and return checkout URL. */
 export const createPreapproval = createServerFn({ method: "POST" })
@@ -42,14 +96,13 @@ export const createPreapproval = createServerFn({ method: "POST" })
     const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
     if (!token) throw new Error("Mercado Pago no está configurado todavía. Pedile al admin que cargue MERCADOPAGO_ACCESS_TOKEN.");
 
-    const { data: profile } = await supabase.from("profiles").select("org_id").eq("id", userId).single();
-    if (!profile?.org_id) throw new Error("No org");
+    const orgId = await getOrCreateOrgId(supabase, userId);
     const { data: org } = await supabase
       .from("organizations")
       .select("id, name, plan_price_ars")
-      .eq("id", profile.org_id)
-      .single();
-    if (!org) throw new Error("Org no encontrada");
+      .eq("id", orgId)
+      .maybeSingle();
+    if (!org) throw new Error("No pudimos cargar tu workspace. Probá recargar la página.");
 
     const origin = process.env.PUBLIC_APP_URL || "https://project--f6700845-18a2-42a5-b8fb-c9d0dd25ca9a.lovable.app";
     const email = (claims as any).email ?? `org+${org.id}@flux.app`;
@@ -86,9 +139,8 @@ export const cancelSubscription = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
-    const { data: profile } = await supabase.from("profiles").select("org_id").eq("id", userId).single();
-    if (!profile?.org_id) throw new Error("No org");
-    const { data: org } = await supabase.from("organizations").select("mp_preapproval_id").eq("id", profile.org_id).single();
+    const orgId = await getOrCreateOrgId(supabase, userId);
+    const { data: org } = await supabase.from("organizations").select("mp_preapproval_id").eq("id", orgId).maybeSingle();
     if (org?.mp_preapproval_id && token) {
       await fetch(`https://api.mercadopago.com/preapproval/${org.mp_preapproval_id}`, {
         method: "PUT",
@@ -96,7 +148,7 @@ export const cancelSubscription = createServerFn({ method: "POST" })
         body: JSON.stringify({ status: "cancelled" }),
       });
     }
-    await supabase.from("organizations").update({ subscription_status: "canceled" }).eq("id", profile.org_id);
+    await supabase.from("organizations").update({ subscription_status: "canceled" }).eq("id", orgId);
     return { ok: true };
   });
 

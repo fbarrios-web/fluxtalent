@@ -19,9 +19,7 @@ export const googleStartUrl = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ origin: z.string().url() }).parse(input))
   .handler(async ({ context }) => {
     const { googleAuthUrl } = await import("@/lib/google.server");
-    // IMPORTANT: el redirect_uri tiene que coincidir EXACTAMENTE con el que está
-    // registrado en Google Cloud Console. Usamos siempre un origin canónico
-    // (PUBLIC_APP_URL o la URL publicada) para que funcione desde preview y prod.
+    // IMPORTANT: usamos un único callback estable para que Google no reciba URLs de preview cambiantes.
     const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
     const state = crypto.randomUUID();
     const payload = `${context.userId}.${state}.${Date.now()}`;

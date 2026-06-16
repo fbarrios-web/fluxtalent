@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { useEffect } from "react";
 import { getGoogleStatus, googleStartUrl, googleDisconnect } from "@/lib/scheduling.functions";
 
+const GOOGLE_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/google/callback";
+
 export const Route = createFileRoute("/app/integrations")({
   component: IntegrationsPage,
   validateSearch: (s: Record<string, unknown>) => ({
@@ -88,6 +90,9 @@ function IntegrationsPage() {
                 <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
                   <AlertCircle className="h-3 w-3" />
                   Pediremos permisos para crear eventos en Calendar y enviar mails con tu cuenta.
+                </p>
+                <p className="mt-3 rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                  Callback autorizado requerido en Google: <span className="font-mono text-foreground">{GOOGLE_CALLBACK_URL}</span>
                 </p>
               </div>
             )}

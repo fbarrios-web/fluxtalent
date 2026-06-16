@@ -67,12 +67,13 @@ function SubscriptionPage() {
   const isTrial = sub.subscription_status === "trialing";
   const isActive = sub.subscription_status === "active";
 
-  const statusBadge = {
+  const statusBadges: Record<string, { label: string; cls: string }> = {
     trialing: { label: `En prueba · ${sub.daysLeft} días restantes`, cls: "bg-accent text-accent-foreground" },
     active: { label: "Activa", cls: "bg-primary/10 text-primary" },
     past_due: { label: "Pago pendiente", cls: "bg-destructive/10 text-destructive" },
     canceled: { label: "Cancelada", cls: "bg-muted text-muted-foreground" },
-  }[sub.subscription_status] ?? { label: sub.subscription_status, cls: "bg-muted text-muted-foreground" };
+  };
+  const statusBadge = statusBadges[sub.subscription_status] ?? { label: String(sub.subscription_status), cls: "bg-muted text-muted-foreground" };
 
   return (
     <div className="mx-auto max-w-5xl p-6 md:p-10">
