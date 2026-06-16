@@ -274,6 +274,93 @@ export const addManualSlot = createServerFn({ method: "POST" })
 
 // ---------- Trigger interview invite ----------
 
+export async function inviteForInterview(
+  supabase: any,
+  userId: string,
+  applicationId: string,
+  stage: "interview_1" | "interview_2" | "interview_3",
+) {
+  const { data: app } = await supabase.from("applications")
+    .select("id, first_name, last_name, email, vacancy_id")
+    .eq("id", applicationId).maybeSingle();
+  if (!app) throw new Error("Postulante no encontrado");
+  const { data: vac } = await supabase.from("vacancies")
+    .select("id, title, org_id").eq("id", app.vacancy_id).maybeSingle();
+  if (!vac) throw new Error("Vacante no encontrada");
+  const { data: org } = await supabase.from("organizations")
+    .select("name, consultancy_name, contact_email, brand_color, logo_url, signature_html, timezone")
+    .eq("id", vac.org_id).maybeSingle();
+  if (!org) throw new Error("Organización no encontrada");
+  const { data: cfg } = await supabase.from("vacancy_scheduling")
+    .select("recruiter_id, enabled").eq("vacancy_id", vac.id).maybeSingle();
+  if (!cfg || !cfg.enabled) throw new Error("Configurá las entrevistas para esta vacante antes de invitar.");
+  const recruiterId = cfg.recruiter_id ?? userId;
+  const { data: recruiter } = await supabase.from("profiles")
+    .select("google_refresh_token, google_email, display_name")
+    .eq("id", recruiterId).maybeSingle();
+  if (!recruiter?.google_refresh_token || !recruiter.google_email) {
+    throw new Error("El reclutador debe conectar su Google Calendar antes de invitar.");
+  }
+
+  const { data: existing } = await supabase.from("interview_bookings")
+    .select("id, booking_token, status").eq("application_id", app.id).eq("stage", stage).maybeSingle();
+  let booking = existing;
+  if (!booking) {
+    const { data: created, error } = await supabase.from("interview_bookings").insert({
+      application_id: app.id,
+      vacancy_id: vac.id,
+      org_id: vac.org_id,
+      stage,
+      recruiter_id: recruiterId,
+    }).select("id, booking_token, status").single();
+    if (error) throw error;
+    booking = created;
+  } else if (booking.status === "scheduled") {
+    return { ok: true, bookingToken: booking.booking_token, skipped: "already_scheduled" };
+  }
+
+  const { getRequestHeader } = await import("@tanstack/react-start/server");
+  const origin = getRequestHeader("origin") || getRequestHeader("referer")?.split("/").slice(0, 3).join("/") || "https://fluxtalent.lovable.app";
+  const scheduleUrl = `${origin}/schedule/${booking.booking_token}`;
+
+  const { refreshAccessToken, sendGmail } = await import("@/lib/google.server");
+  const { interviewInviteHtml } = await import("@/lib/email-templates");
+  const { access_token } = await refreshAccessToken(recruiter.google_refresh_token);
+  const brand = {
+    consultancyName: org.consultancy_name || org.name,
+    contactEmail: org.contact_email,
+    brandColor: org.brand_color || "#0F766E",
+    logoUrl: org.logo_url,
+    signatureHtml: org.signature_html,
+  };
+  const stageLabel = STAGE_LABELS[stage];
+  const html = interviewInviteHtml({
+    ...brand,
+    firstName: app.first_name || "",
+    vacancyTitle: vac.title,
+    scheduleUrl,
+    stageLabel,
+  });
+  await sendGmail({
+    accessToken: access_token,
+    fromName: brand.consultancyName,
+    fromEmail: recruiter.google_email,
+    to: app.email,
+    subject: `Coordinemos tu ${stageLabel} — ${vac.title}`,
+    html,
+    replyTo: brand.contactEmail || undefined,
+  });
+
+  await supabase.from("application_events").insert({
+    application_id: app.id,
+    actor_id: userId,
+    type: "interview_invite_sent",
+    payload: { stage, booking_id: booking.id },
+  });
+
+  return { ok: true, bookingToken: booking.booking_token };
+}
+
 export const sendInterviewInvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({
@@ -281,85 +368,6 @@ export const sendInterviewInvite = createServerFn({ method: "POST" })
     stage: z.enum(["interview_1", "interview_2", "interview_3"]),
   }).parse(input))
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    const { data: app } = await supabase.from("applications")
-      .select("id, first_name, last_name, email, vacancy_id")
-      .eq("id", data.applicationId).maybeSingle();
-    if (!app) throw new Error("Postulante no encontrado");
-    const { data: vac } = await supabase.from("vacancies")
-      .select("id, title, org_id").eq("id", app.vacancy_id).maybeSingle();
-    if (!vac) throw new Error("Vacante no encontrada");
-    const { data: org } = await supabase.from("organizations")
-      .select("name, consultancy_name, contact_email, brand_color, logo_url, signature_html, timezone")
-      .eq("id", vac.org_id).maybeSingle();
-    if (!org) throw new Error("Organización no encontrada");
-    const { data: cfg } = await supabase.from("vacancy_scheduling")
-      .select("recruiter_id, enabled").eq("vacancy_id", vac.id).maybeSingle();
-    if (!cfg || !cfg.enabled) throw new Error("Configurá las entrevistas para esta vacante antes de invitar.");
-    const recruiterId = cfg.recruiter_id ?? userId;
-    const { data: recruiter } = await supabase.from("profiles")
-      .select("google_refresh_token, google_email, display_name")
-      .eq("id", recruiterId).maybeSingle();
-    if (!recruiter?.google_refresh_token || !recruiter.google_email) {
-      throw new Error("El reclutador debe conectar su Google Calendar antes de invitar.");
-    }
-
-    // Create or reuse booking
-    const { data: existing } = await supabase.from("interview_bookings")
-      .select("id, booking_token, status").eq("application_id", app.id).eq("stage", data.stage).maybeSingle();
-    let booking = existing;
-    if (!booking) {
-      const { data: created, error } = await supabase.from("interview_bookings").insert({
-        application_id: app.id,
-        vacancy_id: vac.id,
-        org_id: vac.org_id,
-        stage: data.stage,
-        recruiter_id: recruiterId,
-      }).select("id, booking_token, status").single();
-      if (error) throw error;
-      booking = created;
-    }
-
-    // Build URL — prefer published origin; fallback to request origin via header
-    const { getRequestHeader } = await import("@tanstack/react-start/server");
-    const origin = getRequestHeader("origin") || getRequestHeader("referer")?.split("/").slice(0, 3).join("/") || "";
-    const scheduleUrl = `${origin}/schedule/${booking.booking_token}`;
-
-    // Send via Gmail with recruiter's account
-    const { refreshAccessToken, sendGmail } = await import("@/lib/google.server");
-    const { interviewInviteHtml } = await import("@/lib/email-templates");
-    const { access_token } = await refreshAccessToken(recruiter.google_refresh_token);
-    const brand = {
-      consultancyName: org.consultancy_name || org.name,
-      contactEmail: org.contact_email,
-      brandColor: org.brand_color || "#0F766E",
-      logoUrl: org.logo_url,
-      signatureHtml: org.signature_html,
-    };
-    const stageLabel = STAGE_LABELS[data.stage];
-    const html = interviewInviteHtml({
-      ...brand,
-      firstName: app.first_name || "",
-      vacancyTitle: vac.title,
-      scheduleUrl,
-      stageLabel,
-    });
-    await sendGmail({
-      accessToken: access_token,
-      fromName: brand.consultancyName,
-      fromEmail: recruiter.google_email,
-      to: app.email,
-      subject: `Coordinemos tu ${stageLabel} — ${vac.title}`,
-      html,
-      replyTo: brand.contactEmail || undefined,
-    });
-
-    await supabase.from("application_events").insert({
-      application_id: app.id,
-      actor_id: userId,
-      type: "interview_invite_sent",
-      payload: { stage: data.stage, booking_id: booking.id },
-    });
-
-    return { ok: true, bookingToken: booking.booking_token };
+    return await inviteForInterview(context.supabase, context.userId, data.applicationId, data.stage);
   });
+
