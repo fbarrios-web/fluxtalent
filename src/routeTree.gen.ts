@@ -14,14 +14,21 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as ApplySlugRouteImport } from './routes/apply.$slug'
+import { Route as AppSubscriptionRouteImport } from './routes/app.subscription'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
+import { Route as AppAdminRouteImport } from './routes/app.admin'
 import { Route as AppVacanciesIndexRouteImport } from './routes/app.vacancies.index'
+import { Route as AppAdminIndexRouteImport } from './routes/app.admin.index'
 import { Route as AppVacanciesNewRouteImport } from './routes/app.vacancies.new'
 import { Route as AppVacanciesVacancyIdRouteImport } from './routes/app.vacancies.$vacancyId'
 import { Route as AppCandidatesIdRouteImport } from './routes/app.candidates.$id'
+import { Route as AppAdminUsersRouteImport } from './routes/app.admin.users'
+import { Route as AppAdminPaymentsRouteImport } from './routes/app.admin.payments'
+import { Route as AppAdminOrgsRouteImport } from './routes/app.admin.orgs'
 import { Route as ApiPublicApplyRouteImport } from './routes/api.public.apply'
 import { Route as ApiPublicAnalyzeRouteImport } from './routes/api.public.analyze'
+import { Route as ApiPublicMpWebhookRouteImport } from './routes/api.public.mp.webhook'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -48,6 +55,11 @@ const ApplySlugRoute = ApplySlugRouteImport.update({
   path: '/apply/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppSubscriptionRoute = AppSubscriptionRouteImport.update({
+  id: '/subscription',
+  path: '/subscription',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -58,10 +70,20 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppVacanciesIndexRoute = AppVacanciesIndexRouteImport.update({
   id: '/vacancies/',
   path: '/vacancies/',
   getParentRoute: () => AppRoute,
+} as any)
+const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 const AppVacanciesNewRoute = AppVacanciesNewRouteImport.update({
   id: '/vacancies/new',
@@ -78,6 +100,21 @@ const AppCandidatesIdRoute = AppCandidatesIdRouteImport.update({
   path: '/candidates/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminUsersRoute = AppAdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminPaymentsRoute = AppAdminPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminOrgsRoute = AppAdminOrgsRouteImport.update({
+  id: '/orgs',
+  path: '/orgs',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 const ApiPublicApplyRoute = ApiPublicApplyRouteImport.update({
   id: '/api/public/apply',
   path: '/api/public/apply',
@@ -88,51 +125,76 @@ const ApiPublicAnalyzeRoute = ApiPublicAnalyzeRouteImport.update({
   path: '/api/public/analyze',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMpWebhookRoute = ApiPublicMpWebhookRouteImport.update({
+  id: '/api/public/mp/webhook',
+  path: '/api/public/mp/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/app/admin': typeof AppAdminRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/subscription': typeof AppSubscriptionRoute
   '/apply/$slug': typeof ApplySlugRoute
   '/app/': typeof AppIndexRoute
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
+  '/app/admin/orgs': typeof AppAdminOrgsRoute
+  '/app/admin/payments': typeof AppAdminPaymentsRoute
+  '/app/admin/users': typeof AppAdminUsersRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/vacancies/$vacancyId': typeof AppVacanciesVacancyIdRoute
   '/app/vacancies/new': typeof AppVacanciesNewRoute
+  '/app/admin/': typeof AppAdminIndexRoute
   '/app/vacancies/': typeof AppVacanciesIndexRoute
+  '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/subscription': typeof AppSubscriptionRoute
   '/apply/$slug': typeof ApplySlugRoute
   '/app': typeof AppIndexRoute
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
+  '/app/admin/orgs': typeof AppAdminOrgsRoute
+  '/app/admin/payments': typeof AppAdminPaymentsRoute
+  '/app/admin/users': typeof AppAdminUsersRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/vacancies/$vacancyId': typeof AppVacanciesVacancyIdRoute
   '/app/vacancies/new': typeof AppVacanciesNewRoute
+  '/app/admin': typeof AppAdminIndexRoute
   '/app/vacancies': typeof AppVacanciesIndexRoute
+  '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/app/admin': typeof AppAdminRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/subscription': typeof AppSubscriptionRoute
   '/apply/$slug': typeof ApplySlugRoute
   '/app/': typeof AppIndexRoute
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
+  '/app/admin/orgs': typeof AppAdminOrgsRoute
+  '/app/admin/payments': typeof AppAdminPaymentsRoute
+  '/app/admin/users': typeof AppAdminUsersRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/vacancies/$vacancyId': typeof AppVacanciesVacancyIdRoute
   '/app/vacancies/new': typeof AppVacanciesNewRoute
+  '/app/admin/': typeof AppAdminIndexRoute
   '/app/vacancies/': typeof AppVacanciesIndexRoute
+  '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -140,45 +202,65 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/app/admin'
     | '/app/dashboard'
     | '/app/settings'
+    | '/app/subscription'
     | '/apply/$slug'
     | '/app/'
     | '/api/public/analyze'
     | '/api/public/apply'
+    | '/app/admin/orgs'
+    | '/app/admin/payments'
+    | '/app/admin/users'
     | '/app/candidates/$id'
     | '/app/vacancies/$vacancyId'
     | '/app/vacancies/new'
+    | '/app/admin/'
     | '/app/vacancies/'
+    | '/api/public/mp/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/app/dashboard'
     | '/app/settings'
+    | '/app/subscription'
     | '/apply/$slug'
     | '/app'
     | '/api/public/analyze'
     | '/api/public/apply'
+    | '/app/admin/orgs'
+    | '/app/admin/payments'
+    | '/app/admin/users'
     | '/app/candidates/$id'
     | '/app/vacancies/$vacancyId'
     | '/app/vacancies/new'
+    | '/app/admin'
     | '/app/vacancies'
+    | '/api/public/mp/webhook'
   id:
     | '__root__'
     | '/'
     | '/app'
     | '/auth'
+    | '/app/admin'
     | '/app/dashboard'
     | '/app/settings'
+    | '/app/subscription'
     | '/apply/$slug'
     | '/app/'
     | '/api/public/analyze'
     | '/api/public/apply'
+    | '/app/admin/orgs'
+    | '/app/admin/payments'
+    | '/app/admin/users'
     | '/app/candidates/$id'
     | '/app/vacancies/$vacancyId'
     | '/app/vacancies/new'
+    | '/app/admin/'
     | '/app/vacancies/'
+    | '/api/public/mp/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -188,6 +270,7 @@ export interface RootRouteChildren {
   ApplySlugRoute: typeof ApplySlugRoute
   ApiPublicAnalyzeRoute: typeof ApiPublicAnalyzeRoute
   ApiPublicApplyRoute: typeof ApiPublicApplyRoute
+  ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -227,6 +310,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApplySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/subscription': {
+      id: '/app/subscription'
+      path: '/subscription'
+      fullPath: '/app/subscription'
+      preLoaderRoute: typeof AppSubscriptionRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/settings': {
       id: '/app/settings'
       path: '/settings'
@@ -241,12 +331,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/admin': {
+      id: '/app/admin'
+      path: '/admin'
+      fullPath: '/app/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/vacancies/': {
       id: '/app/vacancies/'
       path: '/vacancies'
       fullPath: '/app/vacancies/'
       preLoaderRoute: typeof AppVacanciesIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/app/admin/': {
+      id: '/app/admin/'
+      path: '/'
+      fullPath: '/app/admin/'
+      preLoaderRoute: typeof AppAdminIndexRouteImport
+      parentRoute: typeof AppAdminRoute
     }
     '/app/vacancies/new': {
       id: '/app/vacancies/new'
@@ -269,6 +373,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCandidatesIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/admin/users': {
+      id: '/app/admin/users'
+      path: '/users'
+      fullPath: '/app/admin/users'
+      preLoaderRoute: typeof AppAdminUsersRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/payments': {
+      id: '/app/admin/payments'
+      path: '/payments'
+      fullPath: '/app/admin/payments'
+      preLoaderRoute: typeof AppAdminPaymentsRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/orgs': {
+      id: '/app/admin/orgs'
+      path: '/orgs'
+      fullPath: '/app/admin/orgs'
+      preLoaderRoute: typeof AppAdminOrgsRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/api/public/apply': {
       id: '/api/public/apply'
       path: '/api/public/apply'
@@ -283,12 +408,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAnalyzeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/mp/webhook': {
+      id: '/api/public/mp/webhook'
+      path: '/api/public/mp/webhook'
+      fullPath: '/api/public/mp/webhook'
+      preLoaderRoute: typeof ApiPublicMpWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AppAdminRouteChildren {
+  AppAdminOrgsRoute: typeof AppAdminOrgsRoute
+  AppAdminPaymentsRoute: typeof AppAdminPaymentsRoute
+  AppAdminUsersRoute: typeof AppAdminUsersRoute
+  AppAdminIndexRoute: typeof AppAdminIndexRoute
+}
+
+const AppAdminRouteChildren: AppAdminRouteChildren = {
+  AppAdminOrgsRoute: AppAdminOrgsRoute,
+  AppAdminPaymentsRoute: AppAdminPaymentsRoute,
+  AppAdminUsersRoute: AppAdminUsersRoute,
+  AppAdminIndexRoute: AppAdminIndexRoute,
+}
+
+const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
+  AppAdminRouteChildren,
+)
+
 interface AppRouteChildren {
+  AppAdminRoute: typeof AppAdminRouteWithChildren
   AppDashboardRoute: typeof AppDashboardRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppSubscriptionRoute: typeof AppSubscriptionRoute
   AppIndexRoute: typeof AppIndexRoute
   AppCandidatesIdRoute: typeof AppCandidatesIdRoute
   AppVacanciesVacancyIdRoute: typeof AppVacanciesVacancyIdRoute
@@ -297,8 +449,10 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAdminRoute: AppAdminRouteWithChildren,
   AppDashboardRoute: AppDashboardRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppSubscriptionRoute: AppSubscriptionRoute,
   AppIndexRoute: AppIndexRoute,
   AppCandidatesIdRoute: AppCandidatesIdRoute,
   AppVacanciesVacancyIdRoute: AppVacanciesVacancyIdRoute,
@@ -315,6 +469,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApplySlugRoute: ApplySlugRoute,
   ApiPublicAnalyzeRoute: ApiPublicAnalyzeRoute,
   ApiPublicApplyRoute: ApiPublicApplyRoute,
+  ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
