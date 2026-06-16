@@ -8,7 +8,7 @@ export function FluxLogo({ className, size = 32 }: { className?: string; size?: 
       alt="FLUX Talent"
       width={size}
       height={size}
-      className={cn("object-contain", className)}
+      className={cn("object-contain rounded-lg", className)}
       style={{ width: size, height: size }}
     />
   );
