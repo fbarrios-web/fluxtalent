@@ -93,7 +93,7 @@ function AppLayout() {
           <div className="mb-2 px-3 py-2 text-xs text-muted-foreground">
             <div className="truncate font-medium text-foreground">{user.email}</div>
           </div>
-          <button onClick={() => signOut()} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-sidebar-accent hover:text-foreground">
+          <button onClick={() => signOut()} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors">
             <LogOut className="h-4 w-4" /> Salir
           </button>
         </div>
