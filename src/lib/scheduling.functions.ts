@@ -10,22 +10,133 @@ const STAGE_LABELS: Record<string, string> = {
 
 // ---------- Google connection ----------
 
+const DEFAULT_APP_ORIGIN = "https://fluxtalent.lovable.app";
+const GOOGLE_CALLBACK_PATH = "/api/public/google/callback";
+
 function callbackUrl(origin: string) {
-  return `${origin}/api/public/google/callback`;
+  return `${origin.replace(/\/$/, "")}${GOOGLE_CALLBACK_PATH}`;
 }
+
+function normalizeOrigin(value?: string | null) {
+  if (!value) return null;
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+}
+
+function configuredAppOrigin() {
+  return normalizeOrigin(process.env.PUBLIC_APP_URL) ?? DEFAULT_APP_ORIGIN;
+}
+
+function isTrustedOrigin(origin: string) {
+  try {
+    const url = new URL(origin);
+    const isLovableHost = url.hostname === "fluxtalent.lovable.app" || url.hostname.endsWith(".lovable.app");
+    const isLocal = url.hostname === "localhost" || url.hostname === "127.0.0.1";
+    const isConfigured = origin === configuredAppOrigin();
+    return (url.protocol === "https:" && (isLovableHost || isConfigured)) || (url.protocol === "http:" && isLocal);
+  } catch {
+    return false;
+  }
+}
+
+function safeReturnOrigin(inputOrigin: string) {
+  const origin = normalizeOrigin(inputOrigin);
+  return origin && isTrustedOrigin(origin) ? origin : configuredAppOrigin();
+}
+
+function unique(values: string[]) {
+  return [...new Set(values.filter(Boolean))];
+}
+
+function oauthCandidates(inputOrigin: string) {
+  const returnOrigin = safeReturnOrigin(inputOrigin);
+  const origins = unique([returnOrigin, configuredAppOrigin(), DEFAULT_APP_ORIGIN]);
+  return { returnOrigin, callbackUris: origins.map(callbackUrl) };
+}
+
+type OAuthCheck = {
+  callbackUri: string;
+  ok: boolean;
+  reason?: "redirect_uri_mismatch" | "verification_unavailable";
+  statusCode?: number;
+  detail?: string;
+};
+
+async function buildOAuthState(userId: string, callbackUri: string, returnOrigin: string) {
+  const payload = JSON.stringify({ userId, callbackUri, returnOrigin, nonce: crypto.randomUUID(), ts: Date.now() });
+  const sig = await hmac(payload, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  return `${btoa(payload)}.${sig}`;
+}
+
+async function verifyGoogleAuthUrl(authUrl: string): Promise<Omit<OAuthCheck, "callbackUri">> {
+  try {
+    const res = await fetch(authUrl, { method: "GET", redirect: "manual" });
+    const body = await res.text().catch(() => "");
+    const location = res.headers.get("location") ?? "";
+    const evidence = `${body} ${location}`;
+    if (res.status === 400 && evidence.includes("redirect_uri_mismatch")) {
+      return { ok: false, reason: "redirect_uri_mismatch", statusCode: res.status };
+    }
+    if (evidence.includes("redirect_uri_mismatch")) {
+      return { ok: false, reason: "redirect_uri_mismatch", statusCode: res.status };
+    }
+    return { ok: true, statusCode: res.status };
+  } catch (err) {
+    return { ok: false, reason: "verification_unavailable", detail: err instanceof Error ? err.message : "No se pudo verificar Google OAuth" };
+  }
+}
+
+async function resolveGoogleOAuth(userId: string, inputOrigin: string) {
+  const { googleAuthUrl } = await import("@/lib/google.server");
+  const { returnOrigin, callbackUris } = oauthCandidates(inputOrigin);
+  const checks: OAuthCheck[] = [];
+
+  for (const callbackUri of callbackUris) {
+    const state = await buildOAuthState(userId, callbackUri, returnOrigin);
+    const url = googleAuthUrl(callbackUri, state);
+    const check = await verifyGoogleAuthUrl(url);
+    checks.push({ callbackUri, ...check });
+
+    if (check.ok || check.reason === "verification_unavailable") {
+      return { ok: true as const, url, callbackUri, returnOrigin, requiredCallbackUris: callbackUris, checks, verified: check.ok };
+    }
+  }
+
+  return {
+    ok: false as const,
+    error: "redirect_uri_mismatch",
+    returnOrigin,
+    requiredCallbackUris: callbackUris,
+    checks,
+  };
+}
+
+export const verifyGoogleOAuthConfig = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ origin: z.string().url() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const result = await resolveGoogleOAuth(context.userId, data.origin);
+    if (result.ok) {
+      return {
+        ok: true,
+        callbackUri: result.callbackUri,
+        returnOrigin: result.returnOrigin,
+        requiredCallbackUris: result.requiredCallbackUris,
+        checks: result.checks,
+        verified: result.verified,
+      };
+    }
+    return result;
+  });
 
 export const googleStartUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ origin: z.string().url() }).parse(input))
-  .handler(async ({ context }) => {
-    const { googleAuthUrl } = await import("@/lib/google.server");
-    // IMPORTANT: usamos un único callback estable para que Google no reciba URLs de preview cambiantes.
-    const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
-    const state = crypto.randomUUID();
-    const payload = `${context.userId}.${state}.${Date.now()}`;
-    const sig = await hmac(payload, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-    const fullState = `${btoa(payload)}.${sig}`;
-    return { url: googleAuthUrl(callbackUrl(origin), fullState) };
+  .handler(async ({ data, context }) => {
+    return resolveGoogleOAuth(context.userId, data.origin);
   });
 
 async function hmac(payload: string, secret: string) {
@@ -35,17 +146,30 @@ async function hmac(payload: string, secret: string) {
   return [...new Uint8Array(sig)].map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-export async function verifyOAuthState(state: string): Promise<{ userId: string } | null> {
+export async function verifyOAuthState(state: string): Promise<{ userId: string; callbackUri: string | null; returnOrigin: string | null } | null> {
   const [encoded, sig] = state.split(".");
   if (!encoded || !sig) return null;
   let payload: string;
   try { payload = atob(encoded); } catch { return null; }
   const expected = await hmac(payload, process.env.SUPABASE_SERVICE_ROLE_KEY!);
   if (expected !== sig) return null;
+
+  try {
+    const parsed = JSON.parse(payload) as { userId?: string; callbackUri?: string; returnOrigin?: string; ts?: number };
+    if (!parsed.userId || !parsed.ts || Date.now() - parsed.ts > 10 * 60_000) return null;
+    const callbackUri = parsed.callbackUri && callbackUrl(new URL(parsed.callbackUri).origin) === parsed.callbackUri
+      ? parsed.callbackUri
+      : null;
+    const returnOrigin = parsed.returnOrigin && isTrustedOrigin(parsed.returnOrigin) ? parsed.returnOrigin : null;
+    return { userId: parsed.userId, callbackUri, returnOrigin };
+  } catch {
+    // Backward compatibility for links generated before the JSON state payload.
+  }
+
   const [userId, , tsStr] = payload.split(".");
   const ts = Number(tsStr);
   if (!userId || !ts || Date.now() - ts > 10 * 60_000) return null;
-  return { userId };
+  return { userId, callbackUri: null, returnOrigin: null };
 }
 
 export const googleDisconnect = createServerFn({ method: "POST" })

@@ -8,9 +8,6 @@ export const Route = createFileRoute("/api/public/google/callback")({
         const code = url.searchParams.get("code");
         const state = url.searchParams.get("state");
         const error = url.searchParams.get("error");
-        // Mismo callback estable que se usa al iniciar OAuth.
-        const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
-
         if (error || !code || !state) {
           throw redirect({ to: "/app/integrations", search: { error: error || "missing_code" } as any });
         }
@@ -21,9 +18,12 @@ export const Route = createFileRoute("/api/public/google/callback")({
         }
 
         const { exchangeCodeForTokens, getUserInfo } = await import("@/lib/google.server");
-        const tokens = await exchangeCodeForTokens(code, `${origin}/api/public/google/callback`);
+        const callbackUri = verified.callbackUri ?? `${process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app"}/api/public/google/callback`;
+        const returnOrigin = verified.returnOrigin ?? "";
+        const integrationsPath = returnOrigin ? `${returnOrigin}/app/integrations` : "/app/integrations";
+        const tokens = await exchangeCodeForTokens(code, callbackUri);
         if (!tokens.refresh_token) {
-          throw redirect({ to: "/app/integrations", search: { error: "no_refresh" } as any });
+          throw redirect({ href: `${integrationsPath}?error=no_refresh` });
         }
         const info = await getUserInfo(tokens.access_token);
 
@@ -34,9 +34,9 @@ export const Route = createFileRoute("/api/public/google/callback")({
           google_connected_at: new Date().toISOString(),
         }).eq("id", verified.userId);
         if (updErr) {
-          throw redirect({ to: "/app/integrations", search: { error: "store_failed" } as any });
+          throw redirect({ href: `${integrationsPath}?error=store_failed` });
         }
-        throw redirect({ to: "/app/integrations", search: { ok: "1" } as any });
+        throw redirect({ href: `${integrationsPath}?ok=1` });
       },
     },
   },
