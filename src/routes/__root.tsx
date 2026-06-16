@@ -75,9 +75,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Hirex — ATS con IA" },
+      { title: "FLUX Talent — ATS con IA" },
       { name: "description", content: "Reclutamiento moderno con automatización inteligente y matching por IA." },
-      { property: "og:title", content: "Hirex — ATS con IA" },
+      { property: "og:title", content: "FLUX Talent — ATS con IA" },
       { property: "og:description", content: "Reclutamiento moderno con automatización inteligente y matching por IA." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

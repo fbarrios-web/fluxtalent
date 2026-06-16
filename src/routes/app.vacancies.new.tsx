@@ -13,7 +13,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/app/vacancies/new")({
   component: NewVacancy,
-  head: () => ({ meta: [{ title: "Nueva vacante — Hirex" }] }),
+  head: () => ({ meta: [{ title: "Nueva vacante — FLUX Talent" }] }),
 });
 
 function NewVacancy() {
