@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, ExternalLink } from "lucide-react";
+import { Plus, ExternalLink, Download } from "lucide-react";
+import { downloadCSV } from "@/lib/export-csv";
 
 export const Route = createFileRoute("/app/vacancies/")({
   component: VacanciesList,
