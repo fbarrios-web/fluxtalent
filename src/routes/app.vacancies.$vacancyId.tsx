@@ -68,8 +68,10 @@ function VacancyDetail() {
   }
 
   async function onDrop(appId: string, stage: string) {
-    await move({ data: { id: appId, stage: stage as any } });
+    const res = await move({ data: { id: appId, stage: stage as any } });
     qc.invalidateQueries({ queryKey: ["vacancy-apps", vacancyId] });
+    if ((res as any)?.inviteWarning) toast.warning((res as any).inviteWarning);
+    else if (stage.startsWith("interview_")) toast.success("Invitación enviada al postulante");
   }
 
   return (
