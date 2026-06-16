@@ -10,7 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
+import { Route as AppVacanciesIndexRouteImport } from './routes/app.vacancies.index'
+import { Route as AppVacanciesNewRouteImport } from './routes/app.vacancies.new'
 import { Route as ApiPublicApplyRouteImport } from './routes/api.public.apply'
 import { Route as ApiPublicAnalyzeRouteImport } from './routes/api.public.analyze'
 
@@ -19,10 +24,35 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVacanciesIndexRoute = AppVacanciesIndexRouteImport.update({
+  id: '/vacancies/',
+  path: '/vacancies/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVacanciesNewRoute = AppVacanciesNewRouteImport.update({
+  id: '/vacancies/new',
+  path: '/vacancies/new',
+  getParentRoute: () => AppRoute,
 } as any)
 const ApiPublicApplyRoute = ApiPublicApplyRouteImport.update({
   id: '/api/public/apply',
@@ -37,33 +67,75 @@ const ApiPublicAnalyzeRoute = ApiPublicAnalyzeRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/app/dashboard': typeof AppDashboardRoute
+  '/app/': typeof AppIndexRoute
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
+  '/app/vacancies/new': typeof AppVacanciesNewRoute
+  '/app/vacancies/': typeof AppVacanciesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/app/dashboard': typeof AppDashboardRoute
+  '/app': typeof AppIndexRoute
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
+  '/app/vacancies/new': typeof AppVacanciesNewRoute
+  '/app/vacancies': typeof AppVacanciesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/app/dashboard': typeof AppDashboardRoute
+  '/app/': typeof AppIndexRoute
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
+  '/app/vacancies/new': typeof AppVacanciesNewRoute
+  '/app/vacancies/': typeof AppVacanciesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/api/public/analyze' | '/api/public/apply'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/auth'
+    | '/app/dashboard'
+    | '/app/'
+    | '/api/public/analyze'
+    | '/api/public/apply'
+    | '/app/vacancies/new'
+    | '/app/vacancies/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/api/public/analyze' | '/api/public/apply'
-  id: '__root__' | '/' | '/auth' | '/api/public/analyze' | '/api/public/apply'
+  to:
+    | '/'
+    | '/auth'
+    | '/app/dashboard'
+    | '/app'
+    | '/api/public/analyze'
+    | '/api/public/apply'
+    | '/app/vacancies/new'
+    | '/app/vacancies'
+  id:
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/auth'
+    | '/app/dashboard'
+    | '/app/'
+    | '/api/public/analyze'
+    | '/api/public/apply'
+    | '/app/vacancies/new'
+    | '/app/vacancies/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiPublicAnalyzeRoute: typeof ApiPublicAnalyzeRoute
   ApiPublicApplyRoute: typeof ApiPublicApplyRoute
@@ -78,12 +150,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/app/': {
+      id: '/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/dashboard': {
+      id: '/app/dashboard'
+      path: '/dashboard'
+      fullPath: '/app/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/vacancies/': {
+      id: '/app/vacancies/'
+      path: '/vacancies'
+      fullPath: '/app/vacancies/'
+      preLoaderRoute: typeof AppVacanciesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/vacancies/new': {
+      id: '/app/vacancies/new'
+      path: '/vacancies/new'
+      fullPath: '/app/vacancies/new'
+      preLoaderRoute: typeof AppVacanciesNewRouteImport
+      parentRoute: typeof AppRoute
     }
     '/api/public/apply': {
       id: '/api/public/apply'
@@ -102,8 +209,25 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppRouteChildren {
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppVacanciesNewRoute: typeof AppVacanciesNewRoute
+  AppVacanciesIndexRoute: typeof AppVacanciesIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppDashboardRoute: AppDashboardRoute,
+  AppIndexRoute: AppIndexRoute,
+  AppVacanciesNewRoute: AppVacanciesNewRoute,
+  AppVacanciesIndexRoute: AppVacanciesIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiPublicAnalyzeRoute: ApiPublicAnalyzeRoute,
   ApiPublicApplyRoute: ApiPublicApplyRoute,
