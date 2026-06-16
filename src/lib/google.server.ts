@@ -22,6 +22,42 @@ function clientCreds() {
   return { id, secret };
 }
 
+export function googleOAuthClientDiagnostics() {
+  const id = process.env.GOOGLE_OAUTH_CLIENT_ID;
+  const secret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+  return {
+    clientIdConfigured: !!id,
+    clientSecretConfigured: !!secret,
+    clientId: id ?? null,
+  };
+}
+
+export async function verifyGoogleClientCredentials(redirectUri: string) {
+  const id = process.env.GOOGLE_OAUTH_CLIENT_ID;
+  const secret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+  if (!id || !secret) {
+    return { ok: false, status: "missing_credentials" as const };
+  }
+
+  const body = new URLSearchParams({
+    code: "lovable-oauth-diagnostic",
+    client_id: id,
+    client_secret: secret,
+    redirect_uri: redirectUri,
+    grant_type: "authorization_code",
+  });
+  const res = await fetch(TOKEN_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+  });
+  const text = await res.text();
+  if (text.includes("invalid_grant")) return { ok: true, status: "credentials_accepted" as const };
+  if (text.includes("redirect_uri_mismatch")) return { ok: false, status: "redirect_uri_mismatch" as const };
+  if (text.includes("invalid_client") || res.status === 401) return { ok: false, status: "invalid_client" as const };
+  return { ok: false, status: "unknown" as const };
+}
+
 export function googleAuthUrl(redirectUri: string, state: string) {
   const { id } = clientCreds();
   const params = new URLSearchParams({
