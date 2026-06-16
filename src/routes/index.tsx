@@ -104,7 +104,7 @@ function Landing() {
 
       <section id="workflow" className="border-t border-border bg-muted/30 py-20">
         <div className="mx-auto max-w-4xl px-6">
-          <h2 className="font-display text-4xl">Del aviso al hire, en una sola pantalla.</h2>
+          <h2 className="font-display text-4xl">Proceso end-to-end, en una sola pantalla.</h2>
           <ol className="mt-10 space-y-6">
             {[
               ["01", "Creás la vacante", "Definí puesto, seniority, modalidad y % de match mínimo. La IA te ayuda a redactar."],
