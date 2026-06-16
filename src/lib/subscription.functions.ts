@@ -8,14 +8,15 @@ export const getMySubscription = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { data: profile } = await supabase.from("profiles").select("org_id").eq("id", userId).single();
-    if (!profile?.org_id) throw new Error("No org");
+    if (!profile?.org_id) return null;
 
     const { data: org, error } = await supabase
       .from("organizations")
       .select("id, name, subscription_status, trial_ends_at, plan_price_ars, current_period_end, last_payment_at, mp_preapproval_id")
       .eq("id", profile.org_id)
       .single();
-    if (error) throw error;
+    if (error || !org) return null;
+
 
     const now = Date.now();
     const trialEnds = org.trial_ends_at ? new Date(org.trial_ends_at).getTime() : 0;
