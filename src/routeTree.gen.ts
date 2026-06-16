@@ -9,38 +9,203 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as ApplySlugRouteImport } from './routes/apply.$slug'
+import { Route as AppSettingsRouteImport } from './routes/app.settings'
+import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
+import { Route as AppVacanciesIndexRouteImport } from './routes/app.vacancies.index'
+import { Route as AppVacanciesNewRouteImport } from './routes/app.vacancies.new'
+import { Route as AppVacanciesVacancyIdRouteImport } from './routes/app.vacancies.$vacancyId'
+import { Route as AppCandidatesIdRouteImport } from './routes/app.candidates.$id'
+import { Route as ApiPublicApplyRouteImport } from './routes/api.public.apply'
+import { Route as ApiPublicAnalyzeRouteImport } from './routes/api.public.analyze'
 
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const ApplySlugRoute = ApplySlugRouteImport.update({
+  id: '/apply/$slug',
+  path: '/apply/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVacanciesIndexRoute = AppVacanciesIndexRouteImport.update({
+  id: '/vacancies/',
+  path: '/vacancies/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVacanciesNewRoute = AppVacanciesNewRouteImport.update({
+  id: '/vacancies/new',
+  path: '/vacancies/new',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVacanciesVacancyIdRoute = AppVacanciesVacancyIdRouteImport.update({
+  id: '/vacancies/$vacancyId',
+  path: '/vacancies/$vacancyId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCandidatesIdRoute = AppCandidatesIdRouteImport.update({
+  id: '/candidates/$id',
+  path: '/candidates/$id',
+  getParentRoute: () => AppRoute,
+} as any)
+const ApiPublicApplyRoute = ApiPublicApplyRouteImport.update({
+  id: '/api/public/apply',
+  path: '/api/public/apply',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAnalyzeRoute = ApiPublicAnalyzeRouteImport.update({
+  id: '/api/public/analyze',
+  path: '/api/public/analyze',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/app/dashboard': typeof AppDashboardRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/apply/$slug': typeof ApplySlugRoute
+  '/app/': typeof AppIndexRoute
+  '/api/public/analyze': typeof ApiPublicAnalyzeRoute
+  '/api/public/apply': typeof ApiPublicApplyRoute
+  '/app/candidates/$id': typeof AppCandidatesIdRoute
+  '/app/vacancies/$vacancyId': typeof AppVacanciesVacancyIdRoute
+  '/app/vacancies/new': typeof AppVacanciesNewRoute
+  '/app/vacancies/': typeof AppVacanciesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/app/dashboard': typeof AppDashboardRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/apply/$slug': typeof ApplySlugRoute
+  '/app': typeof AppIndexRoute
+  '/api/public/analyze': typeof ApiPublicAnalyzeRoute
+  '/api/public/apply': typeof ApiPublicApplyRoute
+  '/app/candidates/$id': typeof AppCandidatesIdRoute
+  '/app/vacancies/$vacancyId': typeof AppVacanciesVacancyIdRoute
+  '/app/vacancies/new': typeof AppVacanciesNewRoute
+  '/app/vacancies': typeof AppVacanciesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/app/dashboard': typeof AppDashboardRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/apply/$slug': typeof ApplySlugRoute
+  '/app/': typeof AppIndexRoute
+  '/api/public/analyze': typeof ApiPublicAnalyzeRoute
+  '/api/public/apply': typeof ApiPublicApplyRoute
+  '/app/candidates/$id': typeof AppCandidatesIdRoute
+  '/app/vacancies/$vacancyId': typeof AppVacanciesVacancyIdRoute
+  '/app/vacancies/new': typeof AppVacanciesNewRoute
+  '/app/vacancies/': typeof AppVacanciesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/auth'
+    | '/app/dashboard'
+    | '/app/settings'
+    | '/apply/$slug'
+    | '/app/'
+    | '/api/public/analyze'
+    | '/api/public/apply'
+    | '/app/candidates/$id'
+    | '/app/vacancies/$vacancyId'
+    | '/app/vacancies/new'
+    | '/app/vacancies/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/app/dashboard'
+    | '/app/settings'
+    | '/apply/$slug'
+    | '/app'
+    | '/api/public/analyze'
+    | '/api/public/apply'
+    | '/app/candidates/$id'
+    | '/app/vacancies/$vacancyId'
+    | '/app/vacancies/new'
+    | '/app/vacancies'
+  id:
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/auth'
+    | '/app/dashboard'
+    | '/app/settings'
+    | '/apply/$slug'
+    | '/app/'
+    | '/api/public/analyze'
+    | '/api/public/apply'
+    | '/app/candidates/$id'
+    | '/app/vacancies/$vacancyId'
+    | '/app/vacancies/new'
+    | '/app/vacancies/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  ApplySlugRoute: typeof ApplySlugRoute
+  ApiPublicAnalyzeRoute: typeof ApiPublicAnalyzeRoute
+  ApiPublicApplyRoute: typeof ApiPublicApplyRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +213,109 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/': {
+      id: '/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/apply/$slug': {
+      id: '/apply/$slug'
+      path: '/apply/$slug'
+      fullPath: '/apply/$slug'
+      preLoaderRoute: typeof ApplySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/settings': {
+      id: '/app/settings'
+      path: '/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/dashboard': {
+      id: '/app/dashboard'
+      path: '/dashboard'
+      fullPath: '/app/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/vacancies/': {
+      id: '/app/vacancies/'
+      path: '/vacancies'
+      fullPath: '/app/vacancies/'
+      preLoaderRoute: typeof AppVacanciesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/vacancies/new': {
+      id: '/app/vacancies/new'
+      path: '/vacancies/new'
+      fullPath: '/app/vacancies/new'
+      preLoaderRoute: typeof AppVacanciesNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/vacancies/$vacancyId': {
+      id: '/app/vacancies/$vacancyId'
+      path: '/vacancies/$vacancyId'
+      fullPath: '/app/vacancies/$vacancyId'
+      preLoaderRoute: typeof AppVacanciesVacancyIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/candidates/$id': {
+      id: '/app/candidates/$id'
+      path: '/candidates/$id'
+      fullPath: '/app/candidates/$id'
+      preLoaderRoute: typeof AppCandidatesIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/api/public/apply': {
+      id: '/api/public/apply'
+      path: '/api/public/apply'
+      fullPath: '/api/public/apply'
+      preLoaderRoute: typeof ApiPublicApplyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/analyze': {
+      id: '/api/public/analyze'
+      path: '/api/public/analyze'
+      fullPath: '/api/public/analyze'
+      preLoaderRoute: typeof ApiPublicAnalyzeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppSettingsRoute: typeof AppSettingsRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppCandidatesIdRoute: typeof AppCandidatesIdRoute
+  AppVacanciesVacancyIdRoute: typeof AppVacanciesVacancyIdRoute
+  AppVacanciesNewRoute: typeof AppVacanciesNewRoute
+  AppVacanciesIndexRoute: typeof AppVacanciesIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppDashboardRoute: AppDashboardRoute,
+  AppSettingsRoute: AppSettingsRoute,
+  AppIndexRoute: AppIndexRoute,
+  AppCandidatesIdRoute: AppCandidatesIdRoute,
+  AppVacanciesVacancyIdRoute: AppVacanciesVacancyIdRoute,
+  AppVacanciesNewRoute: AppVacanciesNewRoute,
+  AppVacanciesIndexRoute: AppVacanciesIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ApplySlugRoute: ApplySlugRoute,
+  ApiPublicAnalyzeRoute: ApiPublicAnalyzeRoute,
+  ApiPublicApplyRoute: ApiPublicApplyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
