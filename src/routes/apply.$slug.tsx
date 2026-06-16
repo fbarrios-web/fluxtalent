@@ -19,10 +19,11 @@ function ApplyPage() {
   const { data: vacancy, isLoading } = useQuery({
     queryKey: ["public-vacancy", slug],
     queryFn: async () => {
-      const { data: v } = await supabase.from("vacancies").select("*, screening_questions(*)").eq("public_slug", slug).maybeSingle();
-      return v;
+      const { data } = await supabase.rpc("get_public_vacancy_by_slug", { _slug: slug });
+      return (data as any)?.[0] ?? null;
     },
   });
+
 
   const [form, setForm] = useState({ first_name: "", last_name: "", email: "", phone: "", linkedin: "" });
   const [cv, setCv] = useState<File | null>(null);
