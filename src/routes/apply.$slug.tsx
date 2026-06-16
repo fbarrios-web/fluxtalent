@@ -117,8 +117,7 @@ function ApplyPage() {
       <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">
         © 2026 FLUX Automatizaciones. Todos los derechos reservados.
       </footer>
-
-      </form>
     </div>
+
   );
 }
