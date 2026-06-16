@@ -141,26 +141,58 @@ export function VacancyScheduling({ vacancyId }: { vacancyId: string }) {
       <div className="rounded-xl border bg-card p-5 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold">Disponibilidad semanal recurrente</h3>
-          <Button size="sm" variant="outline" onClick={() => setRules([...rules, { weekday: 1, startTime: "09:00", endTime: "12:00" }])}>
+          <Button size="sm" variant="outline" onClick={() => setRules([...rules, { weekdays: [1], startTime: "09:00", endTime: "12:00", effectiveFrom: "", effectiveUntil: "" }])}>
             <Plus className="h-4 w-4 mr-1" /> Agregar franja
           </Button>
         </div>
+        <p className="text-xs text-muted-foreground">Elegí uno o varios días de la semana, el horario, y opcionalmente desde / hasta cuándo se aplica esta franja.</p>
         {rules.length === 0 && <p className="text-sm text-muted-foreground">No hay franjas. Agregá una arriba.</p>}
-        <div className="space-y-2">
+        <div className="space-y-4">
           {rules.map((r, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <select className="rounded border px-2 py-1 text-sm bg-background" value={r.weekday}
-                onChange={e => setRules(rules.map((x, j) => j === i ? { ...x, weekday: Number(e.target.value) } : x))}>
-                {WEEKDAYS.map((d, idx) => <option key={idx} value={idx}>{d}</option>)}
-              </select>
-              <Input type="time" className="w-32" value={r.startTime}
-                onChange={e => setRules(rules.map((x, j) => j === i ? { ...x, startTime: e.target.value } : x))} />
-              <span className="text-muted-foreground">a</span>
-              <Input type="time" className="w-32" value={r.endTime}
-                onChange={e => setRules(rules.map((x, j) => j === i ? { ...x, endTime: e.target.value } : x))} />
-              <Button size="icon" variant="ghost" onClick={() => setRules(rules.filter((_, j) => j !== i))}>
-                <X className="h-4 w-4" />
-              </Button>
+            <div key={i} className="rounded-lg border bg-background/40 p-3 space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <Label className="text-xs">Días de la semana</Label>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {WEEKDAYS.map((d, idx) => {
+                      const active = r.weekdays.includes(idx);
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => toggleDay(i, idx)}
+                          className={`rounded-md border px-2 py-1 text-xs transition-colors ${active ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-accent"}`}
+                        >{d}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <Button size="icon" variant="ghost" onClick={() => setRules(rules.filter((_, j) => j !== i))}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                <div>
+                  <Label className="text-xs">Hora inicio</Label>
+                  <Input type="time" value={r.startTime}
+                    onChange={e => setRules(rules.map((x, j) => j === i ? { ...x, startTime: e.target.value } : x))} />
+                </div>
+                <div>
+                  <Label className="text-xs">Hora fin</Label>
+                  <Input type="time" value={r.endTime}
+                    onChange={e => setRules(rules.map((x, j) => j === i ? { ...x, endTime: e.target.value } : x))} />
+                </div>
+                <div>
+                  <Label className="text-xs">Desde (opcional)</Label>
+                  <Input type="date" value={r.effectiveFrom}
+                    onChange={e => setRules(rules.map((x, j) => j === i ? { ...x, effectiveFrom: e.target.value } : x))} />
+                </div>
+                <div>
+                  <Label className="text-xs">Hasta (opcional)</Label>
+                  <Input type="date" value={r.effectiveUntil}
+                    onChange={e => setRules(rules.map((x, j) => j === i ? { ...x, effectiveUntil: e.target.value } : x))} />
+                </div>
+              </div>
             </div>
           ))}
         </div>
