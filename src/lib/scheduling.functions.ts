@@ -252,9 +252,11 @@ export const saveVacancyScheduling = createServerFn({ method: "POST" })
     instructions: z.string().max(2000).optional().nullable(),
     enabled: z.boolean().default(true),
     rules: z.array(z.object({
-      weekday: z.number().int().min(0).max(6),
+      weekdays: z.array(z.number().int().min(0).max(6)).min(1),
       startTime: z.string().regex(/^\d{2}:\d{2}$/),
       endTime: z.string().regex(/^\d{2}:\d{2}$/),
+      effectiveFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+      effectiveUntil: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
     })).max(50),
   }).parse(input))
   .handler(async ({ data, context }) => {
@@ -273,16 +275,18 @@ export const saveVacancyScheduling = createServerFn({ method: "POST" })
     });
 
     await context.supabase.from("availability_rules").delete().eq("vacancy_id", data.vacancyId);
-    if (data.rules.length) {
-      await context.supabase.from("availability_rules").insert(
-        data.rules.map(r => ({
-          vacancy_id: data.vacancyId,
-          org_id: orgId,
-          weekday: r.weekday,
-          start_time: r.startTime,
-          end_time: r.endTime,
-        }))
-      );
+    const expanded = data.rules.flatMap(r => r.weekdays.map(wd => ({
+      vacancy_id: data.vacancyId,
+      org_id: orgId,
+      weekday: wd,
+      start_time: r.startTime,
+      end_time: r.endTime,
+      effective_from: r.effectiveFrom ?? null,
+      effective_until: r.effectiveUntil ?? null,
+    })));
+    if (expanded.length) {
+      const { error } = await context.supabase.from("availability_rules").insert(expanded);
+      if (error) throw error;
     }
     return { ok: true };
   });
@@ -316,7 +320,12 @@ export const regenerateSlots = createServerFn({ method: "POST" })
       const weekdayMap: Record<string, number> = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
       const weekday = weekdayMap[isoWeekdayStr] ?? wd;
       const ymd = new Intl.DateTimeFormat("sv-SE", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(day);
-      for (const r of rules.filter(x => x.weekday === weekday)) {
+      for (const r of rules.filter(x => {
+        if (x.weekday !== weekday) return false;
+        if (x.effective_from && ymd < x.effective_from) return false;
+        if (x.effective_until && ymd > x.effective_until) return false;
+        return true;
+      })) {
         const startLocal = `${ymd}T${r.start_time}`;
         const endLocal = `${ymd}T${r.end_time}`;
         const startUtcBase = zonedToUtc(startLocal, tz);
