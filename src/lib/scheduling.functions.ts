@@ -59,8 +59,7 @@ function oauthCandidates(inputOrigin: string) {
 
 type OAuthCheck = {
   callbackUri: string;
-  ok: boolean;
-  reason?: "redirect_uri_mismatch" | "verification_unavailable";
+  status: "requires_manual_check" | "redirect_uri_mismatch" | "verification_unavailable";
   statusCode?: number;
   detail?: string;
 };
@@ -78,14 +77,14 @@ async function verifyGoogleAuthUrl(authUrl: string): Promise<Omit<OAuthCheck, "c
     const location = res.headers.get("location") ?? "";
     const evidence = `${body} ${location}`;
     if (res.status === 400 && evidence.includes("redirect_uri_mismatch")) {
-      return { ok: false, reason: "redirect_uri_mismatch", statusCode: res.status };
+      return { status: "redirect_uri_mismatch", statusCode: res.status };
     }
     if (evidence.includes("redirect_uri_mismatch")) {
-      return { ok: false, reason: "redirect_uri_mismatch", statusCode: res.status };
+      return { status: "redirect_uri_mismatch", statusCode: res.status };
     }
-    return { ok: true, statusCode: res.status };
+    return { status: "requires_manual_check", statusCode: res.status };
   } catch (err) {
-    return { ok: false, reason: "verification_unavailable", detail: err instanceof Error ? err.message : "No se pudo verificar Google OAuth" };
+    return { status: "verification_unavailable", detail: err instanceof Error ? err.message : "No se pudo verificar Google OAuth" };
   }
 }
 
@@ -100,8 +99,8 @@ async function resolveGoogleOAuth(userId: string, inputOrigin: string) {
     const check = await verifyGoogleAuthUrl(url);
     checks.push({ callbackUri, ...check });
 
-    if (check.ok || check.reason === "verification_unavailable") {
-      return { ok: true as const, url, callbackUri, returnOrigin, requiredCallbackUris: callbackUris, checks, verified: check.ok };
+    if (check.status !== "redirect_uri_mismatch") {
+      return { ok: true as const, url, callbackUri, returnOrigin, requiredCallbackUris: callbackUris, checks, verificationStatus: check.status };
     }
   }
 
@@ -132,7 +131,7 @@ export const verifyGoogleOAuthConfig = createServerFn({ method: "POST" })
         returnOrigin: result.returnOrigin,
         requiredCallbackUris: result.requiredCallbackUris,
         checks: result.checks,
-        verified: result.verified,
+        verificationStatus: result.verificationStatus,
         credentials,
         diagnostics,
       };
