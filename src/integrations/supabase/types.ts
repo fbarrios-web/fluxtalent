@@ -177,6 +177,99 @@ export type Database = {
           },
         ]
       }
+      availability_rules: {
+        Row: {
+          created_at: string
+          end_time: string
+          id: string
+          org_id: string
+          start_time: string
+          vacancy_id: string
+          weekday: number
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          id?: string
+          org_id: string
+          start_time: string
+          vacancy_id: string
+          weekday: number
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          id?: string
+          org_id?: string
+          start_time?: string
+          vacancy_id?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "availability_rules_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "availability_rules_vacancy_id_fkey"
+            columns: ["vacancy_id"]
+            isOneToOne: false
+            referencedRelation: "vacancies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      availability_slots: {
+        Row: {
+          created_at: string
+          end_at: string
+          id: string
+          org_id: string
+          source: string
+          start_at: string
+          status: string
+          vacancy_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_at: string
+          id?: string
+          org_id: string
+          source?: string
+          start_at: string
+          status?: string
+          vacancy_id: string
+        }
+        Update: {
+          created_at?: string
+          end_at?: string
+          id?: string
+          org_id?: string
+          source?: string
+          start_at?: string
+          status?: string
+          vacancy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "availability_slots_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "availability_slots_vacancy_id_fkey"
+            columns: ["vacancy_id"]
+            isOneToOne: false
+            referencedRelation: "vacancies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_templates: {
         Row: {
           body: string
@@ -212,9 +305,94 @@ export type Database = {
           },
         ]
       }
+      interview_bookings: {
+        Row: {
+          application_id: string
+          booking_token: string
+          created_at: string
+          duration_minutes: number | null
+          google_event_id: string | null
+          id: string
+          meet_link: string | null
+          org_id: string
+          recruiter_id: string | null
+          scheduled_at: string | null
+          slot_id: string | null
+          stage: string
+          status: string
+          updated_at: string
+          vacancy_id: string
+        }
+        Insert: {
+          application_id: string
+          booking_token?: string
+          created_at?: string
+          duration_minutes?: number | null
+          google_event_id?: string | null
+          id?: string
+          meet_link?: string | null
+          org_id: string
+          recruiter_id?: string | null
+          scheduled_at?: string | null
+          slot_id?: string | null
+          stage: string
+          status?: string
+          updated_at?: string
+          vacancy_id: string
+        }
+        Update: {
+          application_id?: string
+          booking_token?: string
+          created_at?: string
+          duration_minutes?: number | null
+          google_event_id?: string | null
+          id?: string
+          meet_link?: string | null
+          org_id?: string
+          recruiter_id?: string | null
+          scheduled_at?: string | null
+          slot_id?: string | null
+          stage?: string
+          status?: string
+          updated_at?: string
+          vacancy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_bookings_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_bookings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_bookings_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "availability_slots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_bookings_vacancy_id_fkey"
+            columns: ["vacancy_id"]
+            isOneToOne: false
+            referencedRelation: "vacancies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           brand_color: string | null
+          consultancy_name: string | null
+          contact_email: string | null
           created_at: string
           current_period_end: string | null
           id: string
@@ -226,10 +404,13 @@ export type Database = {
           sender_email: string | null
           signature_html: string | null
           subscription_status: Database["public"]["Enums"]["subscription_status"]
+          timezone: string
           trial_ends_at: string
         }
         Insert: {
           brand_color?: string | null
+          consultancy_name?: string | null
+          contact_email?: string | null
           created_at?: string
           current_period_end?: string | null
           id?: string
@@ -241,10 +422,13 @@ export type Database = {
           sender_email?: string | null
           signature_html?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
+          timezone?: string
           trial_ends_at?: string
         }
         Update: {
           brand_color?: string | null
+          consultancy_name?: string | null
+          contact_email?: string | null
           created_at?: string
           current_period_end?: string | null
           id?: string
@@ -256,6 +440,7 @@ export type Database = {
           sender_email?: string | null
           signature_html?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
+          timezone?: string
           trial_ends_at?: string
         }
         Relationships: []
@@ -309,6 +494,9 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string | null
+          google_connected_at: string | null
+          google_email: string | null
+          google_refresh_token: string | null
           id: string
           org_id: string | null
         }
@@ -316,6 +504,9 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          google_connected_at?: string | null
+          google_email?: string | null
+          google_refresh_token?: string | null
           id: string
           org_id?: string | null
         }
@@ -323,6 +514,9 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          google_connected_at?: string | null
+          google_email?: string | null
+          google_refresh_token?: string | null
           id?: string
           org_id?: string | null
         }
@@ -504,12 +698,61 @@ export type Database = {
           },
         ]
       }
+      vacancy_scheduling: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          enabled: boolean
+          instructions: string | null
+          org_id: string
+          recruiter_id: string
+          updated_at: string
+          vacancy_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number
+          enabled?: boolean
+          instructions?: string | null
+          org_id: string
+          recruiter_id: string
+          updated_at?: string
+          vacancy_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          enabled?: boolean
+          instructions?: string | null
+          org_id?: string
+          recruiter_id?: string
+          updated_at?: string
+          vacancy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vacancy_scheduling_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vacancy_scheduling_vacancy_id_fkey"
+            columns: ["vacancy_id"]
+            isOneToOne: true
+            referencedRelation: "vacancies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       current_org_id: { Args: never; Returns: string }
+      get_booking_by_token: { Args: { _token: string }; Returns: Json }
       get_public_vacancy_by_slug: {
         Args: { _slug: string }
         Returns: {
@@ -537,6 +780,10 @@ export type Database = {
         Returns: boolean
       }
       is_subscription_active: { Args: { _org_id: string }; Returns: boolean }
+      reserve_slot: {
+        Args: { _slot_id: string; _token: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "recruiter"
