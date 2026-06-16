@@ -26,17 +26,25 @@ function Settings() {
     },
   });
   const [name, setName] = useState("");
+  const [consultancyName, setConsultancyName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
   const [brandColor, setBrandColor] = useState("#0F766E");
+  const [logoUrl, setLogoUrl] = useState("");
   const [signature, setSignature] = useState("");
   const [senderEmail, setSenderEmail] = useState("");
+  const [timezone, setTimezone] = useState("America/Argentina/Buenos_Aires");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (org) {
       setName(org.name);
+      setConsultancyName((org as any).consultancy_name ?? "");
+      setContactEmail((org as any).contact_email ?? "");
       setBrandColor(org.brand_color ?? "#0F766E");
+      setLogoUrl(org.logo_url ?? "");
       setSignature(org.signature_html ?? "");
       setSenderEmail(org.sender_email ?? "");
+      setTimezone((org as any).timezone ?? "America/Argentina/Buenos_Aires");
     }
   }, [org]);
 
@@ -50,8 +58,15 @@ function Settings() {
     setSaving(true);
     try {
       const { error } = await supabase.from("organizations").update({
-        name, brand_color: brandColor, signature_html: signature, sender_email: senderEmail,
-      }).eq("id", org.id);
+        name,
+        consultancy_name: consultancyName || null,
+        contact_email: contactEmail || null,
+        brand_color: brandColor,
+        logo_url: logoUrl || null,
+        signature_html: signature,
+        sender_email: senderEmail,
+        timezone,
+      } as any).eq("id", org.id);
       if (error) throw error;
       toast.success("Guardado");
       qc.invalidateQueries({ queryKey: ["my-org"] });
@@ -72,10 +87,15 @@ function Settings() {
 
       <section className="mt-8 space-y-4 rounded-2xl border border-border bg-card p-6">
         <h3 className="font-semibold">Empresa & marca</h3>
+        <p className="text-sm text-muted-foreground">Estos datos aparecen en los mails que recibe el postulante.</p>
         <div className="grid gap-4 md:grid-cols-2">
-          <div><Label>Nombre</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
+          <div><Label>Nombre legal</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
+          <div><Label>Nombre comercial / consultora</Label><Input value={consultancyName} onChange={e => setConsultancyName(e.target.value)} placeholder="Aparece en el remitente del mail" /></div>
+          <div><Label>Mail de contacto (para postulantes)</Label><Input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="hola@empresa.com" /></div>
           <div><Label>Email remitente</Label><Input value={senderEmail} onChange={e => setSenderEmail(e.target.value)} placeholder="reclutamiento@empresa.com" /></div>
           <div><Label>Color de marca</Label><div className="flex items-center gap-2"><input type="color" value={brandColor} onChange={e => setBrandColor(e.target.value)} className="h-10 w-14 rounded border border-input" /><Input value={brandColor} onChange={e => setBrandColor(e.target.value)} /></div></div>
+          <div><Label>URL del logo</Label><Input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="https://..." /></div>
+          <div><Label>Zona horaria</Label><Input value={timezone} onChange={e => setTimezone(e.target.value)} placeholder="America/Argentina/Buenos_Aires" /></div>
         </div>
         <div><Label>Firma (HTML simple)</Label><Textarea rows={4} value={signature} onChange={e => setSignature(e.target.value)} placeholder="<b>María Pérez</b> — Talent Lead @ Empresa" /></div>
         <Button onClick={save} disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Guardar</Button>
