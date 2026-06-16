@@ -93,8 +93,8 @@ export const adminGrantLicense = createServerFn({ method: "POST" })
 
     const now = Date.now();
     const days = (d: number) => new Date(now + d * 86400000).toISOString();
-    type OrgUpdate = Parameters<typeof supabaseAdmin.from<"organizations">>[0] extends never ? any : any;
-    let patch: any = {};
+    let patch: Record<string, unknown> = {};
+
 
     switch (data.action) {
       case "activate_30": patch = { subscription_status: "active", current_period_end: days(30), last_payment_at: new Date().toISOString() }; break;
@@ -106,8 +106,9 @@ export const adminGrantLicense = createServerFn({ method: "POST" })
       case "cancel": patch = { subscription_status: "canceled" }; break;
     }
 
-    const { error } = await supabaseAdmin.from("organizations").update(patch).eq("id", data.org_id);
+    const { error } = await supabaseAdmin.from("organizations").update(patch as never).eq("id", data.org_id);
     if (error) throw error;
+
 
 
     if (data.action === "mark_paid_manual" || data.action.startsWith("activate_")) {
