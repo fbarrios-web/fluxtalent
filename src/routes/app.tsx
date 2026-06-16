@@ -66,7 +66,7 @@ function AppLayout() {
                 to={item.to}
                 className={cn(
                   "mb-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                  active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground"
+                  active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
                 )}
               >
                 <item.icon className="h-4 w-4" />
@@ -81,7 +81,7 @@ function AppLayout() {
                 "mb-1 mt-4 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 loc.pathname.startsWith("/app/admin")
                   ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
               )}
             >
               <ShieldCheck className="h-4 w-4" /> Admin
@@ -93,7 +93,7 @@ function AppLayout() {
           <div className="mb-2 px-3 py-2 text-xs text-muted-foreground">
             <div className="truncate font-medium text-foreground">{user.email}</div>
           </div>
-          <button onClick={() => signOut()} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-sidebar-accent hover:text-foreground">
+          <button onClick={() => signOut()} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors">
             <LogOut className="h-4 w-4" /> Salir
           </button>
         </div>
