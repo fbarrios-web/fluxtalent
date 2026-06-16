@@ -4,12 +4,13 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { moveApplicationStage, updateVacancy } from "@/lib/recruiting.functions";
-import { ArrowLeft, ExternalLink, Copy, Loader2, Settings as SettingsIcon } from "lucide-react";
+import { ArrowLeft, ExternalLink, Copy, Loader2, Settings as SettingsIcon, Download } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { MatchPill } from "./app.dashboard";
 import { VacancyScheduling } from "@/components/vacancy-scheduling";
+import { downloadCSV } from "@/lib/export-csv";
 
 const STAGES = [
   { id: "received", label: "Recibidos" },
@@ -45,7 +46,7 @@ function VacancyDetail() {
     queryFn: async () => {
       const { data } = await supabase
         .from("applications")
-        .select("id, first_name, last_name, email, stage, match_score, ai_status, created_at")
+        .select("id, first_name, last_name, email, phone, cv_url, stage, match_score, ai_status, created_at")
         .eq("vacancy_id", vacancyId)
         .order("match_score", { ascending: false, nullsFirst: false });
       return data ?? [];
@@ -92,6 +93,27 @@ function VacancyDetail() {
             <Button variant="outline" onClick={() => setStatus("active")}>Activar</Button>
           )}
           <Button variant="outline" onClick={copyLink}><Copy className="mr-2 h-3.5 w-3.5" /> Copiar link</Button>
+          <Button
+            variant="outline"
+            disabled={!apps?.length}
+            onClick={() => {
+              const rows = (apps ?? []).map((a: any) => [
+                `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim(),
+                a.email ?? "",
+                a.phone ?? "",
+                a.cv_url ?? "",
+                a.stage ?? "",
+                a.match_score != null ? `${a.match_score}%` : "",
+              ]);
+              downloadCSV(
+                `postulantes-${v.public_slug ?? v.id}`,
+                ["Postulante", "Email", "Teléfono", "CV", "Estado", "Match %"],
+                rows,
+              );
+            }}
+          >
+            <Download className="mr-2 h-3.5 w-3.5" /> Exportar Excel
+          </Button>
           <a href={applyUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm hover:bg-accent">
             <ExternalLink className="h-3.5 w-3.5" /> Ver form
           </a>
