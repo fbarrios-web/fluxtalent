@@ -45,7 +45,7 @@ function Landing() {
             Reclutá <em className="text-primary">10×</em> más rápido,<br/> sin tareas manuales.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-balance text-base text-muted-foreground md:text-lg">
-            FLUX Talent es el ATS minimalista donde la IA lee los CVs, calcula el match, redacta los emails y coordina las entrevistas — vos sólo decidís.
+            FLUX Talent es el ATS donde la IA lee los CVs, calcula el match, redacta los emails y coordina las entrevistas — vos sólo decidís.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link to="/auth" className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90">
