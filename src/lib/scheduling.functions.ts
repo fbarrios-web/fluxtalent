@@ -17,10 +17,10 @@ function callbackUrl(origin: string) {
 export const googleStartUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ origin: z.string().url() }).parse(input))
-  .handler(async ({ data, context }) => {
+  .handler(async ({ context }) => {
     const { googleAuthUrl } = await import("@/lib/google.server");
-    // IMPORTANT: el redirect_uri tiene que coincidir EXACTAMENTE con uno registrado en Google Cloud.
-    const origin = data.origin.replace(/\/$/, "");
+    // IMPORTANT: usamos un único callback estable para que Google no reciba URLs de preview cambiantes.
+    const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
     const state = crypto.randomUUID();
     const payload = `${context.userId}.${state}.${Date.now()}`;
     const sig = await hmac(payload, process.env.SUPABASE_SERVICE_ROLE_KEY!);
