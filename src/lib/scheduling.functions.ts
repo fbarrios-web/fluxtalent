@@ -319,8 +319,7 @@ export async function inviteForInterview(
     return { ok: true, bookingToken: booking.booking_token, skipped: "already_scheduled" };
   }
 
-  const { getRequestHeader } = await import("@tanstack/react-start/server");
-  const origin = getRequestHeader("origin") || getRequestHeader("referer")?.split("/").slice(0, 3).join("/") || "https://fluxtalent.lovable.app";
+  const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
   const scheduleUrl = `${origin}/schedule/${booking.booking_token}`;
 
   const { refreshAccessToken, sendGmail } = await import("@/lib/google.server");
