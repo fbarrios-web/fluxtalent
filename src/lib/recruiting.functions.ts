@@ -46,7 +46,7 @@ export const createVacancy = createServerFn({ method: "POST" })
     const { screening, ...rest } = data;
     const { data: vac, error } = await supabase
       .from("vacancies")
-      .insert({ ...rest, org_id: profile.org_id, created_by: userId })
+      .insert({ ...rest, org_id: profile.org_id!, created_by: userId })
       .select("id, public_slug")
       .single();
     if (error) throw error;
