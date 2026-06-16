@@ -53,8 +53,8 @@ function AppLayout() {
     <div className="grid min-h-screen bg-background md:grid-cols-[240px_1fr]">
       <aside className="hidden border-r border-border bg-sidebar md:flex md:flex-col">
         <Link to="/app/dashboard" className="flex items-center gap-2 px-6 py-5 font-semibold text-sidebar-foreground">
-          <FluxLogo size={28} />
-          <span className="tracking-tight">FLUX <span className="opacity-70 font-normal">Talent</span></span>
+          <FluxLogo size={32} />
+          <span className="text-lg tracking-tight">FLUX <span className="text-muted-foreground font-normal">Talent</span></span>
         </Link>
 
         <nav className="flex-1 px-3 py-2">
