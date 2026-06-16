@@ -29,7 +29,7 @@ function CandidateDetail() {
   const interviewQs = useServerFn(aiInterviewQuestions);
   const saveScore = useServerFn(saveScorecard);
 
-  const { data: app, isLoading } = useQuery({
+  const { data: app, isLoading } = useQuery<any>({
     queryKey: ["candidate", id],
     queryFn: async () => {
       const { data } = await supabase
@@ -39,7 +39,7 @@ function CandidateDetail() {
         .single();
       return data;
     },
-    refetchInterval: (q) => (q.state.data?.ai_status === "running" || q.state.data?.ai_status === "pending" ? 3000 : false),
+    refetchInterval: (q: any) => (q.state.data?.ai_status === "running" || q.state.data?.ai_status === "pending" ? 3000 : false),
   });
 
   const [analyzing, setAnalyzing] = useState(false);

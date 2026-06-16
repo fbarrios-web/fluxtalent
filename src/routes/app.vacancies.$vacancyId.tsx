@@ -32,7 +32,7 @@ function VacancyDetail() {
   const move = useServerFn(moveApplicationStage);
   const update = useServerFn(updateVacancy);
 
-  const { data: v } = useQuery({
+  const { data: v } = useQuery<any>({
     queryKey: ["vacancy", vacancyId],
     queryFn: async () => {
       const { data } = await supabase.from("vacancies").select("*").eq("id", vacancyId).single();
