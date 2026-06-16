@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicApplyRouteImport } from './routes/api.public.apply'
+import { Route as ApiPublicAnalyzeRouteImport } from './routes/api.public.analyze'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -22,31 +24,49 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicApplyRoute = ApiPublicApplyRouteImport.update({
+  id: '/api/public/apply',
+  path: '/api/public/apply',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAnalyzeRoute = ApiPublicAnalyzeRouteImport.update({
+  id: '/api/public/analyze',
+  path: '/api/public/analyze',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/api/public/analyze': typeof ApiPublicAnalyzeRoute
+  '/api/public/apply': typeof ApiPublicApplyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/api/public/analyze': typeof ApiPublicAnalyzeRoute
+  '/api/public/apply': typeof ApiPublicApplyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/api/public/analyze': typeof ApiPublicAnalyzeRoute
+  '/api/public/apply': typeof ApiPublicApplyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth'
+  fullPaths: '/' | '/auth' | '/api/public/analyze' | '/api/public/apply'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth'
-  id: '__root__' | '/' | '/auth'
+  to: '/' | '/auth' | '/api/public/analyze' | '/api/public/apply'
+  id: '__root__' | '/' | '/auth' | '/api/public/analyze' | '/api/public/apply'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  ApiPublicAnalyzeRoute: typeof ApiPublicAnalyzeRoute
+  ApiPublicApplyRoute: typeof ApiPublicApplyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +85,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/apply': {
+      id: '/api/public/apply'
+      path: '/api/public/apply'
+      fullPath: '/api/public/apply'
+      preLoaderRoute: typeof ApiPublicApplyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/analyze': {
+      id: '/api/public/analyze'
+      path: '/api/public/analyze'
+      fullPath: '/api/public/analyze'
+      preLoaderRoute: typeof ApiPublicAnalyzeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  ApiPublicAnalyzeRoute: ApiPublicAnalyzeRoute,
+  ApiPublicApplyRoute: ApiPublicApplyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
