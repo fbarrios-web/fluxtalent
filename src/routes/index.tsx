@@ -58,7 +58,7 @@ function Landing() {
         </div>
 
         <div className="relative mt-16 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-          <div className="border-b border-border bg-muted/40 px-4 py-2 text-xs text-muted-foreground">app.fluxtalent.com / vacantes / Senior Product Designer</div>
+          <div className="border-b border-border bg-muted/40 px-4 py-2 text-xs text-muted-foreground">Seguimiento de vacantes</div>
           <div className="grid gap-4 p-6 md:grid-cols-4">
             {[
               { stage: "Recibidos", count: 142, color: "bg-muted" },
