@@ -94,7 +94,7 @@ export const saveOrgBranding = createServerFn({ method: "POST" })
     if (data.logoUrl !== undefined) patch.logo_url = data.logoUrl;
     if (data.signatureHtml !== undefined) patch.signature_html = data.signatureHtml;
     if (data.timezone !== undefined) patch.timezone = data.timezone;
-    const { error } = await context.supabase.from("organizations").update(patch).eq("id", p.org_id);
+    const { error } = await context.supabase.from("organizations").update(patch as never).eq("id", p.org_id);
     if (error) throw error;
     return { ok: true };
   });
