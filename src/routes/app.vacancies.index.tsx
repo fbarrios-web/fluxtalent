@@ -28,9 +28,22 @@ function VacanciesList() {
           <h1 className="font-display text-4xl">Vacantes</h1>
           <p className="text-muted-foreground">Gestioná tus búsquedas abiertas.</p>
         </div>
-        <Link to="/app/vacancies/new" className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-          <Plus className="h-4 w-4" /> Nueva vacante
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={!data?.length}
+            onClick={() => {
+              const rows = (data ?? []).map((v: any) => [v.title, v.status, v.applications?.[0]?.count ?? 0]);
+              downloadCSV("vacantes", ["Vacante", "Estado", "Postulantes"], rows);
+            }}
+            className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
+          >
+            <Download className="h-4 w-4" /> Exportar Excel
+          </button>
+          <Link to="/app/vacancies/new" className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            <Plus className="h-4 w-4" /> Nueva vacante
+          </Link>
+        </div>
       </header>
 
       <div className="rounded-2xl border border-border bg-card">
