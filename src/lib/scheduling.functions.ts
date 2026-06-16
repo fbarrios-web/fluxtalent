@@ -118,7 +118,13 @@ export const verifyGoogleOAuthConfig = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ origin: z.string().url() }).parse(input))
   .handler(async ({ data, context }) => {
+    const { googleOAuthClientDiagnostics, verifyGoogleClientCredentials } = await import("@/lib/google.server");
     const result = await resolveGoogleOAuth(context.userId, data.origin);
+    const firstCallback = oauthCandidates(data.origin).callbackUris[0];
+    const credentials = firstCallback
+      ? await verifyGoogleClientCredentials(firstCallback)
+      : { ok: false, status: "unknown" as const };
+    const diagnostics = googleOAuthClientDiagnostics();
     if (result.ok) {
       return {
         ok: true,
@@ -127,9 +133,11 @@ export const verifyGoogleOAuthConfig = createServerFn({ method: "POST" })
         requiredCallbackUris: result.requiredCallbackUris,
         checks: result.checks,
         verified: result.verified,
+        credentials,
+        diagnostics,
       };
     }
-    return result;
+    return { ...result, credentials, diagnostics };
   });
 
 export const googleStartUrl = createServerFn({ method: "POST" })
