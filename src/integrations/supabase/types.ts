@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          org_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          org_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          org_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       application_events: {
         Row: {
           actor_id: string | null
@@ -181,31 +216,93 @@ export type Database = {
         Row: {
           brand_color: string | null
           created_at: string
+          current_period_end: string | null
           id: string
+          last_payment_at: string | null
           logo_url: string | null
+          mp_preapproval_id: string | null
           name: string
+          plan_price_ars: number
           sender_email: string | null
           signature_html: string | null
+          subscription_status: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at: string
         }
         Insert: {
           brand_color?: string | null
           created_at?: string
+          current_period_end?: string | null
           id?: string
+          last_payment_at?: string | null
           logo_url?: string | null
+          mp_preapproval_id?: string | null
           name: string
+          plan_price_ars?: number
           sender_email?: string | null
           signature_html?: string | null
+          subscription_status?: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at?: string
         }
         Update: {
           brand_color?: string | null
           created_at?: string
+          current_period_end?: string | null
           id?: string
+          last_payment_at?: string | null
           logo_url?: string | null
+          mp_preapproval_id?: string | null
           name?: string
+          plan_price_ars?: number
           sender_email?: string | null
           signature_html?: string | null
+          subscription_status?: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at?: string
         }
         Relationships: []
+      }
+      payments: {
+        Row: {
+          amount_ars: number
+          created_at: string
+          id: string
+          org_id: string
+          paid_at: string | null
+          provider: string
+          provider_payment_id: string | null
+          raw: Json | null
+          status: string
+        }
+        Insert: {
+          amount_ars: number
+          created_at?: string
+          id?: string
+          org_id: string
+          paid_at?: string | null
+          provider?: string
+          provider_payment_id?: string | null
+          raw?: Json | null
+          status: string
+        }
+        Update: {
+          amount_ars?: number
+          created_at?: string
+          id?: string
+          org_id?: string
+          paid_at?: string | null
+          provider?: string
+          provider_payment_id?: string | null
+          raw?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -315,6 +412,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       vacancies: {
         Row: {
           area: string | null
@@ -392,8 +510,17 @@ export type Database = {
     }
     Functions: {
       current_org_id: { Args: never; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_subscription_active: { Args: { _org_id: string }; Returns: boolean }
     }
     Enums: {
+      app_role: "admin" | "recruiter"
       modality: "remote" | "hybrid" | "onsite"
       pipeline_stage:
         | "received"
@@ -412,6 +539,7 @@ export type Database = {
         | "lead"
         | "manager"
         | "director"
+      subscription_status: "trialing" | "active" | "past_due" | "canceled"
       vacancy_status: "draft" | "active" | "paused" | "closed"
     }
     CompositeTypes: {
@@ -540,6 +668,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "recruiter"],
       modality: ["remote", "hybrid", "onsite"],
       pipeline_stage: [
         "received",
@@ -560,6 +689,7 @@ export const Constants = {
         "manager",
         "director",
       ],
+      subscription_status: ["trialing", "active", "past_due", "canceled"],
       vacancy_status: ["draft", "active", "paused", "closed"],
     },
   },
