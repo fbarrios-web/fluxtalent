@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { checkIdentityAvailable, saveIdentity } from "@/lib/recruiting.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,11 +19,16 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const nav = useNavigate();
+  const checkIdentity = useServerFn(checkIdentityAvailable);
+  const saveId = useServerFn(saveIdentity);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [orgName, setOrgName] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [dni, setDni] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -35,6 +42,11 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
+        // Anti-abuse: verify identity isn't already registered (one free account per identity).
+        const check = await checkIdentity({ data: { dni: dni.trim(), full_name: fullName.trim(), birth_date: birthDate } });
+        if (!check.available) {
+          throw new Error("Ya existe una cuenta con esos datos. Iniciá sesión con tu cuenta original.");
+        }
         const { error } = await supabase.auth.signUp({
           email, password,
           options: {
@@ -43,6 +55,8 @@ function AuthPage() {
           },
         });
         if (error) throw error;
+        // Save identity now that the session exists (signup auto-signs-in when auto-confirm is on).
+        try { await saveId({ data: { dni: dni.trim(), full_name: fullName.trim(), birth_date: birthDate } }); } catch {}
         toast.success("¡Cuenta creada!");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -113,8 +127,22 @@ function AuthPage() {
                   <Input id="org" value={orgName} onChange={e => setOrgName(e.target.value)} placeholder="Acme Inc." required />
                 </div>
                 <div>
-                  <Label htmlFor="name">Tu nombre</Label>
-                  <Input id="name" value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="María Pérez" required />
+                  <Label htmlFor="name">Nombre para mostrar</Label>
+                  <Input id="name" value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="María" required />
+                </div>
+                <div>
+                  <Label htmlFor="fullname">Nombre y apellido completo</Label>
+                  <Input id="fullname" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="María Pérez González" required minLength={3} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="dni">DNI</Label>
+                    <Input id="dni" value={dni} onChange={e => setDni(e.target.value)} placeholder="30123456" required minLength={6} />
+                  </div>
+                  <div>
+                    <Label htmlFor="bday">Fecha de nac.</Label>
+                    <Input id="bday" type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} required />
+                  </div>
                 </div>
               </>
             )}
