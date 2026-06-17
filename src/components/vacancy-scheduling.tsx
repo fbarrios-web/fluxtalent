@@ -218,7 +218,7 @@ export function VacancyScheduling({ vacancyId }: { vacancyId: string }) {
       </div>
 
       <div className="rounded-xl border bg-card p-5">
-        <h3 className="font-semibold mb-3">Próximos slots ({data?.slots?.length ?? 0})</h3>
+        <h3 className="font-semibold mb-3">Calendario ({data?.slots?.length ?? 0})</h3>
         {(!data?.slots || data.slots.length === 0) ? (
           <p className="text-sm text-muted-foreground">Sin slots cargados. Configurá la disponibilidad y tocá "Regenerar".</p>
         ) : (

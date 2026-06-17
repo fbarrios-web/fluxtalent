@@ -150,29 +150,9 @@ function Settings() {
         <Button onClick={save} disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Guardar</Button>
       </section>
 
-
-      <section className="mt-6 space-y-4 rounded-2xl border border-border bg-card p-6">
-        <h3 className="font-semibold">Templates de email</h3>
-        <p className="text-sm text-muted-foreground">Variables: <code>{`{{first_name}}`}</code>, <code>{`{{vacancy_title}}`}</code>, <code>{`{{signature}}`}</code></p>
-        {(templates ?? []).map(t => (
-          <details key={t.id} className="rounded-xl border border-border p-4">
-            <summary className="cursor-pointer font-medium">{t.key}</summary>
-            <div className="mt-3 space-y-2">
-              <Input defaultValue={t.subject} onBlur={e => saveTemplate(t.id, { subject: e.target.value })} />
-              <Textarea rows={8} defaultValue={t.body} onBlur={e => saveTemplate(t.id, { body: e.target.value })} />
-            </div>
-          </details>
-        ))}
-      </section>
-
-      <section className="mt-6 rounded-2xl border border-dashed border-border bg-muted/30 p-6">
-        <h3 className="font-semibold">Próximamente</h3>
-        <ul className="mt-2 text-sm text-muted-foreground">
-          <li>· Integración con Google Calendar / Outlook + Google Meet / Zoom</li>
-          <li>· Envío automático de emails con tu dominio</li>
-          <li>· Equipos y roles (hiring managers, entrevistadores)</li>
-        </ul>
-      </section>
     </div>
   );
 }
+
+// keep saveTemplate import path stable for the template editor below if reintroduced
+function _unused() { return null;
