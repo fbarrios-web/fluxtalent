@@ -15,6 +15,29 @@ import { MatchPill } from "./app.dashboard";
 
 const STAGES = ["received", "interview_1", "interview_2", "interview_3", "offer", "hired", "rejected"];
 
+const STAGE_LABEL: Record<string, string> = {
+  received: "Recibido", interview_1: "Entrevista 1", interview_2: "Entrevista 2",
+  interview_3: "Entrevista 3", offer: "Oferta", hired: "Contratado", rejected: "Descartado",
+};
+function eventLabel(e: any): string {
+  const t = e?.type ?? "";
+  const p = e?.payload ?? {};
+  if (t === "stage_change") return `Movido a ${STAGE_LABEL[p.stage] ?? p.stage}`;
+  if (t === "email_sent") return `Email enviado${p.kind ? ` (${p.kind})` : ""}`;
+  if (t === "interview_invite_sent") return "Invitación a entrevista enviada";
+  if (t === "interview_scheduled") return "Entrevista agendada";
+  if (t === "manual_created") return "Candidato cargado manualmente";
+  if (t === "ai_analyzed") return "Análisis con IA completado";
+  return t || "Evento";
+}
+function eventColor(t: string): string {
+  if (t === "email_sent" || t === "interview_invite_sent") return "bg-sky-500";
+  if (t === "stage_change") return "bg-primary";
+  if (t === "interview_scheduled") return "bg-indigo-500";
+  if (t === "manual_created") return "bg-emerald-500";
+  return "bg-muted-foreground";
+}
+
 export const Route = createFileRoute("/app/candidates/$id")({
   component: CandidateDetail,
 });
@@ -228,15 +251,18 @@ function CandidateDetail() {
           <div className="rounded-2xl border border-border bg-card p-4">
             <h4 className="mb-3 text-xs font-semibold uppercase text-muted-foreground">Historial</h4>
             <ul className="space-y-2 text-xs">
-              {(app.application_events ?? []).slice().reverse().map((e: any) => (
-                <li key={e.id} className="flex gap-2 text-muted-foreground">
-                  <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                  <div><span className="font-medium text-foreground">{e.type}</span> · {new Date(e.created_at).toLocaleString()}</div>
-                </li>
-              ))}
+              {(app.application_events ?? []).slice().sort((a: any, b: any) => +new Date(b.created_at) - +new Date(a.created_at)).map((e: any) => {
+                const label = eventLabel(e);
+                return (
+                  <li key={e.id} className="flex gap-2 text-muted-foreground">
+                    <div className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${eventColor(e.type)}`} />
+                    <div><span className="font-medium text-foreground">{label}</span><br />{new Date(e.created_at).toLocaleString("es-AR")}</div>
+                  </li>
+                );
+              })}
               <li className="flex gap-2 text-muted-foreground">
                 <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground" />
-                <div><span className="font-medium text-foreground">Postulación recibida</span> · {new Date(app.created_at).toLocaleString()}</div>
+                <div><span className="font-medium text-foreground">Postulación recibida</span><br />{new Date(app.created_at).toLocaleString("es-AR")}</div>
               </li>
             </ul>
           </div>

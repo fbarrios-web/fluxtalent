@@ -231,3 +231,62 @@ export const saveIdentity = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+// Manually create an application from the recruiter side (upload CV + trigger AI).
+export const manualCreateApplication = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({
+      vacancy_id: z.string().uuid(),
+      first_name: z.string().trim().min(1).max(80),
+      last_name: z.string().trim().min(1).max(80),
+      email: z.string().trim().email().max(200),
+      phone: z.string().trim().max(40).optional().nullable(),
+      linkedin: z.string().trim().max(300).optional().nullable(),
+      cv_base64: z.string().optional().nullable(),
+      cv_filename: z.string().max(200).optional().nullable(),
+      cv_mime: z.string().max(120).optional().nullable(),
+    }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase.from("profiles").select("org_id").eq("id", userId).maybeSingle();
+    if (!profile?.org_id) throw new Error("Perfil sin organización");
+    const { data: vac } = await supabase.from("vacancies").select("id, org_id").eq("id", data.vacancy_id).maybeSingle();
+    if (!vac || vac.org_id !== profile.org_id) throw new Error("Vacante no disponible");
+
+    let cv_url: string | null = null;
+    if (data.cv_base64) {
+      const ext = (data.cv_filename?.split(".").pop() || "pdf").toLowerCase();
+      const path = `${vac.org_id}/${vac.id}/${crypto.randomUUID()}.${ext}`;
+      const bin = Uint8Array.from(atob(data.cv_base64), c => c.charCodeAt(0));
+      const { error: upErr } = await supabase.storage.from("cvs").upload(path, bin, {
+        contentType: data.cv_mime || "application/pdf", upsert: false,
+      });
+      if (upErr) throw new Error("Error al subir CV: " + upErr.message);
+      cv_url = path;
+    }
+
+    const { data: appRow, error } = await supabase.from("applications").insert({
+      vacancy_id: vac.id, org_id: vac.org_id,
+      first_name: data.first_name, last_name: data.last_name,
+      email: data.email, phone: data.phone || null, linkedin: data.linkedin || null,
+      cv_url, source: "manual",
+      ai_status: cv_url ? "pending" : "skipped",
+    }).select("id").single();
+    if (error) throw error;
+
+    await supabase.from("application_events").insert({
+      application_id: appRow.id, actor_id: userId, type: "manual_created", payload: {},
+    });
+
+    if (cv_url) {
+      try {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { runAnalysisAdmin } = await import("@/lib/analyze.server");
+        await runAnalysisAdmin(supabaseAdmin, appRow.id);
+      } catch (e) {
+        await supabase.from("applications").update({ ai_status: "failed" }).eq("id", appRow.id);
+      }
+    }
+    return { id: appRow.id };
+  });
