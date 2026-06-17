@@ -2,6 +2,16 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
+const screeningQuestionSchema = z.object({
+  question: z.string().min(3).max(300),
+  required: z.boolean().default(false),
+  qtype: z.enum(["text", "single", "multi"]).default("text"),
+  options: z.array(z.object({
+    value: z.string().min(1).max(120),
+    discard: z.boolean().default(false),
+  })).max(20).default([]),
+});
+
 export const createVacancy = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
@@ -18,7 +28,7 @@ export const createVacancy = createServerFn({ method: "POST" })
       competencies: z.array(z.string().max(60)).max(20).optional(),
       min_match: z.number().int().min(0).max(100).default(60),
       status: z.enum(["draft", "active", "paused", "closed"]).default("draft"),
-      screening: z.array(z.object({ question: z.string().min(3).max(300), required: z.boolean().default(false) })).max(5).default([]),
+      screening: z.array(screeningQuestionSchema).max(10).default([]),
     }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -43,6 +53,18 @@ export const createVacancy = createServerFn({ method: "POST" })
       profile = { org_id: newOrg.id };
     }
 
+    // Gate: Gmail + branding must be configured before creating a vacancy.
+    const { data: gateProfile } = await supabase
+      .from("profiles").select("google_refresh_token").eq("id", userId).maybeSingle();
+    const { data: gateOrg } = await supabase
+      .from("organizations").select("sender_email, name").eq("id", profile.org_id!).maybeSingle();
+    if (!gateProfile?.google_refresh_token) {
+      throw new Error("Conectá tu cuenta de Gmail en Integraciones antes de crear vacantes.");
+    }
+    if (!gateOrg?.sender_email || !gateOrg?.name) {
+      throw new Error("Completá el nombre de la empresa y el email remitente en Configuración antes de crear vacantes.");
+    }
+
     const { screening, ...rest } = data;
     const { data: vac, error } = await supabase
       .from("vacancies")
@@ -51,10 +73,13 @@ export const createVacancy = createServerFn({ method: "POST" })
       .single();
     if (error) throw error;
 
-
     if (screening.length) {
       await supabase.from("screening_questions").insert(
-        screening.map((q, i) => ({ vacancy_id: vac.id, position: i, question: q.question, required: q.required }))
+        screening.map((q, i) => ({
+          vacancy_id: vac.id, position: i,
+          question: q.question, required: q.required,
+          qtype: q.qtype, options: q.options as any,
+        }))
       );
     }
     return vac;
@@ -67,6 +92,10 @@ export const updateVacancy = createServerFn({ method: "POST" })
       id: z.string().uuid(),
       patch: z.object({
         title: z.string().optional(),
+        area: z.string().optional(),
+        seniority: z.enum(["intern", "junior", "mid", "senior", "lead", "manager", "director"]).optional(),
+        modality: z.enum(["remote", "hybrid", "onsite"]).optional(),
+        location: z.string().optional(),
         status: z.enum(["draft", "active", "paused", "closed"]).optional(),
         min_match: z.number().int().min(0).max(100).optional(),
         description: z.string().optional(),
@@ -75,10 +104,23 @@ export const updateVacancy = createServerFn({ method: "POST" })
         nice_to_have: z.string().optional(),
         competencies: z.array(z.string()).optional(),
       }),
+      screening: z.array(screeningQuestionSchema).max(10).optional(),
     }).parse(input))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("vacancies").update(data.patch).eq("id", data.id);
     if (error) throw error;
+    if (data.screening) {
+      await context.supabase.from("screening_questions").delete().eq("vacancy_id", data.id);
+      if (data.screening.length) {
+        await context.supabase.from("screening_questions").insert(
+          data.screening.map((q, i) => ({
+            vacancy_id: data.id, position: i,
+            question: q.question, required: q.required,
+            qtype: q.qtype, options: q.options as any,
+          }))
+        );
+      }
+    }
     return { ok: true };
   });
 
