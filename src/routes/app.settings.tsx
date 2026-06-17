@@ -73,10 +73,6 @@ function Settings() {
     if (account) setDisplayName(account.displayName);
   }, [account]);
 
-  const { data: templates } = useQuery({
-    queryKey: ["templates"],
-    queryFn: async () => (await supabase.from("email_templates").select("*").order("key")).data ?? [],
-  });
 
   async function save() {
     if (!org) return;
@@ -110,10 +106,6 @@ function Settings() {
     } catch (e: any) { toast.error(e.message ?? "Error"); } finally { setSavingProfile(false); }
   }
 
-  async function saveTemplate(id: string, patch: any) {
-    await supabase.from("email_templates").update(patch).eq("id", id);
-    toast.success("Template actualizado");
-  }
 
   if (isLoading) return <div className="p-10"><Loader2 className="h-5 w-5 animate-spin" /></div>;
 
@@ -154,5 +146,3 @@ function Settings() {
   );
 }
 
-// keep saveTemplate import path stable for the template editor below if reintroduced
-function _unused() { return null;
