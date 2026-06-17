@@ -507,3 +507,79 @@ export const sendInterviewInvite = createServerFn({ method: "POST" })
     return await inviteForInterview(context.supabase, context.userId, data.applicationId, data.stage);
   });
 
+// ---------- Send stage email (rejection / offer) ----------
+
+function renderTemplate(body: string, vars: Record<string, string>) {
+  return body.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k) => vars[k] ?? "");
+}
+
+export async function sendStageEmail(
+  supabase: any,
+  userId: string,
+  applicationId: string,
+  kind: "rejection" | "offer",
+) {
+  const { data: app } = await supabase.from("applications")
+    .select("id, first_name, last_name, email, vacancy_id")
+    .eq("id", applicationId).maybeSingle();
+  if (!app?.email) throw new Error("Postulante sin email");
+  const { data: vac } = await supabase.from("vacancies")
+    .select("id, title, org_id").eq("id", app.vacancy_id).maybeSingle();
+  if (!vac) throw new Error("Vacante no encontrada");
+  const { data: org } = await supabase.from("organizations")
+    .select("name, consultancy_name, contact_email, signature_html")
+    .eq("id", vac.org_id).maybeSingle();
+  if (!org) throw new Error("Organización no encontrada");
+
+  const { data: tpl } = await supabase.from("email_templates")
+    .select("subject, body").eq("org_id", vac.org_id).eq("key", kind).maybeSingle();
+  if (!tpl) throw new Error("Template de email no encontrado. Configurá los templates en Configuración.");
+
+  const { data: sender } = await supabase.from("profiles")
+    .select("google_refresh_token, google_email, display_name")
+    .eq("id", userId).maybeSingle();
+  if (!sender?.google_refresh_token || !sender.google_email) {
+    throw new Error("Conectá Gmail en Integraciones para enviar mails automáticos.");
+  }
+
+  const vars = {
+    first_name: app.first_name || "",
+    last_name: app.last_name || "",
+    vacancy_title: vac.title,
+    signature: stripHtml(org.signature_html || sender.display_name || org.consultancy_name || org.name || ""),
+  };
+  const subject = renderTemplate(tpl.subject, vars);
+  const bodyText = renderTemplate(tpl.body, vars);
+  const html = `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#111;line-height:1.6">
+    <div style="max-width:560px;margin:0 auto;padding:24px">
+      ${escapeHtmlMultiline(bodyText)}
+      ${org.signature_html ? `<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/><div style="font-size:13px;color:#6b7280">${org.signature_html}</div>` : ""}
+    </div></body></html>`;
+
+  const { refreshAccessToken, sendGmail } = await import("@/lib/google.server");
+  const { access_token } = await refreshAccessToken(sender.google_refresh_token);
+  await sendGmail({
+    accessToken: access_token,
+    fromName: org.consultancy_name || org.name,
+    fromEmail: sender.google_email,
+    to: app.email,
+    subject,
+    html,
+    replyTo: org.contact_email || undefined,
+  });
+
+  await supabase.from("application_events").insert({
+    application_id: app.id,
+    actor_id: userId,
+    type: kind === "rejection" ? "rejection_email_sent" : "offer_email_sent",
+    payload: { subject, to: app.email },
+  });
+  return { ok: true };
+}
+
+function stripHtml(s: string) { return s.replace(/<[^>]*>/g, "").trim(); }
+function escapeHtmlMultiline(s: string) {
+  return s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!)).replace(/\n/g, "<br/>");
+}
+
+

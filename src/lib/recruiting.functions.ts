@@ -99,7 +99,7 @@ export const moveApplicationStage = createServerFn({ method: "POST" })
       payload: { stage: data.stage },
     });
 
-    // Auto-trigger interview invite for interview stages
+    // Auto-trigger emails based on new stage
     let inviteWarning: string | null = null;
     if (data.stage === "interview_1" || data.stage === "interview_2" || data.stage === "interview_3") {
       try {
@@ -107,6 +107,13 @@ export const moveApplicationStage = createServerFn({ method: "POST" })
         await inviteForInterview(context.supabase as any, context.userId, data.id, data.stage);
       } catch (e: any) {
         inviteWarning = e?.message ?? "No se pudo enviar la invitación";
+      }
+    } else if (data.stage === "rejected" || data.stage === "offer") {
+      try {
+        const { sendStageEmail } = await import("@/lib/scheduling.functions");
+        await sendStageEmail(context.supabase as any, context.userId, data.id, data.stage === "rejected" ? "rejection" : "offer");
+      } catch (e: any) {
+        inviteWarning = e?.message ?? "No se pudo enviar el email";
       }
     }
     return { ok: true, inviteWarning };
