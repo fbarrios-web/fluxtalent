@@ -109,6 +109,7 @@ function VacancyDetail() {
           ) : (
             <Button variant="outline" onClick={() => setStatus("active")}>Activar</Button>
           )}
+          <EditVacancyDialog vacancy={v} onSaved={() => qc.invalidateQueries({ queryKey: ["vacancy", vacancyId] })} />
           <Button variant="outline" onClick={copyLink}><Copy className="mr-2 h-3.5 w-3.5" /> Copiar link</Button>
           <Button
             variant="outline"
