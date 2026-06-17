@@ -228,15 +228,18 @@ function CandidateDetail() {
           <div className="rounded-2xl border border-border bg-card p-4">
             <h4 className="mb-3 text-xs font-semibold uppercase text-muted-foreground">Historial</h4>
             <ul className="space-y-2 text-xs">
-              {(app.application_events ?? []).slice().reverse().map((e: any) => (
-                <li key={e.id} className="flex gap-2 text-muted-foreground">
-                  <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                  <div><span className="font-medium text-foreground">{e.type}</span> · {new Date(e.created_at).toLocaleString()}</div>
-                </li>
-              ))}
+              {(app.application_events ?? []).slice().sort((a: any, b: any) => +new Date(b.created_at) - +new Date(a.created_at)).map((e: any) => {
+                const label = eventLabel(e);
+                return (
+                  <li key={e.id} className="flex gap-2 text-muted-foreground">
+                    <div className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${eventColor(e.type)}`} />
+                    <div><span className="font-medium text-foreground">{label}</span><br />{new Date(e.created_at).toLocaleString("es-AR")}</div>
+                  </li>
+                );
+              })}
               <li className="flex gap-2 text-muted-foreground">
                 <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground" />
-                <div><span className="font-medium text-foreground">Postulación recibida</span> · {new Date(app.created_at).toLocaleString()}</div>
+                <div><span className="font-medium text-foreground">Postulación recibida</span><br />{new Date(app.created_at).toLocaleString("es-AR")}</div>
               </li>
             </ul>
           </div>
