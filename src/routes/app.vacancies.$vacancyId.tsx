@@ -13,14 +13,13 @@ import { VacancyScheduling } from "@/components/vacancy-scheduling";
 import { downloadCSV } from "@/lib/export-csv";
 
 const STAGES = [
-  { id: "received", label: "Recibidos" },
-  { id: "shortlisted", label: "Preseleccionados" },
-  { id: "interview_1", label: "Entrevista 1" },
-  { id: "interview_2", label: "Entrevista 2" },
-  { id: "interview_3", label: "Entrevista 3" },
-  { id: "offer", label: "Oferta" },
-  { id: "hired", label: "Contratado" },
-  { id: "rejected", label: "Descartado" },
+  { id: "received",    label: "Recibidos",     color: "bg-slate-200 text-slate-700 dark:bg-slate-500/20 dark:text-slate-200" },
+  { id: "interview_1", label: "Entrevista 1",  color: "bg-sky-200 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200" },
+  { id: "interview_2", label: "Entrevista 2",  color: "bg-indigo-200 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200" },
+  { id: "interview_3", label: "Entrevista 3",  color: "bg-violet-200 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200" },
+  { id: "offer",       label: "Oferta",        color: "bg-amber-200 text-amber-900 dark:bg-amber-500/20 dark:text-amber-200" },
+  { id: "hired",       label: "Contratado",    color: "bg-emerald-200 text-emerald-900 dark:bg-emerald-500/20 dark:text-emerald-200" },
+  { id: "rejected",    label: "Descartado",    color: "bg-red-200 text-red-800 dark:bg-red-500/20 dark:text-red-200" },
 ] as const;
 
 export const Route = createFileRoute("/app/vacancies/$vacancyId")({
