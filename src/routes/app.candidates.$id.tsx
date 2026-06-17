@@ -15,6 +15,29 @@ import { MatchPill } from "./app.dashboard";
 
 const STAGES = ["received", "interview_1", "interview_2", "interview_3", "offer", "hired", "rejected"];
 
+const STAGE_LABEL: Record<string, string> = {
+  received: "Recibido", interview_1: "Entrevista 1", interview_2: "Entrevista 2",
+  interview_3: "Entrevista 3", offer: "Oferta", hired: "Contratado", rejected: "Descartado",
+};
+function eventLabel(e: any): string {
+  const t = e?.type ?? "";
+  const p = e?.payload ?? {};
+  if (t === "stage_change") return `Movido a ${STAGE_LABEL[p.stage] ?? p.stage}`;
+  if (t === "email_sent") return `Email enviado${p.kind ? ` (${p.kind})` : ""}`;
+  if (t === "interview_invite_sent") return "Invitación a entrevista enviada";
+  if (t === "interview_scheduled") return "Entrevista agendada";
+  if (t === "manual_created") return "Candidato cargado manualmente";
+  if (t === "ai_analyzed") return "Análisis con IA completado";
+  return t || "Evento";
+}
+function eventColor(t: string): string {
+  if (t === "email_sent" || t === "interview_invite_sent") return "bg-sky-500";
+  if (t === "stage_change") return "bg-primary";
+  if (t === "interview_scheduled") return "bg-indigo-500";
+  if (t === "manual_created") return "bg-emerald-500";
+  return "bg-muted-foreground";
+}
+
 export const Route = createFileRoute("/app/candidates/$id")({
   component: CandidateDetail,
 });
