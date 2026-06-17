@@ -194,3 +194,40 @@ export const getSignedCvUrl = createServerFn({ method: "POST" })
     if (error) throw error;
     return { url: signed.signedUrl };
   });
+
+export const checkIdentityAvailable = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z.object({
+      dni: z.string().trim().min(6).max(20),
+      full_name: z.string().trim().min(3).max(120),
+      birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    }).parse(input))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: exists, error } = await supabaseAdmin.rpc("identity_exists", {
+      _dni: data.dni, _full_name: data.full_name, _birth_date: data.birth_date,
+    });
+    if (error) throw error;
+    return { available: !exists };
+  });
+
+export const saveIdentity = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({
+      dni: z.string().trim().min(6).max(20),
+      full_name: z.string().trim().min(3).max(120),
+      birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.from("profiles").update({
+      dni: data.dni, full_name: data.full_name, birth_date: data.birth_date,
+    } as any).eq("id", context.userId);
+    if (error) {
+      if ((error as any).code === "23505") {
+        throw new Error("Ya existe una cuenta con esos datos. Usá la cuenta original o contactanos.");
+      }
+      throw error;
+    }
+    return { ok: true };
+  });
