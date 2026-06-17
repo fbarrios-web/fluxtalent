@@ -132,10 +132,10 @@ function VacancyDetail() {
 
       <Tabs defaultValue="pipeline">
         <TabsList>
-          <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
+          <TabsTrigger value="pipeline">Etapas</TabsTrigger>
           <TabsTrigger value="table">Tabla</TabsTrigger>
-          <TabsTrigger value="brief">Brief</TabsTrigger>
-          <TabsTrigger value="scheduling">Entrevistas</TabsTrigger>
+          <TabsTrigger value="brief">Detalle de vacante</TabsTrigger>
+          <TabsTrigger value="scheduling">Agenda</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pipeline" className="mt-6">
@@ -188,7 +188,7 @@ function VacancyDetail() {
                       >
                         <ChevronLeft className="h-3.5 w-3.5" />
                       </button>
-                      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{s.label}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${s.color}`}>{s.label}</span>
                     </div>
                     <span className="rounded-full bg-background px-2 text-xs">{items.length}</span>
                   </div>
@@ -203,7 +203,7 @@ function VacancyDetail() {
                       >
                         <div className="flex items-center justify-between">
                           <div className="truncate text-sm font-medium">{a.first_name} {a.last_name}</div>
-                          <MatchPill score={a.match_score} />
+                          <MatchPill score={a.match_score} minMatch={v.min_match} />
                         </div>
                         <div className="mt-1 truncate text-xs text-muted-foreground">{a.email}</div>
                       </div>
@@ -234,7 +234,7 @@ function VacancyDetail() {
                     <td className="px-4 py-3 font-medium">{a.first_name} {a.last_name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{a.email}</td>
                     <td className="px-4 py-3 text-muted-foreground">{a.stage}</td>
-                    <td className="px-4 py-3"><MatchPill score={a.match_score} /></td>
+                    <td className="px-4 py-3"><MatchPill score={a.match_score} minMatch={v.min_match} /></td>
                   </tr>
                 ))}
               </tbody>
