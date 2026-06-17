@@ -360,3 +360,70 @@ function EditVacancyDialog({ vacancy, onSaved }: { vacancy: any; onSaved: () => 
     </>
   );
 }
+
+function AddCandidateDialog({ vacancyId, onAdded }: { vacancyId: string; onAdded: () => void }) {
+  const create = useServerFn(manualCreateApplication);
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ first_name: "", last_name: "", email: "", phone: "", linkedin: "" });
+  const [cv, setCv] = useState<File | null>(null);
+
+  async function save() {
+    if (!form.first_name || !form.last_name || !form.email) {
+      toast.error("Nombre, apellido y email son obligatorios");
+      return;
+    }
+    setSaving(true);
+    try {
+      let cv_base64: string | null = null;
+      let cv_filename: string | null = null;
+      let cv_mime: string | null = null;
+      if (cv) {
+        if (cv.size > 10 * 1024 * 1024) throw new Error("CV mayor a 10MB");
+        const buf = new Uint8Array(await cv.arrayBuffer());
+        let binary = "";
+        for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i]);
+        cv_base64 = btoa(binary);
+        cv_filename = cv.name;
+        cv_mime = cv.type || "application/pdf";
+      }
+      await create({ data: { vacancy_id: vacancyId, ...form, cv_base64, cv_filename, cv_mime } });
+      toast.success("Candidato agregado" + (cv ? " — analizando CV…" : ""));
+      onAdded();
+      setOpen(false);
+      setForm({ first_name: "", last_name: "", email: "", phone: "", linkedin: "" });
+      setCv(null);
+    } catch (e: any) { toast.error(e.message); } finally { setSaving(false); }
+  }
+
+  return (
+    <>
+      <Button variant="outline" onClick={() => setOpen(true)}><UserPlus className="mr-2 h-3.5 w-3.5" /> Agregar candidato</Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Agregar candidato manualmente</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div className="grid gap-3 md:grid-cols-2">
+              <div><Label>Nombre *</Label><Input value={form.first_name} onChange={e => setForm(f => ({ ...f, first_name: e.target.value }))} /></div>
+              <div><Label>Apellido *</Label><Input value={form.last_name} onChange={e => setForm(f => ({ ...f, last_name: e.target.value }))} /></div>
+            </div>
+            <div><Label>Email *</Label><Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div><Label>Teléfono</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
+              <div><Label>LinkedIn</Label><Input value={form.linkedin} onChange={e => setForm(f => ({ ...f, linkedin: e.target.value }))} /></div>
+            </div>
+            <div>
+              <Label>CV (PDF, máx 10MB)</Label>
+              <Input type="file" accept=".pdf,.doc,.docx" onChange={e => setCv(e.target.files?.[0] ?? null)} />
+              {cv && <div className="mt-1 text-xs text-muted-foreground">{cv.name} · {(cv.size / 1024).toFixed(0)}KB</div>}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button onClick={save} disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Agregar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
