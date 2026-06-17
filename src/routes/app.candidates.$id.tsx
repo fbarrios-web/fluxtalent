@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MatchPill } from "./app.dashboard";
 
-const STAGES = ["received", "shortlisted", "interview_1", "interview_2", "interview_3", "offer", "hired", "rejected"];
+const STAGES = ["received", "interview_1", "interview_2", "interview_3", "offer", "hired", "rejected"];
 
 export const Route = createFileRoute("/app/candidates/$id")({
   component: CandidateDetail,
@@ -226,7 +226,7 @@ function CandidateDetail() {
             </Select>
           </div>
           <div className="rounded-2xl border border-border bg-card p-4">
-            <h4 className="mb-3 text-xs font-semibold uppercase text-muted-foreground">Timeline</h4>
+            <h4 className="mb-3 text-xs font-semibold uppercase text-muted-foreground">Historial</h4>
             <ul className="space-y-2 text-xs">
               {(app.application_events ?? []).slice().reverse().map((e: any) => (
                 <li key={e.id} className="flex gap-2 text-muted-foreground">

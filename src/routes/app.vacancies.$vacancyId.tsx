@@ -13,14 +13,13 @@ import { VacancyScheduling } from "@/components/vacancy-scheduling";
 import { downloadCSV } from "@/lib/export-csv";
 
 const STAGES = [
-  { id: "received", label: "Recibidos" },
-  { id: "shortlisted", label: "Preseleccionados" },
-  { id: "interview_1", label: "Entrevista 1" },
-  { id: "interview_2", label: "Entrevista 2" },
-  { id: "interview_3", label: "Entrevista 3" },
-  { id: "offer", label: "Oferta" },
-  { id: "hired", label: "Contratado" },
-  { id: "rejected", label: "Descartado" },
+  { id: "received",    label: "Recibidos",     color: "bg-slate-200 text-slate-700 dark:bg-slate-500/20 dark:text-slate-200" },
+  { id: "interview_1", label: "Entrevista 1",  color: "bg-sky-200 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200" },
+  { id: "interview_2", label: "Entrevista 2",  color: "bg-indigo-200 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200" },
+  { id: "interview_3", label: "Entrevista 3",  color: "bg-violet-200 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200" },
+  { id: "offer",       label: "Oferta",        color: "bg-amber-200 text-amber-900 dark:bg-amber-500/20 dark:text-amber-200" },
+  { id: "hired",       label: "Contratado",    color: "bg-emerald-200 text-emerald-900 dark:bg-emerald-500/20 dark:text-emerald-200" },
+  { id: "rejected",    label: "Descartado",    color: "bg-red-200 text-red-800 dark:bg-red-500/20 dark:text-red-200" },
 ] as const;
 
 export const Route = createFileRoute("/app/vacancies/$vacancyId")({
@@ -84,6 +83,8 @@ function VacancyDetail() {
     qc.invalidateQueries({ queryKey: ["vacancy-apps", vacancyId] });
     if ((res as any)?.inviteWarning) toast.warning((res as any).inviteWarning);
     else if (stage.startsWith("interview_")) toast.success("Invitación enviada al postulante");
+    else if (stage === "rejected") toast.success("Email de descarte enviado");
+    else if (stage === "offer") toast.success("Email de oferta enviado");
   }
 
   return (
@@ -133,10 +134,10 @@ function VacancyDetail() {
 
       <Tabs defaultValue="pipeline">
         <TabsList>
-          <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
+          <TabsTrigger value="pipeline">Etapas</TabsTrigger>
           <TabsTrigger value="table">Tabla</TabsTrigger>
-          <TabsTrigger value="brief">Brief</TabsTrigger>
-          <TabsTrigger value="scheduling">Entrevistas</TabsTrigger>
+          <TabsTrigger value="brief">Detalle de vacante</TabsTrigger>
+          <TabsTrigger value="scheduling">Agenda</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pipeline" className="mt-6">
@@ -189,7 +190,7 @@ function VacancyDetail() {
                       >
                         <ChevronLeft className="h-3.5 w-3.5" />
                       </button>
-                      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{s.label}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${s.color}`}>{s.label}</span>
                     </div>
                     <span className="rounded-full bg-background px-2 text-xs">{items.length}</span>
                   </div>
@@ -204,7 +205,7 @@ function VacancyDetail() {
                       >
                         <div className="flex items-center justify-between">
                           <div className="truncate text-sm font-medium">{a.first_name} {a.last_name}</div>
-                          <MatchPill score={a.match_score} />
+                          <MatchPill score={a.match_score} minMatch={v.min_match} />
                         </div>
                         <div className="mt-1 truncate text-xs text-muted-foreground">{a.email}</div>
                       </div>
@@ -235,7 +236,7 @@ function VacancyDetail() {
                     <td className="px-4 py-3 font-medium">{a.first_name} {a.last_name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{a.email}</td>
                     <td className="px-4 py-3 text-muted-foreground">{a.stage}</td>
-                    <td className="px-4 py-3"><MatchPill score={a.match_score} /></td>
+                    <td className="px-4 py-3"><MatchPill score={a.match_score} minMatch={v.min_match} /></td>
                   </tr>
                 ))}
               </tbody>

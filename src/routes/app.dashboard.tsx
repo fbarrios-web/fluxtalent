@@ -12,6 +12,16 @@ export const Route = createFileRoute("/app/dashboard")({
 });
 
 function Dashboard() {
+  const { data: me } = useQuery({
+    queryKey: ["me-greeting"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u?.user) return null;
+      const { data: p } = await supabase.from("profiles").select("display_name").eq("id", u.user.id).maybeSingle();
+      return { name: p?.display_name || (u.user.email ?? "").split("@")[0] || "" };
+    },
+    staleTime: 5 * 60_000,
+  });
   const { data: vacancies } = useQuery({
     queryKey: ["dashboard-vacancies"],
     queryFn: async () => {
@@ -55,7 +65,7 @@ function Dashboard() {
     <div className="mx-auto max-w-6xl p-6 md:p-10">
       <header className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="font-display text-4xl">Buenos días 👋</h1>
+          <h1 className="font-display text-4xl">Hola{me?.name ? `, ${me.name}` : ""} 👋</h1>
           <p className="text-muted-foreground">Esto es lo que pasa en tu pipeline.</p>
         </div>
         <Link to="/app/vacancies/new" className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
@@ -178,8 +188,13 @@ function StatusPill({ status }: { status: string }) {
   };
   return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${cls[status] ?? "bg-muted"}`}>{status}</span>;
 }
-export function MatchPill({ score }: { score: number | null }) {
+export function MatchPill({ score, minMatch }: { score: number | null; minMatch?: number | null }) {
   if (score == null) return <span className="text-xs text-muted-foreground">analizando…</span>;
-  const c = score >= 80 ? "bg-primary/15 text-primary" : score >= 60 ? "bg-warning/20 text-warning-foreground" : "bg-muted text-muted-foreground";
+  const min = minMatch ?? 60;
+  const high = Math.min(95, Math.max(min + 20, 80));
+  const c =
+    score >= high ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+    : score >= min ? "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300"
+    : "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300";
   return <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${c}`}>{score}%</span>;
 }

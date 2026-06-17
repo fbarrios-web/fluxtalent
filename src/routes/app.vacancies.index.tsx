@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, ExternalLink, Download } from "lucide-react";
+import { Plus, ExternalLink, Download, Search } from "lucide-react";
 import { downloadCSV } from "@/lib/export-csv";
 
 export const Route = createFileRoute("/app/vacancies/")({
@@ -10,6 +11,7 @@ export const Route = createFileRoute("/app/vacancies/")({
 });
 
 function VacanciesList() {
+  const [q, setQ] = useState("");
   const { data, isLoading } = useQuery({
     queryKey: ["vacancies-list"],
     queryFn: async () => {
@@ -21,9 +23,17 @@ function VacanciesList() {
     },
   });
 
+  const filtered = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    if (!term) return data ?? [];
+    return (data ?? []).filter((v: any) =>
+      [v.title, v.area, v.seniority, v.status].filter(Boolean).some((s: string) => String(s).toLowerCase().includes(term))
+    );
+  }, [data, q]);
+
   return (
     <div className="mx-auto max-w-6xl p-6 md:p-10">
-      <header className="mb-8 flex items-center justify-between">
+      <header className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="font-display text-4xl">Vacantes</h1>
           <p className="text-muted-foreground">Gestioná tus búsquedas abiertas.</p>
@@ -33,7 +43,7 @@ function VacanciesList() {
             type="button"
             disabled={!data?.length}
             onClick={() => {
-              const rows = (data ?? []).map((v: any) => [v.title, v.status, v.applications?.[0]?.count ?? 0]);
+              const rows = (filtered ?? []).map((v: any) => [v.title, v.status, v.applications?.[0]?.count ?? 0]);
               downloadCSV("vacantes", ["Vacante", "Estado", "Postulantes"], rows);
             }}
             className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
@@ -46,6 +56,17 @@ function VacanciesList() {
         </div>
       </header>
 
+      <div className="mb-4 relative max-w-md">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <input
+          type="search"
+          value={q}
+          onChange={e => setQ(e.target.value)}
+          placeholder="Buscar por título, área, estado…"
+          className="w-full rounded-full border border-border bg-card py-2 pl-9 pr-3 text-sm outline-none focus:border-primary"
+        />
+      </div>
+
       <div className="rounded-2xl border border-border bg-card">
         {isLoading && <div className="p-10 text-center text-muted-foreground">Cargando…</div>}
         {!isLoading && !data?.length && (
@@ -56,7 +77,10 @@ function VacanciesList() {
             </Link>
           </div>
         )}
-        {data?.map((v: any) => (
+        {!isLoading && data?.length && !filtered.length && (
+          <div className="p-10 text-center text-sm text-muted-foreground">Sin resultados para "{q}".</div>
+        )}
+        {filtered?.map((v: any) => (
           <Link key={v.id} to="/app/vacancies/$vacancyId" params={{ vacancyId: v.id }}
             className="flex items-center justify-between border-b border-border p-4 last:border-0 hover:bg-accent/30">
             <div className="min-w-0">
@@ -84,3 +108,4 @@ function VacanciesList() {
     </div>
   );
 }
+
