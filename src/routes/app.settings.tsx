@@ -49,12 +49,24 @@ function Settings() {
   const [contactEmail, setContactEmail] = useState("");
   const [brandColor, setBrandColor] = useState("#0F766E");
   const [logoUrl, setLogoUrl] = useState("");
+  const [logoPreview, setLogoPreview] = useState("");
   const [signature, setSignature] = useState("");
+  const [signatureImageUrl, setSignatureImageUrl] = useState("");
+  const [signaturePreview, setSignaturePreview] = useState("");
   const [senderEmail, setSenderEmail] = useState("");
   const [timezone, setTimezone] = useState("America/Argentina/Buenos_Aires");
   const [displayName, setDisplayName] = useState("");
   const [saving, setSaving] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingSig, setUploadingSig] = useState(false);
+
+  async function signedPreview(path: string): Promise<string> {
+    if (!path) return "";
+    if (path.startsWith("http")) return path;
+    const { data } = await supabase.storage.from("org-assets").createSignedUrl(path, 60 * 60 * 24 * 7);
+    return data?.signedUrl ?? "";
+  }
 
   useEffect(() => {
     if (org) {
@@ -64,14 +76,33 @@ function Settings() {
       setBrandColor(org.brand_color ?? "#0F766E");
       setLogoUrl(org.logo_url ?? "");
       setSignature(org.signature_html ?? "");
+      setSignatureImageUrl((org as any).signature_image_url ?? "");
       setSenderEmail(org.sender_email ?? "");
       setTimezone((org as any).timezone ?? "America/Argentina/Buenos_Aires");
+      signedPreview(org.logo_url ?? "").then(setLogoPreview);
+      signedPreview((org as any).signature_image_url ?? "").then(setSignaturePreview);
     }
   }, [org]);
 
   useEffect(() => {
     if (account) setDisplayName(account.displayName);
   }, [account]);
+
+  async function uploadAsset(file: File, kind: "logo" | "signature") {
+    if (!org) return;
+    const ext = file.name.split(".").pop() || "png";
+    const path = `${org.id}/${kind}-${Date.now()}.${ext}`;
+    const setUp = kind === "logo" ? setUploadingLogo : setUploadingSig;
+    setUp(true);
+    try {
+      const { error } = await supabase.storage.from("org-assets").upload(path, file, { upsert: true, contentType: file.type });
+      if (error) throw error;
+      const preview = await signedPreview(path);
+      if (kind === "logo") { setLogoUrl(path); setLogoPreview(preview); }
+      else { setSignatureImageUrl(path); setSignaturePreview(preview); }
+      toast.success("Imagen subida — recordá guardar los cambios");
+    } catch (e: any) { toast.error(e.message ?? "Error al subir"); } finally { setUp(false); }
+  }
 
 
   async function save() {
@@ -85,6 +116,7 @@ function Settings() {
         brand_color: brandColor,
         logo_url: logoUrl || null,
         signature_html: signature,
+        signature_image_url: signatureImageUrl || null,
         sender_email: senderEmail,
         timezone,
       } as any).eq("id", org.id).select("id");
@@ -135,12 +167,41 @@ function Settings() {
           <div><Label>Mail de contacto (para postulantes)</Label><Input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="hola@empresa.com" /></div>
           <div><Label>Email remitente</Label><Input value={senderEmail} onChange={e => setSenderEmail(e.target.value)} placeholder="reclutamiento@empresa.com" /></div>
           <div><Label>Color de marca</Label><div className="flex items-center gap-2"><input type="color" value={brandColor} onChange={e => setBrandColor(e.target.value)} className="h-10 w-14 rounded border border-input" /><Input value={brandColor} onChange={e => setBrandColor(e.target.value)} /></div></div>
-          <div><Label>URL del logo</Label><Input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="https://..." /></div>
+          <div>
+            <Label>Logo de la empresa</Label>
+            <div className="flex items-center gap-3">
+              {logoPreview && <img src={logoPreview} alt="logo" className="h-12 w-12 rounded border border-border object-contain bg-white" />}
+              <Input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) uploadAsset(f, "logo"); }} disabled={uploadingLogo} />
+              {logoUrl && <Button variant="ghost" size="sm" onClick={() => { setLogoUrl(""); setLogoPreview(""); }}>Quitar</Button>}
+            </div>
+          </div>
           <div><Label>Zona horaria</Label><Input value={timezone} onChange={e => setTimezone(e.target.value)} placeholder="America/Argentina/Buenos_Aires" /></div>
         </div>
-        <div><Label>Firma (HTML simple)</Label><Textarea rows={4} value={signature} onChange={e => setSignature(e.target.value)} placeholder="<b>María Pérez</b> — Talent Lead @ Empresa" /></div>
+        <div>
+          <Label>Firma — texto (HTML simple)</Label>
+          <Textarea rows={4} value={signature} onChange={e => setSignature(e.target.value)} placeholder="<b>María Pérez</b> — Talent Lead @ Empresa" />
+        </div>
+        <div>
+          <Label>Firma — imagen (opcional)</Label>
+          <div className="flex items-center gap-3">
+            {signaturePreview && <img src={signaturePreview} alt="firma" className="h-16 rounded border border-border object-contain bg-white" />}
+            <Input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) uploadAsset(f, "signature"); }} disabled={uploadingSig} />
+            {signatureImageUrl && <Button variant="ghost" size="sm" onClick={() => { setSignatureImageUrl(""); setSignaturePreview(""); }}>Quitar</Button>}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">Se mostrará debajo del texto de la firma en los emails.</p>
+        </div>
         <Button onClick={save} disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Guardar</Button>
       </section>
+
+      <section className="mt-8 space-y-3 rounded-2xl border border-border bg-card p-6">
+        <h3 className="font-semibold">Soporte</h3>
+        <p className="text-sm text-muted-foreground">
+          ¿Necesitás ayuda, una integración personalizada o reportar un problema? Escribinos a{" "}
+          <a href="mailto:hola@fluxautomatizaciones.com" className="text-primary underline">hola@fluxautomatizaciones.com</a>.
+        </p>
+        <p className="text-xs text-muted-foreground">Respondemos en menos de 24h hábiles.</p>
+      </section>
+
 
     </div>
   );

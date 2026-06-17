@@ -409,6 +409,7 @@ export type Database = {
           plan_price_ars: number
           sender_email: string | null
           signature_html: string | null
+          signature_image_url: string | null
           subscription_status: Database["public"]["Enums"]["subscription_status"]
           timezone: string
           trial_ends_at: string
@@ -427,6 +428,7 @@ export type Database = {
           plan_price_ars?: number
           sender_email?: string | null
           signature_html?: string | null
+          signature_image_url?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           timezone?: string
           trial_ends_at?: string
@@ -445,6 +447,7 @@ export type Database = {
           plan_price_ars?: number
           sender_email?: string | null
           signature_html?: string | null
+          signature_image_url?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           timezone?: string
           trial_ends_at?: string
