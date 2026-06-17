@@ -498,8 +498,11 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          birth_date: string | null
           created_at: string
           display_name: string | null
+          dni: string | null
+          full_name: string | null
           google_connected_at: string | null
           google_email: string | null
           google_refresh_token: string | null
@@ -508,8 +511,11 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          birth_date?: string | null
           created_at?: string
           display_name?: string | null
+          dni?: string | null
+          full_name?: string | null
           google_connected_at?: string | null
           google_email?: string | null
           google_refresh_token?: string | null
@@ -518,8 +524,11 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          birth_date?: string | null
           created_at?: string
           display_name?: string | null
+          dni?: string | null
+          full_name?: string | null
           google_connected_at?: string | null
           google_email?: string | null
           google_refresh_token?: string | null
@@ -583,21 +592,27 @@ export type Database = {
       screening_questions: {
         Row: {
           id: string
+          options: Json
           position: number
+          qtype: string
           question: string
           required: boolean
           vacancy_id: string
         }
         Insert: {
           id?: string
+          options?: Json
           position?: number
+          qtype?: string
           question: string
           required?: boolean
           vacancy_id: string
         }
         Update: {
           id?: string
+          options?: Json
           position?: number
+          qtype?: string
           question?: string
           required?: boolean
           vacancy_id?: string
@@ -783,6 +798,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      identity_exists: {
+        Args: { _birth_date: string; _dni: string; _full_name: string }
         Returns: boolean
       }
       is_subscription_active: { Args: { _org_id: string }; Returns: boolean }

@@ -60,6 +60,22 @@ export const Route = createFileRoute("/api/public/apply")({
             cv_url = path;
           }
 
+          // Auto-discard rule: if any answer selects an option marked discard=true.
+          let autoDiscard = false;
+          const { data: qs } = await supabaseAdmin
+            .from("screening_questions")
+            .select("question, qtype, options")
+            .eq("vacancy_id", vac.id);
+          for (const q of qs ?? []) {
+            const ans = (answers as any)[(q as any).question];
+            const opts: any[] = ((q as any).options ?? []) as any[];
+            if (!opts.length || ans == null) continue;
+            const chosen: string[] = Array.isArray(ans) ? ans : [String(ans)];
+            if (opts.some(o => o?.discard && chosen.includes(o.value))) {
+              autoDiscard = true; break;
+            }
+          }
+
           const { data: appRow, error: insErr } = await supabaseAdmin
             .from("applications")
             .insert({
@@ -68,14 +84,15 @@ export const Route = createFileRoute("/api/public/apply")({
               first_name, last_name, email, phone, linkedin,
               cv_url,
               screening_answers: answers,
-              ai_status: cv_url ? "pending" : "skipped",
+              ai_status: autoDiscard ? "skipped" : (cv_url ? "pending" : "skipped"),
+              stage: autoDiscard ? ("rejected" as any) : undefined,
             })
             .select("id")
             .single();
           if (insErr) return Response.json({ error: insErr.message }, { status: 500, headers: cors });
 
-          // Run AI analysis inline (Workers kill background promises after response).
-          if (cv_url) {
+          // Run AI analysis inline (skip if auto-discarded).
+          if (cv_url && !autoDiscard) {
             try {
               const { runAnalysisAdmin } = await import("@/lib/analyze.server");
               await runAnalysisAdmin(supabaseAdmin, appRow.id);

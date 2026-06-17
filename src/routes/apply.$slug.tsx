@@ -26,8 +26,9 @@ function ApplyPage() {
 
 
   const [form, setForm] = useState({ first_name: "", last_name: "", email: "", phone: "", linkedin: "" });
+  type AnswerVal = string | string[];
   const [cv, setCv] = useState<File | null>(null);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, AnswerVal>>({});
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -101,12 +102,55 @@ function ApplyPage() {
         {!!questions.length && (
           <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
             <h3 className="font-semibold">Preguntas rápidas</h3>
-            {questions.map((q: any) => (
-              <div key={q.id}>
-                <Label>{q.question}{q.required && " *"}</Label>
-                <Textarea required={q.required} rows={3} value={answers[q.question] ?? ""} onChange={e => setAnswers(a => ({ ...a, [q.question]: e.target.value }))} />
-              </div>
-            ))}
+            {questions.map((q: any) => {
+              const qtype = q.qtype ?? "text";
+              const opts: { value: string }[] = q.options ?? [];
+              const val = answers[q.question];
+              if (qtype === "single") {
+                return (
+                  <div key={q.id}>
+                    <Label>{q.question}{q.required && " *"}</Label>
+                    <div className="mt-2 space-y-2">
+                      {opts.map(o => (
+                        <label key={o.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <input type="radio" name={`q-${q.id}`} value={o.value} required={q.required}
+                            checked={val === o.value}
+                            onChange={() => setAnswers(a => ({ ...a, [q.question]: o.value }))} />
+                          {o.value}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+              if (qtype === "multi") {
+                const arr = (Array.isArray(val) ? val : []) as string[];
+                return (
+                  <div key={q.id}>
+                    <Label>{q.question}{q.required && " *"}</Label>
+                    <div className="mt-2 space-y-2">
+                      {opts.map(o => (
+                        <label key={o.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <input type="checkbox" checked={arr.includes(o.value)}
+                            onChange={e => setAnswers(a => {
+                              const cur = (Array.isArray(a[q.question]) ? a[q.question] : []) as string[];
+                              const next = e.target.checked ? [...cur, o.value] : cur.filter(x => x !== o.value);
+                              return { ...a, [q.question]: next };
+                            })} />
+                          {o.value}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+              return (
+                <div key={q.id}>
+                  <Label>{q.question}{q.required && " *"}</Label>
+                  <Textarea required={q.required} rows={3} value={(val as string) ?? ""} onChange={e => setAnswers(a => ({ ...a, [q.question]: e.target.value }))} />
+                </div>
+              );
+            })}
           </div>
         )}
 
