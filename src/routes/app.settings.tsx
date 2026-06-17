@@ -116,6 +116,7 @@ function Settings() {
         brand_color: brandColor,
         logo_url: logoUrl || null,
         signature_html: signature,
+        signature_image_url: signatureImageUrl || null,
         sender_email: senderEmail,
         timezone,
       } as any).eq("id", org.id).select("id");
