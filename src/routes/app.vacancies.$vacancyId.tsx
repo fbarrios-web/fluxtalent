@@ -4,13 +4,18 @@ import { useState, useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { moveApplicationStage, updateVacancy } from "@/lib/recruiting.functions";
-import { ArrowLeft, ExternalLink, Copy, Loader2, Settings as SettingsIcon, Download, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ExternalLink, Copy, Loader2, Download, ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { MatchPill } from "./app.dashboard";
 import { VacancyScheduling } from "@/components/vacancy-scheduling";
 import { downloadCSV } from "@/lib/export-csv";
+import { ScreeningEditor } from "./app.vacancies.new";
 
 const STAGES = [
   { id: "received",    label: "Recibidos",     color: "bg-slate-200 text-slate-700 dark:bg-slate-500/20 dark:text-slate-200" },
