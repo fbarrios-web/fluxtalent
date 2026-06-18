@@ -118,7 +118,7 @@ function SubscriptionPage() {
         <h2 className="font-display text-2xl">Planes disponibles</h2>
         <p className="text-sm text-muted-foreground">Todos los planes incluyen {TRIAL_DAYS} días de prueba gratis.</p>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
+        <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {PLANS.map(p => {
             const isCurrent = p.id === activePlan.id;
             return (
