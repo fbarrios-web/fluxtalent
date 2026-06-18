@@ -76,6 +76,13 @@ export const Route = createFileRoute("/api/public/apply")({
             }
           }
 
+          // Plan limit: don't run AI when monthly CV quota is exceeded
+          let analyzeAi = !!cv_url && !autoDiscard;
+          if (analyzeAi) {
+            const { canAnalyzeMoreCvs } = await import("@/lib/plan-limits");
+            analyzeAi = await canAnalyzeMoreCvs(supabaseAdmin, vac.org_id);
+          }
+
           const { data: appRow, error: insErr } = await supabaseAdmin
             .from("applications")
             .insert({
@@ -84,15 +91,15 @@ export const Route = createFileRoute("/api/public/apply")({
               first_name, last_name, email, phone, linkedin,
               cv_url,
               screening_answers: answers,
-              ai_status: autoDiscard ? "skipped" : (cv_url ? "pending" : "skipped"),
+              ai_status: autoDiscard ? "skipped" : (analyzeAi ? "pending" : "skipped"),
               stage: autoDiscard ? ("rejected" as any) : undefined,
             })
             .select("id")
             .single();
           if (insErr) return Response.json({ error: insErr.message }, { status: 500, headers: cors });
 
-          // Run AI analysis inline (skip if auto-discarded).
-          if (cv_url && !autoDiscard) {
+          // Run AI analysis inline (skip if auto-discarded or quota reached).
+          if (analyzeAi) {
             try {
               const { runAnalysisAdmin } = await import("@/lib/analyze.server");
               await runAnalysisAdmin(supabaseAdmin, appRow.id);

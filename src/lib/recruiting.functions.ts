@@ -65,6 +65,11 @@ export const createVacancy = createServerFn({ method: "POST" })
       throw new Error("Completá el nombre de la empresa y el email remitente en Configuración antes de crear vacantes.");
     }
 
+    // Plan limit: active vacancies
+    const { assertCanCreateVacancy } = await import("@/lib/plan-limits");
+    await assertCanCreateVacancy(supabase, profile.org_id!);
+
+
     const { screening, ...rest } = data;
     const { data: vac, error } = await supabase
       .from("vacancies")
@@ -266,20 +271,27 @@ export const manualCreateApplication = createServerFn({ method: "POST" })
       cv_url = path;
     }
 
+    // Plan limit: skip AI analysis if monthly CV cap reached
+    let analyzeAi = !!cv_url;
+    if (cv_url) {
+      const { canAnalyzeMoreCvs } = await import("@/lib/plan-limits");
+      analyzeAi = await canAnalyzeMoreCvs(supabase, vac.org_id);
+    }
+
     const { data: appRow, error } = await supabase.from("applications").insert({
       vacancy_id: vac.id, org_id: vac.org_id,
       first_name: data.first_name, last_name: data.last_name,
       email: data.email, phone: data.phone || null, linkedin: data.linkedin || null,
       cv_url, source: "manual",
-      ai_status: cv_url ? "pending" : "skipped",
+      ai_status: analyzeAi ? "pending" : "skipped",
     }).select("id").single();
     if (error) throw error;
 
     await supabase.from("application_events").insert({
-      application_id: appRow.id, actor_id: userId, type: "manual_created", payload: {},
+      application_id: appRow.id, actor_id: userId, type: "manual_created", payload: { ai_skipped_by_plan: cv_url && !analyzeAi },
     });
 
-    if (cv_url) {
+    if (analyzeAi) {
       try {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { runAnalysisAdmin } = await import("@/lib/analyze.server");
