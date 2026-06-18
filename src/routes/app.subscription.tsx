@@ -148,6 +148,10 @@ function SubscriptionPage() {
                 <div className="mt-6 flex-1" />
                 {isCurrent ? (
                   <Button variant="outline" disabled className="mt-4 w-full">Plan actual</Button>
+                ) : p.contactOnly ? (
+                  <Button asChild className="mt-4 w-full" variant="outline">
+                    <a href="mailto:hola@fluxautomatizaciones.com?subject=Plan%20Custom%20FLUX%20Talent">Contactar a ventas</a>
+                  </Button>
                 ) : (
                   <Button className="mt-4 w-full" variant={p.highlighted ? "default" : "outline"} onClick={() => toast.info("Próximamente vas a poder cambiar de plan desde acá. Por ahora escribinos.")}>Elegir {p.name}</Button>
                 )}
