@@ -65,6 +65,11 @@ export const createVacancy = createServerFn({ method: "POST" })
       throw new Error("Completá el nombre de la empresa y el email remitente en Configuración antes de crear vacantes.");
     }
 
+    // Plan limit: active vacancies
+    const { assertCanCreateVacancy } = await import("@/lib/plan-limits");
+    await assertCanCreateVacancy(supabase, profile.org_id!);
+
+
     const { screening, ...rest } = data;
     const { data: vac, error } = await supabase
       .from("vacancies")
