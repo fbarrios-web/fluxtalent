@@ -5,7 +5,11 @@ import { adminListOrgs, adminGrantLicense } from "@/lib/admin.functions";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { useState } from "react";
+import { PLANS } from "@/lib/plans";
 
 export const Route = createFileRoute("/app/admin/orgs")({
   component: AdminOrgs,
