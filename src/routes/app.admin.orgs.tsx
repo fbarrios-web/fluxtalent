@@ -5,7 +5,11 @@ import { adminListOrgs, adminGrantLicense } from "@/lib/admin.functions";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { useState } from "react";
+import { PLANS } from "@/lib/plans";
 
 export const Route = createFileRoute("/app/admin/orgs")({
   component: AdminOrgs,
@@ -30,10 +34,12 @@ function AdminOrgs() {
   const { data, isLoading } = useQuery({ queryKey: ["admin-orgs"], queryFn: () => list() });
 
   const mut = useMutation({
-    mutationFn: (vars: { org_id: string; action: any }) => grant({ data: vars }),
+    mutationFn: (vars: { org_id: string; action: any; plan_price_ars?: number; days?: number }) => grant({ data: vars }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-orgs"] }); qc.invalidateQueries({ queryKey: ["admin-metrics"] }); toast.success("Actualizado"); },
     onError: (e: any) => toast.error(e.message ?? "Error"),
   });
+
+  const [planDialog, setPlanDialog] = useState<{ orgId: string; orgName: string } | null>(null);
 
   if (isLoading) return <div className="grid h-64 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></div>;
 
@@ -84,7 +90,12 @@ function AdminOrgs() {
                   <td className="px-4 py-3">ARS {Number(o.plan_price_ars).toLocaleString("es-AR")}</td>
                   <td className="px-4 py-3 text-xs">{o.last_payment_at ? new Date(o.last_payment_at).toLocaleDateString("es-AR") : "—"}</td>
                   <td className="px-4 py-3">
-                    <ActionMenu orgId={o.id} onPick={(action) => mut.mutate({ org_id: o.id, action })} disabled={mut.isPending} />
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setPlanDialog({ orgId: o.id, orgName: o.name })} disabled={mut.isPending}>
+                        Asignar plan
+                      </Button>
+                      <ActionMenu orgId={o.id} onPick={(action) => mut.mutate({ org_id: o.id, action })} disabled={mut.isPending} />
+                    </div>
                   </td>
                 </tr>
               );
@@ -95,7 +106,77 @@ function AdminOrgs() {
           </tbody>
         </table>
       </div>
+
+      <AssignPlanDialog
+        open={!!planDialog}
+        org={planDialog}
+        onClose={() => setPlanDialog(null)}
+        onAssign={(plan_price_ars, days) => {
+          if (!planDialog) return;
+          mut.mutate({ org_id: planDialog.orgId, action: "set_plan", plan_price_ars, days });
+          setPlanDialog(null);
+        }}
+        pending={mut.isPending}
+      />
     </div>
+  );
+}
+
+function AssignPlanDialog({ open, org, onClose, onAssign, pending }: {
+  open: boolean;
+  org: { orgId: string; orgName: string } | null;
+  onClose: () => void;
+  onAssign: (plan_price_ars: number, days: number) => void;
+  pending: boolean;
+}) {
+  const assignable = PLANS.filter(p => !p.contactOnly && p.priceArs >= 0);
+  const [planId, setPlanId] = useState<string>(assignable[1]?.id ?? assignable[0].id);
+  const [days, setDays] = useState<string>("30");
+  const plan = assignable.find(p => p.id === planId) ?? assignable[0];
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Asignar plan {org ? `· ${org.orgName}` : ""}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Plan</Label>
+            <Select value={planId} onValueChange={setPlanId}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {assignable.map(p => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name} — {p.priceArs === 0 ? "Gratis" : `ARS ${p.priceArs.toLocaleString("es-AR")}/mes`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Duración</Label>
+            <Select value={days} onValueChange={setDays}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="15">15 días</SelectItem>
+                <SelectItem value="30">30 días</SelectItem>
+                <SelectItem value="90">90 días</SelectItem>
+                <SelectItem value="180">180 días</SelectItem>
+                <SelectItem value="365">1 año</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <p className="text-xs text-muted-foreground">Esta acción marca la suscripción como activa, fija el precio del plan y registra un pago manual.</p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={() => onAssign(plan.priceArs, Number(days))} disabled={pending}>
+            {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Activar {plan.name}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
