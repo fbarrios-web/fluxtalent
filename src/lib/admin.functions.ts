@@ -85,7 +85,9 @@ export const adminGrantLicense = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z.object({
       org_id: z.string().uuid(),
-      action: z.enum(["activate_30", "activate_90", "activate_365", "extend_trial_15", "mark_paid_manual", "suspend", "cancel"]),
+      action: z.enum(["activate_30", "activate_90", "activate_365", "extend_trial_15", "mark_paid_manual", "suspend", "cancel", "set_plan"]),
+      plan_price_ars: z.number().int().nonnegative().optional(),
+      days: z.number().int().positive().max(3650).optional(),
     }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
@@ -104,6 +106,17 @@ export const adminGrantLicense = createServerFn({ method: "POST" })
       case "mark_paid_manual": patch = { subscription_status: "active", current_period_end: days(30), last_payment_at: new Date().toISOString() }; break;
       case "suspend": patch = { subscription_status: "past_due" }; break;
       case "cancel": patch = { subscription_status: "canceled" }; break;
+      case "set_plan": {
+        if (data.plan_price_ars === undefined) throw new Error("Falta el precio del plan");
+        const periodDays = data.days ?? 30;
+        patch = {
+          subscription_status: "active",
+          plan_price_ars: data.plan_price_ars,
+          current_period_end: days(periodDays),
+          last_payment_at: new Date().toISOString(),
+        };
+        break;
+      }
     }
 
     const { error } = await supabaseAdmin.from("organizations").update(patch as never).eq("id", data.org_id);
@@ -111,19 +124,19 @@ export const adminGrantLicense = createServerFn({ method: "POST" })
 
 
 
-    if (data.action === "mark_paid_manual" || data.action.startsWith("activate_")) {
+    if (data.action === "mark_paid_manual" || data.action === "set_plan" || data.action.startsWith("activate_")) {
       await supabaseAdmin.from("payments").insert({
         org_id: data.org_id,
         provider: "manual",
-        amount_ars: 20000,
+        amount_ars: data.action === "set_plan" ? (data.plan_price_ars ?? 0) : 20000,
         status: "approved",
         paid_at: new Date().toISOString(),
-        raw: { by: context.userId, action: data.action },
+        raw: { by: context.userId, action: data.action, plan_price_ars: data.plan_price_ars, days: data.days },
       });
     }
 
     await supabaseAdmin.from("activity_events").insert({
-      org_id: data.org_id, user_id: context.userId, event_type: `admin.${data.action}`, metadata: {},
+      org_id: data.org_id, user_id: context.userId, event_type: `admin.${data.action}`, metadata: { plan_price_ars: data.plan_price_ars, days: data.days },
     });
 
     return { ok: true };
