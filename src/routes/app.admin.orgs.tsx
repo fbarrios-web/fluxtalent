@@ -34,10 +34,12 @@ function AdminOrgs() {
   const { data, isLoading } = useQuery({ queryKey: ["admin-orgs"], queryFn: () => list() });
 
   const mut = useMutation({
-    mutationFn: (vars: { org_id: string; action: any }) => grant({ data: vars }),
+    mutationFn: (vars: { org_id: string; action: any; plan_price_ars?: number; days?: number }) => grant({ data: vars }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-orgs"] }); qc.invalidateQueries({ queryKey: ["admin-metrics"] }); toast.success("Actualizado"); },
     onError: (e: any) => toast.error(e.message ?? "Error"),
   });
+
+  const [planDialog, setPlanDialog] = useState<{ orgId: string; orgName: string } | null>(null);
 
   if (isLoading) return <div className="grid h-64 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></div>;
 
