@@ -442,8 +442,9 @@ export async function inviteForInterview(
     .eq("id", vac.org_id).maybeSingle();
   if (!org) throw new Error("Organización no encontrada");
   const { data: cfg } = await supabase.from("vacancy_scheduling")
-    .select("recruiter_id, enabled").eq("vacancy_id", vac.id).maybeSingle();
-  if (!cfg || !cfg.enabled) throw new Error("Configurá las entrevistas para esta vacante antes de invitar.");
+    .select("recruiter_id, enabled, interviewer_email, extra_invitees")
+    .eq("vacancy_id", vac.id).eq("stage", stage).maybeSingle();
+  if (!cfg || !cfg.enabled) throw new Error(`Configurá la agenda de ${STAGE_LABELS[stage]} para esta vacante antes de invitar.`);
   const recruiterId = cfg.recruiter_id ?? userId;
   const { data: recruiter } = await supabase.from("profiles")
     .select("google_refresh_token, google_email, display_name")
