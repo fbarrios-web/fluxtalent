@@ -91,7 +91,12 @@ function Settings() {
   }, [org]);
 
   useEffect(() => {
-    if (account) setDisplayName(account.displayName);
+    if (account) {
+      setDisplayName(account.displayName);
+      setFullName(account.fullName);
+      setDni(account.dni);
+      setBirthDate(account.birthDate);
+    }
   }, [account]);
 
   async function uploadAsset(file: File, kind: "logo" | "signature") {
