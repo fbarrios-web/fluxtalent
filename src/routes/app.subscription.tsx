@@ -143,7 +143,7 @@ function SubscriptionPage() {
                 <p className="mt-1 text-sm text-muted-foreground">{p.tagline}</p>
                 <div className="mt-4">
                   <span className="font-display text-3xl">{formatArs(p.priceArs)}</span>
-                  <span className="text-sm text-muted-foreground"> /mes</span>
+                  <span className="text-sm text-muted-foreground"> / 15 días.</span>
                 </div>
                 <ul className="mt-5 space-y-2 text-sm">
                   {p.features.map(f => (
