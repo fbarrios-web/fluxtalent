@@ -103,6 +103,8 @@ export const updateVacancy = createServerFn({ method: "POST" })
         seniority: z.enum(["intern", "junior", "mid", "senior", "lead", "manager", "director"]).optional(),
         modality: z.enum(["remote", "hybrid", "onsite"]).optional(),
         location: z.string().optional(),
+        work_schedule: z.string().max(200).optional(),
+        image_url: z.string().url().optional().or(z.literal("")),
         status: z.enum(["draft", "active", "paused", "closed"]).optional(),
         min_match: z.number().int().min(0).max(100).optional(),
         description: z.string().optional(),
