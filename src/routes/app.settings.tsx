@@ -185,15 +185,7 @@ function Settings() {
         <div>
           <Label>Firma — texto (HTML simple)</Label>
           <Textarea rows={4} value={signature} onChange={e => setSignature(e.target.value)} placeholder="<b>María Pérez</b> — Talent Lead @ Empresa" />
-        </div>
-        <div>
-          <Label>Firma — imagen (opcional)</Label>
-          <div className="flex items-center gap-3">
-            {signaturePreview && <img src={signaturePreview} alt="firma" className="h-16 rounded border border-border object-contain bg-white" />}
-            <Input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) uploadAsset(f, "signature"); }} disabled={uploadingSig} />
-            {signatureImageUrl && <Button variant="ghost" size="sm" onClick={() => { setSignatureImageUrl(""); setSignaturePreview(""); }}>Quitar</Button>}
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">Se mostrará debajo del texto de la firma en los emails.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Solo texto. Aparece debajo del cuerpo en cada email.</p>
         </div>
         <Button onClick={save} disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Guardar</Button>
       </section>
