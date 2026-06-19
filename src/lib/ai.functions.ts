@@ -282,9 +282,9 @@ export const aiVacancyImage = createServerFn({ method: "POST" })
     if (!v) throw new Error("Vacante no encontrada");
     const { aiGenerateImage, aiJSON } = await import("@/lib/ai-gateway.server");
     const size = data.aspect === "wide" ? "1536x1024" : data.aspect === "story" ? "1024x1536" : "1024x1024";
-    const prompt = `Modern, premium corporate recruitment background image for a job posting.
+    const prompt = `Minimal, premium, LIGHT-BACKGROUND corporate recruitment background image for a job posting.
 Role: ${v.title}. Area: ${v.area ?? "professional"}. Seniority: ${v.seniority ?? "mid"}. Modality: ${v.modality ?? "remote"}.
-Style: clean abstract gradient background with soft geometric shapes, generous empty space on the right half for overlay text and a logo, photorealistic but minimal, professional palette, NO TEXT, NO LOGOS, NO PEOPLE FACES, no watermarks. Suitable as the canvas for a LinkedIn job post.`;
+Style: very light off-white / cream / pale neutral background, subtle soft pastel geometric shapes and gentle gradients, lots of negative space, airy and modern. The composition MUST keep generous empty area (right half for square/wide, bottom half for vertical) where text and a logo will be overlaid. Photorealistic but minimal, professional, NO TEXT, NO LOGOS, NO PEOPLE FACES, no watermarks, no dark areas, no heavy shadows.`;
 
     // Resumen de requisitos y responsabilidades en bullets cortos
     let requirements_bullets: string[] = [];
