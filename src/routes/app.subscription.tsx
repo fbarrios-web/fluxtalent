@@ -1,11 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getMySubscription, createPreapproval, cancelSubscription } from "@/lib/subscription.functions";
+import { getMySubscription, createPreapproval, cancelSubscription, requestInvoiceC } from "@/lib/subscription.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, CreditCard, Loader2, ShieldCheck, Sparkles, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { CheckCircle2, CreditCard, FileText, Loader2, ShieldCheck, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
+import { useState } from "react";
 import { PLANS, planByPrice, formatLimit, formatArs, TRIAL_DAYS } from "@/lib/plans";
 
 export const Route = createFileRoute("/app/subscription")({
