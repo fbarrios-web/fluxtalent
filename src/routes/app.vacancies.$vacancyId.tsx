@@ -97,7 +97,6 @@ function VacancyDetail() {
     if ((res as any)?.inviteWarning) toast.warning((res as any).inviteWarning);
     else if (stage.startsWith("interview_")) toast.success("Invitación enviada al postulante");
     else if (stage === "rejected") toast.success("Email de descarte enviado");
-    else if (stage === "offer") toast.success("Email de oferta enviado");
   }
 
   return (
