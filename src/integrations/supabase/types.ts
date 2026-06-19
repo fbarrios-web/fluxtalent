@@ -185,6 +185,7 @@ export type Database = {
           end_time: string
           id: string
           org_id: string
+          stage: string
           start_time: string
           vacancy_id: string
           weekday: number
@@ -196,6 +197,7 @@ export type Database = {
           end_time: string
           id?: string
           org_id: string
+          stage?: string
           start_time: string
           vacancy_id: string
           weekday: number
@@ -207,6 +209,7 @@ export type Database = {
           end_time?: string
           id?: string
           org_id?: string
+          stage?: string
           start_time?: string
           vacancy_id?: string
           weekday?: number
@@ -235,6 +238,7 @@ export type Database = {
           id: string
           org_id: string
           source: string
+          stage: string
           start_at: string
           status: string
           vacancy_id: string
@@ -245,6 +249,7 @@ export type Database = {
           id?: string
           org_id: string
           source?: string
+          stage?: string
           start_at: string
           status?: string
           vacancy_id: string
@@ -255,6 +260,7 @@ export type Database = {
           id?: string
           org_id?: string
           source?: string
+          stage?: string
           start_at?: string
           status?: string
           vacancy_id?: string
@@ -829,9 +835,12 @@ export type Database = {
           created_at: string
           duration_minutes: number
           enabled: boolean
+          extra_invitees: Json
           instructions: string | null
+          interviewer_email: string | null
           org_id: string
           recruiter_id: string
+          stage: string
           updated_at: string
           vacancy_id: string
         }
@@ -839,9 +848,12 @@ export type Database = {
           created_at?: string
           duration_minutes?: number
           enabled?: boolean
+          extra_invitees?: Json
           instructions?: string | null
+          interviewer_email?: string | null
           org_id: string
           recruiter_id: string
+          stage?: string
           updated_at?: string
           vacancy_id: string
         }
@@ -849,9 +861,12 @@ export type Database = {
           created_at?: string
           duration_minutes?: number
           enabled?: boolean
+          extra_invitees?: Json
           instructions?: string | null
+          interviewer_email?: string | null
           org_id?: string
           recruiter_id?: string
+          stage?: string
           updated_at?: string
           vacancy_id?: string
         }
@@ -866,7 +881,7 @@ export type Database = {
           {
             foreignKeyName: "vacancy_scheduling_vacancy_id_fkey"
             columns: ["vacancy_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "vacancies"
             referencedColumns: ["id"]
           },
