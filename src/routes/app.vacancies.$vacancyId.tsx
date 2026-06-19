@@ -462,3 +462,193 @@ function AddCandidateDialog({ vacancyId, onAdded }: { vacancyId: string; onAdded
     </>
   );
 }
+
+function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: string }) {
+  const gen = useServerFn(aiVacancyImage);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [aspect, setAspect] = useState<"square" | "wide" | "story">("square");
+  const [cta, setCta] = useState("Postulate en el link adjunto");
+  const [bgDataUrl, setBgDataUrl] = useState<string | null>(null);
+  const [finalDataUrl, setFinalDataUrl] = useState<string | null>(null);
+  const [org, setOrg] = useState<{ name: string; logo_url: string | null; brand_color: string | null } | null>(null);
+
+  useEffect(() => {
+    if (!open || org) return;
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      const { data: prof } = await supabase.from("profiles").select("org_id").eq("id", u.user.id).maybeSingle();
+      if (!prof?.org_id) return;
+      const { data: o } = await supabase.from("organizations").select("name, logo_url, brand_color").eq("id", prof.org_id).maybeSingle();
+      if (o) setOrg(o as any);
+    })();
+  }, [open, org]);
+
+  async function generate() {
+    setLoading(true);
+    setBgDataUrl(null); setFinalDataUrl(null);
+    try {
+      const r: any = await gen({ data: { vacancyId: vacancy.id, aspect } });
+      const url = `data:image/png;base64,${r.b64}`;
+      setBgDataUrl(url);
+      await compose(url);
+    } catch (e: any) {
+      toast.error(e.message ?? "No se pudo generar la imagen");
+    } finally { setLoading(false); }
+  }
+
+  async function compose(bgUrl: string) {
+    const dims = aspect === "wide" ? { w: 1536, h: 1024 } : aspect === "story" ? { w: 1024, h: 1536 } : { w: 1024, h: 1024 };
+    const canvas = document.createElement("canvas");
+    canvas.width = dims.w; canvas.height = dims.h;
+    const ctx = canvas.getContext("2d")!;
+    const bg = await loadImg(bgUrl);
+    ctx.drawImage(bg, 0, 0, dims.w, dims.h);
+
+    const brand = org?.brand_color || "#0F766E";
+    // Overlay panel (right side for square/wide, bottom for story)
+    if (aspect === "story") {
+      const h = dims.h * 0.42;
+      const grad = ctx.createLinearGradient(0, dims.h - h, 0, dims.h);
+      grad.addColorStop(0, "rgba(0,0,0,0)"); grad.addColorStop(0.4, "rgba(0,0,0,0.7)"); grad.addColorStop(1, "rgba(0,0,0,0.92)");
+      ctx.fillStyle = grad; ctx.fillRect(0, dims.h - h, dims.w, h);
+    } else {
+      const pw = dims.w * 0.5;
+      const grad = ctx.createLinearGradient(dims.w - pw, 0, dims.w, 0);
+      grad.addColorStop(0, "rgba(0,0,0,0)"); grad.addColorStop(0.4, "rgba(0,0,0,0.7)"); grad.addColorStop(1, "rgba(0,0,0,0.92)");
+      ctx.fillStyle = grad; ctx.fillRect(dims.w - pw, 0, pw, dims.h);
+    }
+
+    // Accent bar
+    ctx.fillStyle = brand;
+    if (aspect === "story") ctx.fillRect(60, dims.h - dims.h * 0.42 + 40, 90, 8);
+    else ctx.fillRect(dims.w - dims.w * 0.5 + 60, 80, 90, 8);
+
+    // Text layout
+    const textX = aspect === "story" ? 60 : dims.w - dims.w * 0.5 + 60;
+    let textY = aspect === "story" ? dims.h - dims.h * 0.42 + 90 : 130;
+    const maxW = aspect === "story" ? dims.w - 120 : dims.w * 0.5 - 120;
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "600 28px system-ui, -apple-system, Segoe UI, Arial";
+    ctx.fillText("Estamos buscando", textX, textY); textY += 50;
+
+    ctx.font = "800 64px system-ui, -apple-system, Segoe UI, Arial";
+    textY = wrapText(ctx, vacancy.title, textX, textY, maxW, 70);
+    textY += 20;
+
+    ctx.font = "400 26px system-ui, -apple-system, Segoe UI, Arial";
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    const meta = [vacancy.area, labelSeniority(vacancy.seniority), labelModality(vacancy.modality), vacancy.location].filter(Boolean).join(" · ");
+    if (meta) { textY = wrapText(ctx, meta, textX, textY, maxW, 34); textY += 10; }
+    if (vacancy.work_schedule) { textY = wrapText(ctx, vacancy.work_schedule, textX, textY, maxW, 34); textY += 20; }
+
+    // CTA
+    ctx.fillStyle = brand;
+    const ctaH = 70;
+    ctx.fillRect(textX, textY, Math.min(maxW, 520), ctaH);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 24px system-ui, -apple-system, Segoe UI, Arial";
+    ctx.textBaseline = "middle";
+    ctx.fillText(cta, textX + 24, textY + ctaH / 2);
+    ctx.textBaseline = "alphabetic";
+
+    // Logo bottom-left
+    if (org?.logo_url) {
+      try {
+        const logo = await loadImg(org.logo_url);
+        const lh = 80;
+        const lw = (logo.width / logo.height) * lh;
+        ctx.drawImage(logo, 50, dims.h - lh - 50, lw, lh);
+      } catch {}
+    }
+    if (org?.name) {
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "600 22px system-ui, -apple-system, Segoe UI, Arial";
+      ctx.fillText(org.name, org?.logo_url ? 150 : 50, dims.h - 70);
+    }
+
+    setFinalDataUrl(canvas.toDataURL("image/png"));
+  }
+
+  function download() {
+    if (!finalDataUrl) return;
+    const a = document.createElement("a");
+    a.href = finalDataUrl;
+    a.download = `vacante-${vacancy.public_slug ?? vacancy.id}.png`;
+    a.click();
+  }
+
+  return (
+    <>
+      <Button variant="outline" onClick={() => setOpen(true)}><ImageIcon className="mr-2 h-3.5 w-3.5" /> Imagen</Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+          <DialogHeader><DialogTitle>Generar imagen para publicar</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <p className="text-xs text-muted-foreground">La IA crea un fondo profesional según el rol. Le superponemos tu logo, color de marca, los datos de la vacante y el CTA.</p>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div>
+                <Label>Formato</Label>
+                <Select value={aspect} onValueChange={v => setAspect(v as any)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="square">Cuadrado (1:1) — feed</SelectItem>
+                    <SelectItem value="wide">Horizontal (3:2) — LinkedIn</SelectItem>
+                    <SelectItem value="story">Vertical (2:3) — story</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Texto del CTA</Label>
+                <Input value={cta} onChange={e => setCta(e.target.value)} />
+              </div>
+            </div>
+            <div className="rounded-md border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+              <div>Link de postulación (ya incluido en el botón al compartir): <code className="break-all text-foreground">{applyUrl}</code></div>
+            </div>
+            {finalDataUrl ? (
+              <img src={finalDataUrl} alt="Vista previa" className="w-full rounded-lg border border-border" />
+            ) : bgDataUrl ? (
+              <div className="text-xs text-muted-foreground">Componiendo overlay…</div>
+            ) : (
+              <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">Sin imagen aún. Hacé click en "Generar".</div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)}>Cerrar</Button>
+            <Button variant="outline" onClick={generate} disabled={loading}>
+              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+              {finalDataUrl ? "Regenerar" : "Generar"}
+            </Button>
+            <Button onClick={download} disabled={!finalDataUrl}><Download className="mr-2 h-4 w-4" /> Descargar PNG</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function loadImg(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lineH: number): number {
+  const words = text.split(/\s+/);
+  let line = "";
+  for (const w of words) {
+    const test = line ? line + " " + w : w;
+    if (ctx.measureText(test).width > maxW && line) { ctx.fillText(line, x, y); y += lineH; line = w; }
+    else line = test;
+  }
+  if (line) { ctx.fillText(line, x, y); y += lineH; }
+  return y;
+}
+function labelSeniority(s?: string) { return s === "junior" ? "Junior" : s === "mid" ? "Semi Senior" : s === "senior" ? "Senior" : s ?? ""; }
+function labelModality(m?: string) { return m === "remote" ? "Remoto" : m === "hybrid" ? "Híbrido" : m === "onsite" ? "Presencial" : m ?? ""; }
