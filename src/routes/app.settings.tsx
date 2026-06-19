@@ -150,7 +150,13 @@ function Settings() {
     if (!account) return;
     setSavingProfile(true);
     try {
-      const { error } = await supabase.from("profiles").update({ display_name: displayName }).eq("id", account.id);
+      const patch: Record<string, unknown> = {
+        display_name: displayName,
+        full_name: fullName.trim() || null,
+        dni: dni.trim() || null,
+        birth_date: birthDate || null,
+      };
+      const { error } = await supabase.from("profiles").update(patch as any).eq("id", account.id);
       if (error) throw error;
       toast.success("Perfil actualizado");
       qc.invalidateQueries({ queryKey: ["my-account"] });
@@ -171,11 +177,15 @@ function Settings() {
         <div className="grid gap-4 md:grid-cols-2">
           <div><Label>Email</Label><Input value={account?.email ?? ""} disabled /></div>
           <div><Label>Nombre para mostrar</Label><Input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Tu nombre" /></div>
+          <div><Label>Nombre completo</Label><Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Nombre y apellido" /></div>
+          <div><Label>DNI</Label><Input value={dni} onChange={e => setDni(e.target.value)} placeholder="12345678" /></div>
+          <div><Label>Fecha de nacimiento</Label><Input type="date" value={birthDate ?? ""} onChange={e => setBirthDate(e.target.value)} /></div>
           <div><Label>Roles</Label><Input value={(account?.roles ?? []).join(", ") || "—"} disabled /></div>
           <div><Label>Miembro desde</Label><Input value={account?.createdAt ? new Date(account.createdAt).toLocaleDateString("es-AR") : "—"} disabled /></div>
         </div>
         <Button onClick={saveProfile} disabled={savingProfile || !account}>{savingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Guardar perfil</Button>
       </section>
+
 
       <section className="mt-8 space-y-4 rounded-2xl border border-border bg-card p-6">
         <h3 className="font-semibold">Empresa & marca</h3>
