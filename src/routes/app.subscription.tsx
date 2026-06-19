@@ -121,7 +121,7 @@ function SubscriptionPage() {
       {/* Planes */}
       <div className="mt-10">
         <h2 className="font-display text-2xl">Planes disponibles</h2>
-        <p className="text-sm text-muted-foreground">Todos los planes incluyen {TRIAL_DAYS} días de prueba gratis.</p>
+        <p className="text-sm text-muted-foreground">{"\n"}</p>
 
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {PLANS.map(p => {
