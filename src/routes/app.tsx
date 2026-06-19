@@ -30,6 +30,7 @@ function AppLayout() {
   const nav = useNavigate();
   const loc = useLocation();
   const amI = useServerFn(adminAmI);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const { data: roleData } = useQuery({
     queryKey: ["am-i-admin"],
     queryFn: () => amI(),
@@ -51,7 +52,6 @@ function AppLayout() {
   }
 
 
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   const NavLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
     <>
