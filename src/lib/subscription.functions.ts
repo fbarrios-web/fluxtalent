@@ -177,3 +177,87 @@ export const logEvent = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
+/** Solicita Factura C: guarda la solicitud y notifica al admin por email. */
+export const requestInvoiceC = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({
+      business_name: z.string().trim().min(2).max(200),
+      cuit_or_dni: z.string().trim().min(7).max(20),
+      email: z.string().trim().email().max(200),
+      address: z.string().trim().max(300).optional().or(z.literal("")),
+      notes: z.string().trim().max(1000).optional().or(z.literal("")),
+      amount_ars: z.number().nonnegative().optional(),
+    }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const orgId = await getOrCreateOrgId(supabase, userId);
+
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("name, plan_price_ars")
+      .eq("id", orgId)
+      .maybeSingle();
+
+    const { data: inserted, error } = await supabase
+      .from("invoice_requests")
+      .insert({
+        org_id: orgId,
+        user_id: userId,
+        invoice_type: "C",
+        business_name: data.business_name,
+        cuit_or_dni: data.cuit_or_dni,
+        email: data.email,
+        address: data.address || null,
+        notes: data.notes || null,
+        amount_ars: data.amount_ars ?? org?.plan_price_ars ?? null,
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+
+    let emailWarning: string | null = null;
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: adminRole } = await supabaseAdmin
+        .from("user_roles").select("user_id").eq("role", "admin").limit(1).maybeSingle();
+      if (adminRole?.user_id) {
+        const { data: adminProfile } = await supabaseAdmin
+          .from("profiles")
+          .select("google_refresh_token, google_email, display_name")
+          .eq("id", adminRole.user_id)
+          .maybeSingle();
+        if (adminProfile?.google_refresh_token && adminProfile.google_email) {
+          const { refreshAccessToken, sendGmail } = await import("@/lib/google.server");
+          const { access_token } = await refreshAccessToken(adminProfile.google_refresh_token);
+          const esc = (s: string) => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
+          const html = `
+            <h2>Nueva solicitud de Factura C</h2>
+            <p><strong>Organización:</strong> ${esc(org?.name ?? "—")}</p>
+            <p><strong>Razón social / Nombre:</strong> ${esc(data.business_name)}</p>
+            <p><strong>CUIT/DNI:</strong> ${esc(data.cuit_or_dni)}</p>
+            <p><strong>Email de facturación:</strong> ${esc(data.email)}</p>
+            <p><strong>Domicilio:</strong> ${esc(data.address || "—")}</p>
+            <p><strong>Monto:</strong> ${data.amount_ars ?? org?.plan_price_ars ?? "—"} ARS</p>
+            <p><strong>Notas:</strong> ${esc(data.notes || "—")}</p>
+          `;
+          await sendGmail({
+            accessToken: access_token,
+            fromName: adminProfile.display_name || "FLUX Talent",
+            fromEmail: adminProfile.google_email,
+            to: adminProfile.google_email,
+            subject: `Factura C · ${org?.name ?? "Cliente"}`,
+            html,
+            replyTo: data.email,
+          });
+        } else {
+          emailWarning = "Solicitud guardada. El admin debe conectar Gmail para recibir la notificación por email.";
+        }
+      }
+    } catch (e: any) {
+      emailWarning = `Solicitud guardada, pero falló el envío del email: ${e?.message ?? "error"}`;
+    }
+
+    return { id: inserted.id, emailWarning };
+  });

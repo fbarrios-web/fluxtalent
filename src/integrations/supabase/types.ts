@@ -394,6 +394,62 @@ export type Database = {
           },
         ]
       }
+      invoice_requests: {
+        Row: {
+          address: string | null
+          amount_ars: number | null
+          business_name: string
+          created_at: string
+          cuit_or_dni: string
+          email: string
+          id: string
+          invoice_type: string
+          notes: string | null
+          org_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          amount_ars?: number | null
+          business_name: string
+          created_at?: string
+          cuit_or_dni: string
+          email: string
+          id?: string
+          invoice_type?: string
+          notes?: string | null
+          org_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          amount_ars?: number | null
+          business_name?: string
+          created_at?: string
+          cuit_or_dni?: string
+          email?: string
+          id?: string
+          invoice_type?: string
+          notes?: string | null
+          org_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           brand_color: string | null

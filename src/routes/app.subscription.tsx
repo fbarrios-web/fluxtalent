@@ -1,11 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getMySubscription, createPreapproval, cancelSubscription } from "@/lib/subscription.functions";
+import { getMySubscription, createPreapproval, cancelSubscription, requestInvoiceC } from "@/lib/subscription.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, CreditCard, Loader2, ShieldCheck, Sparkles, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { CheckCircle2, CreditCard, FileText, Loader2, ShieldCheck, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
+import { useState } from "react";
 import { PLANS, planByPrice, formatLimit, formatArs, TRIAL_DAYS } from "@/lib/plans";
 
 export const Route = createFileRoute("/app/subscription")({
@@ -185,7 +190,10 @@ function SubscriptionPage() {
         )}
       </div>
 
-      <p className="mt-6 flex items-center gap-2 text-xs text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" /> Pago seguro vía Mercado Pago. Cancelás cuando quieras.</p>
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+        <p className="flex items-center gap-2 text-xs text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" /> Pago seguro vía Mercado Pago. Cancelás cuando quieras.</p>
+        <InvoiceCDialog defaultAmount={sub.plan_price_ars} />
+      </div>
     </div>
   );
 }
@@ -196,5 +204,72 @@ function Info({ label, value }: { label: string; value: string }) {
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-1 text-lg font-semibold">{value}</p>
     </div>
+  );
+}
+
+function InvoiceCDialog({ defaultAmount }: { defaultAmount: number | null }) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({
+    business_name: "",
+    cuit_or_dni: "",
+    email: "",
+    address: "",
+    notes: "",
+  });
+  const submit = useServerFn(requestInvoiceC);
+  const mut = useMutation({
+    mutationFn: () => submit({ data: { ...form, amount_ars: defaultAmount ?? undefined } }),
+    onSuccess: (r: any) => {
+      toast.success("Solicitud enviada. Te facturamos a la brevedad.");
+      if (r?.emailWarning) toast.warning(r.emailWarning);
+      setOpen(false);
+      setForm({ business_name: "", cuit_or_dni: "", email: "", address: "", notes: "" });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "No se pudo enviar la solicitud"),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm"><FileText className="mr-2 h-4 w-4" /> Solicitar Factura C</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Solicitar Factura C</DialogTitle></DialogHeader>
+        <div className="grid gap-3">
+          <div>
+            <Label>Razón social o nombre</Label>
+            <Input value={form.business_name} onChange={e => setForm(f => ({ ...f, business_name: e.target.value }))} />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label>CUIT / DNI</Label>
+              <Input value={form.cuit_or_dni} onChange={e => setForm(f => ({ ...f, cuit_or_dni: e.target.value }))} />
+            </div>
+            <div>
+              <Label>Email de facturación</Label>
+              <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+            </div>
+          </div>
+          <div>
+            <Label>Domicilio (opcional)</Label>
+            <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
+          </div>
+          <div>
+            <Label>Notas (opcional)</Label>
+            <Textarea rows={3} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
+          </div>
+          {defaultAmount != null && (
+            <p className="text-xs text-muted-foreground">Monto a facturar: {formatArs(defaultAmount)}</p>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button onClick={() => mut.mutate()} disabled={mut.isPending || !form.business_name || !form.cuit_or_dni || !form.email}>
+            {mut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Enviar solicitud
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
