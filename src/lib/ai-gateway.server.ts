@@ -63,3 +63,29 @@ export async function aiText(opts: { system?: string; user: string; model?: stri
   const data = await res.json();
   return data.choices?.[0]?.message?.content ?? "";
 }
+
+export async function aiGenerateImage(opts: {
+  prompt: string;
+  size?: string;
+  model?: string;
+}): Promise<string> {
+  const key = process.env.LOVABLE_API_KEY;
+  if (!key) throw new Error("LOVABLE_API_KEY missing");
+  const res = await fetch(`${BASE}/images/generations`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Lovable-API-Key": key, Authorization: `Bearer ${key}` },
+    body: JSON.stringify({
+      model: opts.model ?? "google/gemini-3.1-flash-image-preview",
+      prompt: opts.prompt,
+      size: opts.size ?? "1024x1024",
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`AI image ${res.status}: ${text.slice(0, 300)}`);
+  }
+  const data = await res.json();
+  const b64 = data?.data?.[0]?.b64_json;
+  if (!b64) throw new Error("AI image: empty response");
+  return b64 as string;
+}
