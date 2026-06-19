@@ -659,6 +659,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           id: string
+          image_url: string | null
           location: string | null
           min_match: number
           modality: Database["public"]["Enums"]["modality"] | null
@@ -671,6 +672,7 @@ export type Database = {
           status: Database["public"]["Enums"]["vacancy_status"]
           title: string
           updated_at: string
+          work_schedule: string | null
         }
         Insert: {
           area?: string | null
@@ -679,6 +681,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          image_url?: string | null
           location?: string | null
           min_match?: number
           modality?: Database["public"]["Enums"]["modality"] | null
@@ -691,6 +694,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["vacancy_status"]
           title: string
           updated_at?: string
+          work_schedule?: string | null
         }
         Update: {
           area?: string | null
@@ -699,6 +703,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          image_url?: string | null
           location?: string | null
           min_match?: number
           modality?: Database["public"]["Enums"]["modality"] | null
@@ -711,6 +716,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["vacancy_status"]
           title?: string
           updated_at?: string
+          work_schedule?: string | null
         }
         Relationships: [
           {
