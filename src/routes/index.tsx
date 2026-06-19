@@ -149,8 +149,22 @@ function Landing() {
                 <h3 className="font-display text-2xl">{p.name}</h3>
                 <p className="mt-1 min-h-[2.5rem] text-sm text-muted-foreground">{p.tagline}</p>
                 <div className="mt-5">
+                  {p.originalPriceArs != null && p.originalPriceArs > p.priceArs && (
+                    <span className="mr-2 text-lg text-muted-foreground line-through">
+                      ARS {p.originalPriceArs.toLocaleString("es-AR")}
+                    </span>
+                  )}
                   <span className="font-display text-4xl">{formatArs(p.priceArs)}</span>
-                  <span className="text-sm text-muted-foreground"> / 15 días.</span>
+                  {p.priceArs === 0 ? (
+                    <span className="text-sm text-muted-foreground"> / {TRIAL_DAYS} días</span>
+                  ) : p.priceArs === -1 ? null : (
+                    <span className="text-sm text-muted-foreground"> / mes</span>
+                  )}
+                  {p.originalPriceArs != null && p.originalPriceArs > p.priceArs && p.priceArs > 0 && (
+                    <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                      -{Math.round((1 - p.priceArs / p.originalPriceArs) * 100)}%
+                    </span>
+                  )}
                 </div>
                 <ul className="mt-6 space-y-2 text-sm">
                   {p.features.map(f => (

@@ -91,7 +91,25 @@ function SubscriptionPage() {
           <div>
             <p className="text-sm text-muted-foreground">Plan {isTrial ? "en prueba" : "activo"}</p>
             <p className="font-display text-3xl">FLUX Talent — {activePlan.name}</p>
-            <p className="text-sm text-muted-foreground">{formatArs(activePlan.priceArs)} / 15 días.</p>
+            <div className="mt-1 flex items-baseline gap-2">
+              {activePlan.originalPriceArs != null && activePlan.originalPriceArs > activePlan.priceArs && activePlan.priceArs > 0 && (
+                <span className="text-sm text-muted-foreground line-through">
+                  ARS {activePlan.originalPriceArs.toLocaleString("es-AR")}/mes
+                </span>
+              )}
+              <span className="text-sm text-muted-foreground">
+                {activePlan.priceArs === 0
+                  ? `Gratis / ${TRIAL_DAYS} días`
+                  : activePlan.priceArs === -1
+                    ? "A medida"
+                    : `${formatArs(activePlan.priceArs)} / mes`}
+              </span>
+              {activePlan.originalPriceArs != null && activePlan.originalPriceArs > activePlan.priceArs && activePlan.priceArs > 0 && (
+                <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                  -{Math.round((1 - activePlan.priceArs / activePlan.originalPriceArs) * 100)}%
+                </span>
+              )}
+            </div>
           </div>
           <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusBadge.cls}`}>{statusBadge.label}</span>
         </div>
@@ -142,8 +160,22 @@ function SubscriptionPage() {
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">{p.tagline}</p>
                 <div className="mt-4">
+                  {p.originalPriceArs != null && p.originalPriceArs > p.priceArs && p.priceArs > 0 && (
+                    <span className="mr-2 text-sm text-muted-foreground line-through">
+                      ARS {p.originalPriceArs.toLocaleString("es-AR")}
+                    </span>
+                  )}
                   <span className="font-display text-3xl">{formatArs(p.priceArs)}</span>
-                  <span className="text-sm text-muted-foreground"> / 15 días.</span>
+                  {p.priceArs === 0 ? (
+                    <span className="text-sm text-muted-foreground"> / {TRIAL_DAYS} días</span>
+                  ) : p.priceArs === -1 ? null : (
+                    <span className="text-sm text-muted-foreground"> / mes</span>
+                  )}
+                  {p.originalPriceArs != null && p.originalPriceArs > p.priceArs && p.priceArs > 0 && (
+                    <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                      -{Math.round((1 - p.priceArs / p.originalPriceArs) * 100)}%
+                    </span>
+                  )}
                 </div>
                 <ul className="mt-5 space-y-2 text-sm">
                   {p.features.map(f => (

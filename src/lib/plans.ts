@@ -8,6 +8,7 @@ export interface Plan {
   id: PlanId;
   name: string;
   priceArs: number; // 0 = gratuito; -1 = a medida
+  originalPriceArs?: number; // precio "de lista" para mostrar descuento
   tagline: string;
   maxVacancies: number; // -1 = ilimitado
   maxCvsPerMonth: number; // -1 = ilimitado
@@ -36,6 +37,7 @@ export const PLANS: Plan[] = [
     id: "starter",
     name: "Starter",
     priceArs: 24000,
+    originalPriceArs: 30000,
     tagline: "Ideal para reclutadores freelancers",
     maxVacancies: 5,
     maxCvsPerMonth: 200,
@@ -50,6 +52,7 @@ export const PLANS: Plan[] = [
     id: "pro",
     name: "Pro",
     priceArs: 48000,
+    originalPriceArs: 60000,
     tagline: "Ideal para consultoras y áreas de Talento con flujo constante.",
     maxVacancies: 20,
     maxCvsPerMonth: 1000,
@@ -65,6 +68,7 @@ export const PLANS: Plan[] = [
     id: "enterprise",
     name: "Enterprise",
     priceArs: 96000,
+    originalPriceArs: 120000,
     tagline: "Volumen alto, multi-equipo y soporte dedicado.",
     maxVacancies: -1,
     maxCvsPerMonth: 1000,
@@ -112,3 +116,4 @@ export function formatArs(n: number): string {
   if (n === 0) return "Gratis";
   return `ARS ${n.toLocaleString("es-AR")}`;
 }
+
