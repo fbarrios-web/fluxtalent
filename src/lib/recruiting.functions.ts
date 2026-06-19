@@ -264,11 +264,15 @@ export const manualCreateApplication = createServerFn({ method: "POST" })
     if (!vac || vac.org_id !== profile.org_id) throw new Error("Vacante no disponible");
 
     let cv_url: string | null = null;
+    let adminClient: any = null;
     if (data.cv_base64) {
+      // Use admin client to upload (cvs bucket has no authenticated INSERT policy)
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      adminClient = supabaseAdmin;
       const ext = (data.cv_filename?.split(".").pop() || "pdf").toLowerCase();
       const path = `${vac.org_id}/${vac.id}/${crypto.randomUUID()}.${ext}`;
       const bin = Uint8Array.from(atob(data.cv_base64), c => c.charCodeAt(0));
-      const { error: upErr } = await supabase.storage.from("cvs").upload(path, bin, {
+      const { error: upErr } = await supabaseAdmin.storage.from("cvs").upload(path, bin, {
         contentType: data.cv_mime || "application/pdf", upsert: false,
       });
       if (upErr) throw new Error("Error al subir CV: " + upErr.message);
@@ -296,13 +300,18 @@ export const manualCreateApplication = createServerFn({ method: "POST" })
     });
 
     if (analyzeAi) {
+      // Fire-and-forget AI analysis so the dialog returns immediately.
+      // The candidate page shows ai_status and a manual "Re-analizar" button as fallback.
       try {
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { runAnalysisAdmin } = await import("@/lib/analyze.server");
-        await runAnalysisAdmin(supabaseAdmin, appRow.id);
-      } catch (e) {
-        await supabase.from("applications").update({ ai_status: "failed" }).eq("id", appRow.id);
-      }
+        const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
+        const secret = process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 8);
+        void fetch(`${origin}/api/public/analyze`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ applicationId: appRow.id, secret }),
+        }).catch(() => {});
+      } catch { /* ignore */ }
     }
     return { id: appRow.id };
   });
+
