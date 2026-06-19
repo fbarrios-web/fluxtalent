@@ -172,7 +172,7 @@ function AssignPlanDialog({ open, org, onClose, onAssign, pending }: {
               <SelectContent>
                 {assignable.map(p => (
                   <SelectItem key={p.id} value={p.id}>
-                    {p.name} — {p.priceArs === 0 ? "Gratis" : `ARS ${p.priceArs.toLocaleString("es-AR")}/mes`}
+                    {p.name} — {p.priceArs === 0 ? "Gratis" : `ARS ${p.priceArs.toLocaleString("es-AR")} / 15 días.`}
                   </SelectItem>
                 ))}
               </SelectContent>
