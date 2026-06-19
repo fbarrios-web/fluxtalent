@@ -5,7 +5,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { analyzeApplication, aiInterviewQuestions, aiDraftEmail } from "@/lib/ai.functions";
 import { moveApplicationStage, getSignedCvUrl, saveScorecard } from "@/lib/recruiting.functions";
-import { ArrowLeft, Sparkles, Loader2, FileText, Mail, MessageSquare, AlertTriangle, CheckCircle2, Star } from "lucide-react";
+import { generateCandidateReport } from "@/lib/candidate-report";
+import { ArrowLeft, Sparkles, Loader2, FileText, Mail, MessageSquare, AlertTriangle, CheckCircle2, Star, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -71,6 +72,8 @@ function CandidateDetail() {
   const [genEmail, setGenEmail] = useState(false);
   const [questions, setQuestions] = useState<any[]>([]);
   const [genQ, setGenQ] = useState(false);
+  const [transcript, setTranscript] = useState("");
+  const [genDoc, setGenDoc] = useState(false);
 
   if (isLoading || !app) return <div className="p-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
   const a = app as any;
@@ -99,6 +102,22 @@ function CandidateDetail() {
     setGenQ(true);
     try { const r = await interviewQs({ data: { applicationId: id, stage: app.stage } }); setQuestions(r.questions); }
     catch (e: any) { toast.error(e.message); } finally { setGenQ(false); }
+  }
+  async function downloadReport() {
+    setGenDoc(true);
+    try {
+      const { data: prof } = await supabase.from("profiles").select("org_id").maybeSingle();
+      if (!prof?.org_id) throw new Error("Organización no encontrada");
+      const { data: org } = await supabase.from("organizations").select("name, consultancy_name, logo_url, brand_color").eq("id", prof.org_id).single();
+      await generateCandidateReport({
+        org: org as any,
+        candidate: a,
+        vacancy: { title: a.vacancy?.title },
+        transcript,
+      });
+      toast.success("Informe generado");
+    } catch (e: any) { toast.error(e.message ?? "Error al generar el informe"); }
+    finally { setGenDoc(false); }
   }
 
   return (
@@ -162,6 +181,7 @@ function CandidateDetail() {
               <TabsTrigger value="email"><Mail className="mr-1 h-3 w-3" /> Email</TabsTrigger>
               <TabsTrigger value="interview"><MessageSquare className="mr-1 h-3 w-3" /> Entrevista</TabsTrigger>
               <TabsTrigger value="scorecard"><Star className="mr-1 h-3 w-3" /> Scorecard</TabsTrigger>
+              <TabsTrigger value="report"><FileDown className="mr-1 h-3 w-3" /> Informe</TabsTrigger>
             </TabsList>
 
             <TabsContent value="screening" className="mt-4 rounded-xl border border-border bg-card p-5">
@@ -236,6 +256,18 @@ function CandidateDetail() {
                   ))}
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="report" className="mt-4 space-y-3 rounded-xl border border-border bg-card p-5">
+              <div>
+                <h4 className="text-sm font-semibold">Informe del candidato (Word)</h4>
+                <p className="text-xs text-muted-foreground">Incluye datos del candidato, análisis de IA y la transcripción / resumen de entrevista que pegues abajo. Usa el logo y color de tu organización.</p>
+              </div>
+              <Textarea rows={10} placeholder="Pegá acá la transcripción o resumen de la entrevista…" value={transcript} onChange={e => setTranscript(e.target.value)} />
+              <Button onClick={downloadReport} disabled={genDoc}>
+                {genDoc ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
+                Generar y descargar Word
+              </Button>
             </TabsContent>
           </Tabs>
         </div>
