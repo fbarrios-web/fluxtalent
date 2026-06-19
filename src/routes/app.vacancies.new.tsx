@@ -128,7 +128,9 @@ function NewVacancy() {
               <Select value={form.seniority} onValueChange={v => set("seniority", v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {["intern", "junior", "mid", "senior", "lead", "manager", "director"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  <SelectItem value="junior">Junior</SelectItem>
+                  <SelectItem value="mid">Semi Senior</SelectItem>
+                  <SelectItem value="senior">Senior</SelectItem>
                 </SelectContent>
               </Select>
             </Field>
@@ -142,6 +144,12 @@ function NewVacancy() {
                 </SelectContent>
               </Select>
             </Field>
+            {(form.modality === "hybrid" || form.modality === "onsite") && (
+              <>
+                <Field label="Ubicación"><Input value={form.location} onChange={e => set("location", e.target.value)} placeholder="CABA, Argentina" /></Field>
+                <Field label="Días y horario laboral"><Input value={form.work_schedule} onChange={e => set("work_schedule", e.target.value)} placeholder="Lun a Vie 9 a 18hs" /></Field>
+              </>
+            )}
           </div>
           <Button variant="outline" onClick={aiDraft} disabled={drafting} className="mt-2">
             {drafting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4 text-primary" />}
