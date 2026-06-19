@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { adminListOrgs, adminGrantLicense } from "@/lib/admin.functions";
-import { Loader2 } from "lucide-react";
+import { adminListOrgs, adminGrantLicense, adminExportClients } from "@/lib/admin.functions";
+import { Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { PLANS } from "@/lib/plans";
+import * as XLSX from "xlsx";
 
 export const Route = createFileRoute("/app/admin/orgs")({
   component: AdminOrgs,
