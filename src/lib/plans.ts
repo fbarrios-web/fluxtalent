@@ -60,8 +60,8 @@ export const PLANS: Plan[] = [
     features: [
       "Hasta 20 vacantes activas",
       "1.000 CVs / mes con IA",
-      "Coordinación automática de entrevistas (Meet)",
-      "Scorecards estructurados",
+      "\n",
+      "Acceso al proceso end-to-end",
       "Soporte prioritario",
     ],
   },
