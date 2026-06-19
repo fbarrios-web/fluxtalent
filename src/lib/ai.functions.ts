@@ -264,3 +264,27 @@ Devolvé sólo el cuerpo del email, sin asunto, sin saludo "Estimado" formal, en
     });
     return { body: text };
   });
+
+// ============ AI: imagen de fondo para publicación de vacante ============
+export const aiVacancyImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({
+      vacancyId: z.string().uuid(),
+      aspect: z.enum(["square", "wide", "story"]).default("square"),
+    }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: v } = await context.supabase
+      .from("vacancies")
+      .select("title, area, seniority, modality, description")
+      .eq("id", data.vacancyId)
+      .single();
+    if (!v) throw new Error("Vacante no encontrada");
+    const { aiGenerateImage } = await import("@/lib/ai-gateway.server");
+    const size = data.aspect === "wide" ? "1536x1024" : data.aspect === "story" ? "1024x1536" : "1024x1024";
+    const prompt = `Modern, premium corporate recruitment background image for a job posting.
+Role: ${v.title}. Area: ${v.area ?? "professional"}. Seniority: ${v.seniority ?? "mid"}. Modality: ${v.modality ?? "remote"}.
+Style: clean abstract gradient background with soft geometric shapes, generous empty space on the right half for overlay text and a logo, photorealistic but minimal, professional palette, NO TEXT, NO LOGOS, NO PEOPLE FACES, no watermarks. Suitable as the canvas for a LinkedIn job post.`;
+    const b64 = await aiGenerateImage({ prompt, size });
+    return { b64, size };
+  });
