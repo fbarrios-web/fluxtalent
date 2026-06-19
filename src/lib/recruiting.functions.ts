@@ -130,8 +130,35 @@ export const updateVacancy = createServerFn({ method: "POST" })
         );
       }
     }
-    return { ok: true };
+    // Re-evaluate auto-rejection when min_match changes:
+    // any "received" application with match_score below new threshold gets auto-rejected.
+    let autoRejected = 0;
+    if (typeof data.patch.min_match === "number") {
+      const min = data.patch.min_match;
+      const { data: low } = await context.supabase
+        .from("applications")
+        .select("id, match_score")
+        .eq("vacancy_id", data.id)
+        .eq("stage", "received")
+        .not("match_score", "is", null)
+        .lt("match_score", min);
+      if (low?.length) {
+        const ids = low.map((a: any) => a.id);
+        await context.supabase.from("applications").update({ stage: "rejected" }).in("id", ids);
+        await context.supabase.from("application_events").insert(
+          low.map((a: any) => ({
+            application_id: a.id,
+            actor_id: context.userId,
+            type: "auto_reject",
+            payload: { reason: `match ${a.match_score}% < ${min}% (umbral actualizado)` },
+          })),
+        );
+        autoRejected = ids.length;
+      }
+    }
+    return { ok: true, autoRejected };
   });
+
 
 export const moveApplicationStage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
