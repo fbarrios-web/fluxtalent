@@ -23,15 +23,15 @@ export const PLANS: Plan[] = [
     id: "free",
     name: "Free",
     priceArs: 0,
-    tagline: "Probá FLUX Talent gratis por 15 días.",
+    tagline: "Probá FLUX Talent\u00a0",
     maxVacancies: 1,
     maxCvsPerMonth: 20,
     features: [
       "1 vacante activa",
       "20 CVs analizados con IA",
-      "15 días de prueba",
-      "Pipeline Kanban",
-      "Solo una cuenta por persona",
+      "",
+      "",
+      "Acceso al proceso end-to-end",
     ],
   },
   {
@@ -44,9 +44,9 @@ export const PLANS: Plan[] = [
     features: [
       "Hasta 5 vacantes activas",
       "200 CVs / mes con IA",
-      "Pipeline Kanban",
-      "Emails con tu marca",
-      "Soporte por email",
+      "",
+      "\n",
+      "Acceso al proceso end-to-end",
     ],
   },
   {
@@ -60,8 +60,8 @@ export const PLANS: Plan[] = [
     features: [
       "Hasta 20 vacantes activas",
       "1.000 CVs / mes con IA",
-      "Coordinación automática de entrevistas (Meet)",
-      "Scorecards estructurados",
+      "\n",
+      "Acceso al proceso end-to-end",
       "Soporte prioritario",
     ],
   },

@@ -91,7 +91,7 @@ function SubscriptionPage() {
           <div>
             <p className="text-sm text-muted-foreground">Plan {isTrial ? "en prueba" : "activo"}</p>
             <p className="font-display text-3xl">FLUX Talent — {activePlan.name}</p>
-            <p className="text-sm text-muted-foreground">{formatArs(activePlan.priceArs)}/mes</p>
+            <p className="text-sm text-muted-foreground">{formatArs(activePlan.priceArs)} / 15 días.</p>
           </div>
           <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusBadge.cls}`}>{statusBadge.label}</span>
         </div>
@@ -121,7 +121,7 @@ function SubscriptionPage() {
       {/* Planes */}
       <div className="mt-10">
         <h2 className="font-display text-2xl">Planes disponibles</h2>
-        <p className="text-sm text-muted-foreground">Todos los planes incluyen {TRIAL_DAYS} días de prueba gratis.</p>
+        <p className="text-sm text-muted-foreground">{"\n"}</p>
 
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {PLANS.map(p => {
@@ -143,7 +143,7 @@ function SubscriptionPage() {
                 <p className="mt-1 text-sm text-muted-foreground">{p.tagline}</p>
                 <div className="mt-4">
                   <span className="font-display text-3xl">{formatArs(p.priceArs)}</span>
-                  <span className="text-sm text-muted-foreground"> /mes</span>
+                  <span className="text-sm text-muted-foreground"> / 15 días.</span>
                 </div>
                 <ul className="mt-5 space-y-2 text-sm">
                   {p.features.map(f => (

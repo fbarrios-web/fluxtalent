@@ -150,7 +150,7 @@ function Landing() {
                 <p className="mt-1 min-h-[2.5rem] text-sm text-muted-foreground">{p.tagline}</p>
                 <div className="mt-5">
                   <span className="font-display text-4xl">{formatArs(p.priceArs)}</span>
-                  <span className="text-sm text-muted-foreground"> /mes</span>
+                  <span className="text-sm text-muted-foreground"> / 15 días.</span>
                 </div>
                 <ul className="mt-6 space-y-2 text-sm">
                   {p.features.map(f => (
