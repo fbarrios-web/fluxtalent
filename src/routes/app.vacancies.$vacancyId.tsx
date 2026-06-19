@@ -760,3 +760,95 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
 }
 function labelSeniority(s?: string) { return s === "junior" ? "Junior" : s === "mid" ? "Semi Senior" : s === "senior" ? "Senior" : s ?? ""; }
 function labelModality(m?: string) { return m === "remote" ? "Remoto" : m === "hybrid" ? "Híbrido" : m === "onsite" ? "Presencial" : m ?? ""; }
+
+function BulkUploadDialog({ vacancyId, onDone }: { vacancyId: string; onDone: () => void }) {
+  const bulk = useServerFn(bulkCreateApplicationFromCv);
+  const [open, setOpen] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+  const [running, setRunning] = useState(false);
+  const [results, setResults] = useState<Array<{ name: string; ok: boolean; message: string }>>([]);
+
+  async function fileToBase64(f: File): Promise<string> {
+    const buf = new Uint8Array(await f.arrayBuffer());
+    let binary = "";
+    for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i]);
+    return btoa(binary);
+  }
+
+  async function process() {
+    if (!files.length) return;
+    setRunning(true);
+    setResults([]);
+    for (const f of files) {
+      try {
+        if (f.size > 10 * 1024 * 1024) throw new Error("CV mayor a 10MB");
+        const b64 = await fileToBase64(f);
+        const r: any = await bulk({ data: {
+          vacancy_id: vacancyId, cv_base64: b64,
+          cv_filename: f.name, cv_mime: f.type || "application/pdf",
+        }});
+        setResults(prev => [...prev, { name: f.name, ok: true, message: `${r.first_name} ${r.last_name} · ${r.email}` }]);
+      } catch (e: any) {
+        setResults(prev => [...prev, { name: f.name, ok: false, message: e?.message ?? "Error" }]);
+      }
+    }
+    setRunning(false);
+    onDone();
+  }
+
+  function reset() {
+    setFiles([]);
+    setResults([]);
+  }
+
+  return (
+    <>
+      <Button variant="outline" onClick={() => setOpen(true)}><Upload className="mr-2 h-3.5 w-3.5" /> Carga masiva</Button>
+      <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
+        <DialogContent className="max-h-[85vh] max-w-xl overflow-y-auto">
+          <DialogHeader><DialogTitle>Carga masiva de CVs</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Adjuntá uno o varios CVs (PDF). La IA va a leer automáticamente nombre y email de cada archivo y crear el candidato en la vacante.
+            </p>
+            <div>
+              <Label>Archivos (PDF, máx 10MB cada uno)</Label>
+              <Input type="file" accept=".pdf,.doc,.docx" multiple
+                onChange={e => setFiles(Array.from(e.target.files ?? []))} disabled={running} />
+              {files.length > 0 && (
+                <div className="mt-2 text-xs text-muted-foreground">{files.length} archivo(s) seleccionado(s)</div>
+              )}
+            </div>
+            {results.length > 0 && (
+              <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-1.5">
+                {results.map((r, i) => (
+                  <div key={i} className="flex items-start gap-2 text-sm">
+                    {r.ok
+                      ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                      : <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />}
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-medium">{r.name}</div>
+                      <div className={`text-xs ${r.ok ? "text-muted-foreground" : "text-red-600"}`}>{r.message}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {running && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" /> Procesando {results.length + 1} de {files.length}…
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)} disabled={running}>Cerrar</Button>
+            <Button onClick={process} disabled={running || !files.length}>
+              {running && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Procesar {files.length || ""}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
