@@ -487,6 +487,7 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
   const [loading, setLoading] = useState(false);
   const [aspect, setAspect] = useState<"square" | "wide" | "story">("square");
   const [cta, setCta] = useState("Postulate en el link adjunto");
+  const [includeLogo, setIncludeLogo] = useState(true);
   const [finalDataUrl, setFinalDataUrl] = useState<string | null>(null);
   const [existingUrl, setExistingUrl] = useState<string | null>(null);
   const [org, setOrg] = useState<{ name: string; logo_url: string | null; brand_color: string | null } | null>(null);
