@@ -84,10 +84,12 @@ function CandidateDetail() {
     catch (e: any) { toast.error(e.message); } finally { setAnalyzing(false); }
   }
   async function setStage(stage: string) {
-    await move({ data: { id, stage: stage as any } });
+    const res: any = await move({ data: { id, stage: stage as any } });
     qc.invalidateQueries({ queryKey: ["candidate", id] });
     toast.success("Etapa actualizada");
+    if (res?.inviteWarning) toast.warning(res.inviteWarning);
   }
+
   async function openCv() {
     if (!app.cv_url) return;
     const { url } = await signCv({ data: { path: app.cv_url } });
