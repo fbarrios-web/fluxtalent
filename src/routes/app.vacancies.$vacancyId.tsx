@@ -3,8 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { moveApplicationStage, updateVacancy, manualCreateApplication } from "@/lib/recruiting.functions";
-import { ArrowLeft, ExternalLink, Copy, Loader2, Download, ChevronLeft, ChevronRight, Pencil, UserPlus, ImageIcon, Sparkles } from "lucide-react";
+import { moveApplicationStage, updateVacancy, manualCreateApplication, bulkCreateApplicationFromCv } from "@/lib/recruiting.functions";
+import { ArrowLeft, ExternalLink, Copy, Loader2, Download, ChevronLeft, ChevronRight, Pencil, UserPlus, ImageIcon, Sparkles, Upload, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -119,6 +119,7 @@ function VacancyDetail() {
           <EditVacancyDialog vacancy={v} onSaved={() => qc.invalidateQueries({ queryKey: ["vacancy", vacancyId] })} />
           <VacancyImageDialog vacancy={v} applyUrl={applyUrl} />
           <AddCandidateDialog vacancyId={v.id} onAdded={() => qc.invalidateQueries({ queryKey: ["vacancy-apps", vacancyId] })} />
+          <BulkUploadDialog vacancyId={v.id} onDone={() => qc.invalidateQueries({ queryKey: ["vacancy-apps", vacancyId] })} />
           <Button variant="outline" onClick={copyLink}><Copy className="mr-2 h-3.5 w-3.5" /> Copiar link</Button>
           <Button
             variant="outline"
@@ -486,6 +487,7 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
   const [loading, setLoading] = useState(false);
   const [aspect, setAspect] = useState<"square" | "wide" | "story">("square");
   const [cta, setCta] = useState("Postulate en el link adjunto");
+  const [includeLogo, setIncludeLogo] = useState(true);
   const [finalDataUrl, setFinalDataUrl] = useState<string | null>(null);
   const [existingUrl, setExistingUrl] = useState<string | null>(null);
   const [org, setOrg] = useState<{ name: string; logo_url: string | null; brand_color: string | null } | null>(null);
@@ -531,8 +533,8 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
       toast.error("Esta vacante ya tiene una imagen generada");
       return;
     }
-    if (!org?.logo_url) {
-      toast.error("Cargá el logo de tu organización en Configuración antes de generar la imagen");
+    if (includeLogo && !org?.logo_url) {
+      toast.error("Cargá el logo en Configuración o desactivá la opción de logo.");
       return;
     }
     setLoading(true);
@@ -621,34 +623,33 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
     drawSection("Requisitos", m?.requirements ?? []);
     drawSection("Responsabilidades", m?.responsibilities ?? []);
 
-    const baseY = panel.y + panel.h - 70;
-    if (org?.logo_url) {
-      try {
-        const logo = await loadImg(org.logo_url);
-        const lh = 56;
-        const lw = (logo.width / logo.height) * lh;
-        ctx.drawImage(logo, textX, baseY - lh / 2, lw, lh);
-        if (org?.name) {
-          ctx.fillStyle = ink;
-          ctx.font = "600 20px system-ui, -apple-system, Segoe UI, Arial";
-          ctx.textBaseline = "middle";
-          ctx.fillText(org.name, textX + lw + 16, baseY);
-          ctx.textBaseline = "alphabetic";
-        }
-      } catch {}
-    }
+    // Bottom area: logo (big, no legal name) + CTA below
+    const bottomPad = 50;
+    const ctaH = 52;
+    let bottomCursor = panel.y + panel.h - bottomPad;
 
-    const ctaText = cta;
-    ctx.font = "700 20px system-ui, -apple-system, Segoe UI, Arial";
-    const ctaW = ctx.measureText(ctaText).width + 36;
-    const ctaX = panel.x + panel.w - padX - ctaW;
-    const ctaY = panel.y + 60;
+    // CTA pill at the very bottom
+    ctx.font = "700 22px system-ui, -apple-system, Segoe UI, Arial";
+    const ctaW = ctx.measureText(cta).width + 44;
+    const ctaY = bottomCursor - ctaH;
     ctx.fillStyle = brand;
-    ctx.fillRect(ctaX, ctaY, ctaW, 44);
+    ctx.fillRect(textX, ctaY, ctaW, ctaH);
     ctx.fillStyle = "#ffffff";
     ctx.textBaseline = "middle";
-    ctx.fillText(ctaText, ctaX + 18, ctaY + 22);
+    ctx.fillText(cta, textX + 22, ctaY + ctaH / 2);
     ctx.textBaseline = "alphabetic";
+    bottomCursor = ctaY - 20;
+
+    if (includeLogo && org?.logo_url) {
+      try {
+        const logo = await loadImg(org.logo_url);
+        // Make the logo significantly larger than before
+        const lh = isStory ? 140 : 120;
+        const lw = (logo.width / logo.height) * lh;
+        const logoY = bottomCursor - lh;
+        ctx.drawImage(logo, textX, logoY, lw, lh);
+      } catch {}
+    }
 
     return canvas.toDataURL("image/png");
   }
@@ -696,6 +697,20 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
                 </div>
               </div>
             )}
+            {!hasExisting && (
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={includeLogo}
+                  onChange={e => setIncludeLogo(e.target.checked)}
+                  className="h-4 w-4 accent-primary"
+                />
+                Incluir logo de la organización
+                {includeLogo && !org?.logo_url && (
+                  <span className="text-xs text-amber-600">(cargá uno en Configuración)</span>
+                )}
+              </label>
+            )}
             <div className="rounded-md border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
               <div>Link de postulación: <code className="break-all text-foreground">{applyUrl}</code></div>
             </div>
@@ -703,14 +718,14 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
               <img src={previewSrc} alt="Vista previa" className="w-full rounded-lg border border-border" />
             ) : (
               <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-                {org && !org.logo_url ? "Cargá el logo de tu organización en Configuración para poder generar la imagen." : "Sin imagen aún. Hacé click en \"Generar\"."}
+                Sin imagen aún. Hacé click en "Generar".
               </div>
             )}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)}>Cerrar</Button>
             {!hasExisting && (
-              <Button variant="outline" onClick={generate} disabled={loading || !org?.logo_url}>
+              <Button variant="outline" onClick={generate} disabled={loading || (includeLogo && !org?.logo_url)}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                 Generar
               </Button>
@@ -745,3 +760,95 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
 }
 function labelSeniority(s?: string) { return s === "junior" ? "Junior" : s === "mid" ? "Semi Senior" : s === "senior" ? "Senior" : s ?? ""; }
 function labelModality(m?: string) { return m === "remote" ? "Remoto" : m === "hybrid" ? "Híbrido" : m === "onsite" ? "Presencial" : m ?? ""; }
+
+function BulkUploadDialog({ vacancyId, onDone }: { vacancyId: string; onDone: () => void }) {
+  const bulk = useServerFn(bulkCreateApplicationFromCv);
+  const [open, setOpen] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+  const [running, setRunning] = useState(false);
+  const [results, setResults] = useState<Array<{ name: string; ok: boolean; message: string }>>([]);
+
+  async function fileToBase64(f: File): Promise<string> {
+    const buf = new Uint8Array(await f.arrayBuffer());
+    let binary = "";
+    for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i]);
+    return btoa(binary);
+  }
+
+  async function process() {
+    if (!files.length) return;
+    setRunning(true);
+    setResults([]);
+    for (const f of files) {
+      try {
+        if (f.size > 10 * 1024 * 1024) throw new Error("CV mayor a 10MB");
+        const b64 = await fileToBase64(f);
+        const r: any = await bulk({ data: {
+          vacancy_id: vacancyId, cv_base64: b64,
+          cv_filename: f.name, cv_mime: f.type || "application/pdf",
+        }});
+        setResults(prev => [...prev, { name: f.name, ok: true, message: `${r.first_name} ${r.last_name} · ${r.email}` }]);
+      } catch (e: any) {
+        setResults(prev => [...prev, { name: f.name, ok: false, message: e?.message ?? "Error" }]);
+      }
+    }
+    setRunning(false);
+    onDone();
+  }
+
+  function reset() {
+    setFiles([]);
+    setResults([]);
+  }
+
+  return (
+    <>
+      <Button variant="outline" onClick={() => setOpen(true)}><Upload className="mr-2 h-3.5 w-3.5" /> Carga masiva</Button>
+      <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
+        <DialogContent className="max-h-[85vh] max-w-xl overflow-y-auto">
+          <DialogHeader><DialogTitle>Carga masiva de CVs</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Adjuntá uno o varios CVs (PDF). La IA va a leer automáticamente nombre y email de cada archivo y crear el candidato en la vacante.
+            </p>
+            <div>
+              <Label>Archivos (PDF, máx 10MB cada uno)</Label>
+              <Input type="file" accept=".pdf,.doc,.docx" multiple
+                onChange={e => setFiles(Array.from(e.target.files ?? []))} disabled={running} />
+              {files.length > 0 && (
+                <div className="mt-2 text-xs text-muted-foreground">{files.length} archivo(s) seleccionado(s)</div>
+              )}
+            </div>
+            {results.length > 0 && (
+              <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-1.5">
+                {results.map((r, i) => (
+                  <div key={i} className="flex items-start gap-2 text-sm">
+                    {r.ok
+                      ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                      : <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />}
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-medium">{r.name}</div>
+                      <div className={`text-xs ${r.ok ? "text-muted-foreground" : "text-red-600"}`}>{r.message}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {running && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" /> Procesando {results.length + 1} de {files.length}…
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)} disabled={running}>Cerrar</Button>
+            <Button onClick={process} disabled={running || !files.length}>
+              {running && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Procesar {files.length || ""}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
