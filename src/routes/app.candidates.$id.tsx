@@ -257,6 +257,18 @@ function CandidateDetail() {
                 </div>
               )}
             </TabsContent>
+
+            <TabsContent value="report" className="mt-4 space-y-3 rounded-xl border border-border bg-card p-5">
+              <div>
+                <h4 className="text-sm font-semibold">Informe del candidato (Word)</h4>
+                <p className="text-xs text-muted-foreground">Incluye datos del candidato, análisis de IA y la transcripción / resumen de entrevista que pegues abajo. Usa el logo y color de tu organización.</p>
+              </div>
+              <Textarea rows={10} placeholder="Pegá acá la transcripción o resumen de la entrevista…" value={transcript} onChange={e => setTranscript(e.target.value)} />
+              <Button onClick={downloadReport} disabled={genDoc}>
+                {genDoc ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
+                Generar y descargar Word
+              </Button>
+            </TabsContent>
           </Tabs>
         </div>
 
