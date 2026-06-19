@@ -347,3 +347,96 @@ export const manualCreateApplication = createServerFn({ method: "POST" })
     return { id: appRow.id };
   });
 
+
+// Extract first_name/last_name/email from a CV using AI, then create the application
+// reusing the same flow as manualCreateApplication (upload + async analyze).
+export const bulkCreateApplicationFromCv = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({
+      vacancy_id: z.string().uuid(),
+      cv_base64: z.string().min(1),
+      cv_filename: z.string().max(200),
+      cv_mime: z.string().max(120).optional().nullable(),
+    }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase.from("profiles").select("org_id").eq("id", userId).maybeSingle();
+    if (!profile?.org_id) throw new Error("Perfil sin organización");
+    const { data: vac } = await supabase.from("vacancies").select("id, org_id").eq("id", data.vacancy_id).maybeSingle();
+    if (!vac || vac.org_id !== profile.org_id) throw new Error("Vacante no disponible");
+
+    // Extract name + email via AI
+    const { aiJSON } = await import("@/lib/ai-gateway.server");
+    const mime = data.cv_mime || "application/pdf";
+    let extracted: { first_name: string; last_name: string; email: string } = { first_name: "", last_name: "", email: "" };
+    try {
+      extracted = await aiJSON<{ first_name: string; last_name: string; email: string }>({
+        system: "Extraés datos de contacto de un CV. Devolvés sólo JSON.",
+        user: [
+          { type: "text", text: `Del CV adjunto extraé el nombre, apellido y email principal del candidato. Si algún dato no aparece, devolvé string vacío. Nombre y apellido en formato propio (Title Case). Archivo: ${data.cv_filename}.` },
+          { type: "file", file: { filename: data.cv_filename, file_data: `data:${mime};base64,${data.cv_base64}` } },
+        ],
+        schema: {
+          name: "cv_contact",
+          description: "Datos de contacto del CV",
+          parameters: {
+            type: "object",
+            properties: {
+              first_name: { type: "string" },
+              last_name: { type: "string" },
+              email: { type: "string" },
+            },
+            required: ["first_name", "last_name", "email"],
+          },
+        },
+      });
+    } catch (e: any) {
+      throw new Error("No se pudo leer el CV: " + (e?.message ?? "error de IA"));
+    }
+
+    const first_name = (extracted.first_name || "").trim() || "Sin nombre";
+    const last_name = (extracted.last_name || "").trim() || "—";
+    const email = (extracted.email || "").trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new Error(`No se detectó un email válido en "${data.cv_filename}"`);
+    }
+
+    // Upload CV (admin client, cvs bucket has no authenticated INSERT policy)
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const ext = (data.cv_filename.split(".").pop() || "pdf").toLowerCase();
+    const path = `${vac.org_id}/${vac.id}/${crypto.randomUUID()}.${ext}`;
+    const bin = Uint8Array.from(atob(data.cv_base64), c => c.charCodeAt(0));
+    const { error: upErr } = await supabaseAdmin.storage.from("cvs").upload(path, bin, {
+      contentType: mime, upsert: false,
+    });
+    if (upErr) throw new Error("Error al subir CV: " + upErr.message);
+
+    const { canAnalyzeMoreCvs } = await import("@/lib/plan-limits");
+    const analyzeAi = await canAnalyzeMoreCvs(supabase, vac.org_id);
+
+    const { data: appRow, error } = await supabase.from("applications").insert({
+      vacancy_id: vac.id, org_id: vac.org_id,
+      first_name, last_name, email,
+      cv_url: path, source: "manual",
+      ai_status: analyzeAi ? "pending" : "skipped",
+    }).select("id").single();
+    if (error) throw error;
+
+    await supabase.from("application_events").insert({
+      application_id: appRow.id, actor_id: userId, type: "bulk_uploaded", payload: { filename: data.cv_filename, ai_skipped_by_plan: !analyzeAi },
+    });
+
+    if (analyzeAi) {
+      try {
+        const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
+        const secret = process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 8);
+        void fetch(`${origin}/api/public/analyze`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ applicationId: appRow.id, secret }),
+        }).catch(() => {});
+      } catch { /* ignore */ }
+    }
+    return { id: appRow.id, first_name, last_name, email };
+  });
