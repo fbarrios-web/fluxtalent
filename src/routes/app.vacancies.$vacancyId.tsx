@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useServerFn as _useServerFn } from "@tanstack/react-start";
 import { aiVacancyImage } from "@/lib/ai.functions";
 import { MatchPill } from "./app.dashboard";
 import { VacancyScheduling } from "@/components/vacancy-scheduling";
