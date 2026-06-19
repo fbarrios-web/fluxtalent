@@ -291,11 +291,13 @@ export const manualCreateApplication = createServerFn({ method: "POST" })
     if (!vac || vac.org_id !== profile.org_id) throw new Error("Vacante no disponible");
 
     let cv_url: string | null = null;
-    let adminClient: any = null;
     if (data.cv_base64) {
       // Use admin client to upload (cvs bucket has no authenticated INSERT policy)
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      adminClient = supabaseAdmin;
+      const ext = (data.cv_filename?.split(".").pop() || "pdf").toLowerCase();
+      const path = `${vac.org_id}/${vac.id}/${crypto.randomUUID()}.${ext}`;
+      const bin = Uint8Array.from(atob(data.cv_base64), c => c.charCodeAt(0));
+      const { error: upErr } = await supabaseAdmin.storage.from("cvs").upload(path, bin, {
       const ext = (data.cv_filename?.split(".").pop() || "pdf").toLowerCase();
       const path = `${vac.org_id}/${vac.id}/${crypto.randomUUID()}.${ext}`;
       const bin = Uint8Array.from(atob(data.cv_base64), c => c.charCodeAt(0));
