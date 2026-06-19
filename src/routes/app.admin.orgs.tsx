@@ -30,9 +30,27 @@ function AdminOrgs() {
   const qc = useQueryClient();
   const list = useServerFn(adminListOrgs);
   const grant = useServerFn(adminGrantLicense);
+  const exportFn = useServerFn(adminExportClients);
   const [filter, setFilter] = useState("");
+  const [exporting, setExporting] = useState(false);
 
   const { data, isLoading } = useQuery({ queryKey: ["admin-orgs"], queryFn: () => list() });
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const rows = await exportFn();
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Clientes");
+      XLSX.writeFile(wb, `clientes-flux-talent-${new Date().toISOString().slice(0, 10)}.xlsx`);
+      toast.success(`${rows.length} clientes exportados`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se pudo exportar");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const mut = useMutation({
     mutationFn: (vars: { org_id: string; action: any; plan_price_ars?: number; days?: number }) => grant({ data: vars }),
