@@ -131,7 +131,7 @@ export const updateVacancy = createServerFn({ method: "POST" })
       }
     }
     // Re-evaluate auto-rejection when min_match changes:
-    // any "received" application with match_score below new threshold gets auto-rejected.
+    // any "received" application with match_score below new threshold gets auto-rejected and gets rejection email.
     let autoRejected = 0;
     if (typeof data.patch.min_match === "number") {
       const min = data.patch.min_match;
@@ -153,6 +153,13 @@ export const updateVacancy = createServerFn({ method: "POST" })
             payload: { reason: `match ${a.match_score}% < ${min}% (umbral actualizado)` },
           })),
         );
+        // Send rejection email to each (best-effort, in parallel)
+        try {
+          const { sendStageEmail } = await import("@/lib/scheduling.functions");
+          await Promise.allSettled(
+            ids.map((id: string) => sendStageEmail(context.supabase as any, context.userId, id, "rejection")),
+          );
+        } catch { /* noop */ }
         autoRejected = ids.length;
       }
     }
