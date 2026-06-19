@@ -83,10 +83,19 @@ export function VacancyScheduling({ vacancyId }: { vacancyId: string }) {
           effectiveUntil: r.effectiveUntil || null,
         }));
       await save({ data: { vacancyId, durationMinutes: duration, instructions, enabled, rules: payload } });
-      toast.success("Configuración guardada");
+      // Auto-regenerate slots so the candidate sees the new availability immediately.
+      let createdMsg = "";
+      if (payload.length > 0) {
+        try {
+          const res = await regen({ data: { vacancyId, days: 30 } });
+          createdMsg = ` · ${res.created} slots generados`;
+        } catch { /* swallow regen errors, main save succeeded */ }
+      }
+      toast.success("Configuración guardada" + createdMsg);
       qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId] });
     } catch (e: any) { toast.error(e.message); }
   }
+
 
   async function onRegenerate() {
     try {
