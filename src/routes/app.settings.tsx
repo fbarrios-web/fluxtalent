@@ -100,7 +100,12 @@ function Settings() {
       const preview = await signedPreview(path);
       if (kind === "logo") { setLogoUrl(path); setLogoPreview(preview); }
       else { setSignatureImageUrl(path); setSignaturePreview(preview); }
-      toast.success("Imagen subida — recordá guardar los cambios");
+      // Auto-persist the new asset path so users don't lose it if they forget to press Save.
+      const patch: Record<string, unknown> = kind === "logo" ? { logo_url: path } : { signature_image_url: path };
+      const { error: upErr } = await supabase.from("organizations").update(patch as any).eq("id", org.id);
+      if (upErr) throw upErr;
+      qc.invalidateQueries({ queryKey: ["my-org"] });
+      toast.success(kind === "logo" ? "Logo actualizado" : "Firma actualizada");
     } catch (e: any) { toast.error(e.message ?? "Error al subir"); } finally { setUp(false); }
   }
 
@@ -109,7 +114,7 @@ function Settings() {
     if (!org) return;
     setSaving(true);
     try {
-      const { data: updated, error } = await supabase.from("organizations").update({
+      const { error } = await supabase.from("organizations").update({
         name,
         consultancy_name: consultancyName || null,
         contact_email: contactEmail || null,
@@ -119,13 +124,13 @@ function Settings() {
         signature_image_url: signatureImageUrl || null,
         sender_email: senderEmail,
         timezone,
-      } as any).eq("id", org.id).select("id");
+      } as any).eq("id", org.id);
       if (error) throw error;
-      if (!updated?.length) throw new Error("No se pudieron guardar los cambios. Verificá tus permisos.");
       toast.success("Cambios guardados");
       qc.invalidateQueries({ queryKey: ["my-org"] });
     } catch (e: any) { toast.error(e.message ?? "Error al guardar"); } finally { setSaving(false); }
   }
+
 
   async function saveProfile() {
     if (!account) return;

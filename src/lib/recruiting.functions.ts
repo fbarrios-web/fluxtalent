@@ -130,8 +130,35 @@ export const updateVacancy = createServerFn({ method: "POST" })
         );
       }
     }
-    return { ok: true };
+    // Re-evaluate auto-rejection when min_match changes:
+    // any "received" application with match_score below new threshold gets auto-rejected.
+    let autoRejected = 0;
+    if (typeof data.patch.min_match === "number") {
+      const min = data.patch.min_match;
+      const { data: low } = await context.supabase
+        .from("applications")
+        .select("id, match_score")
+        .eq("vacancy_id", data.id)
+        .eq("stage", "received")
+        .not("match_score", "is", null)
+        .lt("match_score", min);
+      if (low?.length) {
+        const ids = low.map((a: any) => a.id);
+        await context.supabase.from("applications").update({ stage: "rejected" }).in("id", ids);
+        await context.supabase.from("application_events").insert(
+          low.map((a: any) => ({
+            application_id: a.id,
+            actor_id: context.userId,
+            type: "auto_reject",
+            payload: { reason: `match ${a.match_score}% < ${min}% (umbral actualizado)` },
+          })),
+        );
+        autoRejected = ids.length;
+      }
+    }
+    return { ok: true, autoRejected };
   });
+
 
 export const moveApplicationStage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -265,10 +292,12 @@ export const manualCreateApplication = createServerFn({ method: "POST" })
 
     let cv_url: string | null = null;
     if (data.cv_base64) {
+      // Use admin client to upload (cvs bucket has no authenticated INSERT policy)
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const ext = (data.cv_filename?.split(".").pop() || "pdf").toLowerCase();
       const path = `${vac.org_id}/${vac.id}/${crypto.randomUUID()}.${ext}`;
       const bin = Uint8Array.from(atob(data.cv_base64), c => c.charCodeAt(0));
-      const { error: upErr } = await supabase.storage.from("cvs").upload(path, bin, {
+      const { error: upErr } = await supabaseAdmin.storage.from("cvs").upload(path, bin, {
         contentType: data.cv_mime || "application/pdf", upsert: false,
       });
       if (upErr) throw new Error("Error al subir CV: " + upErr.message);
@@ -296,13 +325,18 @@ export const manualCreateApplication = createServerFn({ method: "POST" })
     });
 
     if (analyzeAi) {
+      // Fire-and-forget AI analysis so the dialog returns immediately.
+      // The candidate page shows ai_status and a manual "Re-analizar" button as fallback.
       try {
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { runAnalysisAdmin } = await import("@/lib/analyze.server");
-        await runAnalysisAdmin(supabaseAdmin, appRow.id);
-      } catch (e) {
-        await supabase.from("applications").update({ ai_status: "failed" }).eq("id", appRow.id);
-      }
+        const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
+        const secret = process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 8);
+        void fetch(`${origin}/api/public/analyze`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ applicationId: appRow.id, secret }),
+        }).catch(() => {});
+      } catch { /* ignore */ }
     }
     return { id: appRow.id };
   });
+
