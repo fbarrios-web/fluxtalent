@@ -623,34 +623,33 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
     drawSection("Requisitos", m?.requirements ?? []);
     drawSection("Responsabilidades", m?.responsibilities ?? []);
 
-    const baseY = panel.y + panel.h - 70;
-    if (org?.logo_url) {
-      try {
-        const logo = await loadImg(org.logo_url);
-        const lh = 56;
-        const lw = (logo.width / logo.height) * lh;
-        ctx.drawImage(logo, textX, baseY - lh / 2, lw, lh);
-        if (org?.name) {
-          ctx.fillStyle = ink;
-          ctx.font = "600 20px system-ui, -apple-system, Segoe UI, Arial";
-          ctx.textBaseline = "middle";
-          ctx.fillText(org.name, textX + lw + 16, baseY);
-          ctx.textBaseline = "alphabetic";
-        }
-      } catch {}
-    }
+    // Bottom area: logo (big, no legal name) + CTA below
+    const bottomPad = 50;
+    const ctaH = 52;
+    let bottomCursor = panel.y + panel.h - bottomPad;
 
-    const ctaText = cta;
-    ctx.font = "700 20px system-ui, -apple-system, Segoe UI, Arial";
-    const ctaW = ctx.measureText(ctaText).width + 36;
-    const ctaX = panel.x + panel.w - padX - ctaW;
-    const ctaY = panel.y + 60;
+    // CTA pill at the very bottom
+    ctx.font = "700 22px system-ui, -apple-system, Segoe UI, Arial";
+    const ctaW = ctx.measureText(cta).width + 44;
+    const ctaY = bottomCursor - ctaH;
     ctx.fillStyle = brand;
-    ctx.fillRect(ctaX, ctaY, ctaW, 44);
+    ctx.fillRect(textX, ctaY, ctaW, ctaH);
     ctx.fillStyle = "#ffffff";
     ctx.textBaseline = "middle";
-    ctx.fillText(ctaText, ctaX + 18, ctaY + 22);
+    ctx.fillText(cta, textX + 22, ctaY + ctaH / 2);
     ctx.textBaseline = "alphabetic";
+    bottomCursor = ctaY - 20;
+
+    if (includeLogo && org?.logo_url) {
+      try {
+        const logo = await loadImg(org.logo_url);
+        // Make the logo significantly larger than before
+        const lh = isStory ? 140 : 120;
+        const lw = (logo.width / logo.height) * lh;
+        const logoY = bottomCursor - lh;
+        ctx.drawImage(logo, textX, logoY, lw, lh);
+      } catch {}
+    }
 
     return canvas.toDataURL("image/png");
   }
