@@ -49,7 +49,7 @@ function NewVacancy() {
   });
 
   const [form, setForm] = useState({
-    title: "", area: "", seniority: "mid", modality: "remote", location: "",
+    title: "", area: "", seniority: "mid", modality: "remote", location: "", work_schedule: "",
     description: "", responsibilities: "", requirements: "", nice_to_have: "",
     competencies: [] as string[], min_match: 60, status: "active" as "draft" | "active",
   });
