@@ -66,12 +66,18 @@ function AdminOrgs() {
 
   return (
     <div className="space-y-4">
-      <input
-        value={filter}
-        onChange={e => setFilter(e.target.value)}
-        placeholder="Buscar organización…"
-        className="w-full max-w-sm rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-      />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <input
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+          placeholder="Buscar organización…"
+          className="w-full max-w-sm rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+        />
+        <Button variant="outline" size="sm" onClick={handleExport} disabled={exporting}>
+          {exporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+          Exportar clientes (Excel)
+        </Button>
+      </div>
 
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         <table className="w-full text-sm">
