@@ -150,17 +150,28 @@ function VacancyDetail() {
       </div>
 
       <Tabs defaultValue="pipeline">
-        <TabsList>
-          <TabsTrigger value="pipeline">Etapas</TabsTrigger>
-          <TabsTrigger value="table">Tabla</TabsTrigger>
-          <TabsTrigger value="brief">Detalle de vacante</TabsTrigger>
-          <TabsTrigger value="scheduling">Agenda</TabsTrigger>
-        </TabsList>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <TabsList>
+            <TabsTrigger value="pipeline">Etapas</TabsTrigger>
+            <TabsTrigger value="table">Tabla</TabsTrigger>
+            <TabsTrigger value="brief">Detalle de vacante</TabsTrigger>
+            <TabsTrigger value="scheduling">Agenda</TabsTrigger>
+          </TabsList>
+          <div className="relative w-72 max-w-full">
+            <input
+              type="search"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Buscar postulante por nombre o email…"
+              className="w-full rounded-full border border-border bg-card px-4 py-2 text-sm outline-none focus:border-primary"
+            />
+          </div>
+        </div>
 
         <TabsContent value="pipeline" className="mt-6">
           <div className="flex gap-3 overflow-x-auto pb-4">
             {STAGES.map(s => {
-              const items = (apps ?? []).filter((a: any) => a.stage === s.id);
+              const items = filteredApps.filter((a: any) => a.stage === s.id);
               const isCollapsed = !!collapsed[s.id];
               if (isCollapsed) {
                 return (
