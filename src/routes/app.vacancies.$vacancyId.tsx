@@ -489,6 +489,7 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
   const [cta, setCta] = useState("Postulate en el link adjunto");
   const [bgDataUrl, setBgDataUrl] = useState<string | null>(null);
   const [finalDataUrl, setFinalDataUrl] = useState<string | null>(null);
+  const [meta, setMeta] = useState<any>(null);
   const [org, setOrg] = useState<{ name: string; logo_url: string | null; brand_color: string | null } | null>(null);
 
   useEffect(() => {
@@ -510,13 +511,14 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
       const r: any = await gen({ data: { vacancyId: vacancy.id, aspect } });
       const url = `data:image/png;base64,${r.b64}`;
       setBgDataUrl(url);
-      await compose(url);
+      setMeta(r.meta);
+      await compose(url, r.meta);
     } catch (e: any) {
       toast.error(e.message ?? "No se pudo generar la imagen");
     } finally { setLoading(false); }
   }
 
-  async function compose(bgUrl: string) {
+  async function compose(bgUrl: string, m: any) {
     const dims = aspect === "wide" ? { w: 1536, h: 1024 } : aspect === "story" ? { w: 1024, h: 1536 } : { w: 1024, h: 1024 };
     const canvas = document.createElement("canvas");
     canvas.width = dims.w; canvas.height = dims.h;
@@ -525,70 +527,104 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
     ctx.drawImage(bg, 0, 0, dims.w, dims.h);
 
     const brand = org?.brand_color || "#0F766E";
-    // Overlay panel (right side for square/wide, bottom for story)
-    if (aspect === "story") {
-      const h = dims.h * 0.42;
-      const grad = ctx.createLinearGradient(0, dims.h - h, 0, dims.h);
-      grad.addColorStop(0, "rgba(0,0,0,0)"); grad.addColorStop(0.4, "rgba(0,0,0,0.7)"); grad.addColorStop(1, "rgba(0,0,0,0.92)");
-      ctx.fillStyle = grad; ctx.fillRect(0, dims.h - h, dims.w, h);
-    } else {
-      const pw = dims.w * 0.5;
-      const grad = ctx.createLinearGradient(dims.w - pw, 0, dims.w, 0);
-      grad.addColorStop(0, "rgba(0,0,0,0)"); grad.addColorStop(0.4, "rgba(0,0,0,0.7)"); grad.addColorStop(1, "rgba(0,0,0,0.92)");
-      ctx.fillStyle = grad; ctx.fillRect(dims.w - pw, 0, pw, dims.h);
-    }
+    const isStory = aspect === "story";
+    // Larger panel to fit bullets
+    const panel = isStory
+      ? { x: 0, y: dims.h * 0.35, w: dims.w, h: dims.h * 0.65 }
+      : { x: dims.w * 0.42, y: 0, w: dims.w * 0.58, h: dims.h };
+
+    const grad = isStory
+      ? ctx.createLinearGradient(0, panel.y, 0, panel.y + panel.h)
+      : ctx.createLinearGradient(panel.x, 0, panel.x + panel.w, 0);
+    grad.addColorStop(0, "rgba(0,0,0,0)"); grad.addColorStop(0.25, "rgba(0,0,0,0.78)"); grad.addColorStop(1, "rgba(0,0,0,0.95)");
+    ctx.fillStyle = grad; ctx.fillRect(panel.x, panel.y, panel.w, panel.h);
+
+    const padX = 60;
+    const textX = panel.x + padX;
+    const maxW = panel.w - padX * 2;
+    let textY = panel.y + 70;
 
     // Accent bar
     ctx.fillStyle = brand;
-    if (aspect === "story") ctx.fillRect(60, dims.h - dims.h * 0.42 + 40, 90, 8);
-    else ctx.fillRect(dims.w - dims.w * 0.5 + 60, 80, 90, 8);
+    ctx.fillRect(textX, textY, 80, 6);
+    textY += 30;
 
-    // Text layout
-    const textX = aspect === "story" ? 60 : dims.w - dims.w * 0.5 + 60;
-    let textY = aspect === "story" ? dims.h - dims.h * 0.42 + 90 : 130;
-    const maxW = aspect === "story" ? dims.w - 120 : dims.w * 0.5 - 120;
-
+    // Eyebrow
     ctx.fillStyle = "#ffffff";
-    ctx.font = "600 28px system-ui, -apple-system, Segoe UI, Arial";
-    ctx.fillText("Estamos buscando", textX, textY); textY += 50;
+    ctx.font = "600 24px system-ui, -apple-system, Segoe UI, Arial";
+    ctx.fillText("Estamos buscando", textX, textY); textY += 44;
 
-    ctx.font = "800 64px system-ui, -apple-system, Segoe UI, Arial";
-    textY = wrapText(ctx, vacancy.title, textX, textY, maxW, 70);
-    textY += 20;
+    // Title
+    ctx.font = `800 ${isStory ? 56 : 52}px system-ui, -apple-system, Segoe UI, Arial`;
+    textY = wrapText(ctx, m?.title ?? vacancy.title, textX, textY, maxW, isStory ? 62 : 58);
+    textY += 18;
 
-    ctx.font = "400 26px system-ui, -apple-system, Segoe UI, Arial";
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
-    const meta = [vacancy.area, labelSeniority(vacancy.seniority), labelModality(vacancy.modality), vacancy.location].filter(Boolean).join(" · ");
-    if (meta) { textY = wrapText(ctx, meta, textX, textY, maxW, 34); textY += 10; }
-    if (vacancy.work_schedule) { textY = wrapText(ctx, vacancy.work_schedule, textX, textY, maxW, 34); textY += 20; }
+    // Meta line: modalidad · ubicación · horario
+    ctx.font = "400 22px system-ui, -apple-system, Segoe UI, Arial";
+    ctx.fillStyle = "rgba(255,255,255,0.88)";
+    const metaParts = [labelModality(m?.modality ?? vacancy.modality), m?.location ?? vacancy.location, m?.work_schedule ?? vacancy.work_schedule].filter(Boolean);
+    if (metaParts.length) { textY = wrapText(ctx, metaParts.join("  ·  "), textX, textY, maxW, 30); textY += 18; }
 
-    // CTA
-    ctx.fillStyle = brand;
-    const ctaH = 70;
-    ctx.fillRect(textX, textY, Math.min(maxW, 520), ctaH);
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "700 24px system-ui, -apple-system, Segoe UI, Arial";
-    ctx.textBaseline = "middle";
-    ctx.fillText(cta, textX + 24, textY + ctaH / 2);
-    ctx.textBaseline = "alphabetic";
+    // Helper: section title + bullets
+    const drawSection = (title: string, items: string[]) => {
+      if (!items || !items.length) return;
+      ctx.fillStyle = brand;
+      ctx.font = "700 20px system-ui, -apple-system, Segoe UI, Arial";
+      ctx.fillText(title.toUpperCase(), textX, textY); textY += 30;
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "400 22px system-ui, -apple-system, Segoe UI, Arial";
+      for (const it of items) {
+        // Bullet dot
+        ctx.fillStyle = brand;
+        ctx.beginPath(); ctx.arc(textX + 6, textY - 8, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        textY = wrapText(ctx, it, textX + 24, textY, maxW - 24, 28);
+        textY += 6;
+      }
+      textY += 14;
+    };
 
-    // Logo bottom-left
+    drawSection("Requisitos", m?.requirements ?? []);
+    drawSection("Responsabilidades", m?.responsibilities ?? []);
+
+    // Logo + nombre abajo
+    const baseY = panel.y + panel.h - 70;
     if (org?.logo_url) {
       try {
         const logo = await loadImg(org.logo_url);
-        const lh = 80;
+        const lh = 56;
         const lw = (logo.width / logo.height) * lh;
-        ctx.drawImage(logo, 50, dims.h - lh - 50, lw, lh);
+        ctx.drawImage(logo, textX, baseY - lh / 2, lw, lh);
+        if (org?.name) {
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "600 20px system-ui, -apple-system, Segoe UI, Arial";
+          ctx.textBaseline = "middle";
+          ctx.fillText(org.name, textX + lw + 16, baseY);
+          ctx.textBaseline = "alphabetic";
+        }
       } catch {}
-    }
-    if (org?.name) {
+    } else if (org?.name) {
       ctx.fillStyle = "#ffffff";
       ctx.font = "600 22px system-ui, -apple-system, Segoe UI, Arial";
-      ctx.fillText(org.name, org?.logo_url ? 150 : 50, dims.h - 70);
+      ctx.fillText(org.name, textX, baseY);
     }
+
+    // CTA chip arriba a la derecha del panel
+    const ctaText = cta;
+    ctx.font = "700 20px system-ui, -apple-system, Segoe UI, Arial";
+    const ctaW = ctx.measureText(ctaText).width + 36;
+    const ctaX = panel.x + panel.w - padX - ctaW;
+    const ctaY = panel.y + 60;
+    ctx.fillStyle = brand;
+    ctx.fillRect(ctaX, ctaY, ctaW, 44);
+    ctx.fillStyle = "#ffffff";
+    ctx.textBaseline = "middle";
+    ctx.fillText(ctaText, ctaX + 18, ctaY + 22);
+    ctx.textBaseline = "alphabetic";
 
     setFinalDataUrl(canvas.toDataURL("image/png"));
   }
+
 
   function download() {
     if (!finalDataUrl) return;

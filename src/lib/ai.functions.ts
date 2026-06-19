@@ -276,15 +276,47 @@ export const aiVacancyImage = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: v } = await context.supabase
       .from("vacancies")
-      .select("title, area, seniority, modality, description")
+      .select("title, area, seniority, modality, description, requirements, responsibilities, location, work_schedule")
       .eq("id", data.vacancyId)
       .single();
     if (!v) throw new Error("Vacante no encontrada");
-    const { aiGenerateImage } = await import("@/lib/ai-gateway.server");
+    const { aiGenerateImage, aiJSON } = await import("@/lib/ai-gateway.server");
     const size = data.aspect === "wide" ? "1536x1024" : data.aspect === "story" ? "1024x1536" : "1024x1024";
     const prompt = `Modern, premium corporate recruitment background image for a job posting.
 Role: ${v.title}. Area: ${v.area ?? "professional"}. Seniority: ${v.seniority ?? "mid"}. Modality: ${v.modality ?? "remote"}.
 Style: clean abstract gradient background with soft geometric shapes, generous empty space on the right half for overlay text and a logo, photorealistic but minimal, professional palette, NO TEXT, NO LOGOS, NO PEOPLE FACES, no watermarks. Suitable as the canvas for a LinkedIn job post.`;
+
+    // Resumen de requisitos y responsabilidades en bullets cortos
+    let requirements_bullets: string[] = [];
+    let responsibilities_bullets: string[] = [];
+    try {
+      const j = await aiJSON<{ requirements: string[]; responsibilities: string[] }>({
+        system: "Resumís textos de vacantes en bullets ultra-cortos en español (máx 8 palabras cada uno). Devolvé JSON.",
+        user: `Vacante: ${v.title}.
+Requisitos (texto):
+${v.requirements ?? ""}
+
+Responsabilidades (texto):
+${v.responsibilities ?? ""}
+
+Devolvé JSON con esta forma exacta: {"requirements": ["...", "...", "..."], "responsibilities": ["...", "...", "..."]}. Máximo 4 bullets por lista, mínimo 2 (si hay info). Sin emojis, sin viñetas, sin punto final.`,
+      });
+      requirements_bullets = (j.requirements ?? []).slice(0, 4).map(s => String(s).trim()).filter(Boolean);
+      responsibilities_bullets = (j.responsibilities ?? []).slice(0, 4).map(s => String(s).trim()).filter(Boolean);
+    } catch {}
+
     const b64 = await aiGenerateImage({ prompt, size });
-    return { b64, size };
+    return {
+      b64,
+      size,
+      meta: {
+        title: v.title,
+        location: v.location,
+        modality: v.modality,
+        work_schedule: v.work_schedule,
+        requirements: requirements_bullets,
+        responsibilities: responsibilities_bullets,
+      },
+    };
   });
+
