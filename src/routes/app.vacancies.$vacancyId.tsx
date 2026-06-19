@@ -49,6 +49,7 @@ function VacancyDetail() {
     try { localStorage.setItem(storageKey, JSON.stringify(collapsed)); } catch {}
   }, [collapsed, storageKey]);
   const toggleCollapsed = (id: string) => setCollapsed(c => ({ ...c, [id]: !c[id] }));
+  const [search, setSearch] = useState("");
 
 
   const { data: v } = useQuery<any>({
