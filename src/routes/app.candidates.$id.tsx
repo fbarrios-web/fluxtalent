@@ -103,6 +103,22 @@ function CandidateDetail() {
     try { const r = await interviewQs({ data: { applicationId: id, stage: app.stage } }); setQuestions(r.questions); }
     catch (e: any) { toast.error(e.message); } finally { setGenQ(false); }
   }
+  async function downloadReport() {
+    setGenDoc(true);
+    try {
+      const { data: prof } = await supabase.from("profiles").select("org_id").maybeSingle();
+      if (!prof?.org_id) throw new Error("Organización no encontrada");
+      const { data: org } = await supabase.from("organizations").select("name, consultancy_name, logo_url, brand_color").eq("id", prof.org_id).single();
+      await generateCandidateReport({
+        org: org as any,
+        candidate: a,
+        vacancy: { title: a.vacancy?.title },
+        transcript,
+      });
+      toast.success("Informe generado");
+    } catch (e: any) { toast.error(e.message ?? "Error al generar el informe"); }
+    finally { setGenDoc(false); }
+  }
 
   return (
     <div className="p-6 md:p-10">
