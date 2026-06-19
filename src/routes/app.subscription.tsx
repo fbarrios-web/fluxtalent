@@ -91,7 +91,7 @@ function SubscriptionPage() {
           <div>
             <p className="text-sm text-muted-foreground">Plan {isTrial ? "en prueba" : "activo"}</p>
             <p className="font-display text-3xl">FLUX Talent — {activePlan.name}</p>
-            <p className="text-sm text-muted-foreground">{formatArs(activePlan.priceArs)}/mes</p>
+            <p className="text-sm text-muted-foreground">{formatArs(activePlan.priceArs)} / 15 días.</p>
           </div>
           <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusBadge.cls}`}>{statusBadge.label}</span>
         </div>
