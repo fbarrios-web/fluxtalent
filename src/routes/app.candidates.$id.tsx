@@ -14,11 +14,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MatchPill } from "./app.dashboard";
 
-const STAGES = ["received", "interview_1", "interview_2", "interview_3", "offer", "hired", "rejected"];
+const STAGES = ["received", "interview_1", "interview_2", "interview_3", "hired", "rejected"];
 
 const STAGE_LABEL: Record<string, string> = {
   received: "Recibido", interview_1: "Entrevista 1", interview_2: "Entrevista 2",
-  interview_3: "Entrevista 3", offer: "Oferta", hired: "Contratado", rejected: "Descartado",
+  interview_3: "Entrevista 3", hired: "Contratado", rejected: "Descartado",
 };
 function eventLabel(e: any): string {
   const t = e?.type ?? "";
@@ -67,7 +67,7 @@ function CandidateDetail() {
   });
 
   const [analyzing, setAnalyzing] = useState(false);
-  const [emailKind, setEmailKind] = useState<"rejection" | "interview_invite" | "offer" | "followup">("interview_invite");
+  const [emailKind, setEmailKind] = useState<"rejection" | "interview_invite" | "followup">("interview_invite");
   const [emailBody, setEmailBody] = useState("");
   const [genEmail, setGenEmail] = useState(false);
   const [questions, setQuestions] = useState<any[]>([]);
@@ -216,7 +216,6 @@ function CandidateDetail() {
                   <SelectContent>
                     <SelectItem value="interview_invite">Invitar a entrevista</SelectItem>
                     <SelectItem value="rejection">Descarte amable</SelectItem>
-                    <SelectItem value="offer">Oferta</SelectItem>
                     <SelectItem value="followup">Seguimiento</SelectItem>
                   </SelectContent>
                 </Select>

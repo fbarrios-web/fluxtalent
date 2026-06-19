@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Loader2, Plus, X, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -13,6 +14,13 @@ import {
 } from "@/lib/scheduling.functions";
 
 const WEEKDAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+const STAGES = [
+  { id: "interview_1", label: "Entrevista 1" },
+  { id: "interview_2", label: "Entrevista 2" },
+  { id: "interview_3", label: "Entrevista 3" },
+] as const;
+
+type StageId = typeof STAGES[number]["id"];
 
 type Rule = {
   weekdays: number[];
@@ -23,6 +31,22 @@ type Rule = {
 };
 
 export function VacancyScheduling({ vacancyId }: { vacancyId: string }) {
+  const [stage, setStage] = useState<StageId>("interview_1");
+  return (
+    <Tabs value={stage} onValueChange={(v) => setStage(v as StageId)}>
+      <TabsList>
+        {STAGES.map(s => <TabsTrigger key={s.id} value={s.id}>{s.label}</TabsTrigger>)}
+      </TabsList>
+      {STAGES.map(s => (
+        <TabsContent key={s.id} value={s.id} className="mt-4">
+          {stage === s.id && <StageScheduling vacancyId={vacancyId} stage={s.id} />}
+        </TabsContent>
+      ))}
+    </Tabs>
+  );
+}
+
+function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: StageId }) {
   const qc = useQueryClient();
   const get = useServerFn(getVacancyScheduling);
   const save = useServerFn(saveVacancyScheduling);
@@ -31,13 +55,16 @@ export function VacancyScheduling({ vacancyId }: { vacancyId: string }) {
   const addManual = useServerFn(addManualSlot);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["vac-sched", vacancyId],
-    queryFn: () => get({ data: { vacancyId } }),
+    queryKey: ["vac-sched", vacancyId, stage],
+    queryFn: () => get({ data: { vacancyId, stage } }),
   });
 
   const [duration, setDuration] = useState(30);
   const [instructions, setInstructions] = useState("");
   const [enabled, setEnabled] = useState(true);
+  const [interviewerEmail, setInterviewerEmail] = useState("");
+  const [extraInvitees, setExtraInvitees] = useState<string[]>([]);
+  const [newInvitee, setNewInvitee] = useState("");
   const [rules, setRules] = useState<Rule[]>([]);
   const [manualDate, setManualDate] = useState("");
   const [manualTime, setManualTime] = useState("");
@@ -47,7 +74,9 @@ export function VacancyScheduling({ vacancyId }: { vacancyId: string }) {
       setDuration(data.config?.duration_minutes ?? 30);
       setInstructions(data.config?.instructions ?? "");
       setEnabled(data.config?.enabled ?? true);
-      // Group rows that share start/end/from/until into a single rule with multiple weekdays
+      setInterviewerEmail((data.config as any)?.interviewer_email ?? "");
+      const inv = (data.config as any)?.extra_invitees;
+      setExtraInvitees(Array.isArray(inv) ? inv.filter((x: any) => typeof x === "string") : []);
       const groups = new Map<string, Rule>();
       for (const r of (data.rules ?? []) as any[]) {
         const startTime = r.start_time?.slice(0, 5) ?? "09:00";
@@ -71,6 +100,15 @@ export function VacancyScheduling({ vacancyId }: { vacancyId: string }) {
     }));
   }
 
+  function addInvitee() {
+    const e = newInvitee.trim().toLowerCase();
+    if (!e) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) { toast.error("Email inválido"); return; }
+    if (extraInvitees.includes(e)) { setNewInvitee(""); return; }
+    setExtraInvitees([...extraInvitees, e]);
+    setNewInvitee("");
+  }
+
   async function onSave() {
     try {
       const payload = rules
@@ -82,26 +120,30 @@ export function VacancyScheduling({ vacancyId }: { vacancyId: string }) {
           effectiveFrom: r.effectiveFrom || null,
           effectiveUntil: r.effectiveUntil || null,
         }));
-      await save({ data: { vacancyId, durationMinutes: duration, instructions, enabled, rules: payload } });
-      // Auto-regenerate slots so the candidate sees the new availability immediately.
+      await save({ data: {
+        vacancyId, stage,
+        durationMinutes: duration, instructions, enabled,
+        interviewerEmail: interviewerEmail || null,
+        extraInvitees,
+        rules: payload,
+      } });
       let createdMsg = "";
       if (payload.length > 0) {
         try {
-          const res = await regen({ data: { vacancyId, days: 30 } });
+          const res = await regen({ data: { vacancyId, stage, days: 30 } });
           createdMsg = ` · ${res.created} slots generados`;
-        } catch { /* swallow regen errors, main save succeeded */ }
+        } catch { /* noop */ }
       }
       toast.success("Configuración guardada" + createdMsg);
-      qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId] });
+      qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId, stage] });
     } catch (e: any) { toast.error(e.message); }
   }
 
-
   async function onRegenerate() {
     try {
-      const res = await regen({ data: { vacancyId, days: 30 } });
+      const res = await regen({ data: { vacancyId, stage, days: 30 } });
       toast.success(`${res.created} slots creados para los próximos 30 días`);
-      qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId] });
+      qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId, stage] });
     } catch (e: any) { toast.error(e.message); }
   }
 
@@ -109,17 +151,17 @@ export function VacancyScheduling({ vacancyId }: { vacancyId: string }) {
     if (!manualDate || !manualTime) return;
     try {
       const iso = new Date(`${manualDate}T${manualTime}:00`).toISOString();
-      await addManual({ data: { vacancyId, startISO: iso, durationMinutes: duration } });
+      await addManual({ data: { vacancyId, stage, startISO: iso, durationMinutes: duration } });
       setManualTime("");
       toast.success("Slot agregado");
-      qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId] });
+      qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId, stage] });
     } catch (e: any) { toast.error(e.message); }
   }
 
   async function toggle(slotId: string, current: string) {
     try {
       await setStatus({ data: { slotId, status: current === "open" ? "blocked" : "open" } });
-      qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId] });
+      qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId, stage] });
     } catch (e: any) { toast.error(e.message); }
   }
 
@@ -137,8 +179,35 @@ export function VacancyScheduling({ vacancyId }: { vacancyId: string }) {
           <div className="flex items-end gap-2">
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={enabled} onChange={e => setEnabled(e.target.checked)} />
-              Habilitar agenda para esta vacante
+              Habilitar esta agenda
             </label>
+          </div>
+          <div className="sm:col-span-2">
+            <Label>Email del entrevistador (opcional)</Label>
+            <Input type="email" placeholder="entrevistador@empresa.com"
+              value={interviewerEmail} onChange={e => setInterviewerEmail(e.target.value)} />
+            <p className="mt-1 text-xs text-muted-foreground">Se agrega como invitado al evento de Calendar de esta etapa.</p>
+          </div>
+          <div className="sm:col-span-2">
+            <Label>Invitados extra</Label>
+            <div className="flex gap-2">
+              <Input type="email" placeholder="invitado@empresa.com"
+                value={newInvitee} onChange={e => setNewInvitee(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addInvitee(); } }} />
+              <Button type="button" variant="outline" onClick={addInvitee}><Plus className="h-4 w-4" /></Button>
+            </div>
+            {extraInvitees.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {extraInvitees.map(e => (
+                  <span key={e} className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-xs">
+                    {e}
+                    <button type="button" onClick={() => setExtraInvitees(extraInvitees.filter(x => x !== e))}>
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         <div>

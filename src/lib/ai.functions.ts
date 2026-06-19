@@ -167,6 +167,10 @@ export const analyzeApplication = createServerFn({ method: "POST" })
           type: "auto_reject",
           payload: { reason: `match ${result.match_score}% < ${min}%` },
         });
+        try {
+          const { sendStageEmail } = await import("@/lib/scheduling.functions");
+          await sendStageEmail(supabase as any, context.userId, app.id, "rejection");
+        } catch { /* noop */ }
       }
       return { ok: true, match_score: result.match_score };
     } catch (e: any) {

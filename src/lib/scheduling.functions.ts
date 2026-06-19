@@ -229,16 +229,22 @@ export const saveOrgBranding = createServerFn({ method: "POST" })
 
 // ---------- Vacancy scheduling config & availability ----------
 
+const stageEnum = z.enum(["interview_1", "interview_2", "interview_3"]);
+
 export const getVacancyScheduling = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ vacancyId: z.string().uuid() }).parse(input))
+  .inputValidator((input: unknown) => z.object({
+    vacancyId: z.string().uuid(),
+    stage: stageEnum.default("interview_1"),
+  }).parse(input))
   .handler(async ({ data, context }) => {
     const { data: cfg } = await context.supabase.from("vacancy_scheduling")
-      .select("*").eq("vacancy_id", data.vacancyId).maybeSingle();
+      .select("*").eq("vacancy_id", data.vacancyId).eq("stage", data.stage).maybeSingle();
     const { data: rules } = await context.supabase.from("availability_rules")
-      .select("*").eq("vacancy_id", data.vacancyId).order("weekday").order("start_time");
+      .select("*").eq("vacancy_id", data.vacancyId).eq("stage", data.stage)
+      .order("weekday").order("start_time");
     const { data: slots } = await context.supabase.from("availability_slots")
-      .select("*").eq("vacancy_id", data.vacancyId)
+      .select("*").eq("vacancy_id", data.vacancyId).eq("stage", data.stage)
       .gte("start_at", new Date().toISOString())
       .order("start_at").limit(500);
     return { config: cfg, rules: rules ?? [], slots: slots ?? [] };
@@ -248,9 +254,12 @@ export const saveVacancyScheduling = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({
     vacancyId: z.string().uuid(),
+    stage: stageEnum.default("interview_1"),
     durationMinutes: z.number().int().min(15).max(240),
     instructions: z.string().max(2000).optional().nullable(),
     enabled: z.boolean().default(true),
+    interviewerEmail: z.string().email().max(255).optional().nullable().or(z.literal("").transform(() => null)),
+    extraInvitees: z.array(z.string().email()).max(20).default([]),
     rules: z.array(z.object({
       weekdays: z.array(z.number().int().min(0).max(6)).min(1),
       startTime: z.string().regex(/^\d{2}:\d{2}$/),
@@ -267,17 +276,22 @@ export const saveVacancyScheduling = createServerFn({ method: "POST" })
 
     await context.supabase.from("vacancy_scheduling").upsert({
       vacancy_id: data.vacancyId,
+      stage: data.stage,
       org_id: orgId,
       recruiter_id: vac.created_by ?? context.userId,
       duration_minutes: data.durationMinutes,
       instructions: data.instructions ?? null,
       enabled: data.enabled,
-    });
+      interviewer_email: data.interviewerEmail ?? null,
+      extra_invitees: data.extraInvitees ?? [],
+    } as any, { onConflict: "vacancy_id,stage" } as any);
 
-    await context.supabase.from("availability_rules").delete().eq("vacancy_id", data.vacancyId);
+    await context.supabase.from("availability_rules")
+      .delete().eq("vacancy_id", data.vacancyId).eq("stage", data.stage);
     const expanded = data.rules.flatMap(r => r.weekdays.map(wd => ({
       vacancy_id: data.vacancyId,
       org_id: orgId,
+      stage: data.stage,
       weekday: wd,
       start_time: r.startTime,
       end_time: r.endTime,
@@ -295,26 +309,26 @@ export const regenerateSlots = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({
     vacancyId: z.string().uuid(),
+    stage: stageEnum.default("interview_1"),
     days: z.number().int().min(7).max(60).default(30),
   }).parse(input))
   .handler(async ({ data, context }) => {
     const { data: cfg } = await context.supabase.from("vacancy_scheduling")
-      .select("duration_minutes, org_id").eq("vacancy_id", data.vacancyId).maybeSingle();
+      .select("duration_minutes, org_id").eq("vacancy_id", data.vacancyId).eq("stage", data.stage).maybeSingle();
     if (!cfg) throw new Error("Configurá primero la duración del slot.");
     const { data: rules } = await context.supabase.from("availability_rules")
-      .select("*").eq("vacancy_id", data.vacancyId);
+      .select("*").eq("vacancy_id", data.vacancyId).eq("stage", data.stage);
     if (!rules?.length) return { created: 0 };
     const { data: org } = await context.supabase.from("organizations")
       .select("timezone").eq("id", cfg.org_id).maybeSingle();
     const tz = org?.timezone || "America/Argentina/Buenos_Aires";
 
     const duration = cfg.duration_minutes;
-    const inserts: { vacancy_id: string; org_id: string; start_at: string; end_at: string; source: string }[] = [];
+    const inserts: { vacancy_id: string; org_id: string; stage: string; start_at: string; end_at: string; source: string }[] = [];
     const now = new Date();
     for (let d = 0; d < data.days; d++) {
       const day = new Date(now);
       day.setUTCDate(day.getUTCDate() + d);
-      // Determine weekday in target timezone
       const wd = Number(new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short" }).format(day));
       const isoWeekdayStr = new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "long" }).format(day);
       const weekdayMap: Record<string, number> = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
@@ -338,6 +352,7 @@ export const regenerateSlots = createServerFn({ method: "POST" })
             inserts.push({
               vacancy_id: data.vacancyId,
               org_id: cfg.org_id,
+              stage: data.stage,
               start_at: s.toISOString(),
               end_at: e.toISOString(),
               source: "rule",
@@ -348,21 +363,18 @@ export const regenerateSlots = createServerFn({ method: "POST" })
       }
     }
     if (!inserts.length) return { created: 0 };
-    // ON CONFLICT (vacancy_id, start_at) DO NOTHING via upsert with ignoreDuplicates
     const { error, count } = await context.supabase.from("availability_slots")
-      .upsert(inserts, { onConflict: "vacancy_id,start_at", ignoreDuplicates: true, count: "exact" });
+      .upsert(inserts, { onConflict: "vacancy_id,stage,start_at", ignoreDuplicates: true, count: "exact" });
     if (error) throw error;
     return { created: count ?? inserts.length };
   });
 
 // Convert "YYYY-MM-DDTHH:mm" interpreted in given IANA tz → UTC Date
 function zonedToUtc(localISO: string, timeZone: string): Date {
-  // Compute UTC offset for that wall-clock instant in given tz.
   const [date, time] = localISO.split("T");
   const [y, m, d] = date.split("-").map(Number);
   const [hh, mm] = time.split(":").map(Number);
   const asUtc = Date.UTC(y, m - 1, d, hh, mm);
-  // Get the offset in minutes between local-as-tz vs UTC.
   const dtf = new Intl.DateTimeFormat("en-US", {
     timeZone, hour12: false, year: "numeric", month: "2-digit", day: "2-digit",
     hour: "2-digit", minute: "2-digit", second: "2-digit",
@@ -370,7 +382,7 @@ function zonedToUtc(localISO: string, timeZone: string): Date {
   const parts = dtf.formatToParts(new Date(asUtc));
   const get = (t: string) => Number(parts.find(p => p.type === t)?.value);
   const local = Date.UTC(get("year"), get("month") - 1, get("day"), get("hour"), get("minute"), get("second"));
-  const offset = local - asUtc; // ms tz ahead of UTC
+  const offset = local - asUtc;
   return new Date(asUtc - offset);
 }
 
@@ -391,6 +403,7 @@ export const addManualSlot = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({
     vacancyId: z.string().uuid(),
+    stage: stageEnum.default("interview_1"),
     startISO: z.string(),
     durationMinutes: z.number().int().min(15).max(240),
   }).parse(input))
@@ -401,7 +414,7 @@ export const addManualSlot = createServerFn({ method: "POST" })
     const start = new Date(data.startISO);
     const end = new Date(start.getTime() + data.durationMinutes * 60_000);
     const { error } = await context.supabase.from("availability_slots").insert({
-      vacancy_id: data.vacancyId, org_id: vac.org_id,
+      vacancy_id: data.vacancyId, org_id: vac.org_id, stage: data.stage,
       start_at: start.toISOString(), end_at: end.toISOString(),
       source: "manual", status: "open",
     });
@@ -429,8 +442,9 @@ export async function inviteForInterview(
     .eq("id", vac.org_id).maybeSingle();
   if (!org) throw new Error("Organización no encontrada");
   const { data: cfg } = await supabase.from("vacancy_scheduling")
-    .select("recruiter_id, enabled").eq("vacancy_id", vac.id).maybeSingle();
-  if (!cfg || !cfg.enabled) throw new Error("Configurá las entrevistas para esta vacante antes de invitar.");
+    .select("recruiter_id, enabled, interviewer_email, extra_invitees")
+    .eq("vacancy_id", vac.id).eq("stage", stage).maybeSingle();
+  if (!cfg || !cfg.enabled) throw new Error(`Configurá la agenda de ${STAGE_LABELS[stage]} para esta vacante antes de invitar.`);
   const recruiterId = cfg.recruiter_id ?? userId;
   const { data: recruiter } = await supabase.from("profiles")
     .select("google_refresh_token, google_email, display_name")

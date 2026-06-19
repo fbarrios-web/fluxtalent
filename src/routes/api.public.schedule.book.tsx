@@ -35,6 +35,9 @@ export const Route = createFileRoute("/api/public/schedule/book")({
           .eq("id", r.org_id).single();
         const { data: recruiter } = await supabaseAdmin.from("profiles")
           .select("google_refresh_token, google_email, display_name").eq("id", r.recruiter_id).single();
+        const { data: stageCfg } = await supabaseAdmin.from("vacancy_scheduling")
+          .select("interviewer_email, extra_invitees")
+          .eq("vacancy_id", r.vacancy_id).eq("stage", r.stage).maybeSingle();
 
         if (!app || !vac || !org || !recruiter?.google_refresh_token || !recruiter.google_email) {
           // Roll back the slot
@@ -53,6 +56,14 @@ export const Route = createFileRoute("/api/public/schedule/book")({
         };
         const summary = `${stageLabel[r.stage]} — ${vac.title} — ${candidateName}`;
 
+        const interviewerEmail = (stageCfg?.interviewer_email as string | null) || null;
+        const extraInvitees = Array.isArray(stageCfg?.extra_invitees) ? (stageCfg!.extra_invitees as any[]).filter((e): e is string => typeof e === "string") : [];
+        const attendeesMap = new Map<string, { email: string; name?: string }>();
+        attendeesMap.set(app.email.toLowerCase(), { email: app.email, name: candidateName });
+        if (interviewerEmail) attendeesMap.set(interviewerEmail.toLowerCase(), { email: interviewerEmail });
+        attendeesMap.set(recruiter.google_email.toLowerCase(), { email: recruiter.google_email, name: recruiter.display_name ?? "" });
+        for (const e of extraInvitees) attendeesMap.set(e.toLowerCase(), { email: e });
+
         try {
           const { access_token } = await refreshAccessToken(recruiter.google_refresh_token);
           const event = await createCalendarEventWithMeet({
@@ -62,10 +73,7 @@ export const Route = createFileRoute("/api/public/schedule/book")({
             startISO: r.start_at,
             endISO: r.end_at,
             timezone: tz,
-            attendees: [
-              { email: app.email, name: candidateName },
-              { email: recruiter.google_email, name: recruiter.display_name ?? "" },
-            ],
+            attendees: Array.from(attendeesMap.values()),
           });
 
           await supabaseAdmin.from("interview_bookings").update({
