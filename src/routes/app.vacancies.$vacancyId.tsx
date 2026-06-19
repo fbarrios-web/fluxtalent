@@ -533,8 +533,8 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
       toast.error("Esta vacante ya tiene una imagen generada");
       return;
     }
-    if (!org?.logo_url) {
-      toast.error("Cargá el logo de tu organización en Configuración antes de generar la imagen");
+    if (includeLogo && !org?.logo_url) {
+      toast.error("Cargá el logo en Configuración o desactivá la opción de logo.");
       return;
     }
     setLoading(true);
