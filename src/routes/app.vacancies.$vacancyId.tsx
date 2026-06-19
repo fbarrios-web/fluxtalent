@@ -342,6 +342,34 @@ function EditVacancyDialog({ vacancy, onSaved }: { vacancy: any; onSaved: () => 
             <div className="grid gap-3 md:grid-cols-2">
               <div><Label>Título</Label><Input value={patch.title} onChange={e => setPatch(p => ({ ...p, title: e.target.value }))} /></div>
               <div><Label>Área</Label><Input value={patch.area} onChange={e => setPatch(p => ({ ...p, area: e.target.value }))} /></div>
+              <div>
+                <Label>Seniority</Label>
+                <Select value={patch.seniority} onValueChange={v => setPatch(p => ({ ...p, seniority: v as any }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="junior">Junior</SelectItem>
+                    <SelectItem value="mid">Semi Senior</SelectItem>
+                    <SelectItem value="senior">Senior</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Modalidad</Label>
+                <Select value={patch.modality} onValueChange={v => setPatch(p => ({ ...p, modality: v as any }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="remote">Remoto</SelectItem>
+                    <SelectItem value="hybrid">Híbrido</SelectItem>
+                    <SelectItem value="onsite">Presencial</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {(patch.modality === "hybrid" || patch.modality === "onsite") && (
+                <>
+                  <div><Label>Ubicación</Label><Input value={patch.location} onChange={e => setPatch(p => ({ ...p, location: e.target.value }))} placeholder="CABA, Argentina" /></div>
+                  <div><Label>Días y horario</Label><Input value={patch.work_schedule} onChange={e => setPatch(p => ({ ...p, work_schedule: e.target.value }))} placeholder="Lun a Vie 9 a 18hs" /></div>
+                </>
+              )}
             </div>
             <div><Label>Descripción</Label><Textarea rows={3} value={patch.description} onChange={e => setPatch(p => ({ ...p, description: e.target.value }))} /></div>
             <div><Label>Responsabilidades</Label><Textarea rows={4} value={patch.responsibilities} onChange={e => setPatch(p => ({ ...p, responsibilities: e.target.value }))} /></div>
