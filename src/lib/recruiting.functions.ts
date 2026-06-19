@@ -298,10 +298,6 @@ export const manualCreateApplication = createServerFn({ method: "POST" })
       const path = `${vac.org_id}/${vac.id}/${crypto.randomUUID()}.${ext}`;
       const bin = Uint8Array.from(atob(data.cv_base64), c => c.charCodeAt(0));
       const { error: upErr } = await supabaseAdmin.storage.from("cvs").upload(path, bin, {
-      const ext = (data.cv_filename?.split(".").pop() || "pdf").toLowerCase();
-      const path = `${vac.org_id}/${vac.id}/${crypto.randomUUID()}.${ext}`;
-      const bin = Uint8Array.from(atob(data.cv_base64), c => c.charCodeAt(0));
-      const { error: upErr } = await supabaseAdmin.storage.from("cvs").upload(path, bin, {
         contentType: data.cv_mime || "application/pdf", upsert: false,
       });
       if (upErr) throw new Error("Error al subir CV: " + upErr.message);
