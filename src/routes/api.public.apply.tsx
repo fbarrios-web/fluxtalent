@@ -98,15 +98,15 @@ export const Route = createFileRoute("/api/public/apply")({
             .single();
           if (insErr) return Response.json({ error: insErr.message }, { status: 500, headers: cors });
 
-          // Run AI analysis inline (skip if auto-discarded or quota reached).
+          // Fire-and-forget AI analysis so the form responds immediately.
           if (analyzeAi) {
-            try {
-              const { runAnalysisAdmin } = await import("@/lib/analyze.server");
-              await runAnalysisAdmin(supabaseAdmin, appRow.id);
-            } catch (e) {
-              console.error("[apply] analysis failed", e);
-              await supabaseAdmin.from("applications").update({ ai_status: "failed" }).eq("id", appRow.id);
-            }
+            const origin = process.env.PUBLIC_APP_URL || new URL(request.url).origin;
+            const secret = process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 8);
+            void fetch(`${origin}/api/public/analyze`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ applicationId: appRow.id, secret }),
+            }).catch(() => {});
           }
 
           return Response.json({ ok: true, id: appRow.id }, { headers: cors });
