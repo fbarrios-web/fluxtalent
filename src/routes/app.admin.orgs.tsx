@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { adminListOrgs, adminGrantLicense } from "@/lib/admin.functions";
-import { Loader2 } from "lucide-react";
+import { adminListOrgs, adminGrantLicense, adminExportClients } from "@/lib/admin.functions";
+import { Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { PLANS } from "@/lib/plans";
+import * as XLSX from "xlsx";
 
 export const Route = createFileRoute("/app/admin/orgs")({
   component: AdminOrgs,
@@ -29,9 +30,27 @@ function AdminOrgs() {
   const qc = useQueryClient();
   const list = useServerFn(adminListOrgs);
   const grant = useServerFn(adminGrantLicense);
+  const exportFn = useServerFn(adminExportClients);
   const [filter, setFilter] = useState("");
+  const [exporting, setExporting] = useState(false);
 
   const { data, isLoading } = useQuery({ queryKey: ["admin-orgs"], queryFn: () => list() });
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const rows = await exportFn();
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Clientes");
+      XLSX.writeFile(wb, `clientes-flux-talent-${new Date().toISOString().slice(0, 10)}.xlsx`);
+      toast.success(`${rows.length} clientes exportados`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se pudo exportar");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const mut = useMutation({
     mutationFn: (vars: { org_id: string; action: any; plan_price_ars?: number; days?: number }) => grant({ data: vars }),
@@ -47,12 +66,18 @@ function AdminOrgs() {
 
   return (
     <div className="space-y-4">
-      <input
-        value={filter}
-        onChange={e => setFilter(e.target.value)}
-        placeholder="Buscar organización…"
-        className="w-full max-w-sm rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-      />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <input
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+          placeholder="Buscar organización…"
+          className="w-full max-w-sm rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+        />
+        <Button variant="outline" size="sm" onClick={handleExport} disabled={exporting}>
+          {exporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+          Exportar clientes (Excel)
+        </Button>
+      </div>
 
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         <table className="w-full text-sm">

@@ -462,6 +462,7 @@ export type Database = {
           logo_url: string | null
           mp_preapproval_id: string | null
           name: string
+          parent_org_id: string | null
           plan_price_ars: number
           sender_email: string | null
           signature_html: string | null
@@ -481,6 +482,7 @@ export type Database = {
           logo_url?: string | null
           mp_preapproval_id?: string | null
           name: string
+          parent_org_id?: string | null
           plan_price_ars?: number
           sender_email?: string | null
           signature_html?: string | null
@@ -500,6 +502,7 @@ export type Database = {
           logo_url?: string | null
           mp_preapproval_id?: string | null
           name?: string
+          parent_org_id?: string | null
           plan_price_ars?: number
           sender_email?: string | null
           signature_html?: string | null
@@ -508,7 +511,15 @@ export type Database = {
           timezone?: string
           trial_ends_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "organizations_parent_org_id_fkey"
+            columns: ["parent_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payments: {
         Row: {
@@ -784,6 +795,35 @@ export type Database = {
           },
         ]
       }
+      vacancy_assignees: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+          vacancy_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+          vacancy_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+          vacancy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vacancy_assignees_vacancy_id_fkey"
+            columns: ["vacancy_id"]
+            isOneToOne: false
+            referencedRelation: "vacancies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vacancy_scheduling: {
         Row: {
           created_at: string
@@ -874,6 +914,7 @@ export type Database = {
         Args: { _slot_id: string; _token: string }
         Returns: Json
       }
+      root_org_id: { Args: { _org_id: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "recruiter"

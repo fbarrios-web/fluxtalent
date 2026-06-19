@@ -18,6 +18,7 @@ import { Route as ApplySlugRouteImport } from './routes/apply.$slug'
 import { Route as AppSubscriptionRouteImport } from './routes/app.subscription'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppIntegrationsRouteImport } from './routes/app.integrations'
+import { Route as AppEnterpriseRouteImport } from './routes/app.enterprise'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppAdminRouteImport } from './routes/app.admin'
 import { Route as AppVacanciesIndexRouteImport } from './routes/app.vacancies.index'
@@ -77,6 +78,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
 const AppIntegrationsRoute = AppIntegrationsRouteImport.update({
   id: '/integrations',
   path: '/integrations',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEnterpriseRoute = AppEnterpriseRouteImport.update({
+  id: '/enterprise',
+  path: '/enterprise',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -161,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/app/admin': typeof AppAdminRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
+  '/app/enterprise': typeof AppEnterpriseRoute
   '/app/integrations': typeof AppIntegrationsRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/subscription': typeof AppSubscriptionRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/app/dashboard': typeof AppDashboardRoute
+  '/app/enterprise': typeof AppEnterpriseRoute
   '/app/integrations': typeof AppIntegrationsRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/subscription': typeof AppSubscriptionRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/app/admin': typeof AppAdminRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
+  '/app/enterprise': typeof AppEnterpriseRoute
   '/app/integrations': typeof AppIntegrationsRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/subscription': typeof AppSubscriptionRoute
@@ -240,6 +249,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/app/admin'
     | '/app/dashboard'
+    | '/app/enterprise'
     | '/app/integrations'
     | '/app/settings'
     | '/app/subscription'
@@ -264,6 +274,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/app/dashboard'
+    | '/app/enterprise'
     | '/app/integrations'
     | '/app/settings'
     | '/app/subscription'
@@ -290,6 +301,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/app/admin'
     | '/app/dashboard'
+    | '/app/enterprise'
     | '/app/integrations'
     | '/app/settings'
     | '/app/subscription'
@@ -387,6 +399,13 @@ declare module '@tanstack/react-router' {
       path: '/integrations'
       fullPath: '/app/integrations'
       preLoaderRoute: typeof AppIntegrationsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/enterprise': {
+      id: '/app/enterprise'
+      path: '/enterprise'
+      fullPath: '/app/enterprise'
+      preLoaderRoute: typeof AppEnterpriseRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/dashboard': {
@@ -518,6 +537,7 @@ const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRouteWithChildren
   AppDashboardRoute: typeof AppDashboardRoute
+  AppEnterpriseRoute: typeof AppEnterpriseRoute
   AppIntegrationsRoute: typeof AppIntegrationsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSubscriptionRoute: typeof AppSubscriptionRoute
@@ -531,6 +551,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRouteWithChildren,
   AppDashboardRoute: AppDashboardRoute,
+  AppEnterpriseRoute: AppEnterpriseRoute,
   AppIntegrationsRoute: AppIntegrationsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSubscriptionRoute: AppSubscriptionRoute,
