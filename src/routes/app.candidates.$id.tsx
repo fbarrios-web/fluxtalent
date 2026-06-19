@@ -67,7 +67,7 @@ function CandidateDetail() {
   });
 
   const [analyzing, setAnalyzing] = useState(false);
-  const [emailKind, setEmailKind] = useState<"rejection" | "interview_invite" | "offer" | "followup">("interview_invite");
+  const [emailKind, setEmailKind] = useState<"rejection" | "interview_invite" | "followup">("interview_invite");
   const [emailBody, setEmailBody] = useState("");
   const [genEmail, setGenEmail] = useState(false);
   const [questions, setQuestions] = useState<any[]>([]);
