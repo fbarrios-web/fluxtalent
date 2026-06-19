@@ -59,6 +59,9 @@ function Settings() {
   const [senderEmail, setSenderEmail] = useState("");
   const [timezone, setTimezone] = useState("America/Argentina/Buenos_Aires");
   const [displayName, setDisplayName] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [dni, setDni] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [saving, setSaving] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
