@@ -181,6 +181,7 @@ function CandidateDetail() {
               <TabsTrigger value="email"><Mail className="mr-1 h-3 w-3" /> Email</TabsTrigger>
               <TabsTrigger value="interview"><MessageSquare className="mr-1 h-3 w-3" /> Entrevista</TabsTrigger>
               <TabsTrigger value="scorecard"><Star className="mr-1 h-3 w-3" /> Scorecard</TabsTrigger>
+              <TabsTrigger value="report"><FileDown className="mr-1 h-3 w-3" /> Informe</TabsTrigger>
             </TabsList>
 
             <TabsContent value="screening" className="mt-4 rounded-xl border border-border bg-card p-5">
