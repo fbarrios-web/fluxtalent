@@ -697,6 +697,20 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
                 </div>
               </div>
             )}
+            {!hasExisting && (
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={includeLogo}
+                  onChange={e => setIncludeLogo(e.target.checked)}
+                  className="h-4 w-4 accent-primary"
+                />
+                Incluir logo de la organización
+                {includeLogo && !org?.logo_url && (
+                  <span className="text-xs text-amber-600">(cargá uno en Configuración)</span>
+                )}
+              </label>
+            )}
             <div className="rounded-md border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
               <div>Link de postulación: <code className="break-all text-foreground">{applyUrl}</code></div>
             </div>
@@ -704,14 +718,14 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
               <img src={previewSrc} alt="Vista previa" className="w-full rounded-lg border border-border" />
             ) : (
               <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-                {org && !org.logo_url ? "Cargá el logo de tu organización en Configuración para poder generar la imagen." : "Sin imagen aún. Hacé click en \"Generar\"."}
+                Sin imagen aún. Hacé click en "Generar".
               </div>
             )}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)}>Cerrar</Button>
             {!hasExisting && (
-              <Button variant="outline" onClick={generate} disabled={loading || !org?.logo_url}>
+              <Button variant="outline" onClick={generate} disabled={loading || (includeLogo && !org?.logo_url)}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                 Generar
               </Button>
