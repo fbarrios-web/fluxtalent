@@ -216,7 +216,6 @@ function CandidateDetail() {
                   <SelectContent>
                     <SelectItem value="interview_invite">Invitar a entrevista</SelectItem>
                     <SelectItem value="rejection">Descarte amable</SelectItem>
-                    <SelectItem value="offer">Oferta</SelectItem>
                     <SelectItem value="followup">Seguimiento</SelectItem>
                   </SelectContent>
                 </Select>
