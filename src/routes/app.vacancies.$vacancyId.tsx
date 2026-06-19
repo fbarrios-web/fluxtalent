@@ -119,6 +119,7 @@ function VacancyDetail() {
           <EditVacancyDialog vacancy={v} onSaved={() => qc.invalidateQueries({ queryKey: ["vacancy", vacancyId] })} />
           <VacancyImageDialog vacancy={v} applyUrl={applyUrl} />
           <AddCandidateDialog vacancyId={v.id} onAdded={() => qc.invalidateQueries({ queryKey: ["vacancy-apps", vacancyId] })} />
+          <BulkUploadDialog vacancyId={v.id} onDone={() => qc.invalidateQueries({ queryKey: ["vacancy-apps", vacancyId] })} />
           <Button variant="outline" onClick={copyLink}><Copy className="mr-2 h-3.5 w-3.5" /> Copiar link</Button>
           <Button
             variant="outline"
