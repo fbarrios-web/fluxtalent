@@ -462,11 +462,12 @@ export async function inviteForInterview(
   const { refreshAccessToken, sendGmail } = await import("@/lib/google.server");
   const { interviewInviteHtml } = await import("@/lib/email-templates");
   const { access_token } = await refreshAccessToken(recruiter.google_refresh_token);
+  const logoUrl = await signedLogoUrl(supabase, org.logo_url);
   const brand = {
     consultancyName: org.consultancy_name || org.name,
     contactEmail: org.contact_email,
     brandColor: org.brand_color || "#0F766E",
-    logoUrl: org.logo_url,
+    logoUrl,
     signatureHtml: org.signature_html,
   };
   const stageLabel = STAGE_LABELS[stage];
