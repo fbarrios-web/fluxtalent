@@ -114,21 +114,24 @@ function Settings() {
     if (!org) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from("organizations").update({
-        name,
+      const patch: Record<string, unknown> = {
+        name: name || org.name,
         consultancy_name: consultancyName || null,
         contact_email: contactEmail || null,
-        brand_color: brandColor,
+        brand_color: brandColor || "#0F766E",
         logo_url: logoUrl || null,
-        signature_html: signature,
-        signature_image_url: signatureImageUrl || null,
-        sender_email: senderEmail,
-        timezone,
-      } as any).eq("id", org.id);
+        signature_html: signature || null,
+        sender_email: senderEmail || null,
+        timezone: timezone || "America/Argentina/Buenos_Aires",
+      };
+      const { error } = await supabase.from("organizations").update(patch as any).eq("id", org.id);
       if (error) throw error;
       toast.success("Cambios guardados");
       qc.invalidateQueries({ queryKey: ["my-org"] });
-    } catch (e: any) { toast.error(e.message ?? "Error al guardar"); } finally { setSaving(false); }
+    } catch (e: any) {
+      console.error("[settings.save]", e);
+      toast.error(e?.message || e?.error_description || "Error al guardar");
+    } finally { setSaving(false); }
   }
 
 
