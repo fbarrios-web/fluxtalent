@@ -71,14 +71,25 @@ export async function aiGenerateImage(opts: {
 }): Promise<string> {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) throw new Error("LOVABLE_API_KEY missing");
+  const model = opts.model ?? "openai/gpt-image-2";
+  const isGemini = model.startsWith("google/");
+  const body: any = isGemini
+    ? {
+        model,
+        messages: [{ role: "user", content: opts.prompt }],
+        modalities: ["image", "text"],
+      }
+    : {
+        model,
+        prompt: opts.prompt,
+        size: opts.size ?? "1024x1024",
+        quality: "low",
+        n: 1,
+      };
   const res = await fetch(`${BASE}/images/generations`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model: opts.model ?? "google/gemini-2.5-flash-image-preview",
-      prompt: opts.prompt,
-      size: opts.size ?? "1024x1024",
-    }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) {
     const text = await res.text();
