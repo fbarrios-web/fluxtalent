@@ -259,7 +259,7 @@ function VacancyDetail() {
                 </tr>
               </thead>
               <tbody>
-                {(apps ?? []).map((a: any) => (
+                {filteredApps.map((a: any) => (
                   <tr key={a.id} className="cursor-pointer border-b border-border last:border-0 hover:bg-accent/30" onClick={() => nav({ to: "/app/candidates/$id", params: { id: a.id } })}>
                     <td className="px-4 py-3 font-medium">{a.first_name} {a.last_name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{a.email}</td>
