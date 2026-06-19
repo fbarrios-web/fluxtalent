@@ -74,6 +74,12 @@ function VacancyDetail() {
 
   if (!v) return <div className="p-10 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /></div>;
 
+  const term = search.trim().toLowerCase();
+  const filteredApps = !term ? (apps ?? []) : (apps ?? []).filter((a: any) =>
+    [a.first_name, a.last_name, a.email, a.phone].filter(Boolean).some((s: string) => String(s).toLowerCase().includes(term))
+  );
+
+
   const applyUrl = `${window.location.origin}/apply/${v.public_slug}`;
   function copyLink() {
     navigator.clipboard.writeText(applyUrl);
