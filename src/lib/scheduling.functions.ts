@@ -462,11 +462,12 @@ export async function inviteForInterview(
   const { refreshAccessToken, sendGmail } = await import("@/lib/google.server");
   const { interviewInviteHtml } = await import("@/lib/email-templates");
   const { access_token } = await refreshAccessToken(recruiter.google_refresh_token);
+  const logoUrl = await signedLogoUrl(supabase, org.logo_url);
   const brand = {
     consultancyName: org.consultancy_name || org.name,
     contactEmail: org.contact_email,
     brandColor: org.brand_color || "#0F766E",
-    logoUrl: org.logo_url,
+    logoUrl,
     signatureHtml: org.signature_html,
   };
   const stageLabel = STAGE_LABELS[stage];
@@ -527,7 +528,7 @@ export async function sendStageEmail(
     .select("id, title, org_id").eq("id", app.vacancy_id).maybeSingle();
   if (!vac) throw new Error("Vacante no encontrada");
   const { data: org } = await supabase.from("organizations")
-    .select("name, consultancy_name, contact_email, signature_html, signature_image_url")
+    .select("name, consultancy_name, contact_email, brand_color, logo_url, signature_html")
     .eq("id", vac.org_id).maybeSingle();
   if (!org) throw new Error("Organización no encontrada");
 
@@ -542,14 +543,7 @@ export async function sendStageEmail(
     throw new Error("Conectá Gmail en Integraciones para enviar mails automáticos.");
   }
 
-  // Signed URL for signature image (7 days) so the email client can load it
-  let signatureImgUrl = "";
-  if ((org as any).signature_image_url) {
-    const { data: signed } = await supabase.storage.from("org-assets")
-      .createSignedUrl((org as any).signature_image_url, 60 * 60 * 24 * 7);
-    signatureImgUrl = signed?.signedUrl ?? "";
-  }
-
+  const logoUrl = await signedLogoUrl(supabase, org.logo_url);
   const vars = {
     first_name: app.first_name || "",
     last_name: app.last_name || "",
@@ -558,16 +552,14 @@ export async function sendStageEmail(
   };
   const subject = renderTemplate(tpl.subject, vars);
   const bodyText = renderTemplate(tpl.body, vars);
-  const signatureBlock = (org.signature_html || signatureImgUrl)
-    ? `<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/>
-       ${org.signature_html ? `<div style="font-size:13px;color:#6b7280">${org.signature_html}</div>` : ""}
-       ${signatureImgUrl ? `<div style="margin-top:8px"><img src="${signatureImgUrl}" alt="firma" style="max-height:80px;max-width:280px"/></div>` : ""}`
-    : "";
-  const html = `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#111;line-height:1.6">
-    <div style="max-width:560px;margin:0 auto;padding:24px">
-      ${escapeHtmlMultiline(bodyText)}
-      ${signatureBlock}
-    </div></body></html>`;
+  const { brandShellHtml } = await import("@/lib/email-templates");
+  const html = brandShellHtml({
+    consultancyName: org.consultancy_name || org.name,
+    contactEmail: org.contact_email,
+    brandColor: org.brand_color || "#0F766E",
+    logoUrl,
+    signatureHtml: org.signature_html,
+  }, `<div style="font-size:15px;line-height:1.7;color:#111">${escapeHtmlMultiline(bodyText)}</div>`);
 
   const { refreshAccessToken, sendGmail } = await import("@/lib/google.server");
   const { access_token } = await refreshAccessToken(sender.google_refresh_token);
@@ -590,9 +582,17 @@ export async function sendStageEmail(
   return { ok: true };
 }
 
+async function signedLogoUrl(supabase: any, raw: string | null | undefined): Promise<string | null> {
+  if (!raw) return null;
+  if (raw.startsWith("http")) return raw;
+  const { data } = await supabase.storage.from("org-assets").createSignedUrl(raw, 60 * 60 * 24 * 7);
+  return data?.signedUrl ?? null;
+}
+
 function stripHtml(s: string) { return s.replace(/<[^>]*>/g, "").trim(); }
 function escapeHtmlMultiline(s: string) {
   return s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!)).replace(/\n/g, "<br/>");
 }
+
 
 

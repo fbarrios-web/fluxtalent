@@ -8,7 +8,7 @@ type BrandCtx = {
   signatureHtml?: string | null;
 };
 
-function shell(brand: BrandCtx, inner: string) {
+export function brandShellHtml(brand: BrandCtx, inner: string) {
   const color = brand.brandColor || "#0F766E";
   const logo = brand.logoUrl
     ? `<img src="${brand.logoUrl}" alt="${escapeAttr(brand.consultancyName)}" style="max-height:48px;margin-bottom:16px"/>`
@@ -28,6 +28,8 @@ function shell(brand: BrandCtx, inner: string) {
   </div>
   </body></html>`;
 }
+
+function shell(brand: BrandCtx, inner: string) { return brandShellHtml(brand, inner); }
 
 export function interviewInviteHtml(opts: BrandCtx & {
   firstName: string;

@@ -73,9 +73,9 @@ export async function aiGenerateImage(opts: {
   if (!key) throw new Error("LOVABLE_API_KEY missing");
   const res = await fetch(`${BASE}/images/generations`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "Lovable-API-Key": key, Authorization: `Bearer ${key}` },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
     body: JSON.stringify({
-      model: opts.model ?? "google/gemini-3.1-flash-image-preview",
+      model: opts.model ?? "google/gemini-2.5-flash-image-preview",
       prompt: opts.prompt,
       size: opts.size ?? "1024x1024",
     }),
@@ -85,7 +85,9 @@ export async function aiGenerateImage(opts: {
     throw new Error(`AI image ${res.status}: ${text.slice(0, 300)}`);
   }
   const data = await res.json();
-  const b64 = data?.data?.[0]?.b64_json;
+  const b64 = data?.data?.[0]?.b64_json
+    ?? data?.data?.[0]?.image?.b64_json
+    ?? data?.images?.[0]?.b64_json;
   if (!b64) throw new Error("AI image: empty response");
   return b64 as string;
 }

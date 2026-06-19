@@ -49,6 +49,7 @@ function VacancyDetail() {
     try { localStorage.setItem(storageKey, JSON.stringify(collapsed)); } catch {}
   }, [collapsed, storageKey]);
   const toggleCollapsed = (id: string) => setCollapsed(c => ({ ...c, [id]: !c[id] }));
+  const [search, setSearch] = useState("");
 
 
   const { data: v } = useQuery<any>({
@@ -72,6 +73,12 @@ function VacancyDetail() {
   });
 
   if (!v) return <div className="p-10 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /></div>;
+
+  const term = search.trim().toLowerCase();
+  const filteredApps = !term ? (apps ?? []) : (apps ?? []).filter((a: any) =>
+    [a.first_name, a.last_name, a.email, a.phone].filter(Boolean).some((s: string) => String(s).toLowerCase().includes(term))
+  );
+
 
   const applyUrl = `${window.location.origin}/apply/${v.public_slug}`;
   function copyLink() {
@@ -143,17 +150,28 @@ function VacancyDetail() {
       </div>
 
       <Tabs defaultValue="pipeline">
-        <TabsList>
-          <TabsTrigger value="pipeline">Etapas</TabsTrigger>
-          <TabsTrigger value="table">Tabla</TabsTrigger>
-          <TabsTrigger value="brief">Detalle de vacante</TabsTrigger>
-          <TabsTrigger value="scheduling">Agenda</TabsTrigger>
-        </TabsList>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <TabsList>
+            <TabsTrigger value="pipeline">Etapas</TabsTrigger>
+            <TabsTrigger value="table">Tabla</TabsTrigger>
+            <TabsTrigger value="brief">Detalle de vacante</TabsTrigger>
+            <TabsTrigger value="scheduling">Agenda</TabsTrigger>
+          </TabsList>
+          <div className="relative w-72 max-w-full">
+            <input
+              type="search"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Buscar postulante por nombre o email…"
+              className="w-full rounded-full border border-border bg-card px-4 py-2 text-sm outline-none focus:border-primary"
+            />
+          </div>
+        </div>
 
         <TabsContent value="pipeline" className="mt-6">
           <div className="flex gap-3 overflow-x-auto pb-4">
             {STAGES.map(s => {
-              const items = (apps ?? []).filter((a: any) => a.stage === s.id);
+              const items = filteredApps.filter((a: any) => a.stage === s.id);
               const isCollapsed = !!collapsed[s.id];
               if (isCollapsed) {
                 return (
@@ -241,7 +259,7 @@ function VacancyDetail() {
                 </tr>
               </thead>
               <tbody>
-                {(apps ?? []).map((a: any) => (
+                {filteredApps.map((a: any) => (
                   <tr key={a.id} className="cursor-pointer border-b border-border last:border-0 hover:bg-accent/30" onClick={() => nav({ to: "/app/candidates/$id", params: { id: a.id } })}>
                     <td className="px-4 py-3 font-medium">{a.first_name} {a.last_name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{a.email}</td>
