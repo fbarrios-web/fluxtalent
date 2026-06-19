@@ -483,52 +483,85 @@ function AddCandidateDialog({ vacancyId, onAdded }: { vacancyId: string; onAdded
 
 function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: string }) {
   const gen = useServerFn(aiVacancyImage);
+  const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [aspect, setAspect] = useState<"square" | "wide" | "story">("square");
   const [cta, setCta] = useState("Postulate en el link adjunto");
-  const [bgDataUrl, setBgDataUrl] = useState<string | null>(null);
   const [finalDataUrl, setFinalDataUrl] = useState<string | null>(null);
-  const [meta, setMeta] = useState<any>(null);
+  const [existingUrl, setExistingUrl] = useState<string | null>(null);
   const [org, setOrg] = useState<{ name: string; logo_url: string | null; brand_color: string | null } | null>(null);
 
+  const hasExisting = !!(vacancy.image_url || existingUrl);
+
   useEffect(() => {
-    if (!open || org) return;
+    if (!open) return;
     (async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return;
-      const { data: prof } = await supabase.from("profiles").select("org_id").eq("id", u.user.id).maybeSingle();
-      if (!prof?.org_id) return;
-      const { data: o } = await supabase.from("organizations").select("name, logo_url, brand_color").eq("id", prof.org_id).maybeSingle();
-      if (!o) return;
-      let logoUrl: string | null = null;
-      if (o.logo_url) {
-        if (/^https?:\/\//.test(o.logo_url)) {
-          logoUrl = o.logo_url;
-        } else {
-          const { data: s } = await supabase.storage.from("org-assets").createSignedUrl(o.logo_url, 60 * 60);
-          logoUrl = s?.signedUrl ?? null;
+      if (!org) {
+        const { data: u } = await supabase.auth.getUser();
+        if (u.user) {
+          const { data: prof } = await supabase.from("profiles").select("org_id").eq("id", u.user.id).maybeSingle();
+          if (prof?.org_id) {
+            const { data: o } = await supabase.from("organizations").select("name, logo_url, brand_color").eq("id", prof.org_id).maybeSingle();
+            if (o) {
+              let logoUrl: string | null = null;
+              if (o.logo_url) {
+                if (/^https?:\/\//.test(o.logo_url)) logoUrl = o.logo_url;
+                else {
+                  const { data: s } = await supabase.storage.from("org-assets").createSignedUrl(o.logo_url, 60 * 60);
+                  logoUrl = s?.signedUrl ?? null;
+                }
+              }
+              setOrg({ name: o.name, brand_color: o.brand_color, logo_url: logoUrl } as any);
+            }
+          }
         }
       }
-      setOrg({ name: o.name, brand_color: o.brand_color, logo_url: logoUrl } as any);
+      if (vacancy.image_url && !existingUrl) {
+        if (/^https?:\/\//.test(vacancy.image_url)) {
+          setExistingUrl(vacancy.image_url);
+        } else {
+          const { data: s } = await supabase.storage.from("org-assets").createSignedUrl(vacancy.image_url, 60 * 60);
+          if (s?.signedUrl) setExistingUrl(s.signedUrl);
+        }
+      }
     })();
-  }, [open, org]);
+  }, [open, org, vacancy.image_url, existingUrl]);
 
   async function generate() {
+    if (hasExisting) {
+      toast.error("Esta vacante ya tiene una imagen generada");
+      return;
+    }
+    if (!org?.logo_url) {
+      toast.error("Cargá el logo de tu organización en Configuración antes de generar la imagen");
+      return;
+    }
     setLoading(true);
-    setBgDataUrl(null); setFinalDataUrl(null);
+    setFinalDataUrl(null);
     try {
       const r: any = await gen({ data: { vacancyId: vacancy.id, aspect } });
       const url = `data:image/png;base64,${r.b64}`;
-      setBgDataUrl(url);
-      setMeta(r.meta);
-      await compose(url, r.meta);
+      const composed = await compose(url, r.meta);
+      setFinalDataUrl(composed);
+      const blob = await (await fetch(composed)).blob();
+      const path = `vacancy-images/${vacancy.id}.png`;
+      const { error: upErr } = await supabase.storage.from("org-assets").upload(path, blob, {
+        upsert: true, contentType: "image/png",
+      });
+      if (upErr) throw upErr;
+      const { error: updErr } = await supabase.from("vacancies").update({ image_url: path }).eq("id", vacancy.id);
+      if (updErr) throw updErr;
+      const { data: s } = await supabase.storage.from("org-assets").createSignedUrl(path, 60 * 60);
+      if (s?.signedUrl) setExistingUrl(s.signedUrl);
+      qc.invalidateQueries({ queryKey: ["vacancy", vacancy.id] });
+      toast.success("Imagen creada y guardada");
     } catch (e: any) {
       toast.error(e.message ?? "No se pudo generar la imagen");
     } finally { setLoading(false); }
   }
 
-  async function compose(bgUrl: string, m: any) {
+  async function compose(bgUrl: string, m: any): Promise<string> {
     const dims = aspect === "wide" ? { w: 1536, h: 1024 } : aspect === "story" ? { w: 1024, h: 1536 } : { w: 1024, h: 1024 };
     const canvas = document.createElement("canvas");
     canvas.width = dims.w; canvas.height = dims.h;
@@ -538,56 +571,49 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
 
     const brand = org?.brand_color || "#0F766E";
     const isStory = aspect === "story";
-    // Larger panel to fit bullets
     const panel = isStory
       ? { x: 0, y: dims.h * 0.35, w: dims.w, h: dims.h * 0.65 }
       : { x: dims.w * 0.42, y: 0, w: dims.w * 0.58, h: dims.h };
 
-    const grad = isStory
-      ? ctx.createLinearGradient(0, panel.y, 0, panel.y + panel.h)
-      : ctx.createLinearGradient(panel.x, 0, panel.x + panel.w, 0);
-    grad.addColorStop(0, "rgba(0,0,0,0)"); grad.addColorStop(0.25, "rgba(0,0,0,0.78)"); grad.addColorStop(1, "rgba(0,0,0,0.95)");
-    ctx.fillStyle = grad; ctx.fillRect(panel.x, panel.y, panel.w, panel.h);
+    ctx.fillStyle = "rgba(255,255,255,0.93)";
+    ctx.fillRect(panel.x, panel.y, panel.w, panel.h);
 
     const padX = 60;
     const textX = panel.x + padX;
     const maxW = panel.w - padX * 2;
     let textY = panel.y + 70;
 
-    // Accent bar
+    const ink = "#0f172a";
+    const subInk = "#475569";
+
     ctx.fillStyle = brand;
     ctx.fillRect(textX, textY, 80, 6);
     textY += 30;
 
-    // Eyebrow
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "600 24px system-ui, -apple-system, Segoe UI, Arial";
-    ctx.fillText("Estamos buscando", textX, textY); textY += 44;
+    ctx.fillStyle = brand;
+    ctx.font = "700 22px system-ui, -apple-system, Segoe UI, Arial";
+    ctx.fillText("ESTAMOS BUSCANDO", textX, textY); textY += 44;
 
-    // Title
+    ctx.fillStyle = ink;
     ctx.font = `800 ${isStory ? 56 : 52}px system-ui, -apple-system, Segoe UI, Arial`;
     textY = wrapText(ctx, m?.title ?? vacancy.title, textX, textY, maxW, isStory ? 62 : 58);
     textY += 18;
 
-    // Meta line: modalidad · ubicación · horario
-    ctx.font = "400 22px system-ui, -apple-system, Segoe UI, Arial";
-    ctx.fillStyle = "rgba(255,255,255,0.88)";
+    ctx.font = "500 22px system-ui, -apple-system, Segoe UI, Arial";
+    ctx.fillStyle = subInk;
     const metaParts = [labelModality(m?.modality ?? vacancy.modality), m?.location ?? vacancy.location, m?.work_schedule ?? vacancy.work_schedule].filter(Boolean);
     if (metaParts.length) { textY = wrapText(ctx, metaParts.join("  ·  "), textX, textY, maxW, 30); textY += 18; }
 
-    // Helper: section title + bullets
     const drawSection = (title: string, items: string[]) => {
       if (!items || !items.length) return;
       ctx.fillStyle = brand;
-      ctx.font = "700 20px system-ui, -apple-system, Segoe UI, Arial";
+      ctx.font = "800 20px system-ui, -apple-system, Segoe UI, Arial";
       ctx.fillText(title.toUpperCase(), textX, textY); textY += 30;
-      ctx.fillStyle = "#ffffff";
       ctx.font = "400 22px system-ui, -apple-system, Segoe UI, Arial";
       for (const it of items) {
-        // Bullet dot
         ctx.fillStyle = brand;
         ctx.beginPath(); ctx.arc(textX + 6, textY - 8, 4, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle = ink;
         textY = wrapText(ctx, it, textX + 24, textY, maxW - 24, 28);
         textY += 6;
       }
@@ -597,7 +623,6 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
     drawSection("Requisitos", m?.requirements ?? []);
     drawSection("Responsabilidades", m?.responsibilities ?? []);
 
-    // Logo + nombre abajo
     const baseY = panel.y + panel.h - 70;
     if (org?.logo_url) {
       try {
@@ -606,20 +631,15 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
         const lw = (logo.width / logo.height) * lh;
         ctx.drawImage(logo, textX, baseY - lh / 2, lw, lh);
         if (org?.name) {
-          ctx.fillStyle = "#ffffff";
+          ctx.fillStyle = ink;
           ctx.font = "600 20px system-ui, -apple-system, Segoe UI, Arial";
           ctx.textBaseline = "middle";
           ctx.fillText(org.name, textX + lw + 16, baseY);
           ctx.textBaseline = "alphabetic";
         }
       } catch {}
-    } else if (org?.name) {
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "600 22px system-ui, -apple-system, Segoe UI, Arial";
-      ctx.fillText(org.name, textX, baseY);
     }
 
-    // CTA chip arriba a la derecha del panel
     const ctaText = cta;
     ctx.font = "700 20px system-ui, -apple-system, Segoe UI, Arial";
     const ctaW = ctx.measureText(ctaText).width + 36;
@@ -632,61 +652,72 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
     ctx.fillText(ctaText, ctaX + 18, ctaY + 22);
     ctx.textBaseline = "alphabetic";
 
-    setFinalDataUrl(canvas.toDataURL("image/png"));
+    return canvas.toDataURL("image/png");
   }
-
 
   function download() {
-    if (!finalDataUrl) return;
+    const src = finalDataUrl ?? existingUrl;
+    if (!src) return;
     const a = document.createElement("a");
-    a.href = finalDataUrl;
+    a.href = src;
     a.download = `vacante-${vacancy.public_slug ?? vacancy.id}.png`;
+    a.target = "_blank";
     a.click();
   }
+
+  const previewSrc = finalDataUrl ?? existingUrl;
 
   return (
     <>
       <Button variant="outline" onClick={() => setOpen(true)}><ImageIcon className="mr-2 h-3.5 w-3.5" /> Imagen</Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
-          <DialogHeader><DialogTitle>Generar imagen para publicar</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{hasExisting ? "Imagen de la vacante" : "Generar imagen para publicar"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <p className="text-xs text-muted-foreground">La IA crea un fondo profesional según el rol. Le superponemos tu logo, color de marca, los datos de la vacante y el CTA.</p>
-            <div className="grid gap-3 md:grid-cols-2">
-              <div>
-                <Label>Formato</Label>
-                <Select value={aspect} onValueChange={v => setAspect(v as any)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="square">Cuadrado (1:1) — feed</SelectItem>
-                    <SelectItem value="wide">Horizontal (3:2) — LinkedIn</SelectItem>
-                    <SelectItem value="story">Vertical (2:3) — story</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Texto del CTA</Label>
-                <Input value={cta} onChange={e => setCta(e.target.value)} />
-              </div>
-            </div>
-            <div className="rounded-md border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-              <div>Link de postulación (ya incluido en el botón al compartir): <code className="break-all text-foreground">{applyUrl}</code></div>
-            </div>
-            {finalDataUrl ? (
-              <img src={finalDataUrl} alt="Vista previa" className="w-full rounded-lg border border-border" />
-            ) : bgDataUrl ? (
-              <div className="text-xs text-muted-foreground">Componiendo overlay…</div>
+            {hasExisting ? (
+              <p className="text-xs text-muted-foreground">Esta vacante ya tiene su imagen generada. Solo se puede crear una vez por vacante.</p>
             ) : (
-              <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">Sin imagen aún. Hacé click en "Generar".</div>
+              <p className="text-xs text-muted-foreground">Diseño con fondo claro, detalles en tu color de marca y tu logo. Se puede generar <strong>una sola vez</strong> por vacante.</p>
+            )}
+            {!hasExisting && (
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <Label>Formato</Label>
+                  <Select value={aspect} onValueChange={v => setAspect(v as any)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="square">Cuadrado (1:1) — feed</SelectItem>
+                      <SelectItem value="wide">Horizontal (3:2) — LinkedIn</SelectItem>
+                      <SelectItem value="story">Vertical (2:3) — story</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Texto del CTA</Label>
+                  <Input value={cta} onChange={e => setCta(e.target.value)} />
+                </div>
+              </div>
+            )}
+            <div className="rounded-md border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+              <div>Link de postulación: <code className="break-all text-foreground">{applyUrl}</code></div>
+            </div>
+            {previewSrc ? (
+              <img src={previewSrc} alt="Vista previa" className="w-full rounded-lg border border-border" />
+            ) : (
+              <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+                {org && !org.logo_url ? "Cargá el logo de tu organización en Configuración para poder generar la imagen." : "Sin imagen aún. Hacé click en \"Generar\"."}
+              </div>
             )}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)}>Cerrar</Button>
-            <Button variant="outline" onClick={generate} disabled={loading}>
-              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-              {finalDataUrl ? "Regenerar" : "Generar"}
-            </Button>
-            <Button onClick={download} disabled={!finalDataUrl}><Download className="mr-2 h-4 w-4" /> Descargar PNG</Button>
+            {!hasExisting && (
+              <Button variant="outline" onClick={generate} disabled={loading || !org?.logo_url}>
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                Generar
+              </Button>
+            )}
+            <Button onClick={download} disabled={!previewSrc}><Download className="mr-2 h-4 w-4" /> Descargar PNG</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
