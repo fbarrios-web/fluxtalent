@@ -14,11 +14,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MatchPill } from "./app.dashboard";
 
-const STAGES = ["received", "interview_1", "interview_2", "interview_3", "offer", "hired", "rejected"];
+const STAGES = ["received", "interview_1", "interview_2", "interview_3", "hired", "rejected"];
 
 const STAGE_LABEL: Record<string, string> = {
   received: "Recibido", interview_1: "Entrevista 1", interview_2: "Entrevista 2",
-  interview_3: "Entrevista 3", offer: "Oferta", hired: "Contratado", rejected: "Descartado",
+  interview_3: "Entrevista 3", hired: "Contratado", rejected: "Descartado",
 };
 function eventLabel(e: any): string {
   const t = e?.type ?? "";
