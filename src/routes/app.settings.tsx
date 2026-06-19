@@ -23,13 +23,16 @@ function Settings() {
       const { data: u } = await supabase.auth.getUser();
       const user = u?.user;
       if (!user) return null;
-      const { data: profile } = await supabase.from("profiles").select("display_name, org_id").eq("id", user.id).maybeSingle();
+      const { data: profile } = await supabase.from("profiles").select("display_name, org_id, full_name, dni, birth_date").eq("id", user.id).maybeSingle();
       const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
       return {
         id: user.id,
         email: user.email ?? "",
         createdAt: user.created_at,
         displayName: profile?.display_name ?? "",
+        fullName: (profile as any)?.full_name ?? "",
+        dni: (profile as any)?.dni ?? "",
+        birthDate: (profile as any)?.birth_date ?? "",
         roles: (roles ?? []).map((r: any) => r.role),
       };
     },
