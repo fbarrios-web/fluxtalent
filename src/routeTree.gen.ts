@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TrustRouteImport } from './routes/trust'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
@@ -35,6 +36,11 @@ import { Route as ApiPublicScheduleBookRouteImport } from './routes/api.public.s
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api.public.mp.webhook'
 import { Route as ApiPublicGoogleCallbackRouteImport } from './routes/api.public.google.callback'
 
+const TrustRoute = TrustRouteImport.update({
+  id: '/trust',
+  path: '/trust',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -165,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/trust': typeof TrustRoute
   '/app/admin': typeof AppAdminRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
   '/app/enterprise': typeof AppEnterpriseRoute
@@ -191,6 +198,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/trust': typeof TrustRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/enterprise': typeof AppEnterpriseRoute
   '/app/integrations': typeof AppIntegrationsRoute
@@ -218,6 +226,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/trust': typeof TrustRoute
   '/app/admin': typeof AppAdminRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
   '/app/enterprise': typeof AppEnterpriseRoute
@@ -247,6 +256,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/trust'
     | '/app/admin'
     | '/app/dashboard'
     | '/app/enterprise'
@@ -273,6 +283,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/trust'
     | '/app/dashboard'
     | '/app/enterprise'
     | '/app/integrations'
@@ -299,6 +310,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/trust'
     | '/app/admin'
     | '/app/dashboard'
     | '/app/enterprise'
@@ -327,6 +339,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
+  TrustRoute: typeof TrustRoute
   ApplySlugRoute: typeof ApplySlugRoute
   ScheduleTokenRoute: typeof ScheduleTokenRoute
   ApiPublicAnalyzeRoute: typeof ApiPublicAnalyzeRoute
@@ -338,6 +351,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/trust': {
+      id: '/trust'
+      path: '/trust'
+      fullPath: '/trust'
+      preLoaderRoute: typeof TrustRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -568,6 +588,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
+  TrustRoute: TrustRoute,
   ApplySlugRoute: ApplySlugRoute,
   ScheduleTokenRoute: ScheduleTokenRoute,
   ApiPublicAnalyzeRoute: ApiPublicAnalyzeRoute,
