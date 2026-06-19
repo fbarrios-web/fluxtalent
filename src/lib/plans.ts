@@ -23,61 +23,56 @@ export const PLANS: Plan[] = [
     id: "free",
     name: "Free",
     priceArs: 0,
-    tagline: "Probá FLUX Talent\u00a0",
+    tagline: "Free por 15 días",
     maxVacancies: 1,
     maxCvsPerMonth: 20,
     features: [
       "1 vacante activa",
       "20 CVs analizados con IA",
-      "",
-      "",
       "Acceso al proceso end-to-end",
     ],
   },
   {
     id: "starter",
     name: "Starter",
-    priceArs: 20000,
-    tagline: "Ideal para equipos chicos que arrancan a profesionalizar su reclutamiento.",
+    priceArs: 24000,
+    tagline: "Ideal para reclutadores freelancers",
     maxVacancies: 5,
     maxCvsPerMonth: 200,
     features: [
       "Hasta 5 vacantes activas",
-      "200 CVs / mes con IA",
-      "",
-      "\n",
+      "200 CVs analizados con IA",
       "Acceso al proceso end-to-end",
+      "Soporte por mails (SLA 72hs)",
     ],
   },
   {
     id: "pro",
     name: "Pro",
-    priceArs: 45000,
-    tagline: "Para consultoras y áreas de Talento con flujo constante.",
+    priceArs: 48000,
+    tagline: "Ideal para consultoras y áreas de Talento con flujo constante.",
     maxVacancies: 20,
     maxCvsPerMonth: 1000,
     highlighted: true,
     features: [
       "Hasta 20 vacantes activas",
-      "1.000 CVs / mes con IA",
-      "\n",
+      "1.000 CVs analizados con IA",
       "Acceso al proceso end-to-end",
-      "Soporte prioritario",
+      "Soporte prioritario (SLA 48hs)",
     ],
   },
   {
     id: "enterprise",
     name: "Enterprise",
-    priceArs: 90000,
+    priceArs: 96000,
     tagline: "Volumen alto, multi-equipo y soporte dedicado.",
     maxVacancies: -1,
-    maxCvsPerMonth: -1,
+    maxCvsPerMonth: 1000,
     features: [
       "Vacantes ilimitadas",
-      "CVs ilimitados",
-      "Multi-organización y roles avanzados",
-      "Onboarding dedicado",
-      "SLA y soporte 24×5",
+      "1.000 CVs analizados con IA",
+      "Acceso al proceso end-to-end",
+      "Soporte prioritario (SLA 24hs)",
     ],
   },
   {
@@ -100,6 +95,11 @@ export const PLANS: Plan[] = [
 
 export function planByPrice(price: number | string | null | undefined): Plan {
   const p = Number(price ?? 0);
+  // Legacy price mapping for backward compatibility
+  if (p === 0) return PLANS.find(x => x.id === "free")!;
+  if (p === 20000 || p === 24000) return PLANS.find(x => x.id === "starter")!;
+  if (p === 45000 || p === 48000) return PLANS.find(x => x.id === "pro")!;
+  if (p === 90000 || p === 96000) return PLANS.find(x => x.id === "enterprise")!;
   return PLANS.find(x => x.priceArs === p && !x.contactOnly) ?? PLANS[1];
 }
 
