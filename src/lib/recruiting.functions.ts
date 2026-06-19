@@ -21,6 +21,8 @@ export const createVacancy = createServerFn({ method: "POST" })
       seniority: z.enum(["intern", "junior", "mid", "senior", "lead", "manager", "director"]).optional(),
       modality: z.enum(["remote", "hybrid", "onsite"]).optional(),
       location: z.string().max(120).optional(),
+      work_schedule: z.string().max(200).optional(),
+      image_url: z.string().url().optional().or(z.literal("")),
       description: z.string().max(5000).optional(),
       responsibilities: z.string().max(5000).optional(),
       requirements: z.string().max(5000).optional(),
