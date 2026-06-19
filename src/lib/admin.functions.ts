@@ -220,3 +220,63 @@ export const adminListUsers = createServerFn({ method: "GET" })
       .limit(500);
     return profiles ?? [];
   });
+
+/** Export full client base (organizations + key contact) for admin. */
+export const adminExportClients = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const [{ data: orgs }, { data: profiles }, { data: payments }] = await Promise.all([
+      supabaseAdmin.from("organizations")
+        .select("id, name, subscription_status, trial_ends_at, current_period_end, plan_price_ars, last_payment_at, created_at, parent_org_id")
+        .order("created_at", { ascending: false }),
+      supabaseAdmin.from("profiles").select("id, org_id, display_name"),
+      supabaseAdmin.from("payments").select("org_id, amount_ars, status"),
+    ]);
+
+    const ids = (profiles ?? []).map((p: any) => p.id);
+    const emailMap = new Map<string, string>();
+    if (ids.length) {
+      // paginate auth.admin.listUsers if needed
+      let page = 1;
+      while (true) {
+        const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
+        list?.users?.forEach((u: any) => emailMap.set(u.id, u.email ?? ""));
+        if (!list?.users?.length || list.users.length < 200) break;
+        page++;
+        if (page > 50) break;
+      }
+    }
+
+    const ownerByOrg = new Map<string, { name: string; email: string }>();
+    (profiles ?? []).forEach((p: any) => {
+      if (p.org_id && !ownerByOrg.has(p.org_id)) {
+        ownerByOrg.set(p.org_id, { name: p.display_name ?? "", email: emailMap.get(p.id) ?? "" });
+      }
+    });
+
+    const paidByOrg = new Map<string, number>();
+    (payments ?? []).forEach((p: any) => {
+      if (p.status === "approved") paidByOrg.set(p.org_id, (paidByOrg.get(p.org_id) ?? 0) + Number(p.amount_ars || 0));
+    });
+
+    return (orgs ?? []).map((o: any) => {
+      const owner = ownerByOrg.get(o.id);
+      return {
+        org_id: o.id,
+        organizacion: o.name,
+        es_sub_organizacion: o.parent_org_id ? "Sí" : "No",
+        contacto: owner?.name ?? "",
+        email: owner?.email ?? "",
+        estado: o.subscription_status,
+        plan_ars: Number(o.plan_price_ars ?? 0),
+        trial_vence: o.trial_ends_at ?? "",
+        periodo_vence: o.current_period_end ?? "",
+        ultimo_pago: o.last_payment_at ?? "",
+        total_pagado_ars: paidByOrg.get(o.id) ?? 0,
+        creada: o.created_at,
+      };
+    });
+  });
