@@ -293,6 +293,10 @@ function EditVacancyDialog({ vacancy, onSaved }: { vacancy: any; onSaved: () => 
   const [patch, setPatch] = useState({
     title: vacancy.title ?? "",
     area: vacancy.area ?? "",
+    seniority: vacancy.seniority ?? "mid",
+    modality: vacancy.modality ?? "remote",
+    location: vacancy.location ?? "",
+    work_schedule: vacancy.work_schedule ?? "",
     description: vacancy.description ?? "",
     responsibilities: vacancy.responsibilities ?? "",
     requirements: vacancy.requirements ?? "",
