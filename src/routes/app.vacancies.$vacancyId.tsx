@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { moveApplicationStage, updateVacancy, manualCreateApplication } from "@/lib/recruiting.functions";
-import { ArrowLeft, ExternalLink, Copy, Loader2, Download, ChevronLeft, ChevronRight, Pencil, UserPlus } from "lucide-react";
+import { ArrowLeft, ExternalLink, Copy, Loader2, Download, ChevronLeft, ChevronRight, Pencil, UserPlus, ImageIcon, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
