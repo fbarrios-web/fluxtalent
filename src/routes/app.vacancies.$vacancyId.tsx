@@ -500,7 +500,17 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
       const { data: prof } = await supabase.from("profiles").select("org_id").eq("id", u.user.id).maybeSingle();
       if (!prof?.org_id) return;
       const { data: o } = await supabase.from("organizations").select("name, logo_url, brand_color").eq("id", prof.org_id).maybeSingle();
-      if (o) setOrg(o as any);
+      if (!o) return;
+      let logoUrl: string | null = null;
+      if (o.logo_url) {
+        if (/^https?:\/\//.test(o.logo_url)) {
+          logoUrl = o.logo_url;
+        } else {
+          const { data: s } = await supabase.storage.from("org-assets").createSignedUrl(o.logo_url, 60 * 60);
+          logoUrl = s?.signedUrl ?? null;
+        }
+      }
+      setOrg({ name: o.name, brand_color: o.brand_color, logo_url: logoUrl } as any);
     })();
   }, [open, org]);
 
