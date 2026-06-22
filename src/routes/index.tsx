@@ -137,12 +137,12 @@ function Landing() {
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="font-display text-4xl">Planes y precios</h2>
             <p className="mt-3 text-muted-foreground">
-              Empezás con <strong>{TRIAL_DAYS} días gratis</strong> en cualquier plan. Sin tarjeta para probar. Cancelás cuando quieras.
+              El plan <strong>Free</strong> incluye <strong>{TRIAL_DAYS} días gratis</strong>, sin tarjeta. Los planes pagos no tienen período de prueba.
             </p>
           </div>
 
           <div className="mt-12 grid gap-6 md:grid-cols-3">
-            {PLANS.map(p => (
+            {plans.map(p => (
               <div
                 key={p.id}
                 className={`relative flex flex-col rounded-2xl border bg-card p-6 ${p.highlighted ? "border-primary shadow-lg" : "border-border"}`}
