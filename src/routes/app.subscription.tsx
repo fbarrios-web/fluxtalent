@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { CheckCircle2, CreditCard, FileText, Loader2, ShieldCheck, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
-import { PLANS, planByPrice, formatLimit, formatArs, TRIAL_DAYS } from "@/lib/plans";
+import { planByPrice, formatLimit, formatArs, TRIAL_DAYS, mergePlanOverrides } from "@/lib/plans";
+import { getPlanPricing } from "@/lib/pricing.functions";
 
 export const Route = createFileRoute("/app/subscription")({
   component: SubscriptionPage,
@@ -23,6 +24,9 @@ function SubscriptionPage() {
   const getSub = useServerFn(getMySubscription);
   const createPre = useServerFn(createPreapproval);
   const cancel = useServerFn(cancelSubscription);
+  const getPricing = useServerFn(getPlanPricing);
+  const { data: overrides } = useQuery({ queryKey: ["plan-pricing"], queryFn: () => getPricing() });
+  const plans = mergePlanOverrides(overrides);
 
   const { data: sub, isLoading, error } = useQuery({
     queryKey: ["my-subscription"],
