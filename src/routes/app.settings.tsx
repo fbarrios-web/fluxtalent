@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { IntegrationsPanel } from "@/routes/app.integrations";
 
 export const Route = createFileRoute("/app/settings")({
   component: Settings,
@@ -171,59 +173,75 @@ function Settings() {
       <h1 className="font-display text-4xl">Configuración</h1>
       <p className="mt-1 text-muted-foreground">Personalizá tu workspace y la comunicación con candidatos.</p>
 
-      <section className="mt-8 space-y-4 rounded-2xl border border-border bg-card p-6">
-        <h3 className="font-semibold">Mi cuenta</h3>
-        <p className="text-sm text-muted-foreground">Datos personales asociados a tu usuario.</p>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div><Label>Email</Label><Input value={account?.email ?? ""} disabled /></div>
-          <div><Label>Nombre para mostrar</Label><Input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Tu nombre" /></div>
-          <div><Label>Nombre completo</Label><Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Nombre y apellido" /></div>
-          <div><Label>DNI</Label><Input value={dni} onChange={e => setDni(e.target.value)} placeholder="12345678" /></div>
-          <div><Label>Fecha de nacimiento</Label><Input type="date" value={birthDate ?? ""} onChange={e => setBirthDate(e.target.value)} /></div>
-          <div><Label>Roles</Label><Input value={(account?.roles ?? []).join(", ") || "—"} disabled /></div>
-          <div><Label>Miembro desde</Label><Input value={account?.createdAt ? new Date(account.createdAt).toLocaleDateString("es-AR") : "—"} disabled /></div>
-        </div>
-        <Button onClick={saveProfile} disabled={savingProfile || !account}>{savingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Guardar perfil</Button>
-      </section>
+      <Tabs defaultValue="cuenta" className="mt-8">
+        <TabsList>
+          <TabsTrigger value="cuenta">Cuenta y empresa</TabsTrigger>
+          <TabsTrigger value="integraciones">Integraciones</TabsTrigger>
+        </TabsList>
 
+        <TabsContent value="cuenta" className="mt-6 space-y-8">
+          <section className="space-y-4 rounded-2xl border border-border bg-card p-6">
+            <h3 className="font-semibold">Mi cuenta</h3>
+            <p className="text-sm text-muted-foreground">Datos personales asociados a tu usuario.</p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div><Label>Email</Label><Input value={account?.email ?? ""} disabled /></div>
+              <div><Label>Nombre para mostrar</Label><Input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Tu nombre" /></div>
+              <div><Label>Nombre completo</Label><Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Nombre y apellido" /></div>
+              <div><Label>DNI</Label><Input value={dni} onChange={e => setDni(e.target.value)} placeholder="12345678" /></div>
+              <div><Label>Fecha de nacimiento</Label><Input type="date" value={birthDate ?? ""} onChange={e => setBirthDate(e.target.value)} /></div>
+              <div><Label>Roles</Label><Input value={(account?.roles ?? []).join(", ") || "—"} disabled /></div>
+              <div><Label>Miembro desde</Label><Input value={account?.createdAt ? new Date(account.createdAt).toLocaleDateString("es-AR") : "—"} disabled /></div>
+            </div>
+            <Button onClick={saveProfile} disabled={savingProfile || !account}>{savingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Guardar perfil</Button>
+          </section>
 
-      <section className="mt-8 space-y-4 rounded-2xl border border-border bg-card p-6">
-        <h3 className="font-semibold">Empresa & marca</h3>
-        <p className="text-sm text-muted-foreground">Estos datos aparecen en los mails que recibe el postulante.</p>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div><Label>Nombre legal</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
-          <div><Label>Nombre comercial / consultora</Label><Input value={consultancyName} onChange={e => setConsultancyName(e.target.value)} placeholder="Aparece en el remitente del mail" /></div>
-          <div><Label>Mail de contacto (para postulantes)</Label><Input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="hola@empresa.com" /></div>
-          <div><Label>Email remitente</Label><Input value={senderEmail} onChange={e => setSenderEmail(e.target.value)} placeholder="reclutamiento@empresa.com" /></div>
-          <div><Label>Color de marca</Label><div className="flex items-center gap-2"><input type="color" value={brandColor} onChange={e => setBrandColor(e.target.value)} className="h-10 w-14 rounded border border-input" /><Input value={brandColor} onChange={e => setBrandColor(e.target.value)} /></div></div>
-          <div>
-            <Label>Logo de la empresa</Label>
-            <div className="flex items-center gap-3">
-              {logoPreview && <img src={logoPreview} alt="logo" className="h-12 w-12 rounded border border-border object-contain bg-white" />}
-              <Input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) uploadAsset(f, "logo"); }} disabled={uploadingLogo} />
-              {logoUrl && <Button variant="ghost" size="sm" onClick={() => { setLogoUrl(""); setLogoPreview(""); }}>Quitar</Button>}
+          <section className="space-y-4 rounded-2xl border border-border bg-card p-6">
+            <h3 className="font-semibold">Empresa & marca</h3>
+            <p className="text-sm text-muted-foreground">Estos datos aparecen en los mails que recibe el postulante.</p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div><Label>Nombre legal</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
+              <div><Label>Nombre comercial / consultora</Label><Input value={consultancyName} onChange={e => setConsultancyName(e.target.value)} placeholder="Aparece en el remitente del mail" /></div>
+              <div><Label>Mail de contacto (para postulantes)</Label><Input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="hola@empresa.com" /></div>
+              <div><Label>Email remitente</Label><Input value={senderEmail} onChange={e => setSenderEmail(e.target.value)} placeholder="reclutamiento@empresa.com" /></div>
+              <div><Label>Color de marca</Label><div className="flex items-center gap-2"><input type="color" value={brandColor} onChange={e => setBrandColor(e.target.value)} className="h-10 w-14 rounded border border-input" /><Input value={brandColor} onChange={e => setBrandColor(e.target.value)} /></div></div>
+              <div>
+                <Label>Logo de la empresa</Label>
+                <div className="flex items-center gap-3">
+                  {logoPreview && <img src={logoPreview} alt="logo" className="h-12 w-12 rounded border border-border object-contain bg-white" />}
+                  <Input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) uploadAsset(f, "logo"); }} disabled={uploadingLogo} />
+                  {logoUrl && <Button variant="ghost" size="sm" onClick={() => { setLogoUrl(""); setLogoPreview(""); }}>Quitar</Button>}
+                </div>
+              </div>
+              <div><Label>Zona horaria</Label><Input value={timezone} onChange={e => setTimezone(e.target.value)} placeholder="America/Argentina/Buenos_Aires" /></div>
+            </div>
+            <div>
+              <Label>Firma — texto (HTML simple)</Label>
+              <Textarea rows={4} value={signature} onChange={e => setSignature(e.target.value)} placeholder="<b>María Pérez</b> — Talent Lead @ Empresa" />
+              <p className="mt-1 text-xs text-muted-foreground">Solo texto. Aparece debajo del cuerpo en cada email.</p>
+            </div>
+            <Button onClick={save} disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Guardar</Button>
+          </section>
+
+          <section className="space-y-3 rounded-2xl border border-border bg-card p-6">
+            <h3 className="font-semibold">Soporte</h3>
+            <p className="text-sm text-muted-foreground">
+              ¿Necesitás ayuda, una integración personalizada o reportar un problema? Escribinos a{" "}
+              <a href="mailto:hola@fluxautomatizaciones.com" className="text-primary underline">hola@fluxautomatizaciones.com</a>.
+            </p>
+            <p className="text-xs text-muted-foreground">Respondemos en menos de 24h hábiles.</p>
+          </section>
+        </TabsContent>
+
+        <TabsContent value="integraciones" className="mt-6">
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <h3 className="font-semibold">Integraciones</h3>
+            <p className="text-sm text-muted-foreground">Conectá Google Calendar + Gmail para automatizar entrevistas e invitaciones.</p>
+            <div className="mt-4">
+              <IntegrationsPanel />
             </div>
           </div>
-          <div><Label>Zona horaria</Label><Input value={timezone} onChange={e => setTimezone(e.target.value)} placeholder="America/Argentina/Buenos_Aires" /></div>
-        </div>
-        <div>
-          <Label>Firma — texto (HTML simple)</Label>
-          <Textarea rows={4} value={signature} onChange={e => setSignature(e.target.value)} placeholder="<b>María Pérez</b> — Talent Lead @ Empresa" />
-          <p className="mt-1 text-xs text-muted-foreground">Solo texto. Aparece debajo del cuerpo en cada email.</p>
-        </div>
-        <Button onClick={save} disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Guardar</Button>
-      </section>
-
-      <section className="mt-8 space-y-3 rounded-2xl border border-border bg-card p-6">
-        <h3 className="font-semibold">Soporte</h3>
-        <p className="text-sm text-muted-foreground">
-          ¿Necesitás ayuda, una integración personalizada o reportar un problema? Escribinos a{" "}
-          <a href="mailto:hola@fluxautomatizaciones.com" className="text-primary underline">hola@fluxautomatizaciones.com</a>.
-        </p>
-        <p className="text-xs text-muted-foreground">Respondemos en menos de 24h hábiles.</p>
-      </section>
-
-
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

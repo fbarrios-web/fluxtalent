@@ -571,6 +571,27 @@ export type Database = {
           },
         ]
       }
+      plan_pricing: {
+        Row: {
+          base_price_ars: number
+          discount_pct: number
+          plan_id: string
+          updated_at: string
+        }
+        Insert: {
+          base_price_ars: number
+          discount_pct?: number
+          plan_id: string
+          updated_at?: string
+        }
+        Update: {
+          base_price_ars?: number
+          discount_pct?: number
+          plan_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

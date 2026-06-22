@@ -117,3 +117,24 @@ export function formatArs(n: number): string {
   return `ARS ${n.toLocaleString("es-AR")}`;
 }
 
+export type PricingOverride = { plan_id: string; base_price_ars: number; discount_pct: number };
+
+/** Returns PLANS with priceArs / originalPriceArs overridden from DB pricing overrides. */
+export function mergePlanOverrides(overrides: PricingOverride[] | null | undefined): Plan[] {
+  const byId = new Map((overrides ?? []).map(o => [o.plan_id, o] as const));
+  return PLANS.map(p => {
+    const o = byId.get(p.id);
+    if (!o) return p;
+    const base = Number(o.base_price_ars);
+    const disc = Math.max(0, Math.min(100, Number(o.discount_pct ?? 0)));
+    if (base < 0) return { ...p, priceArs: -1, originalPriceArs: undefined };
+    const final = Math.round(base * (1 - disc / 100));
+    return {
+      ...p,
+      priceArs: final,
+      originalPriceArs: disc > 0 ? base : undefined,
+    };
+  });
+}
+
+

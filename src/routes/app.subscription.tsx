@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { CheckCircle2, CreditCard, FileText, Loader2, ShieldCheck, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
-import { PLANS, planByPrice, formatLimit, formatArs, TRIAL_DAYS } from "@/lib/plans";
+import { planByPrice, formatLimit, formatArs, TRIAL_DAYS, mergePlanOverrides } from "@/lib/plans";
+import { getPlanPricing } from "@/lib/pricing.functions";
 
 export const Route = createFileRoute("/app/subscription")({
   component: SubscriptionPage,
@@ -23,6 +24,9 @@ function SubscriptionPage() {
   const getSub = useServerFn(getMySubscription);
   const createPre = useServerFn(createPreapproval);
   const cancel = useServerFn(cancelSubscription);
+  const getPricing = useServerFn(getPlanPricing);
+  const { data: overrides } = useQuery({ queryKey: ["plan-pricing"], queryFn: () => getPricing() });
+  const plans = mergePlanOverrides(overrides);
 
   const { data: sub, isLoading, error } = useQuery({
     queryKey: ["my-subscription"],
@@ -68,7 +72,8 @@ function SubscriptionPage() {
     );
   }
 
-  const activePlan = planByPrice(sub.plan_price_ars);
+  const activePlanBase = planByPrice(sub.plan_price_ars);
+  const activePlan = plans.find(p => p.id === activePlanBase.id) ?? activePlanBase;
   const isTrial = sub.subscription_status === "trialing";
   const isActive = sub.subscription_status === "active";
 
@@ -142,7 +147,7 @@ function SubscriptionPage() {
         <p className="text-sm text-muted-foreground">{"\n"}</p>
 
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {PLANS.map(p => {
+          {plans.map(p => {
             const isCurrent = p.id === activePlan.id;
             return (
               <div

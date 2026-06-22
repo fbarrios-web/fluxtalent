@@ -74,10 +74,46 @@ export const adminListOrgs = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("organizations")
-      .select("id, name, subscription_status, trial_ends_at, current_period_end, plan_price_ars, last_payment_at, created_at, mp_preapproval_id")
+      .select("id, name, subscription_status, trial_ends_at, current_period_end, plan_price_ars, last_payment_at, created_at, mp_preapproval_id, parent_org_id")
       .order("created_at", { ascending: false });
     if (error) throw error;
-    return data ?? [];
+    const orgs = data ?? [];
+
+    // Look up the owner email for each org (first profile in the org)
+    const orgIds = orgs.map((o: any) => o.id);
+    const ownerByOrg = new Map<string, { display_name: string; email: string }>();
+    if (orgIds.length) {
+      const { data: profs } = await supabaseAdmin
+        .from("profiles")
+        .select("id, org_id, display_name, created_at")
+        .in("org_id", orgIds)
+        .order("created_at", { ascending: true });
+      const firstProfByOrg = new Map<string, { id: string; display_name: string }>();
+      (profs ?? []).forEach((p: any) => {
+        if (p.org_id && !firstProfByOrg.has(p.org_id)) {
+          firstProfByOrg.set(p.org_id, { id: p.id, display_name: p.display_name ?? "" });
+        }
+      });
+      // Page through auth.users to map id → email
+      const emailById = new Map<string, string>();
+      let page = 1;
+      while (true) {
+        const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
+        list?.users?.forEach((u: any) => emailById.set(u.id, u.email ?? ""));
+        if (!list?.users?.length || list.users.length < 200) break;
+        page++;
+        if (page > 50) break;
+      }
+      firstProfByOrg.forEach((p, orgId) => {
+        ownerByOrg.set(orgId, { display_name: p.display_name, email: emailById.get(p.id) ?? "" });
+      });
+    }
+
+    return orgs.map((o: any) => ({
+      ...o,
+      owner_email: ownerByOrg.get(o.id)?.email ?? "",
+      owner_name: ownerByOrg.get(o.id)?.display_name ?? "",
+    }));
   });
 
 export const adminGrantLicense = createServerFn({ method: "POST" })

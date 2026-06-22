@@ -18,8 +18,9 @@ export const myEnterprise = createServerFn({ method: "GET" })
     const isEnterprisePlan = Number(org.plan_price_ars) >= 90000;
     const rootId = org.parent_org_id ?? org.id;
 
-    // List sub-orgs of the root org
-    const { data: subOrgs } = await supabase
+    // List sub-orgs of the root org (admin client: user's RLS only sees their own org row)
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: subOrgs } = await supabaseAdmin
       .from("organizations")
       .select("id, name, created_at")
       .eq("parent_org_id", rootId)
