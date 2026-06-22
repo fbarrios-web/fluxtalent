@@ -44,6 +44,17 @@ export const Route = createFileRoute("/api/public/apply")({
             return Response.json({ error: "Vacante no disponible" }, { status: 404, headers: cors });
           }
 
+          // Block duplicate applications by email per vacancy
+          const { data: dup } = await supabaseAdmin
+            .from("applications")
+            .select("id")
+            .eq("vacancy_id", vac.id)
+            .ilike("email", email)
+            .maybeSingle();
+          if (dup) {
+            return Response.json({ error: "Ya te postulaste a esta vacante con este email." }, { status: 409, headers: cors });
+          }
+
           let cv_url: string | null = null;
           if (cv && cv.size > 0) {
             if (cv.size > 10 * 1024 * 1024) {

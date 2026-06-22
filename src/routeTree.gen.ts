@@ -28,6 +28,7 @@ import { Route as AppVacanciesNewRouteImport } from './routes/app.vacancies.new'
 import { Route as AppVacanciesVacancyIdRouteImport } from './routes/app.vacancies.$vacancyId'
 import { Route as AppCandidatesIdRouteImport } from './routes/app.candidates.$id'
 import { Route as AppAdminUsersRouteImport } from './routes/app.admin.users'
+import { Route as AppAdminPricingRouteImport } from './routes/app.admin.pricing'
 import { Route as AppAdminPaymentsRouteImport } from './routes/app.admin.payments'
 import { Route as AppAdminOrgsRouteImport } from './routes/app.admin.orgs'
 import { Route as ApiPublicApplyRouteImport } from './routes/api.public.apply'
@@ -131,6 +132,11 @@ const AppAdminUsersRoute = AppAdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AppAdminRoute,
 } as any)
+const AppAdminPricingRoute = AppAdminPricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 const AppAdminPaymentsRoute = AppAdminPaymentsRouteImport.update({
   id: '/payments',
   path: '/payments',
@@ -185,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/api/public/apply': typeof ApiPublicApplyRoute
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
+  '/app/admin/pricing': typeof AppAdminPricingRoute
   '/app/admin/users': typeof AppAdminUsersRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/vacancies/$vacancyId': typeof AppVacanciesVacancyIdRoute
@@ -211,6 +218,7 @@ export interface FileRoutesByTo {
   '/api/public/apply': typeof ApiPublicApplyRoute
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
+  '/app/admin/pricing': typeof AppAdminPricingRoute
   '/app/admin/users': typeof AppAdminUsersRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/vacancies/$vacancyId': typeof AppVacanciesVacancyIdRoute
@@ -240,6 +248,7 @@ export interface FileRoutesById {
   '/api/public/apply': typeof ApiPublicApplyRoute
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
+  '/app/admin/pricing': typeof AppAdminPricingRoute
   '/app/admin/users': typeof AppAdminUsersRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/vacancies/$vacancyId': typeof AppVacanciesVacancyIdRoute
@@ -270,6 +279,7 @@ export interface FileRouteTypes {
     | '/api/public/apply'
     | '/app/admin/orgs'
     | '/app/admin/payments'
+    | '/app/admin/pricing'
     | '/app/admin/users'
     | '/app/candidates/$id'
     | '/app/vacancies/$vacancyId'
@@ -296,6 +306,7 @@ export interface FileRouteTypes {
     | '/api/public/apply'
     | '/app/admin/orgs'
     | '/app/admin/payments'
+    | '/app/admin/pricing'
     | '/app/admin/users'
     | '/app/candidates/$id'
     | '/app/vacancies/$vacancyId'
@@ -324,6 +335,7 @@ export interface FileRouteTypes {
     | '/api/public/apply'
     | '/app/admin/orgs'
     | '/app/admin/payments'
+    | '/app/admin/pricing'
     | '/app/admin/users'
     | '/app/candidates/$id'
     | '/app/vacancies/$vacancyId'
@@ -484,6 +496,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminUsersRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/app/admin/pricing': {
+      id: '/app/admin/pricing'
+      path: '/pricing'
+      fullPath: '/app/admin/pricing'
+      preLoaderRoute: typeof AppAdminPricingRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/app/admin/payments': {
       id: '/app/admin/payments'
       path: '/payments'
@@ -539,6 +558,7 @@ declare module '@tanstack/react-router' {
 interface AppAdminRouteChildren {
   AppAdminOrgsRoute: typeof AppAdminOrgsRoute
   AppAdminPaymentsRoute: typeof AppAdminPaymentsRoute
+  AppAdminPricingRoute: typeof AppAdminPricingRoute
   AppAdminUsersRoute: typeof AppAdminUsersRoute
   AppAdminIndexRoute: typeof AppAdminIndexRoute
 }
@@ -546,6 +566,7 @@ interface AppAdminRouteChildren {
 const AppAdminRouteChildren: AppAdminRouteChildren = {
   AppAdminOrgsRoute: AppAdminOrgsRoute,
   AppAdminPaymentsRoute: AppAdminPaymentsRoute,
+  AppAdminPricingRoute: AppAdminPricingRoute,
   AppAdminUsersRoute: AppAdminUsersRoute,
   AppAdminIndexRoute: AppAdminIndexRoute,
 }

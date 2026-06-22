@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useAuth, signOut } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { LayoutDashboard, Briefcase, Settings, LogOut, Loader2, CreditCard, ShieldCheck, Plug, Building2, Menu } from "lucide-react";
+import { LayoutDashboard, Briefcase, Settings, LogOut, Loader2, CreditCard, ShieldCheck, Building2, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FluxLogo } from "@/components/flux-logo";
 import { SubscriptionBanner } from "@/components/subscription-banner";
