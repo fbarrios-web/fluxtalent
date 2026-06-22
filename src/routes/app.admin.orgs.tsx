@@ -84,6 +84,7 @@ function AdminOrgs() {
           <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
             <tr>
               <th className="px-4 py-3">Organización</th>
+              <th className="px-4 py-3">Email</th>
               <th className="px-4 py-3">Estado</th>
               <th className="px-4 py-3">Vence</th>
               <th className="px-4 py-3">Plan</th>
@@ -99,7 +100,11 @@ function AdminOrgs() {
                 <tr key={o.id}>
                   <td className="px-4 py-3">
                     <div className="font-medium">{o.name}</div>
-                    <div className="text-xs text-muted-foreground">creada {new Date(o.created_at).toLocaleDateString("es-AR")}</div>
+                    <div className="text-xs text-muted-foreground">creada {new Date(o.created_at).toLocaleDateString("es-AR")}{(o as any).parent_org_id ? " · sub-org" : ""}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="text-sm">{(o as any).owner_email || <span className="text-muted-foreground">—</span>}</div>
+                    {(o as any).owner_name && <div className="text-xs text-muted-foreground">{(o as any).owner_name}</div>}
                   </td>
                   <td className="px-4 py-3"><StatusBadge s={o.subscription_status} /></td>
                   <td className="px-4 py-3">
