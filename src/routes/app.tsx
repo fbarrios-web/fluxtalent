@@ -19,7 +19,6 @@ const navItems = [
   { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/app/vacancies", label: "Vacantes", icon: Briefcase },
   { to: "/app/enterprise", label: "Multi-organización", icon: Building2 },
-  { to: "/app/integrations", label: "Integraciones", icon: Plug },
   { to: "/app/subscription", label: "Suscripción", icon: CreditCard },
   { to: "/app/settings", label: "Configuración", icon: Settings },
 ];
