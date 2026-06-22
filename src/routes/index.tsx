@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles, Workflow, Calendar, Mail, BarChart3, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { FluxLogo } from "@/components/flux-logo";
-import { PLANS, TRIAL_DAYS, formatArs } from "@/lib/plans";
+import { PLANS, TRIAL_DAYS, formatArs, mergePlanOverrides } from "@/lib/plans";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getPlanPricing } from "@/lib/pricing.functions";
 
 
 export const Route = createFileRoute("/")({
@@ -15,6 +18,9 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  const getPricing = useServerFn(getPlanPricing);
+  const { data: overrides } = useQuery({ queryKey: ["plan-pricing"], queryFn: () => getPricing() });
+  const plans = mergePlanOverrides(overrides);
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur">
