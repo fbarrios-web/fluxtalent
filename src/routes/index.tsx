@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles, Workflow, Calendar, Mail, BarChart3, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { FluxLogo } from "@/components/flux-logo";
-import { PLANS, TRIAL_DAYS, formatArs, mergePlanOverrides } from "@/lib/plans";
+import { TRIAL_DAYS, formatArs, mergePlanOverrides } from "@/lib/plans";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getPlanPricing } from "@/lib/pricing.functions";
