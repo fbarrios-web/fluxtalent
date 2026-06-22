@@ -72,7 +72,8 @@ function SubscriptionPage() {
     );
   }
 
-  const activePlan = planByPrice(sub.plan_price_ars);
+  const activePlanBase = planByPrice(sub.plan_price_ars);
+  const activePlan = plans.find(p => p.id === activePlanBase.id) ?? activePlanBase;
   const isTrial = sub.subscription_status === "trialing";
   const isActive = sub.subscription_status === "active";
 
@@ -146,7 +147,7 @@ function SubscriptionPage() {
         <p className="text-sm text-muted-foreground">{"\n"}</p>
 
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {PLANS.map(p => {
+          {plans.map(p => {
             const isCurrent = p.id === activePlan.id;
             return (
               <div
