@@ -197,8 +197,7 @@ function Settings() {
             <h3 className="font-semibold">Empresa & marca</h3>
             <p className="text-sm text-muted-foreground">Estos datos aparecen en los mails que recibe el postulante.</p>
             <div className="grid gap-4 md:grid-cols-2">
-              <div><Label>Nombre legal</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
-              <div><Label>Nombre comercial / consultora</Label><Input value={consultancyName} onChange={e => setConsultancyName(e.target.value)} placeholder="Aparece en el remitente del mail" /></div>
+              <div><Label>Nombre de empresa</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="Acme S.A." /></div>
               <div><Label>Mail de contacto (para postulantes)</Label><Input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="hola@empresa.com" /></div>
               <div><Label>Email remitente</Label><Input value={senderEmail} onChange={e => setSenderEmail(e.target.value)} placeholder="reclutamiento@empresa.com" /></div>
               <div><Label>Color de marca</Label><div className="flex items-center gap-2"><input type="color" value={brandColor} onChange={e => setBrandColor(e.target.value)} className="h-10 w-14 rounded border border-input" /><Input value={brandColor} onChange={e => setBrandColor(e.target.value)} /></div></div>
