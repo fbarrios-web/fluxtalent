@@ -185,11 +185,9 @@ function Settings() {
             <p className="text-sm text-muted-foreground">Datos personales asociados a tu usuario.</p>
             <div className="grid gap-4 md:grid-cols-2">
               <div><Label>Email</Label><Input value={account?.email ?? ""} disabled /></div>
-              <div><Label>Nombre para mostrar</Label><Input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Tu nombre" /></div>
               <div><Label>Nombre completo</Label><Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Nombre y apellido" /></div>
               <div><Label>DNI</Label><Input value={dni} onChange={e => setDni(e.target.value)} placeholder="12345678" /></div>
               <div><Label>Fecha de nacimiento</Label><Input type="date" value={birthDate ?? ""} onChange={e => setBirthDate(e.target.value)} /></div>
-              <div><Label>Roles</Label><Input value={(account?.roles ?? []).join(", ") || "—"} disabled /></div>
               <div><Label>Miembro desde</Label><Input value={account?.createdAt ? new Date(account.createdAt).toLocaleDateString("es-AR") : "—"} disabled /></div>
             </div>
             <Button onClick={saveProfile} disabled={savingProfile || !account}>{savingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Guardar perfil</Button>
@@ -199,8 +197,7 @@ function Settings() {
             <h3 className="font-semibold">Empresa & marca</h3>
             <p className="text-sm text-muted-foreground">Estos datos aparecen en los mails que recibe el postulante.</p>
             <div className="grid gap-4 md:grid-cols-2">
-              <div><Label>Nombre legal</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
-              <div><Label>Nombre comercial / consultora</Label><Input value={consultancyName} onChange={e => setConsultancyName(e.target.value)} placeholder="Aparece en el remitente del mail" /></div>
+              <div><Label>Nombre de empresa</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="Acme S.A." /></div>
               <div><Label>Mail de contacto (para postulantes)</Label><Input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="hola@empresa.com" /></div>
               <div><Label>Email remitente</Label><Input value={senderEmail} onChange={e => setSenderEmail(e.target.value)} placeholder="reclutamiento@empresa.com" /></div>
               <div><Label>Color de marca</Label><div className="flex items-center gap-2"><input type="color" value={brandColor} onChange={e => setBrandColor(e.target.value)} className="h-10 w-14 rounded border border-input" /><Input value={brandColor} onChange={e => setBrandColor(e.target.value)} /></div></div>

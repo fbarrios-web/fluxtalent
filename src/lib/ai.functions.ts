@@ -269,6 +269,102 @@ Devolvé sólo el cuerpo del email, sin asunto, sin saludo "Estimado" formal, en
     return { body: text };
   });
 
+// ============ AI: analizar transcripción de entrevista vs perfil ============
+export const aiAnalyzeInterview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({
+      applicationId: z.string().uuid(),
+      transcript: z.string().min(20).max(60000),
+    }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { aiJSON } = await import("@/lib/ai-gateway.server");
+    const { data: app } = await context.supabase
+      .from("applications")
+      .select("*, vacancy:vacancies(title, requirements, responsibilities, nice_to_have, description)")
+      .eq("id", data.applicationId)
+      .single();
+    if (!app) throw new Error("Application no encontrada");
+    const v: any = app.vacancy ?? {};
+    const profileBlob = [
+      `Candidato: ${app.first_name ?? ""} ${app.last_name ?? ""}`,
+      `Resumen IA previo: ${app.ai_summary ?? "—"}`,
+      `Fortalezas previas: ${(app.strengths ?? []).join("; ") || "—"}`,
+      `Gaps previos: ${(app.gaps ?? []).join("; ") || "—"}`,
+      `Red flags previas: ${(app.red_flags ?? []).join("; ") || "—"}`,
+      `Match score previo: ${app.match_score ?? "—"}`,
+      `Skills parseadas: ${((app.parsed_data as any)?.skills ?? []).join(", ") || "—"}`,
+      `Experiencia parseada: ${((app.parsed_data as any)?.experience ?? []).join(" | ") || "—"}`,
+    ].join("\n");
+    const vacancyBlob = [
+      `Vacante: ${v.title ?? "—"}`,
+      `Descripción: ${v.description ?? "—"}`,
+      `Requisitos: ${v.requirements ?? "—"}`,
+      `Responsabilidades: ${v.responsibilities ?? "—"}`,
+      `Deseables: ${v.nice_to_have ?? "—"}`,
+    ].join("\n");
+    return aiJSON<{
+      summary: string;
+      alignment_score: number;
+      strengths: string[];
+      concerns: string[];
+      evidence: Array<{ topic: string; quote: string; insight: string }>;
+      recommendation: "avanzar" | "stand_by" | "descartar";
+      next_steps: string[];
+    }>({
+      system:
+        "Sos un Talent Lead senior. Analizás transcripciones de entrevista cruzándolas con el perfil del candidato y los requisitos de la vacante. Sos objetivo, citás evidencia textual y evitás clichés. Respondés en español neutro.",
+      user: `Analizá la transcripción de la entrevista cruzando con el perfil y la vacante. NO devuelvas la transcripción tal cual: extraé insights.
+
+=== PERFIL DEL CANDIDATO ===
+${profileBlob}
+
+=== VACANTE ===
+${vacancyBlob}
+
+=== TRANSCRIPCIÓN ===
+${data.transcript}
+
+Devolvé JSON con:
+- summary (4-6 oraciones, narrativa ejecutiva del fit)
+- alignment_score (0-100, qué tanto encaja con la vacante según la entrevista)
+- strengths (3-6 bullets concretos, observados en la entrevista)
+- concerns (2-5 bullets de riesgos / gaps observados)
+- evidence (3-6 ítems: topic corto, quote corta del candidato (parafraseada si hace falta, máx 200 chars), insight 1 oración)
+- recommendation ("avanzar" | "stand_by" | "descartar")
+- next_steps (2-4 bullets accionables para próxima etapa)`,
+      schema: {
+        name: "interview_analysis",
+        description: "Análisis estructurado de entrevista",
+        parameters: {
+          type: "object",
+          properties: {
+            summary: { type: "string" },
+            alignment_score: { type: "number" },
+            strengths: { type: "array", items: { type: "string" } },
+            concerns: { type: "array", items: { type: "string" } },
+            evidence: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  topic: { type: "string" },
+                  quote: { type: "string" },
+                  insight: { type: "string" },
+                },
+                required: ["topic", "quote", "insight"],
+              },
+            },
+            recommendation: { type: "string", enum: ["avanzar", "stand_by", "descartar"] },
+            next_steps: { type: "array", items: { type: "string" } },
+          },
+          required: ["summary", "alignment_score", "strengths", "concerns", "evidence", "recommendation", "next_steps"],
+        },
+      },
+    });
+  });
+
+
 // ============ AI: imagen de fondo para publicación de vacante ============
 export const aiVacancyImage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

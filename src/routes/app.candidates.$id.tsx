@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { analyzeApplication, aiInterviewQuestions, aiDraftEmail } from "@/lib/ai.functions";
+import { analyzeApplication, aiInterviewQuestions, aiDraftEmail, aiAnalyzeInterview } from "@/lib/ai.functions";
 import { moveApplicationStage, getSignedCvUrl, saveScorecard } from "@/lib/recruiting.functions";
 import { generateCandidateReport } from "@/lib/candidate-report";
 import { ArrowLeft, Sparkles, Loader2, FileText, Mail, MessageSquare, AlertTriangle, CheckCircle2, Star, FileDown } from "lucide-react";
@@ -51,6 +51,7 @@ function CandidateDetail() {
   const signCv = useServerFn(getSignedCvUrl);
   const draftEmail = useServerFn(aiDraftEmail);
   const interviewQs = useServerFn(aiInterviewQuestions);
+  const analyzeInterview = useServerFn(aiAnalyzeInterview);
   const saveScore = useServerFn(saveScorecard);
 
   const { data: app, isLoading } = useQuery<any>({
@@ -73,6 +74,8 @@ function CandidateDetail() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [genQ, setGenQ] = useState(false);
   const [transcript, setTranscript] = useState("");
+  const [analysis, setAnalysis] = useState<any | null>(null);
+  const [analyzingTr, setAnalyzingTr] = useState(false);
   const [genDoc, setGenDoc] = useState(false);
 
   if (isLoading || !app) return <div className="p-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
@@ -105,17 +108,34 @@ function CandidateDetail() {
     try { const r = await interviewQs({ data: { applicationId: id, stage: app.stage } }); setQuestions(r.questions); }
     catch (e: any) { toast.error(e.message); } finally { setGenQ(false); }
   }
+  async function runTranscriptAnalysis(): Promise<any | null> {
+    const t = transcript.trim();
+    if (t.length < 20) { toast.error("Pegá una transcripción más completa (mín. 20 caracteres)"); return null; }
+    setAnalyzingTr(true);
+    try {
+      const r: any = await analyzeInterview({ data: { applicationId: id, transcript: t } });
+      setAnalysis(r);
+      toast.success("Transcripción analizada");
+      return r;
+    } catch (e: any) { toast.error(e.message ?? "Error al analizar"); return null; }
+    finally { setAnalyzingTr(false); }
+  }
+
   async function downloadReport() {
     setGenDoc(true);
     try {
       const { data: prof } = await supabase.from("profiles").select("org_id").maybeSingle();
       if (!prof?.org_id) throw new Error("Organización no encontrada");
       const { data: org } = await supabase.from("organizations").select("name, consultancy_name, logo_url, brand_color").eq("id", prof.org_id).single();
+      let useAnalysis = analysis;
+      if (!useAnalysis && transcript.trim().length >= 20) {
+        useAnalysis = await runTranscriptAnalysis();
+      }
       await generateCandidateReport({
         org: org as any,
         candidate: a,
         vacancy: { title: a.vacancy?.title },
-        transcript,
+        analysis: useAnalysis,
       });
       toast.success("Informe generado");
     } catch (e: any) { toast.error(e.message ?? "Error al generar el informe"); }
@@ -262,14 +282,36 @@ function CandidateDetail() {
             <TabsContent value="report" className="mt-4 space-y-3 rounded-xl border border-border bg-card p-5">
               <div>
                 <h4 className="text-sm font-semibold">Informe del candidato (Word)</h4>
-                <p className="text-xs text-muted-foreground">Incluye datos del candidato, análisis de IA y la transcripción / resumen de entrevista que pegues abajo. Usa el logo y color de tu organización.</p>
+                <p className="text-xs text-muted-foreground">Pegá la transcripción y la IA la cruza con el perfil y la vacante. El informe NO incluye la transcripción cruda: se exporta el análisis estructurado.</p>
               </div>
-              <Textarea rows={10} placeholder="Pegá acá la transcripción o resumen de la entrevista…" value={transcript} onChange={e => setTranscript(e.target.value)} />
-              <Button onClick={downloadReport} disabled={genDoc}>
-                {genDoc ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
-                Generar y descargar Word
-              </Button>
+              <Textarea rows={10} placeholder="Pegá acá la transcripción o resumen de la entrevista…" value={transcript} onChange={e => { setTranscript(e.target.value); setAnalysis(null); }} />
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={runTranscriptAnalysis} disabled={analyzingTr || !transcript.trim()} variant="outline">
+                  {analyzingTr ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                  Analizar transcripción
+                </Button>
+                <Button onClick={downloadReport} disabled={genDoc || analyzingTr}>
+                  {genDoc ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
+                  Generar y descargar Word
+                </Button>
+              </div>
+              {analysis && (
+                <div className="mt-3 space-y-3 rounded-lg border border-border bg-muted/30 p-4 text-sm">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">Alineación: {analysis.alignment_score}%</span>
+                    <span className="rounded-full bg-foreground/10 px-2.5 py-0.5 text-xs font-medium uppercase">{analysis.recommendation}</span>
+                  </div>
+                  <p>{analysis.summary}</p>
+                  {!!analysis.strengths?.length && (
+                    <div><div className="text-xs font-semibold text-success">A favor</div><ul className="list-disc pl-5 text-xs">{analysis.strengths.map((s: string, i: number) => <li key={i}>{s}</li>)}</ul></div>
+                  )}
+                  {!!analysis.concerns?.length && (
+                    <div><div className="text-xs font-semibold text-warning">Atención</div><ul className="list-disc pl-5 text-xs">{analysis.concerns.map((s: string, i: number) => <li key={i}>{s}</li>)}</ul></div>
+                  )}
+                </div>
+              )}
             </TabsContent>
+
           </Tabs>
         </div>
 
