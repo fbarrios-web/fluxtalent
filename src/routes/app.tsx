@@ -9,6 +9,7 @@ import { FluxLogo } from "@/components/flux-logo";
 import { SubscriptionBanner } from "@/components/subscription-banner";
 import { adminAmI } from "@/lib/admin.functions";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { supabase } from "@/integrations/supabase/client";
 
 
 export const Route = createFileRoute("/app")({
