@@ -68,6 +68,7 @@ function Settings() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingSig, setUploadingSig] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   async function signedPreview(path: string): Promise<string> {
     if (!path) return "";
@@ -113,7 +114,6 @@ function Settings() {
       const preview = await signedPreview(path);
       if (kind === "logo") { setLogoUrl(path); setLogoPreview(preview); }
       else { setSignatureImageUrl(path); setSignaturePreview(preview); }
-      // Auto-persist the new asset path so users don't lose it if they forget to press Save.
       const patch: Record<string, unknown> = kind === "logo" ? { logo_url: path } : { signature_image_url: path };
       const { error: upErr } = await supabase.from("organizations").update(patch as any).eq("id", org.id);
       if (upErr) throw upErr;
@@ -122,9 +122,28 @@ function Settings() {
     } catch (e: any) { toast.error(e.message ?? "Error al subir"); } finally { setUp(false); }
   }
 
+  function validateOrg() {
+    const errs: Record<string, string> = {};
+    if (!name.trim()) errs.name = "El nombre legal es obligatorio";
+    if (!consultancyName.trim()) errs.consultancyName = "El nombre comercial es obligatorio";
+    if (!contactEmail.trim()) errs.contactEmail = "El mail de contacto es obligatorio";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) errs.contactEmail = "Ingresá un email válido";
+    if (!senderEmail.trim()) errs.senderEmail = "El email remitente es obligatorio";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(senderEmail)) errs.senderEmail = "Ingresá un email válido";
+    if (!brandColor.trim()) errs.brandColor = "El color de marca es obligatorio";
+    if (!timezone.trim()) errs.timezone = "La zona horaria es obligatoria";
+    return errs;
+  }
 
   async function save() {
     if (!org) return;
+    const errs = validateOrg();
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      toast.error("Completá los campos obligatorios antes de guardar");
+      return;
+    }
+    setErrors({});
     setSaving(true);
     try {
       const patch: Record<string, unknown> = {
@@ -134,6 +153,7 @@ function Settings() {
         brand_color: brandColor || "#0F766E",
         logo_url: logoUrl || null,
         signature_html: signature || null,
+        signature_image_url: signatureImageUrl || null,
         sender_email: senderEmail || null,
         timezone: timezone || "America/Argentina/Buenos_Aires",
       };
@@ -146,7 +166,6 @@ function Settings() {
       toast.error(e?.message || e?.error_description || "Error al guardar");
     } finally { setSaving(false); }
   }
-
 
   async function saveProfile() {
     if (!account) return;
@@ -164,7 +183,6 @@ function Settings() {
       qc.invalidateQueries({ queryKey: ["my-account"] });
     } catch (e: any) { toast.error(e.message ?? "Error"); } finally { setSavingProfile(false); }
   }
-
 
   if (isLoading) return <div className="p-10"><Loader2 className="h-5 w-5 animate-spin" /></div>;
 
@@ -197,24 +215,61 @@ function Settings() {
             <h3 className="font-semibold">Empresa & marca</h3>
             <p className="text-sm text-muted-foreground">Estos datos aparecen en los mails que recibe el postulante.</p>
             <div className="grid gap-4 md:grid-cols-2">
-              <div><Label>Nombre de empresa</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="Acme S.A." /></div>
-              <div><Label>Mail de contacto (para postulantes)</Label><Input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="hola@empresa.com" /></div>
-              <div><Label>Email remitente</Label><Input value={senderEmail} onChange={e => setSenderEmail(e.target.value)} placeholder="reclutamiento@empresa.com" /></div>
-              <div><Label>Color de marca</Label><div className="flex items-center gap-2"><input type="color" value={brandColor} onChange={e => setBrandColor(e.target.value)} className="h-10 w-14 rounded border border-input" /><Input value={brandColor} onChange={e => setBrandColor(e.target.value)} /></div></div>
+              <div className="space-y-1">
+                <Label>Nombre legal <span className="text-destructive">*</span></Label>
+                <Input value={name} onChange={e => { setName(e.target.value); setErrors(p => ({ ...p, name: "" })); }} placeholder="Acme S.A." className={errors.name ? "border-destructive ring-1 ring-destructive" : ""} />
+                {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+              </div>
+              <div className="space-y-1">
+                <Label>Nombre comercial / consultora <span className="text-destructive">*</span></Label>
+                <Input value={consultancyName} onChange={e => { setConsultancyName(e.target.value); setErrors(p => ({ ...p, consultancyName: "" })); }} placeholder="Aparece en el remitente del mail" className={errors.consultancyName ? "border-destructive ring-1 ring-destructive" : ""} />
+                {errors.consultancyName && <p className="text-xs text-destructive">{errors.consultancyName}</p>}
+              </div>
+              <div className="space-y-1">
+                <Label>Mail de contacto (para postulantes) <span className="text-destructive">*</span></Label>
+                <Input type="email" value={contactEmail} onChange={e => { setContactEmail(e.target.value); setErrors(p => ({ ...p, contactEmail: "" })); }} placeholder="hola@empresa.com" className={errors.contactEmail ? "border-destructive ring-1 ring-destructive" : ""} />
+                {errors.contactEmail && <p className="text-xs text-destructive">{errors.contactEmail}</p>}
+              </div>
+              <div className="space-y-1">
+                <Label>Email remitente <span className="text-destructive">*</span></Label>
+                <Input value={senderEmail} onChange={e => { setSenderEmail(e.target.value); setErrors(p => ({ ...p, senderEmail: "" })); }} placeholder="reclutamiento@empresa.com" className={errors.senderEmail ? "border-destructive ring-1 ring-destructive" : ""} />
+                {errors.senderEmail && <p className="text-xs text-destructive">{errors.senderEmail}</p>}
+              </div>
+              <div className="space-y-1">
+                <Label>Color de marca <span className="text-destructive">*</span></Label>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={brandColor} onChange={e => { setBrandColor(e.target.value); setErrors(p => ({ ...p, brandColor: "" })); }} className="h-10 w-14 rounded border border-input" />
+                  <Input value={brandColor} onChange={e => { setBrandColor(e.target.value); setErrors(p => ({ ...p, brandColor: "" })); }} className={errors.brandColor ? "border-destructive ring-1 ring-destructive" : ""} />
+                </div>
+                {errors.brandColor && <p className="text-xs text-destructive">{errors.brandColor}</p>}
+              </div>
               <div>
-                <Label>Logo de la empresa</Label>
-                <div className="flex items-center gap-3">
+                <Label>Logo de la empresa <span className="text-muted-foreground text-xs font-normal">(opcional)</span></Label>
+                <div className="flex items-center gap-3 mt-1">
                   {logoPreview && <img src={logoPreview} alt="logo" className="h-12 w-12 rounded border border-border object-contain bg-white" />}
                   <Input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) uploadAsset(f, "logo"); }} disabled={uploadingLogo} />
                   {logoUrl && <Button variant="ghost" size="sm" onClick={() => { setLogoUrl(""); setLogoPreview(""); }}>Quitar</Button>}
                 </div>
               </div>
-              <div><Label>Zona horaria</Label><Input value={timezone} onChange={e => setTimezone(e.target.value)} placeholder="America/Argentina/Buenos_Aires" /></div>
+              <div className="space-y-1">
+                <Label>Zona horaria <span className="text-destructive">*</span></Label>
+                <Input value={timezone} onChange={e => { setTimezone(e.target.value); setErrors(p => ({ ...p, timezone: "" })); }} placeholder="America/Argentina/Buenos_Aires" className={errors.timezone ? "border-destructive ring-1 ring-destructive" : ""} />
+                {errors.timezone && <p className="text-xs text-destructive">{errors.timezone}</p>}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Firma — texto (HTML simple) <span className="text-muted-foreground text-xs font-normal">(opcional)</span></Label>
+              <Textarea rows={4} value={signature} onChange={e => setSignature(e.target.value)} placeholder="<b>María Pérez</b> — Talent Lead @ Empresa" />
+              <p className="text-xs text-muted-foreground">Solo texto. Aparece debajo del cuerpo en cada email.</p>
             </div>
             <div>
-              <Label>Firma — texto (HTML simple)</Label>
-              <Textarea rows={4} value={signature} onChange={e => setSignature(e.target.value)} placeholder="<b>María Pérez</b> — Talent Lead @ Empresa" />
-              <p className="mt-1 text-xs text-muted-foreground">Solo texto. Aparece debajo del cuerpo en cada email.</p>
+              <Label>Firma — imagen <span className="text-muted-foreground text-xs font-normal">(opcional)</span></Label>
+              <div className="flex items-center gap-3 mt-1">
+                {signaturePreview && <img src={signaturePreview} alt="firma" className="h-16 rounded border border-border object-contain bg-white" />}
+                <Input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) uploadAsset(f, "signature"); }} disabled={uploadingSig} />
+                {signatureImageUrl && <Button variant="ghost" size="sm" onClick={() => { setSignatureImageUrl(""); setSignaturePreview(""); }}>Quitar</Button>}
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">Se mostrará debajo del texto de la firma en los emails.</p>
             </div>
             <Button onClick={save} disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Guardar</Button>
           </section>
@@ -242,4 +297,3 @@ function Settings() {
     </div>
   );
 }
-
