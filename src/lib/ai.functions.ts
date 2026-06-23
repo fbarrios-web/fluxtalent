@@ -293,8 +293,8 @@ export const aiAnalyzeInterview = createServerFn({ method: "POST" })
       `Gaps previos: ${(app.gaps ?? []).join("; ") || "—"}`,
       `Red flags previas: ${(app.red_flags ?? []).join("; ") || "—"}`,
       `Match score previo: ${app.match_score ?? "—"}`,
-      `Skills parseadas: ${(app.parsed_data?.skills ?? []).join(", ") || "—"}`,
-      `Experiencia parseada: ${(app.parsed_data?.experience ?? []).join(" | ") || "—"}`,
+      `Skills parseadas: ${((app.parsed_data as any)?.skills ?? []).join(", ") || "—"}`,
+      `Experiencia parseada: ${((app.parsed_data as any)?.experience ?? []).join(" | ") || "—"}`,
     ].join("\n");
     const vacancyBlob = [
       `Vacante: ${v.title ?? "—"}`,
