@@ -65,7 +65,7 @@ function Dashboard() {
     <div className="mx-auto max-w-6xl p-6 md:p-10">
       <header className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="font-display text-4xl">Hola{me?.name ? `, ${me.name}` : ""} 👋</h1>
+          <h1 className="font-display text-4xl">Bienvenid@! 👋</h1>
           <p className="text-muted-foreground">Esto es lo que pasa en tu pipeline.</p>
         </div>
         <Link to="/app/vacancies/new" className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
