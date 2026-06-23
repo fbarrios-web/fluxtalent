@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /workspaces/fluxtalent status)",
+      "Bash(git -C /workspaces/fluxtalent diff)",
+      "Bash(git -C /workspaces/fluxtalent diff HEAD src/lib/index.ts src/routes/app.settings.tsx)",
+      "Bash(git -C /workspaces/fluxtalent log --oneline -5)",
+      "Bash(git -C /workspaces/fluxtalent commit -m ' *)",
+      "Bash(git -C /workspaces/fluxtalent push origin main)",
+      "Bash(git -C /workspaces/fluxtalent pull --rebase origin main)",
+      "Bash(git -C /workspaces/fluxtalent diff HEAD ORIG_HEAD -- src/routes/app.settings.tsx)",
+      "Bash(git -C /workspaces/fluxtalent add src/routes/app.settings.tsx)",
+      "Bash(git -C /workspaces/fluxtalent rebase --continue --no-edit)",
+      "Bash(git -C /workspaces/fluxtalent rebase --continue)"
+    ]
+  }
+}
