@@ -17,6 +17,7 @@ import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as ScheduleTokenRouteImport } from './routes/schedule.$token'
 import { Route as ApplySlugRouteImport } from './routes/apply.$slug'
 import { Route as AppSubscriptionRouteImport } from './routes/app.subscription'
+import { Route as AppSetupRouteImport } from './routes/app.setup'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppIntegrationsRouteImport } from './routes/app.integrations'
 import { Route as AppEnterpriseRouteImport } from './routes/app.enterprise'
@@ -75,6 +76,11 @@ const ApplySlugRoute = ApplySlugRouteImport.update({
 const AppSubscriptionRoute = AppSubscriptionRouteImport.update({
   id: '/subscription',
   path: '/subscription',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSetupRoute = AppSetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -183,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/app/enterprise': typeof AppEnterpriseRoute
   '/app/integrations': typeof AppIntegrationsRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/setup': typeof AppSetupRoute
   '/app/subscription': typeof AppSubscriptionRoute
   '/apply/$slug': typeof ApplySlugRoute
   '/schedule/$token': typeof ScheduleTokenRoute
@@ -210,6 +217,7 @@ export interface FileRoutesByTo {
   '/app/enterprise': typeof AppEnterpriseRoute
   '/app/integrations': typeof AppIntegrationsRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/setup': typeof AppSetupRoute
   '/app/subscription': typeof AppSubscriptionRoute
   '/apply/$slug': typeof ApplySlugRoute
   '/schedule/$token': typeof ScheduleTokenRoute
@@ -240,6 +248,7 @@ export interface FileRoutesById {
   '/app/enterprise': typeof AppEnterpriseRoute
   '/app/integrations': typeof AppIntegrationsRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/setup': typeof AppSetupRoute
   '/app/subscription': typeof AppSubscriptionRoute
   '/apply/$slug': typeof ApplySlugRoute
   '/schedule/$token': typeof ScheduleTokenRoute
@@ -271,6 +280,7 @@ export interface FileRouteTypes {
     | '/app/enterprise'
     | '/app/integrations'
     | '/app/settings'
+    | '/app/setup'
     | '/app/subscription'
     | '/apply/$slug'
     | '/schedule/$token'
@@ -298,6 +308,7 @@ export interface FileRouteTypes {
     | '/app/enterprise'
     | '/app/integrations'
     | '/app/settings'
+    | '/app/setup'
     | '/app/subscription'
     | '/apply/$slug'
     | '/schedule/$token'
@@ -327,6 +338,7 @@ export interface FileRouteTypes {
     | '/app/enterprise'
     | '/app/integrations'
     | '/app/settings'
+    | '/app/setup'
     | '/app/subscription'
     | '/apply/$slug'
     | '/schedule/$token'
@@ -417,6 +429,13 @@ declare module '@tanstack/react-router' {
       path: '/subscription'
       fullPath: '/app/subscription'
       preLoaderRoute: typeof AppSubscriptionRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/setup': {
+      id: '/app/setup'
+      path: '/setup'
+      fullPath: '/app/setup'
+      preLoaderRoute: typeof AppSetupRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/settings': {
@@ -581,6 +600,7 @@ interface AppRouteChildren {
   AppEnterpriseRoute: typeof AppEnterpriseRoute
   AppIntegrationsRoute: typeof AppIntegrationsRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppSetupRoute: typeof AppSetupRoute
   AppSubscriptionRoute: typeof AppSubscriptionRoute
   AppIndexRoute: typeof AppIndexRoute
   AppCandidatesIdRoute: typeof AppCandidatesIdRoute
@@ -595,6 +615,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppEnterpriseRoute: AppEnterpriseRoute,
   AppIntegrationsRoute: AppIntegrationsRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppSetupRoute: AppSetupRoute,
   AppSubscriptionRoute: AppSubscriptionRoute,
   AppIndexRoute: AppIndexRoute,
   AppCandidatesIdRoute: AppCandidatesIdRoute,

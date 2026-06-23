@@ -38,9 +38,27 @@ function AppLayout() {
   });
   const isAdmin = !!roleData?.isAdmin;
 
+  const { data: profileCheck } = useQuery({
+    queryKey: ["profile-setup-check", user?.id],
+    enabled: !!user,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("full_name, dni, birth_date").eq("id", user!.id).maybeSingle();
+      const complete = !!(data as any)?.full_name && !!(data as any)?.dni && !!(data as any)?.birth_date;
+      return { complete };
+    },
+  });
+
   useEffect(() => {
     if (!loading && !user) nav({ to: "/auth" });
   }, [loading, user, nav]);
+
+  useEffect(() => {
+    if (!user || !profileCheck) return;
+    if (!profileCheck.complete && !loc.pathname.startsWith("/app/setup") && !loc.pathname.startsWith("/app/settings")) {
+      nav({ to: "/app/setup" });
+    }
+  }, [user, profileCheck, loc.pathname, nav]);
 
   if (loading || !user) {
     return (
