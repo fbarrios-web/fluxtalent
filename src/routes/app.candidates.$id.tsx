@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { analyzeApplication, aiInterviewQuestions, aiDraftEmail } from "@/lib/ai.functions";
+import { analyzeApplication, aiInterviewQuestions, aiDraftEmail, aiAnalyzeInterview } from "@/lib/ai.functions";
 import { moveApplicationStage, getSignedCvUrl, saveScorecard } from "@/lib/recruiting.functions";
 import { generateCandidateReport } from "@/lib/candidate-report";
 import { ArrowLeft, Sparkles, Loader2, FileText, Mail, MessageSquare, AlertTriangle, CheckCircle2, Star, FileDown } from "lucide-react";
@@ -51,6 +51,7 @@ function CandidateDetail() {
   const signCv = useServerFn(getSignedCvUrl);
   const draftEmail = useServerFn(aiDraftEmail);
   const interviewQs = useServerFn(aiInterviewQuestions);
+  const analyzeInterview = useServerFn(aiAnalyzeInterview);
   const saveScore = useServerFn(saveScorecard);
 
   const { data: app, isLoading } = useQuery<any>({
@@ -73,6 +74,8 @@ function CandidateDetail() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [genQ, setGenQ] = useState(false);
   const [transcript, setTranscript] = useState("");
+  const [analysis, setAnalysis] = useState<any | null>(null);
+  const [analyzingTr, setAnalyzingTr] = useState(false);
   const [genDoc, setGenDoc] = useState(false);
 
   if (isLoading || !app) return <div className="p-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
@@ -105,17 +108,34 @@ function CandidateDetail() {
     try { const r = await interviewQs({ data: { applicationId: id, stage: app.stage } }); setQuestions(r.questions); }
     catch (e: any) { toast.error(e.message); } finally { setGenQ(false); }
   }
+  async function runTranscriptAnalysis(): Promise<any | null> {
+    const t = transcript.trim();
+    if (t.length < 20) { toast.error("Pegá una transcripción más completa (mín. 20 caracteres)"); return null; }
+    setAnalyzingTr(true);
+    try {
+      const r: any = await analyzeInterview({ data: { applicationId: id, transcript: t } });
+      setAnalysis(r);
+      toast.success("Transcripción analizada");
+      return r;
+    } catch (e: any) { toast.error(e.message ?? "Error al analizar"); return null; }
+    finally { setAnalyzingTr(false); }
+  }
+
   async function downloadReport() {
     setGenDoc(true);
     try {
       const { data: prof } = await supabase.from("profiles").select("org_id").maybeSingle();
       if (!prof?.org_id) throw new Error("Organización no encontrada");
       const { data: org } = await supabase.from("organizations").select("name, consultancy_name, logo_url, brand_color").eq("id", prof.org_id).single();
+      let useAnalysis = analysis;
+      if (!useAnalysis && transcript.trim().length >= 20) {
+        useAnalysis = await runTranscriptAnalysis();
+      }
       await generateCandidateReport({
         org: org as any,
         candidate: a,
         vacancy: { title: a.vacancy?.title },
-        transcript,
+        analysis: useAnalysis,
       });
       toast.success("Informe generado");
     } catch (e: any) { toast.error(e.message ?? "Error al generar el informe"); }
