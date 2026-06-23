@@ -80,14 +80,24 @@ function kvTable(rows: Array<[string, string]>, color: string) {
   });
 }
 
+export type InterviewAnalysis = {
+  summary: string;
+  alignment_score: number;
+  strengths: string[];
+  concerns: string[];
+  evidence: Array<{ topic: string; quote: string; insight: string }>;
+  recommendation: "avanzar" | "stand_by" | "descartar";
+  next_steps: string[];
+};
+
 export type CandidateReportInput = {
   org: { name?: string | null; consultancy_name?: string | null; logo_url?: string | null; brand_color?: string | null };
   candidate: any;
   vacancy: { title?: string | null };
-  transcript: string;
+  analysis?: InterviewAnalysis | null;
 };
 
-export async function generateCandidateReport({ org, candidate, vacancy, transcript }: CandidateReportInput) {
+export async function generateCandidateReport({ org, candidate, vacancy, analysis }: CandidateReportInput) {
   const color = org.brand_color || "#0F766E";
   const logo = await fetchLogoBytes(org.logo_url);
   const headerName = org.consultancy_name || org.name || "Informe del candidato";
@@ -150,13 +160,36 @@ export async function generateCandidateReport({ org, candidate, vacancy, transcr
     children.push(...bullets(candidate.red_flags, color));
   }
 
-  children.push(H("Transcripción / resumen de la entrevista", color));
-  const trText = (transcript || "").trim();
-  if (!trText) {
-    children.push(P("—"));
-  } else {
-    for (const para of trText.split(/\n+/)) children.push(P(para));
+  if (analysis) {
+    children.push(H("Análisis de la entrevista", color));
+    children.push(kvTable([
+      ["Alineación con vacante", `${analysis.alignment_score}%`],
+      ["Recomendación", analysis.recommendation.toUpperCase()],
+    ], color));
+    children.push(P(analysis.summary));
+
+    if (analysis.strengths?.length) {
+      children.push(H("Lo observado a favor", color));
+      children.push(...bullets(analysis.strengths, color));
+    }
+    if (analysis.concerns?.length) {
+      children.push(H("Puntos de atención", color));
+      children.push(...bullets(analysis.concerns, color));
+    }
+    if (analysis.evidence?.length) {
+      children.push(H("Evidencia de la entrevista", color));
+      for (const ev of analysis.evidence) {
+        children.push(P(ev.topic, { bold: true }));
+        children.push(P(`"${ev.quote}"`, { color: "555555" }));
+        children.push(P(ev.insight));
+      }
+    }
+    if (analysis.next_steps?.length) {
+      children.push(H("Próximos pasos sugeridos", color));
+      children.push(...bullets(analysis.next_steps, color));
+    }
   }
+
 
   const doc = new Document({
     creator: headerName,
