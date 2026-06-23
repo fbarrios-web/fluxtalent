@@ -185,11 +185,9 @@ function Settings() {
             <p className="text-sm text-muted-foreground">Datos personales asociados a tu usuario.</p>
             <div className="grid gap-4 md:grid-cols-2">
               <div><Label>Email</Label><Input value={account?.email ?? ""} disabled /></div>
-              <div><Label>Nombre para mostrar</Label><Input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Tu nombre" /></div>
               <div><Label>Nombre completo</Label><Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Nombre y apellido" /></div>
               <div><Label>DNI</Label><Input value={dni} onChange={e => setDni(e.target.value)} placeholder="12345678" /></div>
               <div><Label>Fecha de nacimiento</Label><Input type="date" value={birthDate ?? ""} onChange={e => setBirthDate(e.target.value)} /></div>
-              <div><Label>Roles</Label><Input value={(account?.roles ?? []).join(", ") || "—"} disabled /></div>
               <div><Label>Miembro desde</Label><Input value={account?.createdAt ? new Date(account.createdAt).toLocaleDateString("es-AR") : "—"} disabled /></div>
             </div>
             <Button onClick={saveProfile} disabled={savingProfile || !account}>{savingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Guardar perfil</Button>
