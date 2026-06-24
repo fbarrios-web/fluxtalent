@@ -428,7 +428,7 @@ export const bulkCreateApplicationFromCv = createServerFn({ method: "POST" })
     if (error) throw error;
 
     await supabase.from("application_events").insert({
-      application_id: appRow.id, actor_id: userId, type: "bulk_uploaded", payload: { filename: data.cv_filename, ai_skipped_by_plan: !analyzeAi },
+      application_id: appRow.id, actor_id: userId, type: "bulk_uploaded", payload: { filename: data.cv_filename },
     });
 
     // Best-effort kick + queue safety net — see manualCreateApplication note above.
