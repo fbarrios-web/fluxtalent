@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, Link, useLocation } from "@tanstack/react-rout
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { adminAmI } from "@/lib/admin.functions";
-import { Loader2, BarChart3, Building2, Users, CreditCard, ShieldAlert, Tag } from "lucide-react";
+import { Loader2, BarChart3, Building2, Users, CreditCard, ShieldAlert, Tag, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/admin")({
@@ -16,6 +16,7 @@ const tabs = [
   { to: "/app/admin/users", label: "Usuarios", icon: Users },
   { to: "/app/admin/payments", label: "Pagos", icon: CreditCard },
   { to: "/app/admin/pricing", label: "Precios", icon: Tag },
+  { to: "/app/admin/usage", label: "Consumo", icon: Activity },
 ];
 
 function AdminLayout() {
