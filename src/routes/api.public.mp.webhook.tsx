@@ -81,42 +81,64 @@ export const Route = createFileRoute("/api/public/mp/webhook")({
         if (type === "payment") {
           const p: any = await fetchMP(`/v1/payments/${dataId}`);
           if (!p) return new Response("ok");
-          const orgId = p.external_reference;
+          // external_reference puede ser "<orgId>" o "<orgId>:<planId>"
+          const ref = String(p.external_reference ?? "");
+          if (!ref) return new Response("ok");
+          const [orgId, planIdRaw] = ref.split(":");
           if (!orgId) return new Response("ok");
+
+          // Resolver plan desde el catálogo (autoritativo). Fallback: matchear por precio.
+          const { PLANS, planByPrice } = await import("@/lib/plans");
+          const txAmount = Number(p.transaction_amount ?? 0);
+          const planFromId = planIdRaw ? PLANS.find(x => x.id === planIdRaw) : undefined;
+          const plan = planFromId ?? planByPrice(txAmount);
 
           await supabaseAdmin.from("payments").upsert({
             org_id: orgId,
             provider: "mercadopago",
             provider_payment_id: String(p.id),
-            amount_ars: Number(p.transaction_amount ?? 0),
+            amount_ars: txAmount,
             status: p.status,
             paid_at: p.date_approved ?? null,
-            raw: p,
+            raw: { ...p, resolved_plan: plan.id },
           }, { onConflict: "provider,provider_payment_id" });
 
           if (p.status === "approved") {
-            const amount = Number(p.transaction_amount ?? 0);
-            const update: { subscription_status: "active"; current_period_end: string; last_payment_at: string; plan_price_ars?: number } = {
+            const update: { subscription_status: "active"; current_period_end: string; last_payment_at: string; plan_price_ars: number } = {
               subscription_status: "active",
               current_period_end: new Date(Date.now() + 30 * 86400000).toISOString(),
               last_payment_at: p.date_approved ?? new Date().toISOString(),
+              plan_price_ars: plan.priceArs > 0 ? plan.priceArs : txAmount,
             };
-            if (amount > 0) update.plan_price_ars = amount;
             await supabaseAdmin.from("organizations").update(update).eq("id", orgId);
-            await supabaseAdmin.from("activity_events").insert({ org_id: orgId, event_type: "mp.payment_approved", metadata: { amount: p.transaction_amount } });
+            await supabaseAdmin.from("activity_events").insert({
+              org_id: orgId,
+              event_type: "mp.payment_approved",
+              metadata: { amount: txAmount, plan_id: plan.id, plan_name: plan.name },
+            });
           } else if (["rejected", "cancelled", "refunded"].includes(p.status)) {
             await supabaseAdmin.from("organizations").update({ subscription_status: "past_due" }).eq("id", orgId);
           }
         } else if (type === "preapproval" || type === "subscription_preapproval") {
           const pa: any = await fetchMP(`/preapproval/${dataId}`);
           if (!pa) return new Response("ok");
-          const orgId = pa.external_reference;
+          const ref = String(pa.external_reference ?? "");
+          const [orgId, planIdRaw] = ref.split(":");
           if (!orgId) return new Response("ok");
+          const { PLANS } = await import("@/lib/plans");
+          const plan = planIdRaw ? PLANS.find(x => x.id === planIdRaw) : undefined;
           if (pa.status === "authorized") {
-            await supabaseAdmin.from("organizations").update({
+            const patch: { subscription_status: "active"; mp_preapproval_id: string; plan_price_ars?: number } = {
               subscription_status: "active",
               mp_preapproval_id: pa.id,
-            }).eq("id", orgId);
+            };
+            if (plan && plan.priceArs > 0) patch.plan_price_ars = plan.priceArs;
+            await supabaseAdmin.from("organizations").update(patch).eq("id", orgId);
+            await supabaseAdmin.from("activity_events").insert({
+              org_id: orgId,
+              event_type: "mp.preapproval_authorized",
+              metadata: { preapproval_id: pa.id, plan_id: plan?.id, plan_name: plan?.name },
+            });
           } else if (pa.status === "cancelled" || pa.status === "paused") {
             await supabaseAdmin.from("organizations").update({ subscription_status: "canceled" }).eq("id", orgId);
           }
