@@ -151,6 +151,12 @@ function AppLayout() {
               </div>
             </SheetContent>
           </Sheet>
+          <Link to="/app/dashboard" className="flex items-center gap-2 font-semibold text-primary-foreground">
+            <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary-foreground p-1">
+              <FluxLogo size={22} />
+            </div>
+            <span className="text-base tracking-tight">FLUX <span className="opacity-70 font-normal">Talent</span></span>
+          </Link>
         </header>
         <SubscriptionBanner />
         <div className="flex-1"><Outlet /></div>
