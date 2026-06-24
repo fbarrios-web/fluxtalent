@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getMySubscription, createPreapproval, cancelSubscription, requestInvoiceC } from "@/lib/subscription.functions";
+import { getMySubscription, createPreapproval, cancelSubscription, requestInvoiceC, startPlanCheckout } from "@/lib/subscription.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { CheckCircle2, CreditCard, FileText, Loader2, ShieldCheck, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
-import { planByPrice, formatLimit, formatArs, TRIAL_DAYS, mergePlanOverrides } from "@/lib/plans";
+import { planByPrice, formatLimit, formatArs, TRIAL_DAYS, mergePlanOverrides, MP_PLAN_LINKS } from "@/lib/plans";
 import { getPlanPricing } from "@/lib/pricing.functions";
 
 export const Route = createFileRoute("/app/subscription")({
@@ -24,6 +24,7 @@ function SubscriptionPage() {
   const getSub = useServerFn(getMySubscription);
   const createPre = useServerFn(createPreapproval);
   const cancel = useServerFn(cancelSubscription);
+  const startCheckout = useServerFn(startPlanCheckout);
   const getPricing = useServerFn(getPlanPricing);
   const { data: overrides } = useQuery({ queryKey: ["plan-pricing"], queryFn: () => getPricing() });
   const plans = mergePlanOverrides(overrides);
@@ -50,6 +51,11 @@ function SubscriptionPage() {
   const cancelMut = useMutation({
     mutationFn: () => cancel(),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["my-subscription"] }); toast.success("Suscripción cancelada"); },
+  });
+  const planCheckoutMut = useMutation({
+    mutationFn: (planId: "starter" | "pro" | "enterprise") => startCheckout({ data: { planId } }),
+    onSuccess: (r) => { window.open(r.url, "_blank", "noopener"); },
+    onError: (e: any) => toast.error(e.message ?? "No se pudo iniciar el checkout"),
   });
 
   if (isLoading) return <div className="grid h-96 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></div>;
@@ -128,10 +134,21 @@ function SubscriptionPage() {
 
         <div className="mt-6 flex flex-wrap gap-3">
           {!isActive && (
-            <Button onClick={() => subscribeMut.mutate()} disabled={subscribeMut.isPending} size="lg">
-              {subscribeMut.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
-              {isTrial ? "Activar suscripción ahora" : "Suscribirme con Mercado Pago"}
-            </Button>
+            (() => {
+              const targetPlanId = MP_PLAN_LINKS[activePlan.id] ? activePlan.id : "pro";
+              const targetPlan = plans.find(p => p.id === targetPlanId);
+              const useLink = !!MP_PLAN_LINKS[targetPlanId as "starter" | "pro" | "enterprise"];
+              return (
+                <Button
+                  onClick={() => useLink ? planCheckoutMut.mutate(targetPlanId as "starter" | "pro" | "enterprise") : subscribeMut.mutate()}
+                  disabled={subscribeMut.isPending || planCheckoutMut.isPending}
+                  size="lg"
+                >
+                  {(subscribeMut.isPending || planCheckoutMut.isPending) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
+                  {isTrial ? `Activar ${targetPlan?.name ?? "suscripción"} ahora` : `Suscribirme a ${targetPlan?.name ?? "FLUX Talent"}`}
+                </Button>
+              );
+            })()
           )}
           {isActive && (
             <Button onClick={() => cancelMut.mutate()} disabled={cancelMut.isPending} variant="outline">
@@ -194,8 +211,22 @@ function SubscriptionPage() {
                   <Button asChild className="mt-4 w-full" variant="outline">
                     <a href="mailto:hola@fluxautomatizaciones.com?subject=Plan%20Custom%20FLUX%20Talent">Contactar a ventas</a>
                   </Button>
+                ) : MP_PLAN_LINKS[p.id] ? (
+                  <Button
+                    className="mt-4 w-full"
+                    variant={p.highlighted ? "default" : "outline"}
+                    onClick={() => planCheckoutMut.mutate(p.id as "starter" | "pro" | "enterprise")}
+                    disabled={planCheckoutMut.isPending}
+                  >
+                    {planCheckoutMut.isPending && planCheckoutMut.variables === p.id ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <CreditCard className="mr-2 h-4 w-4" />
+                    )}
+                    Suscribirme a {p.name}
+                  </Button>
                 ) : (
-                  <Button className="mt-4 w-full" variant={p.highlighted ? "default" : "outline"} onClick={() => toast.info("Próximamente vas a poder cambiar de plan desde acá. Por ahora escribinos.")}>Elegir {p.name}</Button>
+                  <Button variant="outline" disabled className="mt-4 w-full">Próximamente</Button>
                 )}
               </div>
             );

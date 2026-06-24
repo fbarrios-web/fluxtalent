@@ -19,6 +19,13 @@ export interface Plan {
 
 export const TRIAL_DAYS = 15;
 
+/** Links de Mercado Pago "Planes de suscripción" (no-code). MP gestiona el cobro recurrente. */
+export const MP_PLAN_LINKS: Partial<Record<PlanId, string>> = {
+  starter: "https://mpago.la/1PPH9TE",
+  pro: "https://mpago.la/1K1ThMx",
+  enterprise: "https://mpago.la/1Keo3Qf",
+};
+
 export const PLANS: Plan[] = [
   {
     id: "free",

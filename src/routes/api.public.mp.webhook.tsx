@@ -95,11 +95,14 @@ export const Route = createFileRoute("/api/public/mp/webhook")({
           }, { onConflict: "provider,provider_payment_id" });
 
           if (p.status === "approved") {
-            await supabaseAdmin.from("organizations").update({
+            const amount = Number(p.transaction_amount ?? 0);
+            const update: { subscription_status: "active"; current_period_end: string; last_payment_at: string; plan_price_ars?: number } = {
               subscription_status: "active",
               current_period_end: new Date(Date.now() + 30 * 86400000).toISOString(),
               last_payment_at: p.date_approved ?? new Date().toISOString(),
-            }).eq("id", orgId);
+            };
+            if (amount > 0) update.plan_price_ars = amount;
+            await supabaseAdmin.from("organizations").update(update).eq("id", orgId);
             await supabaseAdmin.from("activity_events").insert({ org_id: orgId, event_type: "mp.payment_approved", metadata: { amount: p.transaction_amount } });
           } else if (["rejected", "cancelled", "refunded"].includes(p.status)) {
             await supabaseAdmin.from("organizations").update({ subscription_status: "past_due" }).eq("id", orgId);
