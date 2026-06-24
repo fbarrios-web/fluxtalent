@@ -204,6 +204,26 @@ function AuthPage() {
           </p>
         </div>
       </div>
+
+      {forgotOpen && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={() => !forgotLoading && setForgotOpen(false)}>
+          <form onClick={e => e.stopPropagation()} onSubmit={handleForgotPassword} className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-lg">
+            <h2 className="font-display text-2xl">Recuperar contraseña</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Te enviaremos un email con un enlace para restablecerla.</p>
+            <div className="mt-4">
+              <Label htmlFor="forgot-email">Email</Label>
+              <Input id="forgot-email" type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} required autoFocus />
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button type="button" variant="ghost" onClick={() => setForgotOpen(false)} disabled={forgotLoading}>Cancelar</Button>
+              <Button type="submit" disabled={forgotLoading || !forgotEmail}>
+                {forgotLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Enviar email
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
