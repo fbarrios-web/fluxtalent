@@ -21,9 +21,9 @@ export const TRIAL_DAYS = 15;
 
 /** Links de Mercado Pago "Planes de suscripción" (no-code). MP gestiona el cobro recurrente. */
 export const MP_PLAN_LINKS: Partial<Record<PlanId, string>> = {
-  starter: "https://mpago.la/1PPH9TE",
+  starter: "https://mpago.la/1Keo3Qf",
   pro: "https://mpago.la/1K1ThMx",
-  enterprise: "https://mpago.la/1Keo3Qf",
+  enterprise: "https://mpago.la/1PPH9TE",
 };
 
 export const PLANS: Plan[] = [
