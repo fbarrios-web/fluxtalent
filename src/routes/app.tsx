@@ -39,10 +39,11 @@ function AppLayout() {
   });
   const isAdmin = !!roleData?.isAdmin;
 
-  const { data: profileCheck } = useQuery({
+  const { data: profileCheck, refetch: refetchProfile } = useQuery({
     queryKey: ["profile-setup-check", user?.id],
     enabled: !!user,
-    staleTime: 30_000,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const { data } = await supabase.from("profiles").select("full_name, dni, birth_date").eq("id", user!.id).maybeSingle();
       const complete = !!(data as any)?.full_name && !!(data as any)?.dni && !!(data as any)?.birth_date;
@@ -53,6 +54,11 @@ function AppLayout() {
   useEffect(() => {
     if (!loading && !user) nav({ to: "/auth" });
   }, [loading, user, nav]);
+
+  useEffect(() => {
+    if (user) refetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loc.pathname]);
 
   useEffect(() => {
     if (!user || !profileCheck) return;
