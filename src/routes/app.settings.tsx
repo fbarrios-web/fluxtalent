@@ -124,7 +124,6 @@ function Settings() {
 
   function validateOrg() {
     const errs: Record<string, string> = {};
-    if (!name.trim()) errs.name = "El nombre legal es obligatorio";
     if (!consultancyName.trim()) errs.consultancyName = "El nombre comercial es obligatorio";
     if (!contactEmail.trim()) errs.contactEmail = "El mail de contacto es obligatorio";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) errs.contactEmail = "Ingresá un email válido";
@@ -147,7 +146,6 @@ function Settings() {
     setSaving(true);
     try {
       const patch: Record<string, unknown> = {
-        name: name || org.name,
         consultancy_name: consultancyName || null,
         contact_email: contactEmail || null,
         brand_color: brandColor || "#0F766E",
@@ -188,7 +186,7 @@ function Settings() {
 
   return (
     <div className="mx-auto max-w-3xl p-6 md:p-10">
-      <h1 className="font-display text-4xl">Configuración</h1>
+      <h1 className="font-display text-4xl">Empresa</h1>
       <p className="mt-1 text-muted-foreground">Personalizá tu workspace y la comunicación con candidatos.</p>
 
       <Tabs defaultValue="cuenta" className="mt-8">
@@ -215,11 +213,6 @@ function Settings() {
             <h3 className="font-semibold">Empresa & marca</h3>
             <p className="text-sm text-muted-foreground">Estos datos aparecen en los mails que recibe el postulante.</p>
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-1">
-                <Label>Nombre legal <span className="text-destructive">*</span></Label>
-                <Input value={name} onChange={e => { setName(e.target.value); setErrors(p => ({ ...p, name: "" })); }} placeholder="Acme S.A." className={errors.name ? "border-destructive ring-1 ring-destructive" : ""} />
-                {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
-              </div>
               <div className="space-y-1">
                 <Label>Nombre comercial / consultora <span className="text-destructive">*</span></Label>
                 <Input value={consultancyName} onChange={e => { setConsultancyName(e.target.value); setErrors(p => ({ ...p, consultancyName: "" })); }} placeholder="Aparece en el remitente del mail" className={errors.consultancyName ? "border-destructive ring-1 ring-destructive" : ""} />
@@ -258,8 +251,8 @@ function Settings() {
               </div>
             </div>
             <div className="space-y-1">
-              <Label>Firma — texto (HTML simple) <span className="text-muted-foreground text-xs font-normal">(opcional)</span></Label>
-              <Textarea rows={4} value={signature} onChange={e => setSignature(e.target.value)} placeholder="<b>María Pérez</b> — Talent Lead @ Empresa" />
+              <Label>Firma — texto <span className="text-muted-foreground text-xs font-normal">(opcional)</span></Label>
+              <Textarea rows={4} value={signature} onChange={e => setSignature(e.target.value)} />
               <p className="text-xs text-muted-foreground">Solo texto. Aparece debajo del cuerpo en cada email.</p>
             </div>
             <div>
@@ -280,7 +273,6 @@ function Settings() {
               ¿Necesitás ayuda, una integración personalizada o reportar un problema? Escribinos a{" "}
               <a href="mailto:hola@fluxautomatizaciones.com" className="text-primary underline">hola@fluxautomatizaciones.com</a>.
             </p>
-            <p className="text-xs text-muted-foreground">Respondemos en menos de 24h hábiles.</p>
           </section>
         </TabsContent>
 
