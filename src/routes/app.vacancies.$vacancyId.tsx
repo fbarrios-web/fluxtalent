@@ -168,7 +168,8 @@ function VacancyDetail() {
         </div>
 
         <TabsContent value="pipeline" className="mt-6">
-          <div className="flex gap-3 overflow-x-auto pb-4">
+          <div className="flex gap-3 overflow-x-auto overflow-y-hidden pb-4 max-h-[calc(100vh-220px)]">
+
             {STAGES.map(s => {
               const items = filteredApps.filter((a: any) => a.stage === s.id);
               const isCollapsed = !!collapsed[s.id];
