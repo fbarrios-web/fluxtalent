@@ -130,18 +130,11 @@ export const Route = createFileRoute("/api/public/apply")({
             return Response.json({ error: "Error al procesar la postulación. Intentá de nuevo." }, { status: 500, headers: cors });
           }
 
-          // Fire-and-forget AI analysis so the form responds immediately.
-          if (analyzeAi) {
-            const origin = process.env.PUBLIC_APP_URL || new URL(request.url).origin;
-            const secret = process.env.INTERNAL_ANALYZE_SECRET;
-            if (secret) {
-              void fetch(`${origin}/api/public/analyze`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ applicationId: appRow.id, secret }),
-              }).catch(() => {});
-            }
-          }
+          // The row is queued at ai_status='pending'. A pg_cron-backed worker
+          // (/api/public/hooks/process-cv-queue) drains it within ~1 minute and
+          // retries on failure. Fire-and-forget fetches don't work on Workers
+          // because the request context is torn down after the response.
+
 
           return Response.json({ ok: true, id: appRow.id }, { headers: cors });
         } catch (e: any) {
