@@ -188,7 +188,7 @@ function Settings() {
 
   return (
     <div className="mx-auto max-w-3xl p-6 md:p-10">
-      <h1 className="font-display text-4xl">Configuración</h1>
+      <h1 className="font-display text-4xl">Empresa</h1>
       <p className="mt-1 text-muted-foreground">Personalizá tu workspace y la comunicación con candidatos.</p>
 
       <Tabs defaultValue="cuenta" className="mt-8">
