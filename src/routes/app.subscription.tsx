@@ -24,6 +24,7 @@ function SubscriptionPage() {
   const getSub = useServerFn(getMySubscription);
   const createPre = useServerFn(createPreapproval);
   const cancel = useServerFn(cancelSubscription);
+  const startCheckout = useServerFn(startPlanCheckout);
   const getPricing = useServerFn(getPlanPricing);
   const { data: overrides } = useQuery({ queryKey: ["plan-pricing"], queryFn: () => getPricing() });
   const plans = mergePlanOverrides(overrides);
