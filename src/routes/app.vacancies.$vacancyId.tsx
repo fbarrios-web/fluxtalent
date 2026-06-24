@@ -168,7 +168,8 @@ function VacancyDetail() {
         </div>
 
         <TabsContent value="pipeline" className="mt-6">
-          <div className="flex gap-3 overflow-x-auto pb-4">
+          <div className="flex gap-3 overflow-x-auto overflow-y-hidden pb-4 max-h-[calc(100vh-220px)]">
+
             {STAGES.map(s => {
               const items = filteredApps.filter((a: any) => a.stage === s.id);
               const isCollapsed = !!collapsed[s.id];
@@ -205,7 +206,7 @@ function VacancyDetail() {
                     const id = e.dataTransfer.getData("text/plain");
                     if (id) onDrop(id, s.id);
                   }}
-                  className="flex w-64 shrink-0 flex-col rounded-2xl bg-muted/40 p-3"
+                  className="flex w-64 shrink-0 flex-col rounded-2xl bg-muted/40 p-3 max-h-full"
                 >
                   <div className="mb-3 flex items-center justify-between px-1">
                     <div className="flex items-center gap-1.5">
@@ -221,7 +222,8 @@ function VacancyDetail() {
                     </div>
                     <span className="rounded-full bg-background px-2 text-xs">{items.length}</span>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 overflow-y-auto pr-1">
+
                     {items.map((a: any) => (
                       <div
                         key={a.id}
@@ -779,6 +781,7 @@ function BulkUploadDialog({ vacancyId, onDone }: { vacancyId: string; onDone: ()
     if (!files.length) return;
     setRunning(true);
     setResults([]);
+    const collected: Array<{ name: string; ok: boolean; message: string }> = [];
     for (const f of files) {
       try {
         if (f.size > 10 * 1024 * 1024) throw new Error("CV mayor a 10MB");
@@ -787,14 +790,25 @@ function BulkUploadDialog({ vacancyId, onDone }: { vacancyId: string; onDone: ()
           vacancy_id: vacancyId, cv_base64: b64,
           cv_filename: f.name, cv_mime: f.type || "application/pdf",
         }});
-        setResults(prev => [...prev, { name: f.name, ok: true, message: `${r.first_name} ${r.last_name} · ${r.email}` }]);
+        collected.push({ name: f.name, ok: true, message: `${r.first_name} ${r.last_name} · ${r.email}` });
       } catch (e: any) {
-        setResults(prev => [...prev, { name: f.name, ok: false, message: e?.message ?? "Error" }]);
+        collected.push({ name: f.name, ok: false, message: e?.message ?? "Error" });
       }
+      setResults([...collected]);
     }
     setRunning(false);
     onDone();
+    const okCount = collected.filter(r => r.ok).length;
+    const failCount = collected.length - okCount;
+    if (failCount === 0) {
+      toast.success(`${okCount} CV(s) procesados correctamente. La IA está analizando en segundo plano.`);
+      setOpen(false);
+      reset();
+    } else {
+      toast.warning(`${okCount} procesados, ${failCount} con errores. Revisá el detalle.`);
+    }
   }
+
 
   function reset() {
     setFiles([]);
