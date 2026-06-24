@@ -70,10 +70,10 @@ function Landing() {
           <div className="border-b border-border bg-muted/40 px-4 py-2 text-xs text-muted-foreground">Seguimiento de vacantes</div>
           <div className="grid gap-4 p-6 md:grid-cols-4">
             {[
-              { stage: "Recibidos", count: 142, color: "bg-muted" },
-              { stage: "Preseleccionados", count: 28, color: "bg-accent" },
-              { stage: "Entrevista", count: 12, color: "bg-primary/10" },
-              { stage: "Oferta", count: 3, color: "bg-primary/20" },
+              { stage: "Recibidos", count: 142, color: "bg-muted", scores: [92, 89, 86] },
+              { stage: "Preseleccionados", count: 28, color: "bg-accent", scores: [78, 74, 71] },
+              { stage: "Entrevista", count: 12, color: "bg-primary/10", scores: [68, 65, 62] },
+              { stage: "Descartado", count: 3, color: "bg-destructive/10", scores: [34, 28, 22] },
             ].map((c) => (
               <div key={c.stage} className={`rounded-xl border border-border p-4 ${c.color}`}>
                 <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{c.stage}</div>
@@ -82,7 +82,7 @@ function Landing() {
                   {[0,1,2].map(i => (
                     <div key={i} className="flex items-center justify-between rounded-md bg-background/80 p-2 text-xs">
                       <span className="truncate">Candidato {i+1}</span>
-                      <span className="rounded-full bg-primary/10 px-1.5 py-0.5 font-medium text-primary">{92-i*3}%</span>
+                      <span className={`rounded-full px-1.5 py-0.5 font-medium ${c.scores[i] < 40 ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'}`}>{c.scores[i]}%</span>
                     </div>
                   ))}
                 </div>
