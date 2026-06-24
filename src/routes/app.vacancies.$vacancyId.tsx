@@ -263,7 +263,7 @@ function VacancyDetail() {
                     <td className="px-4 py-3 font-medium">{a.first_name} {a.last_name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{a.email}</td>
                     <td className="px-4 py-3 text-muted-foreground">{a.stage}</td>
-                    <td className="px-4 py-3"><MatchPill score={a.match_score} minMatch={v.min_match} /></td>
+                    <td className="px-4 py-3"><MatchPill score={a.match_score} minMatch={v.min_match} aiStatus={a.ai_status} /></td>
                   </tr>
                 ))}
               </tbody>
