@@ -126,15 +126,12 @@ function AppLayout() {
       </aside>
 
       <main className="min-w-0 flex flex-col">
-        <header className="flex items-center justify-between border-b border-border bg-sidebar px-4 py-3 md:hidden">
-          <Link to="/app/dashboard" className="flex items-center gap-2 font-semibold">
-            <FluxLogo size={28} />
-            <span className="text-base tracking-tight">FLUX <span className="text-muted-foreground font-normal">Talent</span></span>
-          </Link>
+        <header className="flex items-center gap-3 bg-primary px-4 py-3 md:hidden">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
-              <button aria-label="Menú" className="rounded-md p-2 hover:bg-sidebar-accent">
+              <button aria-label="Menú" className="flex items-center gap-2 rounded-lg border border-primary-foreground/30 bg-primary-foreground/10 px-3 py-2 text-primary-foreground hover:bg-primary-foreground/20 transition-colors">
                 <Menu className="h-5 w-5" />
+                <span className="text-xs font-medium">Menú</span>
               </button>
             </SheetTrigger>
             <SheetContent side="left" className="w-[260px] bg-sidebar p-0">
@@ -154,6 +151,12 @@ function AppLayout() {
               </div>
             </SheetContent>
           </Sheet>
+          <Link to="/app/dashboard" className="flex items-center gap-2 font-semibold text-primary-foreground">
+            <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary-foreground p-1">
+              <FluxLogo size={22} />
+            </div>
+            <span className="text-base tracking-tight">FLUX <span className="opacity-70 font-normal">Talent</span></span>
+          </Link>
         </header>
         <SubscriptionBanner />
         <div className="flex-1"><Outlet /></div>
