@@ -93,7 +93,7 @@ function AuthPage() {
           <p className="font-display text-4xl leading-tight">
             "Reducimos los tiempos de contratación de 30 días a menos de 7 días con FLUX Talent."
           </p>
-          <p className="mt-4 text-sm opacity-80">— Lucía Méndez, Head of People @Evolvium tech</p>
+          <p className="mt-4 text-sm opacity-80">— Lucía Méndez, Head of People @Inventia</p>
         </div>
         <p className="text-xs opacity-60">© 2026 FLUX Automatizaciones. Todos los derechos reservados.</p>
       </div>
