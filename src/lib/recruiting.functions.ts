@@ -424,5 +424,6 @@ export const bulkCreateApplicationFromCv = createServerFn({ method: "POST" })
     });
 
     // Queued for the AI worker — see manualCreateApplication note above.
-
+    return { id: appRow.id, first_name, last_name, email };
   });
+
