@@ -417,14 +417,13 @@ export const bulkCreateApplicationFromCv = createServerFn({ method: "POST" })
     });
     if (upErr) throw new Error("Error al subir CV: " + upErr.message);
 
-    const { canAnalyzeMoreCvs } = await import("@/lib/plan-limits");
-    const analyzeAi = await canAnalyzeMoreCvs(supabase, vac.org_id);
+    const analyzeAi = true;
 
     const { data: appRow, error } = await supabase.from("applications").insert({
       vacancy_id: vac.id, org_id: vac.org_id,
       first_name, last_name, email,
       cv_url: path, source: "manual",
-      ai_status: analyzeAi ? "pending" : "skipped",
+      ai_status: "pending",
     }).select("id").single();
     if (error) throw error;
 
