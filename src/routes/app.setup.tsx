@@ -15,6 +15,7 @@ export const Route = createFileRoute("/app/setup")({
 
 function SetupPage() {
   const nav = useNavigate();
+  const qc = useQueryClient();
   const { data: me, isLoading } = useQuery({
     queryKey: ["setup-me"],
     queryFn: async () => {
