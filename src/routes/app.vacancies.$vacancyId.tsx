@@ -232,7 +232,7 @@ function VacancyDetail() {
                       >
                         <div className="flex items-center justify-between">
                           <div className="truncate text-sm font-medium">{a.first_name} {a.last_name}</div>
-                          <MatchPill score={a.match_score} minMatch={v.min_match} />
+                          <MatchPill score={a.match_score} minMatch={v.min_match} aiStatus={a.ai_status} />
                         </div>
                         <div className="mt-1 truncate text-xs text-muted-foreground">{a.email}</div>
                       </div>
