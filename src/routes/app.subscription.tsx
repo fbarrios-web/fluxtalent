@@ -134,10 +134,21 @@ function SubscriptionPage() {
 
         <div className="mt-6 flex flex-wrap gap-3">
           {!isActive && (
-            <Button onClick={() => subscribeMut.mutate()} disabled={subscribeMut.isPending} size="lg">
-              {subscribeMut.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
-              {isTrial ? "Activar suscripción ahora" : "Suscribirme con Mercado Pago"}
-            </Button>
+            (() => {
+              const targetPlanId = MP_PLAN_LINKS[activePlan.id] ? activePlan.id : "pro";
+              const targetPlan = plans.find(p => p.id === targetPlanId);
+              const useLink = !!MP_PLAN_LINKS[targetPlanId as "starter" | "pro" | "enterprise"];
+              return (
+                <Button
+                  onClick={() => useLink ? planCheckoutMut.mutate(targetPlanId as "starter" | "pro" | "enterprise") : subscribeMut.mutate()}
+                  disabled={subscribeMut.isPending || planCheckoutMut.isPending}
+                  size="lg"
+                >
+                  {(subscribeMut.isPending || planCheckoutMut.isPending) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
+                  {isTrial ? `Activar ${targetPlan?.name ?? "suscripción"} ahora` : `Suscribirme a ${targetPlan?.name ?? "FLUX Talent"}`}
+                </Button>
+              );
+            })()
           )}
           {isActive && (
             <Button onClick={() => cancelMut.mutate()} disabled={cancelMut.isPending} variant="outline">
