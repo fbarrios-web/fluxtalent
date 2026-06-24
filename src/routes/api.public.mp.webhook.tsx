@@ -122,13 +122,23 @@ export const Route = createFileRoute("/api/public/mp/webhook")({
         } else if (type === "preapproval" || type === "subscription_preapproval") {
           const pa: any = await fetchMP(`/preapproval/${dataId}`);
           if (!pa) return new Response("ok");
-          const orgId = pa.external_reference;
+          const ref = String(pa.external_reference ?? "");
+          const [orgId, planIdRaw] = ref.split(":");
           if (!orgId) return new Response("ok");
+          const { PLANS } = await import("@/lib/plans");
+          const plan = planIdRaw ? PLANS.find(x => x.id === planIdRaw) : undefined;
           if (pa.status === "authorized") {
-            await supabaseAdmin.from("organizations").update({
+            const patch: Record<string, unknown> = {
               subscription_status: "active",
               mp_preapproval_id: pa.id,
-            }).eq("id", orgId);
+            };
+            if (plan && plan.priceArs > 0) patch.plan_price_ars = plan.priceArs;
+            await supabaseAdmin.from("organizations").update(patch).eq("id", orgId);
+            await supabaseAdmin.from("activity_events").insert({
+              org_id: orgId,
+              event_type: "mp.preapproval_authorized",
+              metadata: { preapproval_id: pa.id, plan_id: plan?.id, plan_name: plan?.name },
+            });
           } else if (pa.status === "cancelled" || pa.status === "paused") {
             await supabaseAdmin.from("organizations").update({ subscription_status: "canceled" }).eq("id", orgId);
           }
