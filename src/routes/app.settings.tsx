@@ -273,7 +273,6 @@ function Settings() {
               ¿Necesitás ayuda, una integración personalizada o reportar un problema? Escribinos a{" "}
               <a href="mailto:hola@fluxautomatizaciones.com" className="text-primary underline">hola@fluxautomatizaciones.com</a>.
             </p>
-            <p className="text-xs text-muted-foreground">Respondemos en menos de 24h hábiles.</p>
           </section>
         </TabsContent>
 
