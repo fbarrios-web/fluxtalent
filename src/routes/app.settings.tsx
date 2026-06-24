@@ -251,8 +251,8 @@ function Settings() {
               </div>
             </div>
             <div className="space-y-1">
-              <Label>Firma — texto (HTML simple) <span className="text-muted-foreground text-xs font-normal">(opcional)</span></Label>
-              <Textarea rows={4} value={signature} onChange={e => setSignature(e.target.value)} placeholder="<b>María Pérez</b> — Talent Lead @ Empresa" />
+              <Label>Firma — texto <span className="text-muted-foreground text-xs font-normal">(opcional)</span></Label>
+              <Textarea rows={4} value={signature} onChange={e => setSignature(e.target.value)} />
               <p className="text-xs text-muted-foreground">Solo texto. Aparece debajo del cuerpo en cada email.</p>
             </div>
             <div>
