@@ -96,7 +96,7 @@ export const Route = createFileRoute("/api/public/mp/webhook")({
 
           if (p.status === "approved") {
             const amount = Number(p.transaction_amount ?? 0);
-            const update: { subscription_status: string; current_period_end: string; last_payment_at: string; plan_price_ars?: number } = {
+            const update: { subscription_status: "active"; current_period_end: string; last_payment_at: string; plan_price_ars?: number } = {
               subscription_status: "active",
               current_period_end: new Date(Date.now() + 30 * 86400000).toISOString(),
               last_payment_at: p.date_approved ?? new Date().toISOString(),
