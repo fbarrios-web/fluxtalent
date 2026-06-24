@@ -316,3 +316,85 @@ export const adminExportClients = createServerFn({ method: "GET" })
       };
     });
   });
+
+/** Consumo de plataforma: IA, emails y almacenamiento. */
+export const adminUsage = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sb = supabaseAdmin;
+
+    const since30 = new Date(Date.now() - 30 * 86400000).toISOString();
+    const since7 = new Date(Date.now() - 7 * 86400000).toISOString();
+
+    // AI: 1 análisis por aplicación creada
+    const [{ count: apps30 }, { count: apps7 }, { count: appsTotal }] = await Promise.all([
+      sb.from("applications").select("*", { count: "exact", head: true }).gte("created_at", since30),
+      sb.from("applications").select("*", { count: "exact", head: true }).gte("created_at", since7),
+      sb.from("applications").select("*", { count: "exact", head: true }),
+    ]);
+
+    // Eventos relacionados a IA / emails / entrevistas (últimos 30d)
+    const { data: evts } = await sb
+      .from("activity_events")
+      .select("event_type, created_at")
+      .gte("created_at", since30);
+    const evtCount = (prefix: string) =>
+      (evts ?? []).filter((e: any) => String(e.event_type).startsWith(prefix)).length;
+
+    const aiCalls30 = (apps30 ?? 0) + evtCount("ai.") + evtCount("report.");
+    const emails30 = evtCount("email.") + evtCount("interview.invite") + evtCount("interview.booked") + evtCount("rejection.");
+    const interviews30 = evtCount("interview.");
+
+    // Storage: listado de objetos por bucket
+    async function bucketStats(bucket: string) {
+      let total = 0, size = 0, offset = 0;
+      while (true) {
+        const { data, error } = await sb.storage.from(bucket).list("", { limit: 1000, offset, sortBy: { column: "created_at", order: "desc" } });
+        if (error || !data?.length) break;
+        for (const f of data as any[]) {
+          // recursivo: si parece carpeta (sin metadata) listamos su contenido
+          if (!f.metadata) {
+            let sub = 0;
+            const { data: inner } = await sb.storage.from(bucket).list(f.name, { limit: 1000 });
+            (inner ?? []).forEach((x: any) => { if (x.metadata?.size) { sub += Number(x.metadata.size); total++; } });
+            size += sub;
+          } else {
+            total++;
+            size += Number(f.metadata.size || 0);
+          }
+        }
+        if (data.length < 1000) break;
+        offset += 1000;
+        if (offset > 10000) break;
+      }
+      return { files: total, bytes: size };
+    }
+
+    const [cvs, orgAssets] = await Promise.all([bucketStats("cvs"), bucketStats("org-assets")]);
+
+    // Estimaciones de costo (USD)
+    // Gemini Flash: input ~$0.075/M tok, output ~$0.30/M tok. Asumimos 2500 in + 600 out por CV.
+    const inTokPerCV = 2500, outTokPerCV = 600;
+    const aiInTok = aiCalls30 * inTokPerCV;
+    const aiOutTok = aiCalls30 * outTokPerCV;
+    const aiCostUsd = (aiInTok / 1_000_000) * 0.075 + (aiOutTok / 1_000_000) * 0.30;
+
+    // Resend: 3.000 gratis + $0.40 por 1.000
+    const emailsBillable = Math.max(0, emails30 - 3000);
+    const emailCostUsd = (emailsBillable / 1000) * 0.40;
+
+    // Storage: aprox. $0.021/GB/mes (S3 estándar) — referencia
+    const totalGB = (cvs.bytes + orgAssets.bytes) / 1_073_741_824;
+    const storageCostUsd = totalGB * 0.021;
+
+    return {
+      ai: { calls30: aiCalls30, calls7: (apps7 ?? 0), inTok: aiInTok, outTok: aiOutTok, costUsd: aiCostUsd },
+      emails: { sent30: emails30, billable: emailsBillable, costUsd: emailCostUsd },
+      interviews30,
+      storage: { cvs, orgAssets, totalBytes: cvs.bytes + orgAssets.bytes, totalGB, costUsd: storageCostUsd },
+      apps: { total: appsTotal ?? 0, last30: apps30 ?? 0, last7: apps7 ?? 0 },
+      totalCostUsd: aiCostUsd + emailCostUsd + storageCostUsd,
+    };
+  });
