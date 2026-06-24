@@ -128,7 +128,7 @@ export const Route = createFileRoute("/api/public/mp/webhook")({
           const { PLANS } = await import("@/lib/plans");
           const plan = planIdRaw ? PLANS.find(x => x.id === planIdRaw) : undefined;
           if (pa.status === "authorized") {
-            const patch: Record<string, unknown> = {
+            const patch: { subscription_status: "active"; mp_preapproval_id: string; plan_price_ars?: number } = {
               subscription_status: "active",
               mp_preapproval_id: pa.id,
             };
