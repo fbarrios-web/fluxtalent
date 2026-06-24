@@ -51,7 +51,12 @@ function SubscriptionPage() {
   });
   const cancelMut = useMutation({
     mutationFn: () => cancel(),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["my-subscription"] }); toast.success("Suscripción cancelada"); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my-subscription"] });
+      setCancelOpen(false);
+      toast.success("Suscripción cancelada. Las funcionalidades quedaron deshabilitadas.");
+    },
+    onError: (e: any) => toast.error(e?.message ?? "No se pudo cancelar la suscripción"),
   });
   const planCheckoutMut = useMutation({
     mutationFn: (planId: "starter" | "pro" | "enterprise") => startCheckout({ data: { planId } }),
