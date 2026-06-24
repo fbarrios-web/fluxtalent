@@ -165,8 +165,10 @@ export const startPlanCheckout = createServerFn({ method: "POST" })
       .update({ plan_price_ars: plan.priceArs })
       .eq("id", orgId);
 
+    // external_reference = "orgId:planId" — webhook lo usa para activar el plan correcto
+    const ref = `${orgId}:${data.planId}`;
     const sep = baseUrl.includes("?") ? "&" : "?";
-    return { url: `${baseUrl}${sep}external_reference=${encodeURIComponent(orgId)}` };
+    return { url: `${baseUrl}${sep}external_reference=${encodeURIComponent(ref)}` };
   });
 
 export const cancelSubscription = createServerFn({ method: "POST" })
