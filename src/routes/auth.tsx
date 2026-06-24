@@ -20,7 +20,6 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const nav = useNavigate();
   const saveId = useServerFn(saveIdentity);
-  const saveId = useServerFn(saveIdentity);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
