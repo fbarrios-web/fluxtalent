@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
-import { PLANS } from "@/lib/plans";
+import { PLANS, planByPrice } from "@/lib/plans";
 import * as XLSX from "xlsx";
 
 export const Route = createFileRoute("/app/admin/orgs")({
