@@ -206,7 +206,7 @@ function VacancyDetail() {
                     const id = e.dataTransfer.getData("text/plain");
                     if (id) onDrop(id, s.id);
                   }}
-                  className="flex w-64 shrink-0 flex-col rounded-2xl bg-muted/40 p-3"
+                  className="flex w-64 shrink-0 flex-col rounded-2xl bg-muted/40 p-3 max-h-full"
                 >
                   <div className="mb-3 flex items-center justify-between px-1">
                     <div className="flex items-center gap-1.5">
@@ -222,7 +222,8 @@ function VacancyDetail() {
                     </div>
                     <span className="rounded-full bg-background px-2 text-xs">{items.length}</span>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 overflow-y-auto pr-1">
+
                     {items.map((a: any) => (
                       <div
                         key={a.id}
