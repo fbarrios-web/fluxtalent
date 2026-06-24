@@ -65,7 +65,9 @@ function SchedulePage() {
       const when = new Intl.DateTimeFormat("es-AR", {
         timeZone: data.timezone, dateStyle: "full", timeStyle: "short",
       }).format(new Date(slot.start_at));
+      if (json.emailWarning) toast.warning(json.emailWarning);
       setConfirmed({ meetLink: json.meetLink, when });
+
     } catch (e: any) {
       toast.error(e.message || "No se pudo reservar");
       await load();

@@ -93,41 +93,53 @@ export const Route = createFileRoute("/api/public/schedule/book")({
             logoUrl: org.logo_url,
             signatureHtml: org.signature_html,
           };
+          let emailWarning: string | null = null;
           if (event.meetLink) {
-            await sendGmail({
-              accessToken: access_token,
-              fromName: brand.consultancyName,
-              fromEmail: recruiter.google_email,
-              to: app.email,
-              subject: `Confirmación de entrevista — ${vac.title}`,
-              html: interviewConfirmCandidateHtml({
-                ...brand,
-                firstName: app.first_name || "",
-                vacancyTitle: vac.title,
-                whenLabel,
-                meetLink: event.meetLink,
-              }),
-              replyTo: brand.contactEmail || undefined,
-            }).catch(() => {});
+            try {
+              await sendGmail({
+                accessToken: access_token,
+                fromName: brand.consultancyName,
+                fromEmail: recruiter.google_email,
+                to: app.email,
+                subject: `Confirmación de entrevista — ${vac.title}`,
+                html: interviewConfirmCandidateHtml({
+                  ...brand,
+                  firstName: app.first_name || "",
+                  vacancyTitle: vac.title,
+                  whenLabel,
+                  meetLink: event.meetLink,
+                }),
+                replyTo: brand.contactEmail || undefined,
+              });
 
-            await sendGmail({
-              accessToken: access_token,
-              fromName: brand.consultancyName,
-              fromEmail: recruiter.google_email,
-              to: recruiter.google_email,
-              subject: `Nueva entrevista agendada — ${candidateName}`,
-              html: interviewConfirmRecruiterHtml({
-                ...brand,
-                candidateName,
-                candidateEmail: app.email,
-                vacancyTitle: vac.title,
-                whenLabel,
-                meetLink: event.meetLink,
-              }),
-            }).catch(() => {});
+              await sendGmail({
+                accessToken: access_token,
+                fromName: brand.consultancyName,
+                fromEmail: recruiter.google_email,
+                to: recruiter.google_email,
+                subject: `Nueva entrevista agendada — ${candidateName}`,
+                html: interviewConfirmRecruiterHtml({
+                  ...brand,
+                  candidateName,
+                  candidateEmail: app.email,
+                  vacancyTitle: vac.title,
+                  whenLabel,
+                  meetLink: event.meetLink,
+                }),
+              });
+            } catch (mailErr: any) {
+              const msg = mailErr?.message ?? String(mailErr);
+              console.error("[schedule.book] Gmail send failed:", msg);
+              emailWarning = /insufficient.*scope|invalid_scope|ACCESS_TOKEN_SCOPE_INSUFFICIENT/i.test(msg)
+                ? "El reclutador debe reconectar Google para autorizar el envío de mails (permiso gmail.send)."
+                : /SERVICE_DISABLED|has not been used|Gmail API has not been/i.test(msg)
+                  ? "Gmail API no está habilitada en el proyecto de Google del reclutador."
+                  : `No se pudo enviar el mail de confirmación: ${msg}`;
+            }
           }
 
-          return Response.json({ ok: true, meetLink: event.meetLink });
+          return Response.json({ ok: true, meetLink: event.meetLink, emailWarning });
+
         } catch (e: any) {
           // Roll back
           await supabaseAdmin.from("availability_slots").update({ status: "open" }).eq("id", parsed.data.slotId);

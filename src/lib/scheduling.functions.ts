@@ -192,13 +192,28 @@ export const getGoogleStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data } = await context.supabase.from("profiles")
-      .select("google_email, google_connected_at").eq("id", context.userId).maybeSingle();
-    return {
+      .select("google_email, google_connected_at, google_refresh_token").eq("id", context.userId).maybeSingle();
+    const base = {
       connected: !!data?.google_email,
       email: data?.google_email ?? null,
       connectedAt: data?.google_connected_at ?? null,
+      hasGmailScope: false as boolean,
+      hasCalendarScope: false as boolean,
+      scopeCheckError: null as string | null,
     };
+    if (!data?.google_refresh_token) return base;
+    try {
+      const { refreshAccessToken, getTokenScopes } = await import("@/lib/google.server");
+      const { access_token } = await refreshAccessToken(data.google_refresh_token);
+      const scopes = await getTokenScopes(access_token);
+      base.hasGmailScope = scopes.includes("https://www.googleapis.com/auth/gmail.send");
+      base.hasCalendarScope = scopes.includes("https://www.googleapis.com/auth/calendar.events");
+    } catch (e: any) {
+      base.scopeCheckError = e?.message ?? String(e);
+    }
+    return base;
   });
+
 
 // ---------- Org branding ----------
 

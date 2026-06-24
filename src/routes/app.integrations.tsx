@@ -102,8 +102,22 @@ export function IntegrationsPanel() {
                 <Check className="h-4 w-4 text-green-600" />
                 Conectado como <strong>{data.email}</strong>
               </div>
+              {(!data.hasGmailScope || !data.hasCalendarScope) && (
+                <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive space-y-2">
+                  <div className="flex items-center gap-2 font-medium">
+                    <AlertCircle className="h-3 w-3" />
+                    Permisos incompletos. Reconectá Google para autorizar:
+                  </div>
+                  <ul className="list-disc pl-5">
+                    {!data.hasCalendarScope && <li>Crear eventos en Calendar</li>}
+                    {!data.hasGmailScope && <li>Enviar mails desde tu cuenta (gmail.send)</li>}
+                  </ul>
+                  <Button size="sm" onClick={connect}>Reconectar Google</Button>
+                </div>
+              )}
               <Button variant="outline" size="sm" onClick={onDisconnect}>Desconectar</Button>
             </div>
+
           ) : (
             <div className="mt-4">
               <Button onClick={connect}>Conectar Google</Button>

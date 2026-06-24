@@ -111,8 +111,16 @@ export async function refreshAccessToken(refreshToken: string) {
     body,
   });
   if (!res.ok) throw new Error(`Google refresh falló: ${await res.text()}`);
-  return (await res.json()) as { access_token: string; expires_in: number };
+  return (await res.json()) as { access_token: string; expires_in: number; scope?: string };
 }
+
+export async function getTokenScopes(accessToken: string): Promise<string[]> {
+  const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`);
+  if (!res.ok) return [];
+  const j = (await res.json()) as { scope?: string };
+  return (j.scope || "").split(/\s+/).filter(Boolean);
+}
+
 
 export async function getUserInfo(accessToken: string) {
   const res = await fetch(USERINFO_URL, { headers: { Authorization: `Bearer ${accessToken}` } });
