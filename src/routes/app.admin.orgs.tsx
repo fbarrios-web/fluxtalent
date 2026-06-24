@@ -117,7 +117,10 @@ function AdminOrgs() {
                       </div>
                     ) : "—"}
                   </td>
-                  <td className="px-4 py-3">ARS {Number(o.plan_price_ars).toLocaleString("es-AR")}</td>
+                  <td className="px-4 py-3">
+                    <div className="font-medium">{o.subscription_status === "trialing" ? "Free (trial)" : planByPrice(o.plan_price_ars).name}</div>
+                    <div className="text-xs text-muted-foreground">ARS {Number(o.plan_price_ars).toLocaleString("es-AR")}/mes</div>
+                  </td>
                   <td className="px-4 py-3 text-xs">{o.last_payment_at ? new Date(o.last_payment_at).toLocaleDateString("es-AR") : "—"}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
