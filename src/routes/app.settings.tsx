@@ -124,7 +124,6 @@ function Settings() {
 
   function validateOrg() {
     const errs: Record<string, string> = {};
-    if (!name.trim()) errs.name = "El nombre legal es obligatorio";
     if (!consultancyName.trim()) errs.consultancyName = "El nombre comercial es obligatorio";
     if (!contactEmail.trim()) errs.contactEmail = "El mail de contacto es obligatorio";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) errs.contactEmail = "Ingresá un email válido";
@@ -147,7 +146,6 @@ function Settings() {
     setSaving(true);
     try {
       const patch: Record<string, unknown> = {
-        name: name || org.name,
         consultancy_name: consultancyName || null,
         contact_email: contactEmail || null,
         brand_color: brandColor || "#0F766E",
