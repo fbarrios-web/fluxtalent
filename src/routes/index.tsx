@@ -135,6 +135,81 @@ function Landing() {
         </div>
       </section>
 
+      <section id="ai" className="border-t border-border bg-gradient-to-b from-background via-primary/5 to-background py-20">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="mx-auto max-w-2xl text-center">
+            <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground">
+              <Brain className="h-3.5 w-3.5 text-primary" /> Inteligencia Artificial integrada
+            </div>
+            <h2 className="font-display text-4xl md:text-5xl">La IA que trabaja por vos,<br/>desde el primer CV hasta la decisión.</h2>
+            <p className="mt-4 text-muted-foreground">
+              No es un chatbot. Es un motor de decisión que lee, evalúa, pregunta y recomienda — para que vos solo cierres el mejor talento.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[
+              {
+                icon: Brain,
+                title: "Matching inteligente",
+                headline: "Score real, no palabras clave.",
+                desc: "La IA compara cada candidato contra la vacante en 4 dimensiones: experiencia, formación, skills y competencias. Obtené un score general y un desglose por categoría. El ranking se actualiza solo.",
+                highlight: "Auto-rechazo configurable por umbral de match.",
+              },
+              {
+                icon: FileText,
+                title: "Parsing automático de CVs",
+                headline: "Leé CVs sin abrirlos.",
+                desc: "Sube PDF, DOC o DOCX y la IA extrae experiencia, educación y skills en segundos. Construye un perfil estructurado de cada postulante sin intervención manual.",
+                highlight: "Soporta español, inglés y portugués.",
+              },
+              {
+                icon: MessageSquareText,
+                title: "Preguntas para entrevistas",
+                headline: "Entrevistá con inteligencia.",
+                desc: "La IA genera 7 preguntas personalizadas por candidato y etapa, basadas en sus gaps detectados y sus fortalezas. Cada pregunta incluye el objetivo detrás.",
+                highlight: "Foco en validar riesgos y profundizar aciertos.",
+              },
+              {
+                icon: Mic,
+                title: "Análisis de entrevistas",
+                headline: "Convertí una conversación en decisión.",
+                desc: "Subí la transcripción y la IA evalúa alineación con la vacante, cita evidencia textual, detecta riesgos y recomienda: avanzar, stand by o descartar — con próximos pasos claros.",
+                highlight: "Informe ejecutivo exportable en Word.",
+              },
+              {
+                icon: PenTool,
+                title: "Redacción con IA",
+                headline: "Escribí menos, cerrá más.",
+                desc: "La IA redacta descripciones de vacantes profesionales sin sesgos, emails de rechazo cálidos, invitaciones a entrevista y seguimientos — con el tono y la marca de tu empresa.",
+                highlight: "Vacantes, emails y follow-ups en segundos.",
+              },
+              {
+                icon: Zap,
+                title: "Imágenes para publicaciones",
+                headline: "Publicá con diseño propio.",
+                desc: "Generá imágenes premium y minimalistas para cada vacante, listas para LinkedIn, Instagram Stories y posts cuadrados. Fondos claros, espacio para texto y sin marca de agua.",
+                highlight: "Formatos cuadrado, horizontal y story.",
+              },
+            ].map((card) => (
+              <div key={card.title} className="group relative rounded-2xl border border-border bg-card p-6 transition hover:border-primary/40 hover:shadow-lg">
+                <div className="flex items-center gap-3">
+                  <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                    <card.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <h3 className="text-base font-semibold">{card.title}</h3>
+                </div>
+                <p className="mt-3 text-lg font-semibold text-foreground">{card.headline}</p>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{card.desc}</p>
+                <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                  <TrendingUp className="h-3 w-3" /> {card.highlight}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section id="planes" className="border-t border-border py-20">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mx-auto max-w-2xl text-center">
