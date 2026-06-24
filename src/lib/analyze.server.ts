@@ -22,7 +22,10 @@ export async function runAnalysisAdmin(supabaseAdmin: any, applicationId: string
 
   try {
     let userContent: any;
-    const prompt = `Evaluá este candidato contra la vacante.
+    const today = new Date().toISOString().slice(0, 10);
+    const prompt = `Fecha actual: ${today}. Usá esta fecha como referencia: una fecha es "futura" solo si es POSTERIOR a ${today}. No marques como red flag fechas anteriores o iguales a la fecha actual.
+
+Evaluá este candidato contra la vacante.
 
 VACANTE
 - Título: ${app.vacancy.title}
