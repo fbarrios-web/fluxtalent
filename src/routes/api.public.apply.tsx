@@ -55,19 +55,37 @@ export const Route = createFileRoute("/api/public/apply")({
             return Response.json({ error: "Ya te postulaste a esta vacante con este email." }, { status: 409, headers: cors });
           }
 
+          const ALLOWED_CV_EXTS = new Set(["pdf", "doc", "docx", "odt", "rtf"]);
+          const ALLOWED_CV_MIMES = new Set([
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.oasis.opendocument.text",
+            "application/rtf",
+            "text/rtf",
+          ]);
           let cv_url: string | null = null;
           if (cv && cv.size > 0) {
             if (cv.size > 10 * 1024 * 1024) {
               return Response.json({ error: "CV mayor a 10MB" }, { status: 400, headers: cors });
             }
             const ext = (cv.name.split(".").pop() || "pdf").toLowerCase();
+            if (!ALLOWED_CV_EXTS.has(ext)) {
+              return Response.json({ error: "Tipo de archivo no soportado. Usá PDF o Word." }, { status: 400, headers: cors });
+            }
+            if (cv.type && !ALLOWED_CV_MIMES.has(cv.type)) {
+              return Response.json({ error: "Tipo de archivo no soportado. Usá PDF o Word." }, { status: 400, headers: cors });
+            }
             const path = `${vac.org_id}/${vac.id}/${crypto.randomUUID()}.${ext}`;
             const buf = new Uint8Array(await cv.arrayBuffer());
             const { error: upErr } = await supabaseAdmin.storage.from("cvs").upload(path, buf, {
               contentType: cv.type || "application/pdf",
               upsert: false,
             });
-            if (upErr) return Response.json({ error: "Error al subir CV" }, { status: 500, headers: cors });
+            if (upErr) {
+              console.error("[apply] cv upload", upErr);
+              return Response.json({ error: "Error al subir CV" }, { status: 500, headers: cors });
+            }
             cv_url = path;
           }
 
@@ -107,22 +125,28 @@ export const Route = createFileRoute("/api/public/apply")({
             })
             .select("id")
             .single();
-          if (insErr) return Response.json({ error: insErr.message }, { status: 500, headers: cors });
+          if (insErr) {
+            console.error("[apply] insert", insErr);
+            return Response.json({ error: "Error al procesar la postulación. Intentá de nuevo." }, { status: 500, headers: cors });
+          }
 
           // Fire-and-forget AI analysis so the form responds immediately.
           if (analyzeAi) {
             const origin = process.env.PUBLIC_APP_URL || new URL(request.url).origin;
-            const secret = process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 8);
-            void fetch(`${origin}/api/public/analyze`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ applicationId: appRow.id, secret }),
-            }).catch(() => {});
+            const secret = process.env.INTERNAL_ANALYZE_SECRET;
+            if (secret) {
+              void fetch(`${origin}/api/public/analyze`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ applicationId: appRow.id, secret }),
+              }).catch(() => {});
+            }
           }
 
           return Response.json({ ok: true, id: appRow.id }, { headers: cors });
         } catch (e: any) {
-          return Response.json({ error: e.message ?? "error" }, { status: 500, headers: cors });
+          console.error("[apply]", e);
+          return Response.json({ error: "Error al procesar la postulación. Intentá de nuevo." }, { status: 500, headers: cors });
         }
       },
     },
