@@ -83,8 +83,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "FLUX Talent" },
       { name: "twitter:description", content: "Reclutamiento moderno con automatización inteligente y matching por IA." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4e4614e9-fde5-4351-a7d9-e3f3fa7b9c21/id-preview-e53778cb--f6700845-18a2-42a5-b8fb-c9d0dd25ca9a.lovable.app-1781580881456.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4e4614e9-fde5-4351-a7d9-e3f3fa7b9c21/id-preview-e53778cb--f6700845-18a2-42a5-b8fb-c9d0dd25ca9a.lovable.app-1781580881456.png" },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d5f4e506-f53a-42f0-981b-76d260bca3b3/id-preview-169a11a5--f6700845-18a2-42a5-b8fb-c9d0dd25ca9a.lovable.app-1782318172753.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d5f4e506-f53a-42f0-981b-76d260bca3b3/id-preview-169a11a5--f6700845-18a2-42a5-b8fb-c9d0dd25ca9a.lovable.app-1782318172753.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
