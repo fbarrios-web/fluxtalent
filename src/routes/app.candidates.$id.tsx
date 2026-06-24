@@ -17,7 +17,7 @@ import { MatchPill } from "./app.dashboard";
 const STAGES = ["received", "interview_1", "interview_2", "interview_3", "hired", "rejected"];
 
 const STAGE_LABEL: Record<string, string> = {
-  received: "Recibido", interview_1: "Entrevista 1", interview_2: "Entrevista 2",
+  received: "Recibidos", interview_1: "Entrevista 1", interview_2: "Entrevista 2",
   interview_3: "Entrevista 3", hired: "Contratado", rejected: "Descartado",
 };
 function eventLabel(e: any): string {
@@ -320,7 +320,7 @@ function CandidateDetail() {
             <h4 className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Etapa</h4>
             <Select value={app.stage} onValueChange={setStage}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{STAGES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              <SelectContent>{STAGES.map(s => <SelectItem key={s} value={s}>{STAGE_LABEL[s]}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="rounded-2xl border border-border bg-card p-4">
