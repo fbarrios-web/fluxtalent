@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { FluxLogo } from "@/components/flux-logo";
 
 
@@ -29,6 +29,28 @@ function AuthPage() {
   const [dni, setDni] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setForgotLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Te enviamos un email para recuperar tu contraseña.");
+      setForgotOpen(false);
+      setForgotEmail("");
+    } catch (err: any) {
+      toast.error(err.message ?? "No se pudo enviar el email");
+    } finally {
+      setForgotLoading(false);
+    }
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -147,8 +169,26 @@ function AuthPage() {
               <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
             <div>
-              <Label htmlFor="password">Contraseña</Label>
-              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} />
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Contraseña</Label>
+                {mode === "signin" && (
+                  <button type="button" onClick={() => { setForgotEmail(email); setForgotOpen(true); }} className="text-xs font-medium text-primary hover:underline">
+                    ¿Olvidaste tu contraseña?
+                  </button>
+                )}
+              </div>
+              <div className="relative">
+                <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} required minLength={8} className="pr-10" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -164,6 +204,26 @@ function AuthPage() {
           </p>
         </div>
       </div>
+
+      {forgotOpen && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={() => !forgotLoading && setForgotOpen(false)}>
+          <form onClick={e => e.stopPropagation()} onSubmit={handleForgotPassword} className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-lg">
+            <h2 className="font-display text-2xl">Recuperar contraseña</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Te enviaremos un email con un enlace para restablecerla.</p>
+            <div className="mt-4">
+              <Label htmlFor="forgot-email">Email</Label>
+              <Input id="forgot-email" type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} required autoFocus />
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button type="button" variant="ghost" onClick={() => setForgotOpen(false)} disabled={forgotLoading}>Cancelar</Button>
+              <Button type="submit" disabled={forgotLoading || !forgotEmail}>
+                {forgotLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Enviar email
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
