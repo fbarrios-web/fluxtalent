@@ -781,6 +781,7 @@ function BulkUploadDialog({ vacancyId, onDone }: { vacancyId: string; onDone: ()
     if (!files.length) return;
     setRunning(true);
     setResults([]);
+    const collected: Array<{ name: string; ok: boolean; message: string }> = [];
     for (const f of files) {
       try {
         if (f.size > 10 * 1024 * 1024) throw new Error("CV mayor a 10MB");
@@ -789,14 +790,25 @@ function BulkUploadDialog({ vacancyId, onDone }: { vacancyId: string; onDone: ()
           vacancy_id: vacancyId, cv_base64: b64,
           cv_filename: f.name, cv_mime: f.type || "application/pdf",
         }});
-        setResults(prev => [...prev, { name: f.name, ok: true, message: `${r.first_name} ${r.last_name} · ${r.email}` }]);
+        collected.push({ name: f.name, ok: true, message: `${r.first_name} ${r.last_name} · ${r.email}` });
       } catch (e: any) {
-        setResults(prev => [...prev, { name: f.name, ok: false, message: e?.message ?? "Error" }]);
+        collected.push({ name: f.name, ok: false, message: e?.message ?? "Error" });
       }
+      setResults([...collected]);
     }
     setRunning(false);
     onDone();
+    const okCount = collected.filter(r => r.ok).length;
+    const failCount = collected.length - okCount;
+    if (failCount === 0) {
+      toast.success(`${okCount} CV(s) procesados correctamente. La IA está analizando en segundo plano.`);
+      setOpen(false);
+      reset();
+    } else {
+      toast.warning(`${okCount} procesados, ${failCount} con errores. Revisá el detalle.`);
+    }
   }
+
 
   function reset() {
     setFiles([]);
