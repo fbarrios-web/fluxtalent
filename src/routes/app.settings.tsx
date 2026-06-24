@@ -214,11 +214,6 @@ function Settings() {
             <p className="text-sm text-muted-foreground">Estos datos aparecen en los mails que recibe el postulante.</p>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-1">
-                <Label>Nombre legal <span className="text-destructive">*</span></Label>
-                <Input value={name} onChange={e => { setName(e.target.value); setErrors(p => ({ ...p, name: "" })); }} placeholder="Acme S.A." className={errors.name ? "border-destructive ring-1 ring-destructive" : ""} />
-                {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
-              </div>
-              <div className="space-y-1">
                 <Label>Nombre comercial / consultora <span className="text-destructive">*</span></Label>
                 <Input value={consultancyName} onChange={e => { setConsultancyName(e.target.value); setErrors(p => ({ ...p, consultancyName: "" })); }} placeholder="Aparece en el remitente del mail" className={errors.consultancyName ? "border-destructive ring-1 ring-destructive" : ""} />
                 {errors.consultancyName && <p className="text-xs text-destructive">{errors.consultancyName}</p>}
