@@ -157,9 +157,39 @@ function SubscriptionPage() {
             })()
           )}
           {isActive && (
-            <Button onClick={() => cancelMut.mutate()} disabled={cancelMut.isPending} variant="outline">
-              <X className="mr-2 h-4 w-4" /> Cancelar suscripción
-            </Button>
+            <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="text-destructive hover:text-destructive">
+                  <X className="mr-2 h-4 w-4" /> Cancelar suscripción
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-destructive" />
+                    Cancelar suscripción
+                  </DialogTitle>
+                  <DialogDescription asChild>
+                    <div className="space-y-2 pt-2 text-sm">
+                      <p>Al cancelar:</p>
+                      <ul className="list-disc space-y-1 pl-5">
+                        <li>Se da de baja tu suscripción en Mercado Pago y no se generarán nuevos cobros.</li>
+                        <li>Las funcionalidades del sistema (vacantes, análisis de CVs con IA, entrevistas) quedarán deshabilitadas de inmediato.</li>
+                        <li>El estado de tu organización pasará a "Cancelada" en el panel de administración.</li>
+                        <li>Tus datos se conservan: si te volvés a suscribir, recuperás todo.</li>
+                      </ul>
+                    </div>
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button variant="ghost" onClick={() => setCancelOpen(false)} disabled={cancelMut.isPending}>Volver</Button>
+                  <Button variant="destructive" onClick={() => cancelMut.mutate()} disabled={cancelMut.isPending}>
+                    {cancelMut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Sí, cancelar suscripción
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           )}
         </div>
       </div>
