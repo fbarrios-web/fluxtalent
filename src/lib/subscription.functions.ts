@@ -141,6 +141,34 @@ export const createPreapproval = createServerFn({ method: "POST" })
     return { init_point: json.init_point as string, id: json.id as string };
   });
 
+/**
+ * Inicia el checkout de un plan de Mercado Pago (no-code "Planes de suscripción").
+ * MP cobra el monto recurrente; el webhook activa la org cuando paga.
+ */
+export const startPlanCheckout = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ planId: z.enum(["starter", "pro", "enterprise"]) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const baseUrl = MP_PLAN_LINKS[data.planId as PlanId];
+    if (!baseUrl) throw new Error("Plan sin link de Mercado Pago configurado.");
+
+    const orgId = await getOrCreateOrgId(supabase, userId);
+    const plan = PLANS.find(p => p.id === data.planId);
+    if (!plan) throw new Error("Plan inválido.");
+
+    // El trigger bloquea cambios a plan_price_ars salvo admin; usamos service role.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin
+      .from("organizations")
+      .update({ plan_price_ars: plan.priceArs })
+      .eq("id", orgId);
+
+    const sep = baseUrl.includes("?") ? "&" : "?";
+    return { url: `${baseUrl}${sep}external_reference=${encodeURIComponent(orgId)}` };
+  });
+
 export const cancelSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
