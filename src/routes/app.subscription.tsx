@@ -245,14 +245,26 @@ function SubscriptionPage() {
               <tr><th className="py-2">Fecha</th><th>Monto</th><th>Método</th><th>Estado</th></tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {history.map((p: any) => (
-                <tr key={p.id}>
-                  <td className="py-2">{new Date(p.paid_at ?? p.created_at).toLocaleDateString("es-AR")}</td>
-                  <td>{formatArs(Number(p.amount_ars))}</td>
-                  <td className="capitalize">{p.provider}</td>
-                  <td><span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">{p.status}</span></td>
-                </tr>
-              ))}
+              {history.map((p: any) => {
+                const providerLabel = p.provider === "mercadopago" ? "Mercado Pago" : p.provider === "manual" ? "Manual" : p.provider;
+                const statusMap: Record<string, { label: string; cls: string }> = {
+                  approved: { label: "Aprobado", cls: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
+                  pending: { label: "Pendiente", cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+                  in_process: { label: "En proceso", cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+                  rejected: { label: "Rechazado", cls: "bg-destructive/10 text-destructive" },
+                  cancelled: { label: "Cancelado", cls: "bg-muted text-muted-foreground" },
+                  refunded: { label: "Reembolsado", cls: "bg-muted text-muted-foreground" },
+                };
+                const st = statusMap[p.status] ?? { label: p.status, cls: "bg-primary/10 text-primary" };
+                return (
+                  <tr key={p.id}>
+                    <td className="py-2">{new Date(p.paid_at ?? p.created_at).toLocaleDateString("es-AR")}</td>
+                    <td>{formatArs(Number(p.amount_ars))}</td>
+                    <td>{providerLabel}</td>
+                    <td><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${st.cls}`}>{st.label}</span></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
