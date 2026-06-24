@@ -42,11 +42,8 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        // Anti-abuse: verify identity isn't already registered (one free account per identity).
-        const check = await checkIdentity({ data: { dni: dni.trim(), full_name: fullName.trim(), birth_date: birthDate } });
-        if (!check.available) {
-          throw new Error("Ya existe una cuenta con esos datos. Iniciá sesión con tu cuenta original.");
-        }
+        // Anti-abuse: identity uniqueness is enforced by saveIdentity (DB unique constraint)
+        // after the session exists. We avoid pre-checking pre-signup to prevent enumeration.
         const { error } = await supabase.auth.signUp({
           email, password,
           options: {

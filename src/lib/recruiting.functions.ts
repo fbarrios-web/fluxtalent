@@ -435,12 +435,14 @@ export const bulkCreateApplicationFromCv = createServerFn({ method: "POST" })
     if (analyzeAi) {
       try {
         const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
-        const secret = process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 8);
-        void fetch(`${origin}/api/public/analyze`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ applicationId: appRow.id, secret }),
-        }).catch(() => {});
+        const secret = process.env.INTERNAL_ANALYZE_SECRET;
+        if (secret) {
+          void fetch(`${origin}/api/public/analyze`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ applicationId: appRow.id, secret }),
+          }).catch(() => {});
+        }
       } catch { /* ignore */ }
     }
     return { id: appRow.id, first_name, last_name, email };
