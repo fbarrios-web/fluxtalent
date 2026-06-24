@@ -238,16 +238,19 @@ export const getSignedCvUrl = createServerFn({ method: "POST" })
     return { url: signed.signedUrl };
   });
 
+// Authenticated-only: avoids letting anonymous callers enumerate whether a
+// given DNI/name/birthdate triplet belongs to a registered user.
+// Pre-signup uniqueness is still enforced by saveIdentity (unique constraint).
 export const checkIdentityAvailable = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z.object({
       dni: z.string().trim().min(6).max(20),
       full_name: z.string().trim().min(3).max(120),
       birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     }).parse(input))
-  .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: exists, error } = await supabaseAdmin.rpc("identity_exists", {
+  .handler(async ({ data, context }) => {
+    const { data: exists, error } = await context.supabase.rpc("identity_exists", {
       _dni: data.dni, _full_name: data.full_name, _birth_date: data.birth_date,
     });
     if (error) throw error;
@@ -336,12 +339,14 @@ export const manualCreateApplication = createServerFn({ method: "POST" })
       // The candidate page shows ai_status and a manual "Re-analizar" button as fallback.
       try {
         const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
-        const secret = process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 8);
-        void fetch(`${origin}/api/public/analyze`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ applicationId: appRow.id, secret }),
-        }).catch(() => {});
+        const secret = process.env.INTERNAL_ANALYZE_SECRET;
+        if (secret) {
+          void fetch(`${origin}/api/public/analyze`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ applicationId: appRow.id, secret }),
+          }).catch(() => {});
+        }
       } catch { /* ignore */ }
     }
     return { id: appRow.id };
@@ -430,12 +435,14 @@ export const bulkCreateApplicationFromCv = createServerFn({ method: "POST" })
     if (analyzeAi) {
       try {
         const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
-        const secret = process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 8);
-        void fetch(`${origin}/api/public/analyze`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ applicationId: appRow.id, secret }),
-        }).catch(() => {});
+        const secret = process.env.INTERNAL_ANALYZE_SECRET;
+        if (secret) {
+          void fetch(`${origin}/api/public/analyze`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ applicationId: appRow.id, secret }),
+          }).catch(() => {});
+        }
       } catch { /* ignore */ }
     }
     return { id: appRow.id, first_name, last_name, email };

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import { checkIdentityAvailable, saveIdentity } from "@/lib/recruiting.functions";
+import { saveIdentity } from "@/lib/recruiting.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,7 +19,6 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const nav = useNavigate();
-  const checkIdentity = useServerFn(checkIdentityAvailable);
   const saveId = useServerFn(saveIdentity);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
@@ -42,11 +41,8 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        // Anti-abuse: verify identity isn't already registered (one free account per identity).
-        const check = await checkIdentity({ data: { dni: dni.trim(), full_name: fullName.trim(), birth_date: birthDate } });
-        if (!check.available) {
-          throw new Error("Ya existe una cuenta con esos datos. Iniciá sesión con tu cuenta original.");
-        }
+        // Anti-abuse: identity uniqueness is enforced by saveIdentity (DB unique constraint)
+        // after the session exists. We avoid pre-checking pre-signup to prevent enumeration.
         const { error } = await supabase.auth.signUp({
           email, password,
           options: {
