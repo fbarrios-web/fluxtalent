@@ -105,12 +105,10 @@ export const Route = createFileRoute("/api/public/apply")({
             }
           }
 
-          // Plan limit: don't run AI when monthly CV quota is exceeded
-          let analyzeAi = !!cv_url && !autoDiscard;
-          if (analyzeAi) {
-            const { canAnalyzeMoreCvs } = await import("@/lib/plan-limits");
-            analyzeAi = await canAnalyzeMoreCvs(supabaseAdmin, vac.org_id);
-          }
+          // Always analyze any uploaded CV so the recruiter sees match score
+          // and AI summary even on auto-discarded / rejected candidates and
+          // regardless of monthly plan limits. The queue processes everything.
+          const analyzeAi = !!cv_url;
 
           const { data: appRow, error: insErr } = await supabaseAdmin
             .from("applications")
@@ -120,7 +118,7 @@ export const Route = createFileRoute("/api/public/apply")({
               first_name, last_name, email, phone, linkedin,
               cv_url,
               screening_answers: answers,
-              ai_status: autoDiscard ? "skipped" : (analyzeAi ? "pending" : "skipped"),
+              ai_status: analyzeAi ? "pending" : "skipped",
               stage: autoDiscard ? ("rejected" as any) : undefined,
             })
             .select("id")

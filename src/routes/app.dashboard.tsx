@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { Briefcase, Users, Sparkles, TrendingUp, Plus, Clock, FileText } from "lucide-react";
+import { Briefcase, Users, Sparkles, TrendingUp, Plus, Clock, FileText, Loader2 } from "lucide-react";
 import { getMySubscription } from "@/lib/subscription.functions";
 import { planByPrice, formatLimit } from "@/lib/plans";
 
@@ -188,8 +188,12 @@ function StatusPill({ status }: { status: string }) {
   };
   return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${cls[status] ?? "bg-muted"}`}>{status}</span>;
 }
-export function MatchPill({ score, minMatch }: { score: number | null; minMatch?: number | null }) {
-  if (score == null) return <span className="text-xs text-muted-foreground">analizando…</span>;
+export function MatchPill({ score, minMatch, aiStatus }: { score: number | null; minMatch?: number | null; aiStatus?: string | null }) {
+  if (score == null) {
+    if (aiStatus === "error") return <span className="text-xs text-destructive">error de análisis</span>;
+    if (aiStatus === "skipped") return <span className="text-xs text-muted-foreground">sin CV</span>;
+    return <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> analizando…</span>;
+  }
   const min = minMatch ?? 60;
   const high = Math.min(95, Math.max(min + 20, 80));
   const c =

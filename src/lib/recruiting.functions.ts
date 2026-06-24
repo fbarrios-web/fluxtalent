@@ -314,12 +314,8 @@ export const manualCreateApplication = createServerFn({ method: "POST" })
       cv_url = path;
     }
 
-    // Plan limit: skip AI analysis if monthly CV cap reached
-    let analyzeAi = !!cv_url;
-    if (cv_url) {
-      const { canAnalyzeMoreCvs } = await import("@/lib/plan-limits");
-      analyzeAi = await canAnalyzeMoreCvs(supabase, vac.org_id);
-    }
+    // Always analyze any uploaded CV — the queue worker is the safety net.
+    const analyzeAi = !!cv_url;
 
     const { data: appRow, error } = await supabase.from("applications").insert({
       vacancy_id: vac.id, org_id: vac.org_id,
@@ -331,7 +327,7 @@ export const manualCreateApplication = createServerFn({ method: "POST" })
     if (error) throw error;
 
     await supabase.from("application_events").insert({
-      application_id: appRow.id, actor_id: userId, type: "manual_created", payload: { ai_skipped_by_plan: cv_url && !analyzeAi },
+      application_id: appRow.id, actor_id: userId, type: "manual_created", payload: {},
     });
 
     // Best-effort low-latency kick (may be cancelled by Workers when the
@@ -421,19 +417,18 @@ export const bulkCreateApplicationFromCv = createServerFn({ method: "POST" })
     });
     if (upErr) throw new Error("Error al subir CV: " + upErr.message);
 
-    const { canAnalyzeMoreCvs } = await import("@/lib/plan-limits");
-    const analyzeAi = await canAnalyzeMoreCvs(supabase, vac.org_id);
+    const analyzeAi = true;
 
     const { data: appRow, error } = await supabase.from("applications").insert({
       vacancy_id: vac.id, org_id: vac.org_id,
       first_name, last_name, email,
       cv_url: path, source: "manual",
-      ai_status: analyzeAi ? "pending" : "skipped",
+      ai_status: "pending",
     }).select("id").single();
     if (error) throw error;
 
     await supabase.from("application_events").insert({
-      application_id: appRow.id, actor_id: userId, type: "bulk_uploaded", payload: { filename: data.cv_filename, ai_skipped_by_plan: !analyzeAi },
+      application_id: appRow.id, actor_id: userId, type: "bulk_uploaded", payload: { filename: data.cv_filename },
     });
 
     // Best-effort kick + queue safety net — see manualCreateApplication note above.
