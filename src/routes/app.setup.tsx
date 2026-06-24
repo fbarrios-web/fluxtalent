@@ -55,6 +55,7 @@ function SetupPage() {
       } as any).eq("id", me.user.id);
       if (error) throw error;
       toast.success("Datos guardados");
+      await qc.invalidateQueries({ queryKey: ["profile-setup-check"] });
       setDone(true);
     } catch (e: any) { toast.error(e.message ?? "Error al guardar"); }
     finally { setSaving(false); }
