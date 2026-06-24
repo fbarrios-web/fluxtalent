@@ -86,6 +86,9 @@ export type Database = {
       }
       applications: {
         Row: {
+          ai_attempts: number
+          ai_last_error: string | null
+          ai_next_attempt_at: string | null
           ai_status: string | null
           ai_summary: string | null
           created_at: string
@@ -111,6 +114,9 @@ export type Database = {
           vacancy_id: string
         }
         Insert: {
+          ai_attempts?: number
+          ai_last_error?: string | null
+          ai_next_attempt_at?: string | null
           ai_status?: string | null
           ai_summary?: string | null
           created_at?: string
@@ -136,6 +142,9 @@ export type Database = {
           vacancy_id: string
         }
         Update: {
+          ai_attempts?: number
+          ai_last_error?: string | null
+          ai_next_attempt_at?: string | null
           ai_status?: string | null
           ai_summary?: string | null
           created_at?: string
@@ -913,6 +922,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_pending_ai_analyses: {
+        Args: { _limit?: number; _stale_seconds?: number }
+        Returns: {
+          application_id: string
+        }[]
+      }
       current_org_id: { Args: never; Returns: string }
       get_booking_by_token: { Args: { _token: string }; Returns: Json }
       get_public_vacancy_by_slug: {

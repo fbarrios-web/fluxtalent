@@ -37,6 +37,7 @@ import { Route as ApiPublicApplyRouteImport } from './routes/api.public.apply'
 import { Route as ApiPublicAnalyzeRouteImport } from './routes/api.public.analyze'
 import { Route as ApiPublicScheduleBookRouteImport } from './routes/api.public.schedule.book'
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api.public.mp.webhook'
+import { Route as ApiPublicHooksProcessCvQueueRouteImport } from './routes/api.public.hooks.process-cv-queue'
 import { Route as ApiPublicGoogleCallbackRouteImport } from './routes/api.public.google.callback'
 
 const TrustRoute = TrustRouteImport.update({
@@ -179,6 +180,12 @@ const ApiPublicMpWebhookRoute = ApiPublicMpWebhookRouteImport.update({
   path: '/api/public/mp/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksProcessCvQueueRoute =
+  ApiPublicHooksProcessCvQueueRouteImport.update({
+    id: '/api/public/hooks/process-cv-queue',
+    path: '/api/public/hooks/process-cv-queue',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicGoogleCallbackRoute = ApiPublicGoogleCallbackRouteImport.update({
   id: '/api/public/google/callback',
   path: '/api/public/google/callback',
@@ -213,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/vacancies/': typeof AppVacanciesIndexRoute
   '/api/public/google/callback': typeof ApiPublicGoogleCallbackRoute
+  '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
 }
@@ -242,6 +250,7 @@ export interface FileRoutesByTo {
   '/app/admin': typeof AppAdminIndexRoute
   '/app/vacancies': typeof AppVacanciesIndexRoute
   '/api/public/google/callback': typeof ApiPublicGoogleCallbackRoute
+  '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
 }
@@ -274,6 +283,7 @@ export interface FileRoutesById {
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/vacancies/': typeof AppVacanciesIndexRoute
   '/api/public/google/callback': typeof ApiPublicGoogleCallbackRoute
+  '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
 }
@@ -307,6 +317,7 @@ export interface FileRouteTypes {
     | '/app/admin/'
     | '/app/vacancies/'
     | '/api/public/google/callback'
+    | '/api/public/hooks/process-cv-queue'
     | '/api/public/mp/webhook'
     | '/api/public/schedule/book'
   fileRoutesByTo: FileRoutesByTo
@@ -336,6 +347,7 @@ export interface FileRouteTypes {
     | '/app/admin'
     | '/app/vacancies'
     | '/api/public/google/callback'
+    | '/api/public/hooks/process-cv-queue'
     | '/api/public/mp/webhook'
     | '/api/public/schedule/book'
   id:
@@ -367,6 +379,7 @@ export interface FileRouteTypes {
     | '/app/admin/'
     | '/app/vacancies/'
     | '/api/public/google/callback'
+    | '/api/public/hooks/process-cv-queue'
     | '/api/public/mp/webhook'
     | '/api/public/schedule/book'
   fileRoutesById: FileRoutesById
@@ -381,6 +394,7 @@ export interface RootRouteChildren {
   ApiPublicAnalyzeRoute: typeof ApiPublicAnalyzeRoute
   ApiPublicApplyRoute: typeof ApiPublicApplyRoute
   ApiPublicGoogleCallbackRoute: typeof ApiPublicGoogleCallbackRoute
+  ApiPublicHooksProcessCvQueueRoute: typeof ApiPublicHooksProcessCvQueueRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
   ApiPublicScheduleBookRoute: typeof ApiPublicScheduleBookRoute
 }
@@ -583,6 +597,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMpWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/process-cv-queue': {
+      id: '/api/public/hooks/process-cv-queue'
+      path: '/api/public/hooks/process-cv-queue'
+      fullPath: '/api/public/hooks/process-cv-queue'
+      preLoaderRoute: typeof ApiPublicHooksProcessCvQueueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/google/callback': {
       id: '/api/public/google/callback'
       path: '/api/public/google/callback'
@@ -657,6 +678,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAnalyzeRoute: ApiPublicAnalyzeRoute,
   ApiPublicApplyRoute: ApiPublicApplyRoute,
   ApiPublicGoogleCallbackRoute: ApiPublicGoogleCallbackRoute,
+  ApiPublicHooksProcessCvQueueRoute: ApiPublicHooksProcessCvQueueRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
   ApiPublicScheduleBookRoute: ApiPublicScheduleBookRoute,
 }

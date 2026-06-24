@@ -334,9 +334,11 @@ export const manualCreateApplication = createServerFn({ method: "POST" })
       application_id: appRow.id, actor_id: userId, type: "manual_created", payload: { ai_skipped_by_plan: cv_url && !analyzeAi },
     });
 
+    // Best-effort low-latency kick (may be cancelled by Workers when the
+    // response is sent). Reliable processing is handled by the pg_cron-backed
+    // worker at /api/public/hooks/process-cv-queue (drains every minute with
+    // retries + backoff), so the row never gets stuck "Analizando".
     if (analyzeAi) {
-      // Fire-and-forget AI analysis so the dialog returns immediately.
-      // The candidate page shows ai_status and a manual "Re-analizar" button as fallback.
       try {
         const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
         const secret = process.env.INTERNAL_ANALYZE_SECRET;
@@ -349,6 +351,8 @@ export const manualCreateApplication = createServerFn({ method: "POST" })
         }
       } catch { /* ignore */ }
     }
+
+
     return { id: appRow.id };
   });
 
@@ -432,6 +436,7 @@ export const bulkCreateApplicationFromCv = createServerFn({ method: "POST" })
       application_id: appRow.id, actor_id: userId, type: "bulk_uploaded", payload: { filename: data.cv_filename, ai_skipped_by_plan: !analyzeAi },
     });
 
+    // Best-effort kick + queue safety net — see manualCreateApplication note above.
     if (analyzeAi) {
       try {
         const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
@@ -447,3 +452,4 @@ export const bulkCreateApplicationFromCv = createServerFn({ method: "POST" })
     }
     return { id: appRow.id, first_name, last_name, email };
   });
+

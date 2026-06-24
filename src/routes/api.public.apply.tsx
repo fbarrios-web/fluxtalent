@@ -130,7 +130,12 @@ export const Route = createFileRoute("/api/public/apply")({
             return Response.json({ error: "Error al procesar la postulación. Intentá de nuevo." }, { status: 500, headers: cors });
           }
 
-          // Fire-and-forget AI analysis so the form responds immediately.
+          // Best-effort low-latency kick: dispatch the analysis right away so
+          // ideal-case CVs finish in a few seconds. The handler is cancelled
+          // when the response is sent on Cloudflare Workers, so this is NOT
+          // reliable on its own — the row stays at ai_status='pending' and a
+          // pg_cron-backed worker (/api/public/hooks/process-cv-queue) drains
+          // it within ~1 minute and retries with backoff if anything fails.
           if (analyzeAi) {
             const origin = process.env.PUBLIC_APP_URL || new URL(request.url).origin;
             const secret = process.env.INTERNAL_ANALYZE_SECRET;
@@ -142,6 +147,8 @@ export const Route = createFileRoute("/api/public/apply")({
               }).catch(() => {});
             }
           }
+
+
 
           return Response.json({ ok: true, id: appRow.id }, { headers: cors });
         } catch (e: any) {
