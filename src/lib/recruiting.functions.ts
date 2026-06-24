@@ -334,11 +334,24 @@ export const manualCreateApplication = createServerFn({ method: "POST" })
       application_id: appRow.id, actor_id: userId, type: "manual_created", payload: { ai_skipped_by_plan: cv_url && !analyzeAi },
     });
 
-    // The application is left at ai_status='pending'. A pg_cron-backed worker
-    // (/api/public/hooks/process-cv-queue) drains the queue every minute and
-    // updates the row to 'done'/'error'. Fire-and-forget fetches don't work
-    // reliably on Cloudflare Workers (the request context is destroyed when
-    // the handler returns), so we don't try to kick the worker from here.
+    // Best-effort low-latency kick (may be cancelled by Workers when the
+    // response is sent). Reliable processing is handled by the pg_cron-backed
+    // worker at /api/public/hooks/process-cv-queue (drains every minute with
+    // retries + backoff), so the row never gets stuck "Analizando".
+    if (analyzeAi) {
+      try {
+        const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
+        const secret = process.env.INTERNAL_ANALYZE_SECRET;
+        if (secret) {
+          void fetch(`${origin}/api/public/analyze`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ applicationId: appRow.id, secret }),
+          }).catch(() => {});
+        }
+      } catch { /* ignore */ }
+    }
+
 
     return { id: appRow.id };
   });
