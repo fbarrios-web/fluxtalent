@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ export const Route = createFileRoute("/app/setup")({
 
 function SetupPage() {
   const nav = useNavigate();
+  const qc = useQueryClient();
   const { data: me, isLoading } = useQuery({
     queryKey: ["setup-me"],
     queryFn: async () => {
@@ -54,6 +55,7 @@ function SetupPage() {
       } as any).eq("id", me.user.id);
       if (error) throw error;
       toast.success("Datos guardados");
+      await qc.invalidateQueries({ queryKey: ["profile-setup-check"] });
       setDone(true);
     } catch (e: any) { toast.error(e.message ?? "Error al guardar"); }
     finally { setSaving(false); }
