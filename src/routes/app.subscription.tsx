@@ -20,6 +20,7 @@ export const Route = createFileRoute("/app/subscription")({
 });
 
 function SubscriptionPage() {
+  const [cancelOpen, setCancelOpen] = useState(false);
   const qc = useQueryClient();
   const getSub = useServerFn(getMySubscription);
   const createPre = useServerFn(createPreapproval);
