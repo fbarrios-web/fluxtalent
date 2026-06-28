@@ -54,7 +54,7 @@ function SubscriptionPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["my-subscription"] });
       setCancelOpen(false);
-      toast.success("Suscripción cancelada. Las funcionalidades quedaron deshabilitadas.");
+      toast.success("Suscripción cancelada. Vas a conservar el acceso hasta el final del período pago.");
     },
     onError: (e: any) => toast.error(e?.message ?? "No se pudo cancelar la suscripción"),
   });
