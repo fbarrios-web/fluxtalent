@@ -174,8 +174,8 @@ function SubscriptionPage() {
                       <p>Al cancelar:</p>
                       <ul className="list-disc space-y-1 pl-5">
                         <li>Se da de baja tu suscripción en Mercado Pago y no se generarán nuevos cobros.</li>
-                        <li>Las funcionalidades del sistema (vacantes, análisis de CVs con IA, entrevistas) quedarán deshabilitadas de inmediato.</li>
-                        <li>El estado de tu organización pasará a "Cancelada" en el panel de administración.</li>
+                        <li><strong>Conservás el acceso completo al sistema hasta el final del período ya pago</strong> (por ejemplo: si pagaste el 20/6 y cancelás el 10/7, podés seguir usándolo hasta el 20/7).</li>
+                        <li>Al vencer el período, las funcionalidades (crear vacantes, recibir CVs, análisis con IA) quedan deshabilitadas hasta reactivar la suscripción.</li>
                         <li>Tus datos se conservan: si te volvés a suscribir, recuperás todo.</li>
                       </ul>
                     </div>
