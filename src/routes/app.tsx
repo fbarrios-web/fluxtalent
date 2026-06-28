@@ -167,6 +167,7 @@ function AppLayout() {
           </Link>
         </header>
         <SubscriptionBanner />
+        <SatisfactionSurvey />
         <div className="flex-1"><Outlet /></div>
         <footer className="border-t border-border px-6 py-4 text-center text-xs text-muted-foreground">
           © 2026 FLUX Automatizaciones. Todos los derechos reservados.
