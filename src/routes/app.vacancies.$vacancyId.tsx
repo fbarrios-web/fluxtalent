@@ -88,7 +88,7 @@ function VacancyDetail() {
   async function setStatus(status: "active" | "paused" | "closed" | "draft") {
     await update({ data: { id: v.id, patch: { status } } });
     qc.invalidateQueries({ queryKey: ["vacancy", vacancyId] });
-    toast.success(`Vacante ${status}`);
+    toast.success(status === "active" ? "Vacante activada" : status === "paused" ? "Vacante desactivada" : `Vacante ${status}`);
   }
 
   async function onDrop(appId: string, stage: string) {
@@ -107,12 +107,19 @@ function VacancyDetail() {
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl">{v.title}</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="font-display text-4xl">{v.title}</h1>
+            <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase ${
+              v.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+            }`}>
+              {v.status === "active" ? "Activa" : "Desactivada"}
+            </span>
+          </div>
           <p className="text-muted-foreground">{v.area ?? "—"} · {v.seniority ?? "—"} · {v.modality ?? "—"} · match mínimo {v.min_match}%</p>
         </div>
         <div className="flex items-center gap-2">
           {v.status === "active" ? (
-            <Button variant="outline" onClick={() => setStatus("paused")}>Pausar</Button>
+            <Button variant="outline" onClick={() => setStatus("paused")}>Desactivar</Button>
           ) : (
             <Button variant="outline" onClick={() => setStatus("active")}>Activar</Button>
           )}
