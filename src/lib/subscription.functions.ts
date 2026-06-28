@@ -268,6 +268,7 @@ export const requestInvoiceC = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
+    const SUPPORT_EMAIL = "soporte@fluxtalent.com";
     let emailWarning: string | null = null;
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -297,13 +298,13 @@ export const requestInvoiceC = createServerFn({ method: "POST" })
             accessToken: access_token,
             fromName: adminProfile.display_name || "FLUX Talent",
             fromEmail: adminProfile.google_email,
-            to: adminProfile.google_email,
+            to: SUPPORT_EMAIL,
             subject: `Factura C · ${org?.name ?? "Cliente"}`,
             html,
             replyTo: data.email,
           });
         } else {
-          emailWarning = "Solicitud guardada. El admin debe conectar Gmail para recibir la notificación por email.";
+          emailWarning = "Solicitud guardada. El admin debe conectar Gmail para reenviar la notificación a soporte.";
         }
       }
     } catch (e: any) {
