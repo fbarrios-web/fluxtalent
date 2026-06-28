@@ -84,7 +84,9 @@ function buildSubscriptionSnapshot(org: any) {
           : 0;
     const canWrite =
       (org.subscription_status === "trialing" && trialEnds > now) ||
-      (org.subscription_status === "active" && (!org.current_period_end || periodEnds > now));
+      (org.subscription_status === "active" && (!org.current_period_end || periodEnds > now)) ||
+      // Canceled subs keep access until the paid period ends.
+      (org.subscription_status === "canceled" && org.current_period_end && periodEnds > now);
 
     return { ...org, daysLeft, canWrite };
 }
@@ -190,13 +192,12 @@ export const cancelSubscription = createServerFn({ method: "POST" })
         console.error("[cancelSubscription] MP cancel failed", e);
       }
     }
-    // Use admin client to bypass prevent_org_billing_tamper trigger (non-admin users would be blocked).
+    // Soft cancel: keep `current_period_end` intact so the user retains access
+    // through the end of the paid period (e.g., paid on 20/6 + canceled on 10/7
+    // ⇒ still has access until 20/7). The webhook + canWrite logic handles expiry.
     const { error } = await supabaseAdmin
       .from("organizations")
-      .update({
-        subscription_status: "canceled",
-        current_period_end: new Date().toISOString(),
-      })
+      .update({ subscription_status: "canceled" })
       .eq("id", orgId);
     if (error) throw new Error(error.message);
     await supabaseAdmin.from("activity_events").insert({
