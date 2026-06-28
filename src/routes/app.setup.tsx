@@ -100,6 +100,16 @@ function SetupPage() {
               <Input id="bd" type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} required />
             </div>
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="country">País</Label>
+              <Input id="country" value={country} onChange={e => setCountry(e.target.value)} required placeholder="Argentina" />
+            </div>
+            <div>
+              <Label htmlFor="province">Provincia / Estado</Label>
+              <Input id="province" value={province} onChange={e => setProvince(e.target.value)} required placeholder="Buenos Aires" />
+            </div>
+          </div>
           <Button type="submit" disabled={saving} className="w-full">
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Guardar y continuar
