@@ -84,7 +84,9 @@ function buildSubscriptionSnapshot(org: any) {
           : 0;
     const canWrite =
       (org.subscription_status === "trialing" && trialEnds > now) ||
-      (org.subscription_status === "active" && (!org.current_period_end || periodEnds > now));
+      (org.subscription_status === "active" && (!org.current_period_end || periodEnds > now)) ||
+      // Canceled subs keep access until the paid period ends.
+      (org.subscription_status === "canceled" && org.current_period_end && periodEnds > now);
 
     return { ...org, daysLeft, canWrite };
 }
