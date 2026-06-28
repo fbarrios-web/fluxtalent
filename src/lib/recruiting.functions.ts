@@ -67,9 +67,26 @@ export const createVacancy = createServerFn({ method: "POST" })
       throw new Error("Completá el nombre de la empresa y el email remitente en Configuración antes de crear vacantes.");
     }
 
-    // Plan limit: active vacancies
+    // Plan limit: active vacancies + subscription must be active.
     const { assertCanCreateVacancy } = await import("@/lib/plan-limits");
     await assertCanCreateVacancy(supabase, profile.org_id!);
+    const { data: subOrg } = await supabase
+      .from("organizations")
+      .select("subscription_status, trial_ends_at, current_period_end")
+      .eq("id", profile.org_id!)
+      .maybeSingle();
+    {
+      const now = Date.now();
+      const trialEnds = subOrg?.trial_ends_at ? new Date(subOrg.trial_ends_at).getTime() : 0;
+      const periodEnds = subOrg?.current_period_end ? new Date(subOrg.current_period_end).getTime() : 0;
+      const subActive =
+        (subOrg?.subscription_status === "trialing" && trialEnds > now) ||
+        (subOrg?.subscription_status === "active" && (!subOrg.current_period_end || periodEnds > now)) ||
+        (subOrg?.subscription_status === "canceled" && periodEnds > now);
+      if (!subActive) {
+        throw new Error("Tu suscripción no está activa. Reactivala para crear nuevas vacantes.");
+      }
+    }
 
 
     const { screening, ...rest } = data;
