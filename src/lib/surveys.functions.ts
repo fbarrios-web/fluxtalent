@@ -10,21 +10,20 @@ export const getDueSurvey = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const sb = context.supabase;
-    // Use auth user's created_at as account age reference
-    const createdAt = context.user?.created_at as string | undefined;
-    if (!createdAt) return { dueBucket: null as Bucket | null };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: u } = await supabaseAdmin.auth.admin.getUserById(context.userId);
+    const createdAt = u?.user?.created_at;
+    if (!createdAt) return { dueBucket: null as Bucket | null, ageDays: 0 };
     const ageDays = Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000);
 
-    // Pick the largest bucket the user has reached
     const reached = BUCKETS.filter(b => ageDays >= b);
-    if (reached.length === 0) return { dueBucket: null as Bucket | null };
+    if (reached.length === 0) return { dueBucket: null as Bucket | null, ageDays };
 
     const { data: existing } = await sb
-      .from("satisfaction_surveys")
+      .from("satisfaction_surveys" as any)
       .select("bucket")
       .eq("user_id", context.userId);
     const filled = new Set((existing ?? []).map((r: any) => Number(r.bucket)));
-    // Show the earliest reached, unfilled bucket
     const due = reached.find(b => !filled.has(b)) ?? null;
     return { dueBucket: due as Bucket | null, ageDays };
   });
@@ -37,11 +36,11 @@ const SubmitSchema = z.object({
 
 export const submitSurvey = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d: unknown) => SubmitSchema.parse(d))
+  .inputValidator((d: unknown) => SubmitSchema.parse(d))
   .handler(async ({ context, data }) => {
     const sb = context.supabase;
     const { data: prof } = await sb.from("profiles").select("org_id").eq("id", context.userId).maybeSingle();
-    const { error } = await sb.from("satisfaction_surveys").insert({
+    const { error } = await sb.from("satisfaction_surveys" as any).insert({
       user_id: context.userId,
       org_id: (prof as any)?.org_id ?? null,
       bucket: data.bucket,
