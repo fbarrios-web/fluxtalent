@@ -7,6 +7,7 @@ import { LayoutDashboard, Briefcase, Settings, LogOut, Loader2, CreditCard, Shie
 import { cn } from "@/lib/utils";
 import { FluxLogo } from "@/components/flux-logo";
 import { SubscriptionBanner } from "@/components/subscription-banner";
+import { SatisfactionSurvey } from "@/components/satisfaction-survey";
 import { adminAmI } from "@/lib/admin.functions";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
