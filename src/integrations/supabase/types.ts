@@ -605,6 +605,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           birth_date: string | null
+          country: string | null
           created_at: string
           display_name: string | null
           dni: string | null
@@ -614,10 +615,12 @@ export type Database = {
           google_refresh_token: string | null
           id: string
           org_id: string | null
+          province: string | null
         }
         Insert: {
           avatar_url?: string | null
           birth_date?: string | null
+          country?: string | null
           created_at?: string
           display_name?: string | null
           dni?: string | null
@@ -627,10 +630,12 @@ export type Database = {
           google_refresh_token?: string | null
           id: string
           org_id?: string | null
+          province?: string | null
         }
         Update: {
           avatar_url?: string | null
           birth_date?: string | null
+          country?: string | null
           created_at?: string
           display_name?: string | null
           dni?: string | null
@@ -640,10 +645,49 @@ export type Database = {
           google_refresh_token?: string | null
           id?: string
           org_id?: string | null
+          province?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "profiles_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      satisfaction_surveys: {
+        Row: {
+          bucket: number
+          comments: string | null
+          created_at: string
+          id: string
+          nps: number
+          org_id: string | null
+          user_id: string
+        }
+        Insert: {
+          bucket: number
+          comments?: string | null
+          created_at?: string
+          id?: string
+          nps: number
+          org_id?: string | null
+          user_id: string
+        }
+        Update: {
+          bucket?: number
+          comments?: string | null
+          created_at?: string
+          id?: string
+          nps?: number
+          org_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "satisfaction_surveys_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
