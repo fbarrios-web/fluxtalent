@@ -41,7 +41,25 @@ export const Route = createFileRoute("/api/public/apply")({
             .eq("id", vacancyId)
             .single();
           if (vErr || !vac || vac.status !== "active") {
-            return Response.json({ error: "Vacante no disponible" }, { status: 404, headers: cors });
+            return Response.json({ error: "Esta vacante no está recibiendo postulaciones en este momento." }, { status: 404, headers: cors });
+          }
+
+          // Block postulations when the organization's subscription is inactive
+          // (canceled past period_end, past_due, or trial expired).
+          const { data: org } = await supabaseAdmin
+            .from("organizations")
+            .select("subscription_status, trial_ends_at, current_period_end")
+            .eq("id", vac.org_id)
+            .maybeSingle();
+          const now = Date.now();
+          const trialEnds = org?.trial_ends_at ? new Date(org.trial_ends_at).getTime() : 0;
+          const periodEnds = org?.current_period_end ? new Date(org.current_period_end).getTime() : 0;
+          const subActive =
+            (org?.subscription_status === "trialing" && trialEnds > now) ||
+            (org?.subscription_status === "active" && (!org.current_period_end || periodEnds > now)) ||
+            (org?.subscription_status === "canceled" && periodEnds > now);
+          if (!subActive) {
+            return Response.json({ error: "Esta vacante no está recibiendo postulaciones en este momento." }, { status: 403, headers: cors });
           }
 
           // Block duplicate applications by email per vacancy
