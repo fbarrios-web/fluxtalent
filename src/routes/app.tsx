@@ -45,8 +45,9 @@ function AppLayout() {
     staleTime: 0,
     refetchOnWindowFocus: true,
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("full_name, dni, birth_date").eq("id", user!.id).maybeSingle();
-      const complete = !!(data as any)?.full_name && !!(data as any)?.dni && !!(data as any)?.birth_date;
+      const { data } = await supabase.from("profiles").select("full_name, dni, birth_date, country, province").eq("id", user!.id).maybeSingle();
+      const d = data as any;
+      const complete = !!d?.full_name && !!d?.dni && !!d?.birth_date && !!d?.country && !!d?.province;
       return { complete };
     },
   });
