@@ -64,7 +64,7 @@ export const adminListSurveys = createServerFn({ method: "GET" })
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin
-      .from("satisfaction_surveys")
+      .from("satisfaction_surveys" as any)
       .select("id, user_id, org_id, bucket, nps, comments, created_at")
       .order("created_at", { ascending: false })
       .limit(500);
