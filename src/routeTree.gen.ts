@@ -31,6 +31,7 @@ import { Route as AppVacanciesVacancyIdRouteImport } from './routes/app.vacancie
 import { Route as AppCandidatesIdRouteImport } from './routes/app.candidates.$id'
 import { Route as AppAdminUsersRouteImport } from './routes/app.admin.users'
 import { Route as AppAdminUsageRouteImport } from './routes/app.admin.usage'
+import { Route as AppAdminSurveysRouteImport } from './routes/app.admin.surveys'
 import { Route as AppAdminPricingRouteImport } from './routes/app.admin.pricing'
 import { Route as AppAdminPaymentsRouteImport } from './routes/app.admin.payments'
 import { Route as AppAdminOrgsRouteImport } from './routes/app.admin.orgs'
@@ -151,6 +152,11 @@ const AppAdminUsageRoute = AppAdminUsageRouteImport.update({
   path: '/usage',
   getParentRoute: () => AppAdminRoute,
 } as any)
+const AppAdminSurveysRoute = AppAdminSurveysRouteImport.update({
+  id: '/surveys',
+  path: '/surveys',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 const AppAdminPricingRoute = AppAdminPricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
@@ -219,6 +225,7 @@ export interface FileRoutesByFullPath {
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
   '/app/admin/pricing': typeof AppAdminPricingRoute
+  '/app/admin/surveys': typeof AppAdminSurveysRoute
   '/app/admin/usage': typeof AppAdminUsageRoute
   '/app/admin/users': typeof AppAdminUsersRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
@@ -250,6 +257,7 @@ export interface FileRoutesByTo {
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
   '/app/admin/pricing': typeof AppAdminPricingRoute
+  '/app/admin/surveys': typeof AppAdminSurveysRoute
   '/app/admin/usage': typeof AppAdminUsageRoute
   '/app/admin/users': typeof AppAdminUsersRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
@@ -284,6 +292,7 @@ export interface FileRoutesById {
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
   '/app/admin/pricing': typeof AppAdminPricingRoute
+  '/app/admin/surveys': typeof AppAdminSurveysRoute
   '/app/admin/usage': typeof AppAdminUsageRoute
   '/app/admin/users': typeof AppAdminUsersRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
@@ -319,6 +328,7 @@ export interface FileRouteTypes {
     | '/app/admin/orgs'
     | '/app/admin/payments'
     | '/app/admin/pricing'
+    | '/app/admin/surveys'
     | '/app/admin/usage'
     | '/app/admin/users'
     | '/app/candidates/$id'
@@ -350,6 +360,7 @@ export interface FileRouteTypes {
     | '/app/admin/orgs'
     | '/app/admin/payments'
     | '/app/admin/pricing'
+    | '/app/admin/surveys'
     | '/app/admin/usage'
     | '/app/admin/users'
     | '/app/candidates/$id'
@@ -383,6 +394,7 @@ export interface FileRouteTypes {
     | '/app/admin/orgs'
     | '/app/admin/payments'
     | '/app/admin/pricing'
+    | '/app/admin/surveys'
     | '/app/admin/usage'
     | '/app/admin/users'
     | '/app/candidates/$id'
@@ -568,6 +580,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminUsageRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/app/admin/surveys': {
+      id: '/app/admin/surveys'
+      path: '/surveys'
+      fullPath: '/app/admin/surveys'
+      preLoaderRoute: typeof AppAdminSurveysRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/app/admin/pricing': {
       id: '/app/admin/pricing'
       path: '/pricing'
@@ -638,6 +657,7 @@ interface AppAdminRouteChildren {
   AppAdminOrgsRoute: typeof AppAdminOrgsRoute
   AppAdminPaymentsRoute: typeof AppAdminPaymentsRoute
   AppAdminPricingRoute: typeof AppAdminPricingRoute
+  AppAdminSurveysRoute: typeof AppAdminSurveysRoute
   AppAdminUsageRoute: typeof AppAdminUsageRoute
   AppAdminUsersRoute: typeof AppAdminUsersRoute
   AppAdminIndexRoute: typeof AppAdminIndexRoute
@@ -647,6 +667,7 @@ const AppAdminRouteChildren: AppAdminRouteChildren = {
   AppAdminOrgsRoute: AppAdminOrgsRoute,
   AppAdminPaymentsRoute: AppAdminPaymentsRoute,
   AppAdminPricingRoute: AppAdminPricingRoute,
+  AppAdminSurveysRoute: AppAdminSurveysRoute,
   AppAdminUsageRoute: AppAdminUsageRoute,
   AppAdminUsersRoute: AppAdminUsersRoute,
   AppAdminIndexRoute: AppAdminIndexRoute,
