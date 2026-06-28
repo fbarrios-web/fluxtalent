@@ -245,7 +245,7 @@ function SubscriptionPage() {
                   <Button variant="outline" disabled className="mt-4 w-full">Plan actual</Button>
                 ) : p.contactOnly ? (
                   <Button asChild className="mt-4 w-full" variant="outline">
-                    <a href="mailto:hola@fluxautomatizaciones.com?subject=Plan%20Custom%20FLUX%20Talent">Contactar a ventas</a>
+                    <a href="mailto:soporte@fluxtalent.com?subject=Plan%20Custom%20FLUX%20Talent">Contactar a ventas</a>
                   </Button>
                 ) : MP_PLAN_LINKS[p.id] ? (
                   <Button

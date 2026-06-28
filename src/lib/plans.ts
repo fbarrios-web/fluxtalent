@@ -99,7 +99,7 @@ export const PLANS: Plan[] = [
       "Integraciones personalizadas",
       "Informes automáticos a medida",
       "Workflows hechos para tu equipo",
-      "Contacto directo: hola@fluxautomatizaciones.com",
+      "Contacto directo: soporte@fluxtalent.com",
     ],
   },
 ];

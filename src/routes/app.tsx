@@ -7,6 +7,7 @@ import { LayoutDashboard, Briefcase, Settings, LogOut, Loader2, CreditCard, Shie
 import { cn } from "@/lib/utils";
 import { FluxLogo } from "@/components/flux-logo";
 import { SubscriptionBanner } from "@/components/subscription-banner";
+import { SatisfactionSurvey } from "@/components/satisfaction-survey";
 import { adminAmI } from "@/lib/admin.functions";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,8 +46,9 @@ function AppLayout() {
     staleTime: 0,
     refetchOnWindowFocus: true,
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("full_name, dni, birth_date").eq("id", user!.id).maybeSingle();
-      const complete = !!(data as any)?.full_name && !!(data as any)?.dni && !!(data as any)?.birth_date;
+      const { data } = await supabase.from("profiles").select("full_name, dni, birth_date, country, province").eq("id", user!.id).maybeSingle();
+      const d = data as any;
+      const complete = !!d?.full_name && !!d?.dni && !!d?.birth_date && !!d?.country && !!d?.province;
       return { complete };
     },
   });
@@ -165,6 +167,7 @@ function AppLayout() {
           </Link>
         </header>
         <SubscriptionBanner />
+        <SatisfactionSurvey />
         <div className="flex-1"><Outlet /></div>
         <footer className="border-t border-border px-6 py-4 text-center text-xs text-muted-foreground">
           © 2026 FLUX Automatizaciones. Todos los derechos reservados.

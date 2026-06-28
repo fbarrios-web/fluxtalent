@@ -21,7 +21,7 @@ function SetupPage() {
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u?.user) return null;
-      const { data: p } = await supabase.from("profiles").select("id, full_name, dni, birth_date, org_id").eq("id", u.user.id).maybeSingle();
+      const { data: p } = await supabase.from("profiles").select("id, full_name, dni, birth_date, org_id, country, province").eq("id", u.user.id).maybeSingle();
       return { user: u.user, profile: p };
     },
   });
@@ -29,15 +29,20 @@ function SetupPage() {
   const [fullName, setFullName] = useState("");
   const [dni, setDni] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [country, setCountry] = useState("Argentina");
+  const [province, setProvince] = useState("");
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
 
   useEffect(() => {
     if (me?.profile) {
-      setFullName((me.profile as any).full_name ?? "");
-      setDni((me.profile as any).dni ?? "");
-      setBirthDate((me.profile as any).birth_date ?? "");
-      if ((me.profile as any).full_name && (me.profile as any).dni && (me.profile as any).birth_date) {
+      const p = me.profile as any;
+      setFullName(p.full_name ?? "");
+      setDni(p.dni ?? "");
+      setBirthDate(p.birth_date ?? "");
+      if (p.country) setCountry(p.country);
+      if (p.province) setProvince(p.province);
+      if (p.full_name && p.dni && p.birth_date && p.country && p.province) {
         setDone(true);
       }
     }
@@ -52,6 +57,8 @@ function SetupPage() {
         full_name: fullName.trim(),
         dni: dni.trim(),
         birth_date: birthDate,
+        country: country.trim(),
+        province: province.trim(),
       } as any).eq("id", me.user.id);
       if (error) throw error;
       toast.success("Datos guardados");
@@ -91,6 +98,16 @@ function SetupPage() {
             <div>
               <Label htmlFor="bd">Fecha de nacimiento</Label>
               <Input id="bd" type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} required />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="country">País</Label>
+              <Input id="country" value={country} onChange={e => setCountry(e.target.value)} required placeholder="Argentina" />
+            </div>
+            <div>
+              <Label htmlFor="province">Provincia / Estado</Label>
+              <Input id="province" value={province} onChange={e => setProvince(e.target.value)} required placeholder="Buenos Aires" />
             </div>
           </div>
           <Button type="submit" disabled={saving} className="w-full">
