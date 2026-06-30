@@ -40,6 +40,10 @@ function AppLayout() {
   });
   const isAdmin = !!roleData?.isAdmin;
 
+  useEffect(() => {
+    if (!loading && !user) nav({ to: "/auth" });
+  }, [loading, user, nav]);
+
   const { data: profileCheck, refetch: refetchProfile } = useQuery({
     queryKey: ["profile-setup-check", user?.id],
     enabled: !!user,
