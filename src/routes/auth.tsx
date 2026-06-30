@@ -61,6 +61,7 @@ function AuthPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setDniError(null);
     setLoading(true);
     try {
       if (mode === "signup") {
@@ -75,7 +76,18 @@ function AuthPage() {
         });
         if (error) throw error;
         // Save identity now that the session exists (signup auto-signs-in when auto-confirm is on).
-        try { await saveId({ data: { dni: dni.trim(), full_name: fullName.trim(), birth_date: birthDate } }); } catch {}
+        try {
+          await saveId({ data: { dni: dni.trim(), full_name: fullName.trim(), birth_date: birthDate } });
+        } catch (err: any) {
+          const msg = err?.message ?? "";
+          if (msg.includes("Ya existe una cuenta") || msg.includes("Ya se encuentra")) {
+            setDniError("Ya se encuentra una cuenta con estos datos.");
+            await supabase.auth.signOut();
+            setLoading(false);
+            return;
+          }
+          throw err;
+        }
         toast.success("¡Cuenta creada!");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
