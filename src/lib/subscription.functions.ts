@@ -160,18 +160,41 @@ export const startPlanCheckout = createServerFn({ method: "POST" })
     const plan = PLANS.find(p => p.id === data.planId);
     if (!plan) throw new Error("Plan inválido.");
 
-    // El trigger bloquea cambios a plan_price_ars salvo admin; usamos service role.
+    // CRÍTICO: cuando el usuario elige un plan pago NO le damos acceso todavía.
+    // Marcamos la org como `past_due` (= pendiente de pago) y limpiamos el trial.
+    // Solo el webhook de Mercado Pago, al recibir un pago `approved`, pasa la org
+    // a `active`. Esto evita que el usuario use el sistema si abandona el checkout
+    // sin pagar (sin esto, el status `trialing` heredado del alta le daba acceso).
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin
       .from("organizations")
-      .update({ plan_price_ars: plan.priceArs })
+      .update({
+        plan_price_ars: plan.priceArs,
+        subscription_status: "past_due",
+        trial_ends_at: null as any,
+        current_period_end: null as any,
+      })
       .eq("id", orgId);
+
+
+    await supabaseAdmin.from("activity_events").insert({
+      org_id: orgId,
+      user_id: userId,
+      event_type: "checkout.started",
+      metadata: { plan_id: plan.id, plan_name: plan.name, amount: plan.priceArs },
+    });
+    // Stamp setup as completed so the user isn't re-routed to /app/setup after the redirect.
+    // Their access remains blocked until the MP webhook flips status to `active`.
+    await supabaseAdmin.from("profiles").update({ setup_completed_at: new Date().toISOString() } as any).eq("id", userId);
+
+
 
     // external_reference = "orgId:planId" — webhook lo usa para activar el plan correcto
     const ref = `${orgId}:${data.planId}`;
     const sep = baseUrl.includes("?") ? "&" : "?";
     return { url: `${baseUrl}${sep}external_reference=${encodeURIComponent(ref)}` };
   });
+
 
 /**
  * Verifica si una org puede activar el plan Free (trial de 15 días).
@@ -230,8 +253,11 @@ export const chooseFreePlan = createServerFn({ method: "POST" })
         trial_ends_at: new Date(Date.now() + 15 * 86_400_000).toISOString(),
       })
       .eq("id", orgId);
+    // Stamp setup as completed only when the user explicitly picked Free.
+    await supabaseAdmin.from("profiles").update({ setup_completed_at: new Date().toISOString() } as any).eq("id", userId);
     return { ok: true };
   });
+
 
 
 
