@@ -260,7 +260,7 @@ function Landing() {
                 <div className="flex-1" />
                 {p.id === "custom" ? (
                   <a
-                    href="mailto:soporte@fluxtalent.com"
+                    href="mailto:soporte@fluxtalent.com.ar"
                     className={`mt-6 inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium ${
                       p.highlighted
                         ? "bg-primary text-primary-foreground hover:bg-primary/90"
