@@ -616,6 +616,7 @@ export type Database = {
           id: string
           org_id: string | null
           province: string | null
+          setup_completed_at: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -631,6 +632,7 @@ export type Database = {
           id: string
           org_id?: string | null
           province?: string | null
+          setup_completed_at?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -646,6 +648,7 @@ export type Database = {
           id?: string
           org_id?: string | null
           province?: string | null
+          setup_completed_at?: string | null
         }
         Relationships: [
           {
