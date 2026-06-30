@@ -160,18 +160,34 @@ export const startPlanCheckout = createServerFn({ method: "POST" })
     const plan = PLANS.find(p => p.id === data.planId);
     if (!plan) throw new Error("Plan inválido.");
 
-    // El trigger bloquea cambios a plan_price_ars salvo admin; usamos service role.
+    // CRÍTICO: cuando el usuario elige un plan pago NO le damos acceso todavía.
+    // Marcamos la org como `pending_payment` y limpiamos el trial. Solo el webhook
+    // de Mercado Pago, al recibir un pago `approved`, pasa la org a `active`.
+    // Esto evita que el usuario use el sistema si abandona el checkout sin pagar.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin
       .from("organizations")
-      .update({ plan_price_ars: plan.priceArs })
+      .update({
+        plan_price_ars: plan.priceArs,
+        subscription_status: "pending_payment",
+        trial_ends_at: null,
+        current_period_end: null,
+      })
       .eq("id", orgId);
+
+    await supabaseAdmin.from("activity_events").insert({
+      org_id: orgId,
+      user_id: userId,
+      event_type: "checkout.started",
+      metadata: { plan_id: plan.id, plan_name: plan.name, amount: plan.priceArs },
+    });
 
     // external_reference = "orgId:planId" — webhook lo usa para activar el plan correcto
     const ref = `${orgId}:${data.planId}`;
     const sep = baseUrl.includes("?") ? "&" : "?";
     return { url: `${baseUrl}${sep}external_reference=${encodeURIComponent(ref)}` };
   });
+
 
 /**
  * Verifica si una org puede activar el plan Free (trial de 15 días).
