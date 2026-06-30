@@ -72,6 +72,18 @@ export const Route = createFileRoute("/api/public/apply")({
           if (dup) {
             return Response.json({ error: "Ya te postulaste a esta vacante con este email." }, { status: 409, headers: cors });
           }
+          // Enforce plan CV-per-month cap (Free = 20, Starter = 200, etc.).
+          const { getOrgPlan, getCvsThisMonth } = await import("@/lib/plan-limits");
+          const planForOrg = await getOrgPlan(supabaseAdmin, vac.org_id);
+          if (planForOrg.maxCvsPerMonth !== -1) {
+            const usedCvs = await getCvsThisMonth(supabaseAdmin, vac.org_id);
+            if (usedCvs >= planForOrg.maxCvsPerMonth) {
+              return Response.json({
+                error: "Esta vacante alcanzó el cupo de postulaciones del mes. Probá nuevamente más adelante.",
+              }, { status: 403, headers: cors });
+            }
+          }
+
 
           const ALLOWED_CV_EXTS = new Set(["pdf", "doc", "docx", "odt", "rtf"]);
           const ALLOWED_CV_MIMES = new Set([
@@ -123,9 +135,8 @@ export const Route = createFileRoute("/api/public/apply")({
             }
           }
 
-          // Always analyze any uploaded CV so the recruiter sees match score
-          // and AI summary even on auto-discarded / rejected candidates and
-          // regardless of monthly plan limits. The queue processes everything.
+          // Plan cap was already enforced above; analyze any uploaded CV.
+
           const analyzeAi = !!cv_url;
 
           const { data: appRow, error: insErr } = await supabaseAdmin

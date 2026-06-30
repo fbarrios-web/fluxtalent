@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { Briefcase, Users, Sparkles, TrendingUp, Plus, Clock, FileText, Loader2 } from "lucide-react";
+import { Briefcase, Users, Sparkles, TrendingUp, Plus, Clock, FileText, Loader2, AlertTriangle } from "lucide-react";
 import { getMySubscription } from "@/lib/subscription.functions";
 import { planByPrice, formatLimit } from "@/lib/plans";
 
@@ -55,11 +55,29 @@ function Dashboard() {
     },
   });
 
+  const { data: liveCounts } = useQuery({
+    queryKey: ["dashboard-live-counts"],
+    queryFn: async () => {
+      const startOfMonth = new Date();
+      startOfMonth.setUTCDate(1); startOfMonth.setUTCHours(0, 0, 0, 0);
+      const [{ count: vacCount }, { count: cvCount }] = await Promise.all([
+        supabase.from("vacancies").select("*", { count: "exact", head: true }).in("status", ["draft", "active", "paused"]),
+        supabase.from("applications").select("*", { count: "exact", head: true }).not("cv_url", "is", null).gte("created_at", startOfMonth.toISOString()),
+      ]);
+      return { vacancies: vacCount ?? 0, cvsThisMonth: cvCount ?? 0 };
+    },
+    refetchOnWindowFocus: false,
+  });
+
   const getSub = useServerFn(getMySubscription);
   const { data: sub } = useQuery({ queryKey: ["my-subscription"], queryFn: () => getSub(), refetchOnWindowFocus: false });
   const plan = sub ? planByPrice(sub.plan_price_ars) : null;
-  const usedVacancies = vacancies?.length ?? 0;
-  const usedCvs = stats?.total ?? 0;
+  const usedVacancies = liveCounts?.vacancies ?? 0;
+  const usedCvs = liveCounts?.cvsThisMonth ?? 0;
+
+  const vacAtCap = plan && plan.maxVacancies !== -1 && usedVacancies >= plan.maxVacancies;
+  const cvAtCap = plan && plan.maxCvsPerMonth !== -1 && usedCvs >= plan.maxCvsPerMonth;
+  const cvNearCap = plan && plan.maxCvsPerMonth !== -1 && !cvAtCap && usedCvs >= Math.floor(plan.maxCvsPerMonth * 0.8);
 
   return (
     <div className="mx-auto max-w-6xl p-6 md:p-10">
@@ -95,12 +113,42 @@ function Dashboard() {
             />
             <MiniStat
               icon={FileText}
-              label="CVs procesados"
+              label="CVs / mes"
               value={`${usedCvs} / ${formatLimit(plan.maxCvsPerMonth)}`}
             />
           </div>
         </div>
       )}
+
+      {plan && (vacAtCap || cvAtCap || cvNearCap) && (
+        <div className={`mb-8 flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 ${cvAtCap || vacAtCap ? "border-destructive/40 bg-destructive/10" : "border-warning/40 bg-warning/10"}`}>
+          <div className="flex items-start gap-3">
+            <AlertTriangle className={`mt-0.5 h-5 w-5 ${cvAtCap || vacAtCap ? "text-destructive" : "text-warning-foreground"}`} />
+            <div className="text-sm">
+              <p className="font-semibold">
+                {vacAtCap && cvAtCap
+                  ? "Alcanzaste el tope de vacantes y de CVs del plan"
+                  : vacAtCap
+                    ? `Alcanzaste el tope de vacantes activas del plan ${plan.name}`
+                    : cvAtCap
+                      ? `Alcanzaste el tope de CVs del mes del plan ${plan.name}`
+                      : `Estás cerca del tope de CVs del mes (${usedCvs}/${plan.maxCvsPerMonth})`}
+              </p>
+              <p className="text-muted-foreground">
+                {cvAtCap
+                  ? "Las nuevas postulaciones de tus links públicos quedan bloqueadas hasta que actualices el plan o termine el mes."
+                  : vacAtCap
+                    ? "Cerrá una vacante o actualizá tu plan para crear más."
+                    : "Considerá actualizar tu plan para no interrumpir el ingreso de CVs."}
+              </p>
+            </div>
+          </div>
+          <Link to="/app/subscription" className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            Actualizar plan →
+          </Link>
+        </div>
+      )}
+
 
       <div className="grid gap-4 md:grid-cols-4">
         <Stat icon={Users} label="Candidatos totales" value={stats?.total ?? 0} />
