@@ -161,19 +161,21 @@ export const startPlanCheckout = createServerFn({ method: "POST" })
     if (!plan) throw new Error("Plan inválido.");
 
     // CRÍTICO: cuando el usuario elige un plan pago NO le damos acceso todavía.
-    // Marcamos la org como `pending_payment` y limpiamos el trial. Solo el webhook
-    // de Mercado Pago, al recibir un pago `approved`, pasa la org a `active`.
-    // Esto evita que el usuario use el sistema si abandona el checkout sin pagar.
+    // Marcamos la org como `past_due` (= pendiente de pago) y limpiamos el trial.
+    // Solo el webhook de Mercado Pago, al recibir un pago `approved`, pasa la org
+    // a `active`. Esto evita que el usuario use el sistema si abandona el checkout
+    // sin pagar (sin esto, el status `trialing` heredado del alta le daba acceso).
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin
       .from("organizations")
       .update({
         plan_price_ars: plan.priceArs,
-        subscription_status: "pending_payment",
-        trial_ends_at: null,
-        current_period_end: null,
+        subscription_status: "past_due",
+        trial_ends_at: null as any,
+        current_period_end: null as any,
       })
       .eq("id", orgId);
+
 
     await supabaseAdmin.from("activity_events").insert({
       org_id: orgId,
