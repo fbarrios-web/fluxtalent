@@ -88,7 +88,12 @@ function SetupPage() {
         window.location.href = r.url;
       }
     } catch (e: any) {
-      toast.error(e.message ?? "No pudimos activar el plan");
+      const msg = String(e?.message ?? "");
+      if (msg.includes("FREE_NOT_AVAILABLE")) {
+        toast.error("La prueba Free solo está disponible para cuentas nuevas. Elegí un plan pago para continuar.", { duration: 6000 });
+      } else {
+        toast.error(msg || "No pudimos activar el plan");
+      }
       setActivating(null);
     }
   }
