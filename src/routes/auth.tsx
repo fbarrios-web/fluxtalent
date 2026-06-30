@@ -33,6 +33,7 @@ function AuthPage() {
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [dniError, setDniError] = useState<string | null>(null);
 
   async function handleForgotPassword(e: React.FormEvent) {
     e.preventDefault();
@@ -60,6 +61,7 @@ function AuthPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setDniError(null);
     setLoading(true);
     try {
       if (mode === "signup") {
@@ -74,7 +76,18 @@ function AuthPage() {
         });
         if (error) throw error;
         // Save identity now that the session exists (signup auto-signs-in when auto-confirm is on).
-        try { await saveId({ data: { dni: dni.trim(), full_name: fullName.trim(), birth_date: birthDate } }); } catch {}
+        try {
+          await saveId({ data: { dni: dni.trim(), full_name: fullName.trim(), birth_date: birthDate } });
+        } catch (err: any) {
+          const msg = err?.message ?? "";
+          if (msg.includes("Ya existe una cuenta") || msg.includes("Ya se encuentra")) {
+            setDniError("Ya se encuentra una cuenta con estos datos.");
+            await supabase.auth.signOut();
+            setLoading(false);
+            return;
+          }
+          throw err;
+        }
         toast.success("¡Cuenta creada!");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -155,7 +168,8 @@ function AuthPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label htmlFor="dni">DNI</Label>
-                    <Input id="dni" value={dni} onChange={e => setDni(e.target.value)} placeholder="30123456" required minLength={6} />
+                    <Input id="dni" value={dni} onChange={e => { setDni(e.target.value); setDniError(null); }} placeholder="30123456" required minLength={6} />
+                    {dniError && <p className="mt-1 text-xs text-red-500">{dniError}</p>}
                   </div>
                   <div>
                     <Label htmlFor="bday">Fecha de nac.</Label>
