@@ -248,8 +248,11 @@ export const chooseFreePlan = createServerFn({ method: "POST" })
         trial_ends_at: new Date(Date.now() + 15 * 86_400_000).toISOString(),
       })
       .eq("id", orgId);
+    // Stamp setup as completed only when the user explicitly picked Free.
+    await supabaseAdmin.from("profiles").update({ setup_completed_at: new Date().toISOString() } as any).eq("id", userId);
     return { ok: true };
   });
+
 
 
 
