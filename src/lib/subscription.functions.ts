@@ -233,11 +233,8 @@ export const chooseFreePlan = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/**
- * Inicia checkout de un plan pago. Defensa en profundidad: si por algún motivo
- * la UI envía un planId con precio 0 (no debería poder), se rechaza para que
- * el flujo de Free no pase por acá saltando assertFreeEligible.
- */
+
+
 
 
 export const cancelSubscription = createServerFn({ method: "POST" })
