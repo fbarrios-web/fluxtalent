@@ -26,7 +26,7 @@ function SetupPage() {
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u?.user) return null;
-      const { data: p } = await supabase.from("profiles").select("id, full_name, dni, birth_date, org_id, country, province").eq("id", u.user.id).maybeSingle();
+      const { data: p } = await supabase.from("profiles").select("id, full_name, dni, birth_date, org_id, country, province, setup_completed_at").eq("id", u.user.id).maybeSingle();
       return { user: u.user, profile: p };
     },
   });
@@ -52,8 +52,21 @@ function SetupPage() {
       if (p.full_name && p.dni && p.birth_date && p.country && p.province) {
         setPersonalDone(true);
       }
+      if (p.setup_completed_at) setPlanDone(true);
     }
   }, [me]);
+
+  const missing: string[] = [];
+  if (me?.profile) {
+    const p = me.profile as any;
+    if (!p.full_name) missing.push("Nombre y apellido");
+    if (!p.dni) missing.push("DNI");
+    if (!p.birth_date) missing.push("Fecha de nacimiento");
+    if (!p.country) missing.push("País");
+    if (!p.province) missing.push("Provincia / Estado");
+    if (!p.setup_completed_at) missing.push("Elección de plan");
+  }
+
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
