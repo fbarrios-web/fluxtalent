@@ -183,6 +183,11 @@ export const startPlanCheckout = createServerFn({ method: "POST" })
       event_type: "checkout.started",
       metadata: { plan_id: plan.id, plan_name: plan.name, amount: plan.priceArs },
     });
+    // Stamp setup as completed so the user isn't re-routed to /app/setup after the redirect.
+    // Their access remains blocked until the MP webhook flips status to `active`.
+    await supabaseAdmin.from("profiles").update({ setup_completed_at: new Date().toISOString() } as any).eq("id", userId);
+
+
 
     // external_reference = "orgId:planId" — webhook lo usa para activar el plan correcto
     const ref = `${orgId}:${data.planId}`;
