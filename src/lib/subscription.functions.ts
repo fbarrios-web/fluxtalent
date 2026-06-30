@@ -15,7 +15,7 @@ async function createMissingWorkspace(supabaseAdmin: any, userId: string) {
       name: meta.org_name || "Mi empresa",
       trial_ends_at: new Date(Date.now() + 15 * 86_400_000).toISOString(),
       subscription_status: "trialing",
-      plan_price_ars: 20000,
+      plan_price_ars: 0,
     })
     .select("id")
     .single();
@@ -171,6 +171,24 @@ export const startPlanCheckout = createServerFn({ method: "POST" })
     const ref = `${orgId}:${data.planId}`;
     const sep = baseUrl.includes("?") ? "&" : "?";
     return { url: `${baseUrl}${sep}external_reference=${encodeURIComponent(ref)}` };
+  });
+
+/** Activa el plan Free (15 días de prueba) en la org del usuario actual. */
+export const chooseFreePlan = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const orgId = await getOrCreateOrgId(supabase, userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin
+      .from("organizations")
+      .update({
+        plan_price_ars: 0,
+        subscription_status: "trialing",
+        trial_ends_at: new Date(Date.now() + 15 * 86_400_000).toISOString(),
+      })
+      .eq("id", orgId);
+    return { ok: true };
   });
 
 export const cancelSubscription = createServerFn({ method: "POST" })
