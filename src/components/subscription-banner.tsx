@@ -18,6 +18,14 @@ export function SubscriptionBanner() {
       </Bar>
     );
   }
+  if (data.subscription_status === "past_due") {
+    return (
+      <Bar tone="danger" icon={AlertCircle}>
+        Tu suscripción está <b>pendiente de pago</b>. No vas a poder usar el sistema hasta que Mercado Pago confirme el cobro.
+        <Link to="/app/subscription" className="ml-2 underline font-medium">Completar pago →</Link>
+      </Bar>
+    );
+  }
   if (!data.canWrite) {
     return (
       <Bar tone="danger" icon={Lock}>
@@ -26,14 +34,7 @@ export function SubscriptionBanner() {
       </Bar>
     );
   }
-  if (data.subscription_status === "past_due") {
-    return (
-      <Bar tone="danger" icon={AlertCircle}>
-        Tu suscripción tiene un pago pendiente.
-        <Link to="/app/subscription" className="ml-2 underline font-medium">Regularizar →</Link>
-      </Bar>
-    );
-  }
+
   return null;
 }
 
