@@ -33,6 +33,7 @@ function AuthPage() {
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [dniError, setDniError] = useState<string | null>(null);
 
   async function handleForgotPassword(e: React.FormEvent) {
     e.preventDefault();
