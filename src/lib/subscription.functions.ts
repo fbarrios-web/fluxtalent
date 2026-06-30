@@ -15,7 +15,7 @@ async function createMissingWorkspace(supabaseAdmin: any, userId: string) {
       name: meta.org_name || "Mi empresa",
       trial_ends_at: new Date(Date.now() + 15 * 86_400_000).toISOString(),
       subscription_status: "trialing",
-      plan_price_ars: 20000,
+      plan_price_ars: 0,
     })
     .select("id")
     .single();
