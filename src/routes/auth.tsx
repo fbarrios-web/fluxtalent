@@ -74,14 +74,23 @@ function AuthPage() {
             data: { org_name: orgName || "Mi empresa", display_name: displayName || email.split("@")[0] },
           },
         });
-        if (error) throw error;
+        if (error) {
+          // Supabase devuelve "User already registered" para emails duplicados.
+          const m = (error.message ?? "").toLowerCase();
+          if (m.includes("already registered") || m.includes("already exists") || m.includes("user already")) {
+            setDniError("Usuario duplicado");
+            setLoading(false);
+            return;
+          }
+          throw error;
+        }
         // Save identity now that the session exists (signup auto-signs-in when auto-confirm is on).
         try {
           await saveId({ data: { dni: dni.trim(), full_name: fullName.trim(), birth_date: birthDate } });
         } catch (err: any) {
           const msg = err?.message ?? "";
-          if (msg.includes("Ya existe una cuenta") || msg.includes("Ya se encuentra")) {
-            setDniError("Ya se encuentra una cuenta con estos datos.");
+          if (msg.includes("DUPLICATE_USER") || msg.includes("duplicate key") || msg.includes("profiles_dni_unique") || msg.includes("Usuario duplicado") || msg.includes("Ya se encuentra") || msg.includes("Ya existe una cuenta")) {
+            setDniError("Usuario duplicado");
             await supabase.auth.signOut();
             setLoading(false);
             return;
