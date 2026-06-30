@@ -123,6 +123,17 @@ function SetupPage() {
         <p className="mt-2 text-muted-foreground">Necesitamos un par de datos para personalizar tu workspace. Toma menos de 1 minuto.</p>
       </div>
 
+      {missing.length > 0 && (
+        <div className="mb-6 rounded-xl border border-warning/40 bg-warning/10 p-4 text-sm">
+          <p className="font-semibold text-foreground">Te falta completar el setup ({missing.length} {missing.length === 1 ? "punto" : "puntos"}):</p>
+          <ul className="mt-2 list-disc pl-5 text-muted-foreground">
+            {missing.map(m => <li key={m}>{m}</li>)}
+          </ul>
+        </div>
+      )}
+
+
+
       <ol className="mb-8 space-y-2 text-sm">
         <li className="flex items-center gap-2">
           <span className={`grid h-6 w-6 place-items-center rounded-full text-xs font-semibold ${personalDone ? "bg-success text-white" : "bg-primary text-primary-foreground"}`}>{personalDone ? <CheckCircle2 className="h-3.5 w-3.5" /> : "1"}</span>
