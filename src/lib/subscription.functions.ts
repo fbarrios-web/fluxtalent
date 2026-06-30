@@ -173,6 +173,46 @@ export const startPlanCheckout = createServerFn({ method: "POST" })
     return { url: `${baseUrl}${sep}external_reference=${encodeURIComponent(ref)}` };
   });
 
+/**
+ * Verifica si una org puede activar el plan Free (trial de 15 días).
+ * Solo cuentas nuevas: sin historial de pago, sin preapproval previo,
+ * sin precio de plan configurado, y sin trial ya consumido.
+ * Lanza un error con prefijo "FREE_NOT_AVAILABLE:" si no es elegible.
+ * Se usa en CUALQUIER endpoint que pueda fijar plan Free para evitar
+ * bypass desde la UI.
+ */
+async function assertFreeEligible(supabaseAdmin: any, orgId: string) {
+  const { data: org } = await supabaseAdmin
+    .from("organizations")
+    .select("mp_preapproval_id, last_payment_at, trial_ends_at, subscription_status, plan_price_ars")
+    .eq("id", orgId)
+    .maybeSingle();
+  const status = org?.subscription_status ?? "";
+  const trialExpired = !!org?.trial_ends_at && new Date(org.trial_ends_at) < new Date();
+  const hasPaidHistory = !!org?.mp_preapproval_id
+    || !!org?.last_payment_at
+    || (org?.plan_price_ars ?? 0) > 0
+    || ["active", "canceled", "paused", "past_due"].includes(status);
+  if (hasPaidHistory || (trialExpired && status !== "trialing")) {
+    throw new Error("FREE_NOT_AVAILABLE: La prueba gratuita de 15 días solo está disponible para cuentas nuevas. Actualizá a un plan pago para continuar.");
+  }
+}
+
+/** UI: consulta si la org actual puede activar el plan Free. */
+export const canUseFreeTrial = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const orgId = await getOrCreateOrgId(supabase, userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    try {
+      await assertFreeEligible(supabaseAdmin, orgId);
+      return { eligible: true as const };
+    } catch (e: any) {
+      return { eligible: false as const, reason: String(e?.message ?? "").replace(/^FREE_NOT_AVAILABLE:\s*/, "") };
+    }
+  });
+
 /** Activa el plan Free (15 días de prueba) en la org del usuario actual. Solo cuentas nuevas. */
 export const chooseFreePlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -180,21 +220,7 @@ export const chooseFreePlan = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const orgId = await getOrCreateOrgId(supabase, userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: org } = await supabaseAdmin
-      .from("organizations")
-      .select("mp_preapproval_id, last_payment_at, trial_ends_at, subscription_status, plan_price_ars")
-      .eq("id", orgId)
-      .maybeSingle();
-
-    const status = org?.subscription_status ?? "";
-    const trialExpired = !!org?.trial_ends_at && new Date(org.trial_ends_at) < new Date();
-    const hasPaidHistory = !!org?.mp_preapproval_id || !!org?.last_payment_at
-      || (org?.plan_price_ars ?? 0) > 0
-      || ["active", "canceled", "paused"].includes(status);
-
-    if (hasPaidHistory || (trialExpired && status !== "trialing")) {
-      throw new Error("FREE_NOT_AVAILABLE: La prueba gratuita de 15 días solo está disponible para cuentas nuevas. Actualizá a un plan pago para continuar.");
-    }
+    await assertFreeEligible(supabaseAdmin, orgId);
 
     await supabaseAdmin
       .from("organizations")
@@ -206,6 +232,10 @@ export const chooseFreePlan = createServerFn({ method: "POST" })
       .eq("id", orgId);
     return { ok: true };
   });
+
+
+
+
 
 export const cancelSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
