@@ -288,7 +288,7 @@ export const saveIdentity = createServerFn({ method: "POST" })
     } as any).eq("id", context.userId);
     if (error) {
       if ((error as any).code === "23505") {
-        throw new Error("Ya existe una cuenta con esos datos. Usá la cuenta original o contactanos.");
+        throw new Error("DUPLICATE_USER: Usuario duplicado");
       }
       throw error;
     }
