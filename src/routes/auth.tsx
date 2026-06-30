@@ -168,7 +168,8 @@ function AuthPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label htmlFor="dni">DNI</Label>
-                    <Input id="dni" value={dni} onChange={e => setDni(e.target.value)} placeholder="30123456" required minLength={6} />
+                    <Input id="dni" value={dni} onChange={e => { setDni(e.target.value); setDniError(null); }} placeholder="30123456" required minLength={6} />
+                    {dniError && <p className="mt-1 text-xs text-red-500">{dniError}</p>}
                   </div>
                   <div>
                     <Label htmlFor="bday">Fecha de nac.</Label>
