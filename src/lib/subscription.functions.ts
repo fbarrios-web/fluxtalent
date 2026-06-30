@@ -286,7 +286,7 @@ export const requestInvoiceC = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
-    const SUPPORT_EMAIL = "soporte@fluxtalent.com";
+    const SUPPORT_EMAIL = "soporte@fluxtalent.com.ar";
     let emailWarning: string | null = null;
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

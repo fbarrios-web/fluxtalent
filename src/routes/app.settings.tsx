@@ -271,7 +271,7 @@ function Settings() {
             <h3 className="font-semibold">Soporte</h3>
             <p className="text-sm text-muted-foreground">
               ¿Necesitás ayuda, una integración personalizada o reportar un problema? Escribinos a{" "}
-              <a href="mailto:soporte@fluxtalent.com" className="text-primary underline">soporte@fluxtalent.com</a>.
+              <a href="mailto:soporte@fluxtalent.com.ar" className="text-primary underline">soporte@fluxtalent.com.ar</a>.
             </p>
           </section>
         </TabsContent>
