@@ -46,16 +46,22 @@ function AppLayout() {
     staleTime: 0,
     refetchOnWindowFocus: true,
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("full_name, dni, birth_date, country, province").eq("id", user!.id).maybeSingle();
-      const d = data as any;
-      const complete = !!d?.full_name && !!d?.dni && !!d?.birth_date && !!d?.country && !!d?.province;
-      return { complete };
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name, dni, birth_date, country, province, setup_completed_at")
+        .eq("id", user!.id)
+        .maybeSingle();
+      const d = (data ?? {}) as any;
+      const missing: string[] = [];
+      if (!d.full_name) missing.push("Nombre completo");
+      if (!d.dni) missing.push("DNI");
+      if (!d.birth_date) missing.push("Fecha de nacimiento");
+      if (!d.country) missing.push("País");
+      if (!d.province) missing.push("Provincia / Estado");
+      if (!d.setup_completed_at) missing.push("Elección de plan");
+      return { complete: missing.length === 0, missing };
     },
   });
-
-  useEffect(() => {
-    if (!loading && !user) nav({ to: "/auth" });
-  }, [loading, user, nav]);
 
   useEffect(() => {
     if (user) refetchProfile();
@@ -64,10 +70,11 @@ function AppLayout() {
 
   useEffect(() => {
     if (!user || !profileCheck) return;
-    if (!profileCheck.complete && !loc.pathname.startsWith("/app/setup") && !loc.pathname.startsWith("/app/settings")) {
+    if (!profileCheck.complete && !loc.pathname.startsWith("/app/setup")) {
       nav({ to: "/app/setup" });
     }
   }, [user, profileCheck, loc.pathname, nav]);
+
 
   if (loading || !user) {
     return (
