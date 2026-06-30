@@ -55,11 +55,29 @@ function Dashboard() {
     },
   });
 
+  const { data: liveCounts } = useQuery({
+    queryKey: ["dashboard-live-counts"],
+    queryFn: async () => {
+      const startOfMonth = new Date();
+      startOfMonth.setUTCDate(1); startOfMonth.setUTCHours(0, 0, 0, 0);
+      const [{ count: vacCount }, { count: cvCount }] = await Promise.all([
+        supabase.from("vacancies").select("*", { count: "exact", head: true }).in("status", ["draft", "active", "paused"]),
+        supabase.from("applications").select("*", { count: "exact", head: true }).not("cv_url", "is", null).gte("created_at", startOfMonth.toISOString()),
+      ]);
+      return { vacancies: vacCount ?? 0, cvsThisMonth: cvCount ?? 0 };
+    },
+    refetchOnWindowFocus: false,
+  });
+
   const getSub = useServerFn(getMySubscription);
   const { data: sub } = useQuery({ queryKey: ["my-subscription"], queryFn: () => getSub(), refetchOnWindowFocus: false });
   const plan = sub ? planByPrice(sub.plan_price_ars) : null;
-  const usedVacancies = vacancies?.length ?? 0;
-  const usedCvs = stats?.total ?? 0;
+  const usedVacancies = liveCounts?.vacancies ?? 0;
+  const usedCvs = liveCounts?.cvsThisMonth ?? 0;
+
+  const vacAtCap = plan && plan.maxVacancies !== -1 && usedVacancies >= plan.maxVacancies;
+  const cvAtCap = plan && plan.maxCvsPerMonth !== -1 && usedCvs >= plan.maxCvsPerMonth;
+  const cvNearCap = plan && plan.maxCvsPerMonth !== -1 && !cvAtCap && usedCvs >= Math.floor(plan.maxCvsPerMonth * 0.8);
 
   return (
     <div className="mx-auto max-w-6xl p-6 md:p-10">
