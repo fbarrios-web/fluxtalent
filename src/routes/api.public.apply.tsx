@@ -135,9 +135,8 @@ export const Route = createFileRoute("/api/public/apply")({
             }
           }
 
-          // Always analyze any uploaded CV so the recruiter sees match score
-          // and AI summary even on auto-discarded / rejected candidates and
-          // regardless of monthly plan limits. The queue processes everything.
+          // Plan cap was already enforced above; analyze any uploaded CV.
+
           const analyzeAi = !!cv_url;
 
           const { data: appRow, error: insErr } = await supabaseAdmin
