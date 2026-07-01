@@ -135,8 +135,9 @@ function TrustPage() {
           <h2 className="text-lg font-semibold tracking-tight text-foreground">Contacto</h2>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             Para consultas de privacidad, solicitudes de datos o reportes de seguridad,
-            escribinos desde la sección de soporte dentro de la app o respondé a cualquiera
-            de nuestros emails transaccionales.
+            escribinos desde la sección de soporte dentro de la app, respondé a cualquiera
+            de nuestros emails transaccionales, o contactanos por WhatsApp al{" "}
+            <a href="https://wa.me/543519090777?text=Hola%21%20Me%20comunico%20por%20una%20duda%20de%20FLUX%20Talent" target="_blank" rel="noopener noreferrer" className="text-primary underline">+54 351 909-0777</a>.
           </p>
         </section>
 

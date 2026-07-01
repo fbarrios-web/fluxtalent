@@ -271,7 +271,9 @@ function Settings() {
             <h3 className="font-semibold">Soporte</h3>
             <p className="text-sm text-muted-foreground">
               ¿Necesitás ayuda, una integración personalizada o reportar un problema? Escribinos a{" "}
-              <a href="mailto:soporte@fluxtalent.com.ar" className="text-primary underline">soporte@fluxtalent.com.ar</a>.
+              <a href="mailto:soporte@fluxtalent.com.ar" className="text-primary underline">soporte@fluxtalent.com.ar</a>{" "}
+              o por WhatsApp al{" "}
+              <a href="https://wa.me/543519090777?text=Hola%21%20Me%20comunico%20por%20una%20duda%20de%20FLUX%20Talent" target="_blank" rel="noopener noreferrer" className="text-primary underline">+54 351 909-0777</a>.
             </p>
           </section>
         </TabsContent>

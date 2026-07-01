@@ -291,8 +291,12 @@ function Landing() {
         </div>
       </section>
 
-      <footer className="border-t border-border py-10 text-center text-sm text-muted-foreground">
-        © 2026 FLUX Automatizaciones. Todos los derechos reservados.
+      <footer className="border-t border-border py-10 text-center text-sm text-muted-foreground space-y-2">
+        <p>© 2026 FLUX Automatizaciones. Todos los derechos reservados.</p>
+        <p>
+          Soporte: <a href="mailto:soporte@fluxtalent.com.ar" className="underline">soporte@fluxtalent.com.ar</a> ·{" "}
+          <a href="https://wa.me/543519090777?text=Hola%21%20Me%20comunico%20por%20una%20duda%20de%20FLUX%20Talent" target="_blank" rel="noopener noreferrer" className="underline">WhatsApp +54 351 909-0777</a>
+        </p>
       </footer>
 
     </div>
