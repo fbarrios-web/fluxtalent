@@ -327,6 +327,7 @@ export const requestInvoiceC = createServerFn({ method: "POST" })
       business_name: z.string().trim().min(2).max(200),
       cuit_or_dni: z.string().trim().min(7).max(20),
       email: z.string().trim().email().max(200),
+      phone: z.string().trim().min(6).max(40),
       address: z.string().trim().max(300).optional().or(z.literal("")),
       notes: z.string().trim().max(1000).optional().or(z.literal("")),
       amount_ars: z.number().nonnegative().optional(),
@@ -334,6 +335,7 @@ export const requestInvoiceC = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const orgId = await getOrCreateOrgId(supabase, userId);
+
 
     const { data: org } = await supabase
       .from("organizations")
