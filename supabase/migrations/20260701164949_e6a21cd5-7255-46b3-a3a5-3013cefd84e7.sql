@@ -1,0 +1,1 @@
+ALTER TABLE public.invoice_requests ADD COLUMN IF NOT EXISTS phone TEXT;
