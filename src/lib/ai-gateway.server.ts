@@ -1,6 +1,37 @@
 // Server-only helper for Lovable AI Gateway
 const BASE = "https://ai.gateway.lovable.dev/v1";
 
+// Retry helper: exponential backoff on 429 (rate limit) and 5xx (transient).
+// Non-retriable errors (4xx other than 429) throw immediately.
+async function fetchWithRetry(url: string, init: RequestInit, maxRetries = 3): Promise<Response> {
+  let attempt = 0;
+  let lastErr: any;
+  while (attempt <= maxRetries) {
+    try {
+      const res = await fetch(url, init);
+      if (res.ok) return res;
+      // Retriable: 429 (rate limit) and 5xx
+      if (res.status === 429 || res.status >= 500) {
+        if (attempt === maxRetries) return res;
+        const retryAfter = Number(res.headers.get("retry-after")) || 0;
+        const backoff = retryAfter > 0
+          ? retryAfter * 1000
+          : Math.min(1000 * 2 ** attempt, 8000) + Math.floor(Math.random() * 500);
+        await new Promise(r => setTimeout(r, backoff));
+        attempt++;
+        continue;
+      }
+      return res; // non-retriable error surface
+    } catch (e) {
+      lastErr = e;
+      if (attempt === maxRetries) throw e;
+      await new Promise(r => setTimeout(r, Math.min(1000 * 2 ** attempt, 8000)));
+      attempt++;
+    }
+  }
+  throw lastErr ?? new Error("AI gateway: retries exhausted");
+}
+
 export async function aiJSON<T = any>(opts: {
   system?: string;
   user: string | Array<any>;
