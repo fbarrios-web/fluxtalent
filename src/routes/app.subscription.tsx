@@ -368,10 +368,17 @@ function InvoiceCDialog({ defaultAmount }: { defaultAmount: number | null }) {
               <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
             </div>
           </div>
-          <div>
-            <Label>Domicilio (opcional)</Label>
-            <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label>Teléfono</Label>
+              <Input type="tel" placeholder="+54 ..." value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+            </div>
+            <div>
+              <Label>Domicilio (opcional)</Label>
+              <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
+            </div>
           </div>
+
           <div>
             <Label>Notas (opcional)</Label>
             <Textarea rows={3} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
