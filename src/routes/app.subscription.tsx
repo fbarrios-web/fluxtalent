@@ -329,6 +329,7 @@ function InvoiceCDialog({ defaultAmount }: { defaultAmount: number | null }) {
     business_name: "",
     cuit_or_dni: "",
     email: "",
+    phone: "",
     address: "",
     notes: "",
   });
@@ -339,10 +340,11 @@ function InvoiceCDialog({ defaultAmount }: { defaultAmount: number | null }) {
       toast.success("Solicitud enviada. Te facturamos a la brevedad.");
       if (r?.emailWarning) toast.warning(r.emailWarning);
       setOpen(false);
-      setForm({ business_name: "", cuit_or_dni: "", email: "", address: "", notes: "" });
+      setForm({ business_name: "", cuit_or_dni: "", email: "", phone: "", address: "", notes: "" });
     },
     onError: (e: any) => toast.error(e?.message ?? "No se pudo enviar la solicitud"),
   });
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
