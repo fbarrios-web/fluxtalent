@@ -381,7 +381,7 @@ export const requestInvoiceC = createServerFn({ method: "POST" })
       <p><strong>Nombre:</strong> ${esc(profile?.full_name || profile?.display_name || "—")}</p>
       <p><strong>Email de la cuenta:</strong> ${esc(userEmail || "—")}</p>
       <p><strong>DNI del usuario:</strong> ${esc(profile?.dni || "—")}</p>
-      <p><strong>Teléfono del perfil:</strong> ${esc(profile?.phone || "—")}</p>
+      <p><strong>Teléfono del perfil:</strong> —</p>
       <p><strong>País / Provincia:</strong> ${esc(profile?.country || "—")} / ${esc(profile?.province || "—")}</p>
       <h3 style="margin-top:16px">Datos del formulario de facturación</h3>
       <p><strong>Razón social / Nombre:</strong> ${esc(data.business_name)}</p>
