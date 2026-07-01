@@ -389,7 +389,7 @@ function InvoiceCDialog({ defaultAmount }: { defaultAmount: number | null }) {
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
-          <Button onClick={() => mut.mutate()} disabled={mut.isPending || !form.business_name || !form.cuit_or_dni || !form.email}>
+          <Button onClick={() => mut.mutate()} disabled={mut.isPending || !form.business_name || !form.cuit_or_dni || !form.email || !form.phone}>
             {mut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Enviar solicitud
           </Button>
