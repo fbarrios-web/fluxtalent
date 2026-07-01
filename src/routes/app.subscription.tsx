@@ -329,6 +329,7 @@ function InvoiceCDialog({ defaultAmount }: { defaultAmount: number | null }) {
     business_name: "",
     cuit_or_dni: "",
     email: "",
+    phone: "",
     address: "",
     notes: "",
   });
@@ -339,10 +340,11 @@ function InvoiceCDialog({ defaultAmount }: { defaultAmount: number | null }) {
       toast.success("Solicitud enviada. Te facturamos a la brevedad.");
       if (r?.emailWarning) toast.warning(r.emailWarning);
       setOpen(false);
-      setForm({ business_name: "", cuit_or_dni: "", email: "", address: "", notes: "" });
+      setForm({ business_name: "", cuit_or_dni: "", email: "", phone: "", address: "", notes: "" });
     },
     onError: (e: any) => toast.error(e?.message ?? "No se pudo enviar la solicitud"),
   });
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -366,10 +368,17 @@ function InvoiceCDialog({ defaultAmount }: { defaultAmount: number | null }) {
               <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
             </div>
           </div>
-          <div>
-            <Label>Domicilio (opcional)</Label>
-            <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label>Teléfono</Label>
+              <Input type="tel" placeholder="+54 ..." value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+            </div>
+            <div>
+              <Label>Domicilio (opcional)</Label>
+              <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
+            </div>
           </div>
+
           <div>
             <Label>Notas (opcional)</Label>
             <Textarea rows={3} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
@@ -380,7 +389,7 @@ function InvoiceCDialog({ defaultAmount }: { defaultAmount: number | null }) {
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
-          <Button onClick={() => mut.mutate()} disabled={mut.isPending || !form.business_name || !form.cuit_or_dni || !form.email}>
+          <Button onClick={() => mut.mutate()} disabled={mut.isPending || !form.business_name || !form.cuit_or_dni || !form.email || !form.phone}>
             {mut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Enviar solicitud
           </Button>

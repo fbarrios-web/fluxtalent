@@ -327,19 +327,31 @@ export const requestInvoiceC = createServerFn({ method: "POST" })
       business_name: z.string().trim().min(2).max(200),
       cuit_or_dni: z.string().trim().min(7).max(20),
       email: z.string().trim().email().max(200),
+      phone: z.string().trim().min(6).max(40),
       address: z.string().trim().max(300).optional().or(z.literal("")),
       notes: z.string().trim().max(1000).optional().or(z.literal("")),
       amount_ars: z.number().nonnegative().optional(),
     }).parse(input))
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+    const { supabase, userId, claims } = context;
     const orgId = await getOrCreateOrgId(supabase, userId);
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: org } = await supabase
       .from("organizations")
       .select("name, plan_price_ars")
       .eq("id", orgId)
       .maybeSingle();
+
+    // Datos del usuario que hace la solicitud (para incluirlos en el mail)
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("display_name, full_name, dni, country, province, google_email")
+      .eq("id", userId)
+      .maybeSingle();
+    const userEmail = ((claims as any)?.email ?? (profile as any)?.google_email ?? "").toString();
+
 
     const { data: inserted, error } = await supabase
       .from("invoice_requests")
@@ -350,59 +362,100 @@ export const requestInvoiceC = createServerFn({ method: "POST" })
         business_name: data.business_name,
         cuit_or_dni: data.cuit_or_dni,
         email: data.email,
+        phone: data.phone,
         address: data.address || null,
         notes: data.notes || null,
         amount_ars: data.amount_ars ?? org?.plan_price_ars ?? null,
-      })
+      } as any)
       .select("id")
       .single();
     if (error) throw new Error(error.message);
 
     const SUPPORT_EMAIL = "soporte@fluxtalent.com.ar";
+    const esc = (s: string) => String(s ?? "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
+    const subject = `Factura C · ${org?.name ?? "Cliente"}`;
+    const html = `
+      <h2>Nueva solicitud de Factura C</h2>
+      <h3 style="margin-top:16px">Datos del usuario</h3>
+      <p><strong>Organización:</strong> ${esc(org?.name ?? "—")}</p>
+      <p><strong>Nombre:</strong> ${esc(profile?.full_name || profile?.display_name || "—")}</p>
+      <p><strong>Email de la cuenta:</strong> ${esc(userEmail || "—")}</p>
+      <p><strong>DNI del usuario:</strong> ${esc(profile?.dni || "—")}</p>
+      <p><strong>Teléfono del perfil:</strong> —</p>
+      <p><strong>País / Provincia:</strong> ${esc(profile?.country || "—")} / ${esc(profile?.province || "—")}</p>
+      <h3 style="margin-top:16px">Datos del formulario de facturación</h3>
+      <p><strong>Razón social / Nombre:</strong> ${esc(data.business_name)}</p>
+      <p><strong>CUIT / DNI:</strong> ${esc(data.cuit_or_dni)}</p>
+      <p><strong>Email de facturación:</strong> ${esc(data.email)}</p>
+      <p><strong>Teléfono de contacto:</strong> ${esc(data.phone)}</p>
+      <p><strong>Domicilio:</strong> ${esc(data.address || "—")}</p>
+      <p><strong>Monto:</strong> ${data.amount_ars ?? org?.plan_price_ars ?? "—"} ARS</p>
+      <p><strong>Notas:</strong> ${esc(data.notes || "—")}</p>
+      <hr/>
+      <p style="font-size:12px;color:#666">ID solicitud: ${inserted.id}</p>
+    `;
+
     let emailWarning: string | null = null;
-    try {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: adminRole } = await supabaseAdmin
-        .from("user_roles").select("user_id").eq("role", "admin").limit(1).maybeSingle();
-      if (adminRole?.user_id) {
-        const { data: adminProfile } = await supabaseAdmin
-          .from("profiles")
-          .select("google_refresh_token, google_email, display_name")
-          .eq("id", adminRole.user_id)
-          .maybeSingle();
-        if (adminProfile?.google_refresh_token && adminProfile.google_email) {
-          const { refreshAccessToken, sendGmail } = await import("@/lib/google.server");
-          const { access_token } = await refreshAccessToken(adminProfile.google_refresh_token);
-          const esc = (s: string) => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
-          const html = `
-            <h2>Nueva solicitud de Factura C</h2>
-            <p><strong>Organización:</strong> ${esc(org?.name ?? "—")}</p>
-            <p><strong>Razón social / Nombre:</strong> ${esc(data.business_name)}</p>
-            <p><strong>CUIT/DNI:</strong> ${esc(data.cuit_or_dni)}</p>
-            <p><strong>Email de facturación:</strong> ${esc(data.email)}</p>
-            <p><strong>Domicilio:</strong> ${esc(data.address || "—")}</p>
-            <p><strong>Monto:</strong> ${data.amount_ars ?? org?.plan_price_ars ?? "—"} ARS</p>
-            <p><strong>Notas:</strong> ${esc(data.notes || "—")}</p>
-          `;
-          await sendGmail({
-            accessToken: access_token,
-            fromName: adminProfile.display_name || "FLUX Talent",
-            fromEmail: adminProfile.google_email,
-            to: SUPPORT_EMAIL,
-            subject: `Factura C · ${org?.name ?? "Cliente"}`,
+    let emailSent = false;
+
+    // 1) Intento principal: Resend (si está configurado como secret RESEND_API_KEY)
+    const resendKey = process.env.RESEND_API_KEY;
+    if (resendKey) {
+      try {
+        const res = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from: "FLUX Talent <soporte@fluxtalent.com.ar>",
+            to: [SUPPORT_EMAIL],
+            reply_to: data.email,
+            subject,
             html,
-            replyTo: data.email,
-          });
-        } else {
-          emailWarning = "Solicitud guardada. El admin debe conectar Gmail para reenviar la notificación a soporte.";
-        }
+          }),
+        });
+        if (res.ok) emailSent = true;
+        else console.error("[requestInvoiceC] Resend error:", res.status, await res.text());
+      } catch (e: any) {
+        console.error("[requestInvoiceC] Resend fetch failed:", e?.message ?? e);
       }
-    } catch (e: any) {
-      console.error("[requestInvoiceC] email notification failed:", e?.message ?? e);
-      // No exponemos el error al usuario: la solicitud queda registrada y visible en el panel admin.
-      emailWarning = null;
     }
 
+    // 2) Fallback: Gmail del admin (si está conectado)
+    if (!emailSent) {
+      try {
+        const { data: adminRole } = await supabaseAdmin
+          .from("user_roles").select("user_id").eq("role", "admin").limit(1).maybeSingle();
+        if (adminRole?.user_id) {
+          const { data: adminProfile } = await supabaseAdmin
+            .from("profiles")
+            .select("google_refresh_token, google_email, display_name")
+            .eq("id", adminRole.user_id)
+            .maybeSingle();
+          if (adminProfile?.google_refresh_token && adminProfile.google_email) {
+            const { refreshAccessToken, sendGmail } = await import("@/lib/google.server");
+            const { access_token } = await refreshAccessToken(adminProfile.google_refresh_token);
+            await sendGmail({
+              accessToken: access_token,
+              fromName: adminProfile.display_name || "FLUX Talent",
+              fromEmail: adminProfile.google_email,
+              to: SUPPORT_EMAIL,
+              subject,
+              html,
+              replyTo: data.email,
+            });
+            emailSent = true;
+          }
+        }
+      } catch (e: any) {
+        console.error("[requestInvoiceC] Gmail fallback failed:", e?.message ?? e);
+      }
+    }
+
+    if (!emailSent) {
+      // La solicitud queda guardada y visible en el panel admin.
+      console.warn("[requestInvoiceC] no email transport available; request stored only");
+    }
 
     return { id: inserted.id, emailWarning };
   });
+

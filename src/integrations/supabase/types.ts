@@ -421,6 +421,7 @@ export type Database = {
           invoice_type: string
           notes: string | null
           org_id: string
+          phone: string | null
           status: string
           updated_at: string
           user_id: string
@@ -436,6 +437,7 @@ export type Database = {
           invoice_type?: string
           notes?: string | null
           org_id: string
+          phone?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -451,6 +453,7 @@ export type Database = {
           invoice_type?: string
           notes?: string | null
           org_id?: string
+          phone?: string | null
           status?: string
           updated_at?: string
           user_id?: string
