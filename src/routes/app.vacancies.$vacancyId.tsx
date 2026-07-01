@@ -861,3 +861,86 @@ function BulkUploadDialog({ vacancyId, onDone }: { vacancyId: string; onDone: ()
     </>
   );
 }
+
+// Virtualized column body. Uses windowing when there are >30 items so
+// vacancies with 100+ candidates stay snappy under load.
+function KanbanColumnBody({
+  items,
+  onCardClick,
+  minMatch,
+}: {
+  items: any[];
+  onCardClick: (id: string) => void;
+  minMatch?: number;
+}) {
+  const parentRef = useRef<HTMLDivElement>(null);
+  const shouldVirtualize = items.length > 30;
+
+  const rowVirtualizer = useVirtualizer({
+    count: items.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 68,
+    overscan: 6,
+    enabled: shouldVirtualize,
+  });
+
+  if (!items.length) {
+    return (
+      <div className="space-y-2 overflow-y-auto pr-1">
+        <div className="rounded-lg border border-dashed border-border/60 p-3 text-center text-xs text-muted-foreground">—</div>
+      </div>
+    );
+  }
+
+  const renderCard = (a: any) => (
+    <div
+      key={a.id}
+      draggable
+      onDragStart={e => e.dataTransfer.setData("text/plain", a.id)}
+      onClick={() => onCardClick(a.id)}
+      className="cursor-grab rounded-xl border border-border bg-card p-3 shadow-sm hover:border-primary active:cursor-grabbing"
+    >
+      <div className="flex items-center justify-between">
+        <div className="truncate text-sm font-medium">{a.first_name} {a.last_name}</div>
+        <MatchPill score={a.match_score} minMatch={minMatch} aiStatus={a.ai_status} />
+      </div>
+      <div className="mt-1 truncate text-xs text-muted-foreground">{a.email}</div>
+    </div>
+  );
+
+  if (!shouldVirtualize) {
+    return (
+      <div ref={parentRef} className="space-y-2 overflow-y-auto pr-1">
+        {items.map(renderCard)}
+      </div>
+    );
+  }
+
+  return (
+    <div ref={parentRef} className="overflow-y-auto pr-1">
+      <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }}>
+        {rowVirtualizer.getVirtualItems().map(vi => {
+          const a = items[vi.index];
+          return (
+            <div
+              key={a.id}
+              data-index={vi.index}
+              ref={rowVirtualizer.measureElement}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                transform: `translateY(${vi.start}px)`,
+                paddingBottom: 8,
+              }}
+            >
+              {renderCard(a)}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
