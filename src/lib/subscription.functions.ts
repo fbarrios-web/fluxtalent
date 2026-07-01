@@ -347,10 +347,11 @@ export const requestInvoiceC = createServerFn({ method: "POST" })
     // Datos del usuario que hace la solicitud (para incluirlos en el mail)
     const { data: profile } = await supabaseAdmin
       .from("profiles")
-      .select("display_name, full_name, dni, phone, country, province, google_email")
+      .select("display_name, full_name, dni, country, province, google_email")
       .eq("id", userId)
       .maybeSingle();
-    const userEmail = ((claims as any)?.email ?? profile?.google_email ?? "").toString();
+    const userEmail = ((claims as any)?.email ?? (profile as any)?.google_email ?? "").toString();
+
 
     const { data: inserted, error } = await supabase
       .from("invoice_requests")
