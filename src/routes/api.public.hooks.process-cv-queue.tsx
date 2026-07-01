@@ -37,7 +37,7 @@ export const Route = createFileRoute("/api/public/hooks/process-cv-queue")({
         let limit = BATCH_SIZE;
         try {
           const body = (await request.json().catch(() => ({}))) as { limit?: number };
-          if (typeof body.limit === "number" && body.limit > 0 && body.limit <= 25) {
+          if (typeof body.limit === "number" && body.limit > 0 && body.limit <= MAX_LIMIT) {
             limit = body.limit;
           }
         } catch { /* empty body is fine */ }
