@@ -1,6 +1,37 @@
 // Server-only helper for Lovable AI Gateway
 const BASE = "https://ai.gateway.lovable.dev/v1";
 
+// Retry helper: exponential backoff on 429 (rate limit) and 5xx (transient).
+// Non-retriable errors (4xx other than 429) throw immediately.
+async function fetchWithRetry(url: string, init: RequestInit, maxRetries = 3): Promise<Response> {
+  let attempt = 0;
+  let lastErr: any;
+  while (attempt <= maxRetries) {
+    try {
+      const res = await fetch(url, init);
+      if (res.ok) return res;
+      // Retriable: 429 (rate limit) and 5xx
+      if (res.status === 429 || res.status >= 500) {
+        if (attempt === maxRetries) return res;
+        const retryAfter = Number(res.headers.get("retry-after")) || 0;
+        const backoff = retryAfter > 0
+          ? retryAfter * 1000
+          : Math.min(1000 * 2 ** attempt, 8000) + Math.floor(Math.random() * 500);
+        await new Promise(r => setTimeout(r, backoff));
+        attempt++;
+        continue;
+      }
+      return res; // non-retriable error surface
+    } catch (e) {
+      lastErr = e;
+      if (attempt === maxRetries) throw e;
+      await new Promise(r => setTimeout(r, Math.min(1000 * 2 ** attempt, 8000)));
+      attempt++;
+    }
+  }
+  throw lastErr ?? new Error("AI gateway: retries exhausted");
+}
+
 export async function aiJSON<T = any>(opts: {
   system?: string;
   user: string | Array<any>;
@@ -24,7 +55,7 @@ export async function aiJSON<T = any>(opts: {
     body.response_format = { type: "json_object" };
   }
 
-  const res = await fetch(`${BASE}/chat/completions`, {
+  const res = await fetchWithRetry(`${BASE}/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -54,7 +85,7 @@ export async function aiText(opts: { system?: string; user: string; model?: stri
   const messages: any[] = [];
   if (opts.system) messages.push({ role: "system", content: opts.system });
   messages.push({ role: "user", content: opts.user });
-  const res = await fetch(`${BASE}/chat/completions`, {
+  const res = await fetchWithRetry(`${BASE}/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "Lovable-API-Key": key },
     body: JSON.stringify({ model: opts.model ?? "google/gemini-3-flash-preview", messages }),
@@ -86,7 +117,7 @@ export async function aiGenerateImage(opts: {
         quality: "low",
         n: 1,
       };
-  const res = await fetch(`${BASE}/images/generations`, {
+  const res = await fetchWithRetry(`${BASE}/images/generations`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
     body: JSON.stringify(body),

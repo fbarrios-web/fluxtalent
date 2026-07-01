@@ -18,10 +18,11 @@ import { createFileRoute } from "@tanstack/react-router";
  * Auth: Supabase anon `apikey` header — same pattern as other public hooks.
  */
 
-const BATCH_SIZE = 5;
-const CONCURRENCY = 2;
+const BATCH_SIZE = 25;
+const CONCURRENCY = 8;
 const STALE_SECONDS = 180; // a row stuck in 'running' longer than this is re-claimed
 const MAX_ATTEMPTS = 5;
+const MAX_LIMIT = 50;
 
 export const Route = createFileRoute("/api/public/hooks/process-cv-queue")({
   server: {
@@ -36,7 +37,7 @@ export const Route = createFileRoute("/api/public/hooks/process-cv-queue")({
         let limit = BATCH_SIZE;
         try {
           const body = (await request.json().catch(() => ({}))) as { limit?: number };
-          if (typeof body.limit === "number" && body.limit > 0 && body.limit <= 25) {
+          if (typeof body.limit === "number" && body.limit > 0 && body.limit <= MAX_LIMIT) {
             limit = body.limit;
           }
         } catch { /* empty body is fine */ }
