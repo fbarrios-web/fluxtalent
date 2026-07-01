@@ -55,7 +55,7 @@ export async function aiJSON<T = any>(opts: {
     body.response_format = { type: "json_object" };
   }
 
-  const res = await fetch(`${BASE}/chat/completions`, {
+  const res = await fetchWithRetry(`${BASE}/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -85,7 +85,7 @@ export async function aiText(opts: { system?: string; user: string; model?: stri
   const messages: any[] = [];
   if (opts.system) messages.push({ role: "system", content: opts.system });
   messages.push({ role: "user", content: opts.user });
-  const res = await fetch(`${BASE}/chat/completions`, {
+  const res = await fetchWithRetry(`${BASE}/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "Lovable-API-Key": key },
     body: JSON.stringify({ model: opts.model ?? "google/gemini-3-flash-preview", messages }),
@@ -117,7 +117,7 @@ export async function aiGenerateImage(opts: {
         quality: "low",
         n: 1,
       };
-  const res = await fetch(`${BASE}/images/generations`, {
+  const res = await fetchWithRetry(`${BASE}/images/generations`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
     body: JSON.stringify(body),
