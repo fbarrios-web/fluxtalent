@@ -37,6 +37,7 @@ import { Route as AppAdminPaymentsRouteImport } from './routes/app.admin.payment
 import { Route as AppAdminOrgsRouteImport } from './routes/app.admin.orgs'
 import { Route as ApiPublicApplyRouteImport } from './routes/api.public.apply'
 import { Route as ApiPublicAnalyzeRouteImport } from './routes/api.public.analyze'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicScheduleBookRouteImport } from './routes/api.public.schedule.book'
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api.public.mp.webhook'
 import { Route as ApiPublicHooksProcessCvQueueRouteImport } from './routes/api.public.hooks.process-cv-queue'
@@ -182,6 +183,12 @@ const ApiPublicAnalyzeRoute = ApiPublicAnalyzeRouteImport.update({
   path: '/api/public/analyze',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicScheduleBookRoute = ApiPublicScheduleBookRouteImport.update({
   id: '/api/public/schedule/book',
   path: '/api/public/schedule/book',
@@ -237,6 +244,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -269,6 +277,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -304,6 +313,7 @@ export interface FileRoutesById {
   '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -340,6 +350,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-cv-queue'
     | '/api/public/mp/webhook'
     | '/api/public/schedule/book'
+    | '/lovable/email/queue/process'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -372,6 +383,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-cv-queue'
     | '/api/public/mp/webhook'
     | '/api/public/schedule/book'
+    | '/lovable/email/queue/process'
   id:
     | '__root__'
     | '/'
@@ -406,6 +418,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-cv-queue'
     | '/api/public/mp/webhook'
     | '/api/public/schedule/book'
+    | '/lovable/email/queue/process'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -422,6 +435,7 @@ export interface RootRouteChildren {
   ApiPublicHooksProcessCvQueueRoute: typeof ApiPublicHooksProcessCvQueueRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
   ApiPublicScheduleBookRoute: typeof ApiPublicScheduleBookRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -622,6 +636,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAnalyzeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/schedule/book': {
       id: '/api/public/schedule/book'
       path: '/api/public/schedule/book'
@@ -723,6 +744,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksProcessCvQueueRoute: ApiPublicHooksProcessCvQueueRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
   ApiPublicScheduleBookRoute: ApiPublicScheduleBookRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
