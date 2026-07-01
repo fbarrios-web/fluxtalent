@@ -38,6 +38,8 @@ import { Route as AppAdminOrgsRouteImport } from './routes/app.admin.orgs'
 import { Route as ApiPublicApplyRouteImport } from './routes/api.public.apply'
 import { Route as ApiPublicAnalyzeRouteImport } from './routes/api.public.analyze'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicScheduleBookRouteImport } from './routes/api.public.schedule.book'
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api.public.mp.webhook'
 import { Route as ApiPublicHooksProcessCvQueueRouteImport } from './routes/api.public.hooks.process-cv-queue'
@@ -189,6 +191,16 @@ const LovableEmailQueueProcessRoute =
     path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicScheduleBookRoute = ApiPublicScheduleBookRouteImport.update({
   id: '/api/public/schedule/book',
   path: '/api/public/schedule/book',
@@ -244,6 +256,8 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesByTo {
@@ -277,6 +291,8 @@ export interface FileRoutesByTo {
   '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesById {
@@ -313,6 +329,8 @@ export interface FileRoutesById {
   '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRouteTypes {
@@ -350,6 +368,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-cv-queue'
     | '/api/public/mp/webhook'
     | '/api/public/schedule/book'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -383,6 +403,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-cv-queue'
     | '/api/public/mp/webhook'
     | '/api/public/schedule/book'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
   id:
     | '__root__'
@@ -418,6 +440,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-cv-queue'
     | '/api/public/mp/webhook'
     | '/api/public/schedule/book'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
   fileRoutesById: FileRoutesById
 }
@@ -435,6 +459,8 @@ export interface RootRouteChildren {
   ApiPublicHooksProcessCvQueueRoute: typeof ApiPublicHooksProcessCvQueueRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
   ApiPublicScheduleBookRoute: typeof ApiPublicScheduleBookRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
@@ -643,6 +669,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/schedule/book': {
       id: '/api/public/schedule/book'
       path: '/api/public/schedule/book'
@@ -744,6 +784,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksProcessCvQueueRoute: ApiPublicHooksProcessCvQueueRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
   ApiPublicScheduleBookRoute: ApiPublicScheduleBookRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
