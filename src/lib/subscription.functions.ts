@@ -398,8 +398,11 @@ export const requestInvoiceC = createServerFn({ method: "POST" })
         }
       }
     } catch (e: any) {
-      emailWarning = `Solicitud guardada, pero falló el envío del email: ${e?.message ?? "error"}`;
+      console.error("[requestInvoiceC] email notification failed:", e?.message ?? e);
+      // No exponemos el error al usuario: la solicitud queda registrada y visible en el panel admin.
+      emailWarning = null;
     }
+
 
     return { id: inserted.id, emailWarning };
   });
