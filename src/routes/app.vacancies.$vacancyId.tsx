@@ -230,30 +230,17 @@ function VacancyDetail() {
                     </div>
                     <span className="rounded-full bg-background px-2 text-xs">{items.length}</span>
                   </div>
-                  <div className="space-y-2 overflow-y-auto pr-1">
-
-                    {items.map((a: any) => (
-                      <div
-                        key={a.id}
-                        draggable
-                        onDragStart={e => e.dataTransfer.setData("text/plain", a.id)}
-                        onClick={() => nav({ to: "/app/candidates/$id", params: { id: a.id } })}
-                        className="cursor-grab rounded-xl border border-border bg-card p-3 shadow-sm hover:border-primary active:cursor-grabbing"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="truncate text-sm font-medium">{a.first_name} {a.last_name}</div>
-                          <MatchPill score={a.match_score} minMatch={v.min_match} aiStatus={a.ai_status} />
-                        </div>
-                        <div className="mt-1 truncate text-xs text-muted-foreground">{a.email}</div>
-                      </div>
-                    ))}
-                    {!items.length && <div className="rounded-lg border border-dashed border-border/60 p-3 text-center text-xs text-muted-foreground">—</div>}
-                  </div>
+                  <KanbanColumnBody
+                    items={items}
+                    onCardClick={(id) => nav({ to: "/app/candidates/$id", params: { id } })}
+                    minMatch={v.min_match}
+                  />
                 </div>
               );
             })}
           </div>
         </TabsContent>
+
 
 
         <TabsContent value="table" className="mt-6">
