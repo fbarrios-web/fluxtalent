@@ -33,6 +33,7 @@ function AdminOrgs() {
   const list = useServerFn(adminListOrgs);
   const grant = useServerFn(adminGrantLicense);
   const exportFn = useServerFn(adminExportClients);
+  const delFn = useServerFn(adminDeleteOrg);
   const [filter, setFilter] = useState("");
   const [exporting, setExporting] = useState(false);
 
