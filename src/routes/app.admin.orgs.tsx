@@ -61,6 +61,12 @@ function AdminOrgs() {
     onError: (e: any) => toast.error(e.message ?? "Error"),
   });
 
+  const delMut = useMutation({
+    mutationFn: (org_id: string) => delFn({ data: { org_id } }),
+    onSuccess: (r: any) => { qc.invalidateQueries({ queryKey: ["admin-orgs"] }); qc.invalidateQueries({ queryKey: ["admin-metrics"] }); qc.invalidateQueries({ queryKey: ["admin-users"] }); toast.success(`Cuenta eliminada (${r?.deleted_users ?? 0} usuario/s)`); },
+    onError: (e: any) => toast.error(e.message ?? "Error al eliminar"),
+  });
+
   const [planDialog, setPlanDialog] = useState<{ orgId: string; orgName: string } | null>(null);
 
   if (isLoading) return <div className="grid h-64 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></div>;
