@@ -154,6 +154,19 @@ export const adminGrantLicense = createServerFn({ method: "POST" })
         };
         break;
       }
+      case "grant_admin_unlimited": {
+        patch = {
+          is_unlimited: true,
+          subscription_status: "active",
+          plan_price_ars: 0,
+          current_period_end: new Date(now + 3650 * 86400000).toISOString(),
+        };
+        break;
+      }
+      case "revoke_admin_unlimited": {
+        patch = { is_unlimited: false };
+        break;
+      }
     }
 
     const { error } = await supabaseAdmin.from("organizations").update(patch as never).eq("id", data.org_id);
