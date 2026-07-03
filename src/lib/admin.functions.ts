@@ -412,3 +412,27 @@ export const adminUsage = createServerFn({ method: "GET" })
       totalCostUsd: aiCostUsd + emailCostUsd + storageCostUsd,
     };
   });
+
+/** Delete an organization and all its data (users, vacancies, applications, etc.). */
+export const adminDeleteOrg = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ org_id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Collect user ids in this org first (needed to delete auth users).
+    const { data: profs } = await supabaseAdmin.from("profiles").select("id").eq("org_id", data.org_id);
+    const userIds = (profs ?? []).map((p: any) => p.id);
+
+    // Purge all org data via SECURITY DEFINER function.
+    const { error: rpcErr } = await supabaseAdmin.rpc("admin_delete_org", { _org_id: data.org_id });
+    if (rpcErr) throw rpcErr;
+
+    // Delete the auth users so the login is fully removed.
+    for (const uid of userIds) {
+      try { await supabaseAdmin.auth.admin.deleteUser(uid); } catch { /* ignore */ }
+    }
+
+    return { ok: true, deleted_users: userIds.length };
+  });
