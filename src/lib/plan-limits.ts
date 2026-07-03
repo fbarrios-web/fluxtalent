@@ -6,10 +6,12 @@ type Sb = any;
 export async function getOrgPlan(supabase: Sb, orgId: string): Promise<Plan> {
   const { data: org } = await supabase
     .from("organizations")
-    .select("plan_price_ars, subscription_status, trial_ends_at")
+    .select("plan_price_ars, subscription_status, trial_ends_at, is_unlimited")
     .eq("id", orgId).maybeSingle();
   if (!org) return PLANS[0];
-  // Trial = Free plan limits
+  if ((org as any).is_unlimited) {
+    return { ...PLANS[0], id: "custom", name: "Admin (ilimitado)", maxVacancies: -1, maxCvsPerMonth: -1 };
+  }
   if (org.subscription_status === "trialing") return PLANS[0];
   return planByPrice(org.plan_price_ars);
 }
