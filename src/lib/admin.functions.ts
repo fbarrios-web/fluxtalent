@@ -75,7 +75,7 @@ export const adminListOrgs = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("organizations")
-      .select("id, name, subscription_status, trial_ends_at, current_period_end, plan_price_ars, last_payment_at, created_at, mp_preapproval_id, parent_org_id")
+      .select("id, name, subscription_status, trial_ends_at, current_period_end, plan_price_ars, last_payment_at, created_at, mp_preapproval_id, parent_org_id, is_unlimited")
       .order("created_at", { ascending: false });
     if (error) throw error;
     const orgs = data ?? [];
