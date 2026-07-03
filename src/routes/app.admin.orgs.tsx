@@ -22,6 +22,8 @@ const actions = [
   { v: "activate_365", l: "1 año pago" },
   { v: "extend_trial_15", l: "+15 días trial" },
   { v: "mark_paid_manual", l: "Marcar pagado" },
+  { v: "grant_admin_unlimited", l: "★ Activar admin (ilimitado)" },
+  { v: "revoke_admin_unlimited", l: "Quitar admin ilimitado" },
   { v: "suspend", l: "Suspender" },
   { v: "cancel", l: "Cancelar" },
 ] as const;
