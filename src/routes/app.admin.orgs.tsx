@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { adminListOrgs, adminGrantLicense, adminExportClients } from "@/lib/admin.functions";
+import { adminListOrgs, adminGrantLicense, adminExportClients, adminDeleteOrg } from "@/lib/admin.functions";
 import { Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,8 @@ const actions = [
   { v: "activate_365", l: "1 año pago" },
   { v: "extend_trial_15", l: "+15 días trial" },
   { v: "mark_paid_manual", l: "Marcar pagado" },
+  { v: "grant_admin_unlimited", l: "★ Activar admin (ilimitado)" },
+  { v: "revoke_admin_unlimited", l: "Quitar admin ilimitado" },
   { v: "suspend", l: "Suspender" },
   { v: "cancel", l: "Cancelar" },
 ] as const;
@@ -31,6 +33,7 @@ function AdminOrgs() {
   const list = useServerFn(adminListOrgs);
   const grant = useServerFn(adminGrantLicense);
   const exportFn = useServerFn(adminExportClients);
+  const delFn = useServerFn(adminDeleteOrg);
   const [filter, setFilter] = useState("");
   const [exporting, setExporting] = useState(false);
 
@@ -56,6 +59,12 @@ function AdminOrgs() {
     mutationFn: (vars: { org_id: string; action: any; plan_price_ars?: number; days?: number }) => grant({ data: vars }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-orgs"] }); qc.invalidateQueries({ queryKey: ["admin-metrics"] }); toast.success("Actualizado"); },
     onError: (e: any) => toast.error(e.message ?? "Error"),
+  });
+
+  const delMut = useMutation({
+    mutationFn: (org_id: string) => delFn({ data: { org_id } }),
+    onSuccess: (r: any) => { qc.invalidateQueries({ queryKey: ["admin-orgs"] }); qc.invalidateQueries({ queryKey: ["admin-metrics"] }); qc.invalidateQueries({ queryKey: ["admin-users"] }); toast.success(`Cuenta eliminada (${r?.deleted_users ?? 0} usuario/s)`); },
+    onError: (e: any) => toast.error(e.message ?? "Error al eliminar"),
   });
 
   const [planDialog, setPlanDialog] = useState<{ orgId: string; orgName: string } | null>(null);
@@ -118,8 +127,14 @@ function AdminOrgs() {
                     ) : "—"}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="font-medium">{o.subscription_status === "trialing" ? "Free (trial)" : planByPrice(o.plan_price_ars).name}</div>
-                    <div className="text-xs text-muted-foreground">ARS {Number(o.plan_price_ars).toLocaleString("es-AR")}/mes</div>
+                    <div className="font-medium">
+                      {(o as any).is_unlimited
+                        ? "★ Admin ilimitado"
+                        : (o.subscription_status === "trialing" ? "Free (trial)" : planByPrice(o.plan_price_ars).name)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {(o as any).is_unlimited ? "Sin costo · no cuenta en ganancias" : `ARS ${Number(o.plan_price_ars).toLocaleString("es-AR")}/mes`}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-xs">{o.last_payment_at ? new Date(o.last_payment_at).toLocaleDateString("es-AR") : "—"}</td>
                   <td className="px-4 py-3">
@@ -128,6 +143,19 @@ function AdminOrgs() {
                         Asignar plan
                       </Button>
                       <ActionMenu orgId={o.id} onPick={(action) => mut.mutate({ org_id: o.id, action })} disabled={mut.isPending} />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive hover:bg-destructive/10"
+                        disabled={delMut.isPending}
+                        onClick={() => {
+                          if (confirm(`¿Eliminar definitivamente "${o.name}"?\n\nSe borran los usuarios, vacantes, postulaciones y toda la información de esta cuenta. Esta acción no se puede deshacer.`)) {
+                            delMut.mutate(o.id);
+                          }
+                        }}
+                      >
+                        Eliminar
+                      </Button>
                     </div>
                   </td>
                 </tr>

@@ -563,6 +563,7 @@ export type Database = {
           created_at: string
           current_period_end: string | null
           id: string
+          is_unlimited: boolean
           last_payment_at: string | null
           logo_url: string | null
           mp_preapproval_id: string | null
@@ -583,6 +584,7 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           id?: string
+          is_unlimited?: boolean
           last_payment_at?: string | null
           logo_url?: string | null
           mp_preapproval_id?: string | null
@@ -603,6 +605,7 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           id?: string
+          is_unlimited?: boolean
           last_payment_at?: string | null
           logo_url?: string | null
           mp_preapproval_id?: string | null
@@ -1083,6 +1086,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_delete_org: { Args: { _org_id: string }; Returns: undefined }
       claim_pending_ai_analyses: {
         Args: { _limit?: number; _stale_seconds?: number }
         Returns: {
