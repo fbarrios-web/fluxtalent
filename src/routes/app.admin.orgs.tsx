@@ -127,8 +127,14 @@ function AdminOrgs() {
                     ) : "—"}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="font-medium">{o.subscription_status === "trialing" ? "Free (trial)" : planByPrice(o.plan_price_ars).name}</div>
-                    <div className="text-xs text-muted-foreground">ARS {Number(o.plan_price_ars).toLocaleString("es-AR")}/mes</div>
+                    <div className="font-medium">
+                      {(o as any).is_unlimited
+                        ? "★ Admin ilimitado"
+                        : (o.subscription_status === "trialing" ? "Free (trial)" : planByPrice(o.plan_price_ars).name)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {(o as any).is_unlimited ? "Sin costo · no cuenta en ganancias" : `ARS ${Number(o.plan_price_ars).toLocaleString("es-AR")}/mes`}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-xs">{o.last_payment_at ? new Date(o.last_payment_at).toLocaleDateString("es-AR") : "—"}</td>
                   <td className="px-4 py-3">
@@ -137,6 +143,19 @@ function AdminOrgs() {
                         Asignar plan
                       </Button>
                       <ActionMenu orgId={o.id} onPick={(action) => mut.mutate({ org_id: o.id, action })} disabled={mut.isPending} />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive hover:bg-destructive/10"
+                        disabled={delMut.isPending}
+                        onClick={() => {
+                          if (confirm(`¿Eliminar definitivamente "${o.name}"?\n\nSe borran los usuarios, vacantes, postulaciones y toda la información de esta cuenta. Esta acción no se puede deshacer.`)) {
+                            delMut.mutate(o.id);
+                          }
+                        }}
+                      >
+                        Eliminar
+                      </Button>
                     </div>
                   </td>
                 </tr>
