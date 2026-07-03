@@ -27,7 +27,7 @@ export const adminMetrics = createServerFn({ method: "GET" })
       sb.from("profiles").select("*", { count: "exact", head: true }),
       sb.from("vacancies").select("*", { count: "exact", head: true }),
       sb.from("applications").select("*", { count: "exact", head: true }),
-      sb.from("organizations").select("subscription_status"),
+      sb.from("organizations").select("subscription_status, plan_price_ars, is_unlimited"),
       sb.from("payments").select("amount_ars, paid_at, created_at").gte("created_at", new Date(Date.now() - 30 * 86400000).toISOString()),
       sb.from("organizations").select("created_at").gte("created_at", new Date(Date.now() - 14 * 86400000).toISOString()),
       sb.from("activity_events").select("event_type, created_at").gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()),
