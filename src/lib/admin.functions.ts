@@ -37,7 +37,8 @@ export const adminMetrics = createServerFn({ method: "GET" })
       acc[r.subscription_status] = (acc[r.subscription_status] ?? 0) + 1;
       return acc;
     }, {});
-    const mrr = Object.entries(byStatus).reduce((sum, [k, v]) => (k === "active" ? sum + v * 20000 : sum), 0);
+    const activeOrgs = (orgsByStatus ?? []).filter((r: any) => !r.is_unlimited);
+    const mrr = activeOrgs.reduce((sum: number, r: any) => sum + (r.subscription_status === "active" ? Number(r.plan_price_ars || 0) : 0), 0);
     const revenue30 = (payments30 ?? []).reduce((sum: number, p: any) => sum + Number(p.amount_ars || 0), 0);
 
     // Daily signup buckets (14 days)
