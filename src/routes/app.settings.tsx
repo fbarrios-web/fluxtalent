@@ -58,7 +58,7 @@ function Settings() {
   const [signature, setSignature] = useState("");
   const [signatureImageUrl, setSignatureImageUrl] = useState("");
   const [signaturePreview, setSignaturePreview] = useState("");
-  const [senderEmail, setSenderEmail] = useState("");
+  
   const [timezone, setTimezone] = useState("America/Argentina/Buenos_Aires");
   const [displayName, setDisplayName] = useState("");
   const [fullName, setFullName] = useState("");
