@@ -438,7 +438,7 @@ export const addManualSlot = createServerFn({ method: "POST" })
     // Ensure a scheduling config row exists and is enabled so invites can be sent
     // when the recruiter is only using manual slots (no weekly rules).
     const { data: existingCfg } = await context.supabase.from("vacancy_scheduling")
-      .select("id, enabled").eq("vacancy_id", data.vacancyId).eq("stage", data.stage).maybeSingle();
+      .select("enabled").eq("vacancy_id", data.vacancyId).eq("stage", data.stage).maybeSingle();
     if (!existingCfg) {
       await context.supabase.from("vacancy_scheduling").insert({
         vacancy_id: data.vacancyId,
@@ -450,7 +450,8 @@ export const addManualSlot = createServerFn({ method: "POST" })
       } as any);
     } else if (!existingCfg.enabled) {
       await context.supabase.from("vacancy_scheduling")
-        .update({ enabled: true }).eq("id", (existingCfg as any).id);
+        .update({ enabled: true })
+        .eq("vacancy_id", data.vacancyId).eq("stage", data.stage);
     }
     return { ok: true };
   });
