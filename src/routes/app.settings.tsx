@@ -86,7 +86,7 @@ function Settings() {
       setLogoUrl(org.logo_url ?? "");
       setSignature(org.signature_html ?? "");
       setSignatureImageUrl((org as any).signature_image_url ?? "");
-      setSenderEmail(org.sender_email ?? "");
+      
       setTimezone((org as any).timezone ?? "America/Argentina/Buenos_Aires");
       signedPreview(org.logo_url ?? "").then(setLogoPreview);
       signedPreview((org as any).signature_image_url ?? "").then(setSignaturePreview);
