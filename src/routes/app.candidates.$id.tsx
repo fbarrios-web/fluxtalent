@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { analyzeApplication, aiInterviewQuestions, aiDraftEmail, aiAnalyzeInterview } from "@/lib/ai.functions";
-import { moveApplicationStage, getSignedCvUrl, saveScorecard } from "@/lib/recruiting.functions";
+import { moveApplicationStage, getSignedCvUrl } from "@/lib/recruiting.functions";
 import { generateCandidateReport } from "@/lib/candidate-report";
-import { ArrowLeft, Sparkles, Loader2, FileText, Mail, MessageSquare, AlertTriangle, CheckCircle2, Star, FileDown } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, FileText, Mail, MessageSquare, AlertTriangle, CheckCircle2, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -52,7 +52,7 @@ function CandidateDetail() {
   const draftEmail = useServerFn(aiDraftEmail);
   const interviewQs = useServerFn(aiInterviewQuestions);
   const analyzeInterview = useServerFn(aiAnalyzeInterview);
-  const saveScore = useServerFn(saveScorecard);
+  
 
   const { data: app, isLoading } = useQuery<any>({
     queryKey: ["candidate", id],
@@ -202,7 +202,6 @@ function CandidateDetail() {
               <TabsTrigger value="profile">Perfil parseado</TabsTrigger>
               <TabsTrigger value="email"><Mail className="mr-1 h-3 w-3" /> Email</TabsTrigger>
               <TabsTrigger value="interview"><MessageSquare className="mr-1 h-3 w-3" /> Entrevista</TabsTrigger>
-              <TabsTrigger value="scorecard"><Star className="mr-1 h-3 w-3" /> Scorecard</TabsTrigger>
               <TabsTrigger value="report"><FileDown className="mr-1 h-3 w-3" /> Informe</TabsTrigger>
             </TabsList>
 
@@ -262,21 +261,6 @@ function CandidateDetail() {
                   </li>
                 ))}
               </ol>
-            </TabsContent>
-
-            <TabsContent value="scorecard" className="mt-4 rounded-xl border border-border bg-card p-5">
-              <ScorecardForm appId={id} stage={app.stage} onSaved={() => qc.invalidateQueries({ queryKey: ["candidate", id] })} save={saveScore} />
-              {!!app.scorecards?.length && (
-                <div className="mt-6 space-y-3">
-                  <h4 className="text-sm font-semibold">Scorecards anteriores</h4>
-                  {app.scorecards.map((s: any) => (
-                    <div key={s.id} className="rounded-lg border border-border p-3 text-sm">
-                      <div className="flex justify-between"><span className="font-medium">{s.stage}</span><span>{s.overall}/5 · {s.recommendation}</span></div>
-                      {s.notes && <p className="mt-1 text-muted-foreground">{s.notes}</p>}
-                    </div>
-                  ))}
-                </div>
-              )}
             </TabsContent>
 
             <TabsContent value="report" className="mt-4 space-y-3 rounded-xl border border-border bg-card p-5">
@@ -357,46 +341,3 @@ function Insight({ icon: Icon, title, items, color }: any) {
   );
 }
 
-function ScorecardForm({ appId, stage, save, onSaved }: any) {
-  const criteria = ["Experiencia técnica", "Comunicación", "Cultura", "Ownership"];
-  const [ratings, setRatings] = useState<Record<string, number>>(Object.fromEntries(criteria.map(c => [c, 3])));
-  const [overall, setOverall] = useState(3);
-  const [rec, setRec] = useState("avanzar");
-  const [notes, setNotes] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  async function submit() {
-    setSaving(true);
-    try {
-      await save({ data: { application_id: appId, stage, ratings, overall, recommendation: rec, notes } });
-      toast.success("Scorecard guardado");
-      setNotes("");
-      onSaved();
-    } catch (e: any) { toast.error(e.message); } finally { setSaving(false); }
-  }
-  return (
-    <div className="space-y-4">
-      {criteria.map(c => (
-        <div key={c}>
-          <div className="mb-1 flex justify-between text-sm"><span>{c}</span><span className="text-muted-foreground">{ratings[c]}/5</span></div>
-          <input type="range" min={1} max={5} value={ratings[c]} onChange={e => setRatings(r => ({ ...r, [c]: Number(e.target.value) }))} className="w-full accent-primary" />
-        </div>
-      ))}
-      <div>
-        <div className="mb-1 flex justify-between text-sm font-semibold"><span>Score general</span><span>{overall}/5</span></div>
-        <input type="range" min={1} max={5} value={overall} onChange={e => setOverall(Number(e.target.value))} className="w-full accent-primary" />
-      </div>
-      <Select value={rec} onValueChange={setRec}>
-        <SelectTrigger><SelectValue /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="hire_strong">Avanzar fuerte</SelectItem>
-          <SelectItem value="avanzar">Avanzar</SelectItem>
-          <SelectItem value="dudoso">Dudoso</SelectItem>
-          <SelectItem value="descartar">Descartar</SelectItem>
-        </SelectContent>
-      </Select>
-      <Textarea rows={4} placeholder="Notas de la entrevista…" value={notes} onChange={e => setNotes(e.target.value)} />
-      <Button onClick={submit} disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Guardar scorecard</Button>
-    </div>
-  );
-}

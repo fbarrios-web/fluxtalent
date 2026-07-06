@@ -58,7 +58,7 @@ function Settings() {
   const [signature, setSignature] = useState("");
   const [signatureImageUrl, setSignatureImageUrl] = useState("");
   const [signaturePreview, setSignaturePreview] = useState("");
-  const [senderEmail, setSenderEmail] = useState("");
+  
   const [timezone, setTimezone] = useState("America/Argentina/Buenos_Aires");
   const [displayName, setDisplayName] = useState("");
   const [fullName, setFullName] = useState("");
@@ -86,7 +86,7 @@ function Settings() {
       setLogoUrl(org.logo_url ?? "");
       setSignature(org.signature_html ?? "");
       setSignatureImageUrl((org as any).signature_image_url ?? "");
-      setSenderEmail(org.sender_email ?? "");
+      
       setTimezone((org as any).timezone ?? "America/Argentina/Buenos_Aires");
       signedPreview(org.logo_url ?? "").then(setLogoPreview);
       signedPreview((org as any).signature_image_url ?? "").then(setSignaturePreview);
@@ -127,8 +127,6 @@ function Settings() {
     if (!consultancyName.trim()) errs.consultancyName = "El nombre comercial es obligatorio";
     if (!contactEmail.trim()) errs.contactEmail = "El mail de contacto es obligatorio";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) errs.contactEmail = "Ingresá un email válido";
-    if (!senderEmail.trim()) errs.senderEmail = "El email remitente es obligatorio";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(senderEmail)) errs.senderEmail = "Ingresá un email válido";
     if (!brandColor.trim()) errs.brandColor = "El color de marca es obligatorio";
     if (!timezone.trim()) errs.timezone = "La zona horaria es obligatoria";
     return errs;
@@ -152,7 +150,7 @@ function Settings() {
         logo_url: logoUrl || null,
         signature_html: signature || null,
         signature_image_url: signatureImageUrl || null,
-        sender_email: senderEmail || null,
+        
         timezone: timezone || "America/Argentina/Buenos_Aires",
       };
       const { error } = await supabase.from("organizations").update(patch as any).eq("id", org.id);
@@ -222,11 +220,6 @@ function Settings() {
                 <Label>Mail de contacto (para postulantes) <span className="text-destructive">*</span></Label>
                 <Input type="email" value={contactEmail} onChange={e => { setContactEmail(e.target.value); setErrors(p => ({ ...p, contactEmail: "" })); }} placeholder="hola@empresa.com" className={errors.contactEmail ? "border-destructive ring-1 ring-destructive" : ""} />
                 {errors.contactEmail && <p className="text-xs text-destructive">{errors.contactEmail}</p>}
-              </div>
-              <div className="space-y-1">
-                <Label>Email remitente <span className="text-destructive">*</span></Label>
-                <Input value={senderEmail} onChange={e => { setSenderEmail(e.target.value); setErrors(p => ({ ...p, senderEmail: "" })); }} placeholder="reclutamiento@empresa.com" className={errors.senderEmail ? "border-destructive ring-1 ring-destructive" : ""} />
-                {errors.senderEmail && <p className="text-xs text-destructive">{errors.senderEmail}</p>}
               </div>
               <div className="space-y-1">
                 <Label>Color de marca <span className="text-destructive">*</span></Label>

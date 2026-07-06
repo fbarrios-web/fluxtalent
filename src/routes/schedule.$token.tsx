@@ -37,6 +37,7 @@ function SchedulePage() {
   const [selected, setSelected] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState<{ meetLink: string | null; when: string } | null>(null);
+  const [logoSrc, setLogoSrc] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -49,6 +50,18 @@ function SchedulePage() {
     setLoading(false);
   }
   useEffect(() => { load(); }, [token]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/public/schedule/logo?token=${encodeURIComponent(token)}`);
+        const json = await res.json().catch(() => ({}));
+        if (!cancelled) setLogoSrc(json?.url ?? null);
+      } catch { if (!cancelled) setLogoSrc(null); }
+    })();
+    return () => { cancelled = true; };
+  }, [token]);
 
   async function book() {
     if (!selected || !data) return;
@@ -132,8 +145,8 @@ function SchedulePage() {
     <div className="min-h-screen bg-muted/30">
       <div className="max-w-2xl mx-auto p-6 md:p-10">
         <header className="mb-8 text-center">
-          {data.logo_url
-            ? <img src={data.logo_url} alt={company} className="h-12 mx-auto mb-4" />
+          {logoSrc
+            ? <img src={logoSrc} alt={company} className="h-12 mx-auto mb-4" />
             : <div className="text-lg font-bold mb-4" style={{ color: brand }}>{company}</div>}
           <h1 className="text-2xl md:text-3xl font-semibold">Hola {data.first_name || ""} 👋</h1>
           <p className="text-muted-foreground mt-2">

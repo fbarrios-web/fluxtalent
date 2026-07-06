@@ -59,12 +59,12 @@ export const createVacancy = createServerFn({ method: "POST" })
     const { data: gateProfile } = await supabase
       .from("profiles").select("google_refresh_token").eq("id", userId).maybeSingle();
     const { data: gateOrg } = await supabase
-      .from("organizations").select("sender_email, name").eq("id", profile.org_id!).maybeSingle();
+      .from("organizations").select("name").eq("id", profile.org_id!).maybeSingle();
     if (!gateProfile?.google_refresh_token) {
       throw new Error("Conectá tu cuenta de Gmail en Integraciones antes de crear vacantes.");
     }
-    if (!gateOrg?.sender_email || !gateOrg?.name) {
-      throw new Error("Completá el nombre de la empresa y el email remitente en Configuración antes de crear vacantes.");
+    if (!gateOrg?.name) {
+      throw new Error("Completá el nombre de la empresa en Configuración antes de crear vacantes.");
     }
 
     // Plan limit: active vacancies + subscription must be active.

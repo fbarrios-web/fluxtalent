@@ -424,7 +424,7 @@ export const addManualSlot = createServerFn({ method: "POST" })
   }).parse(input))
   .handler(async ({ data, context }) => {
     const { data: vac } = await context.supabase.from("vacancies")
-      .select("org_id").eq("id", data.vacancyId).maybeSingle();
+      .select("org_id, created_by").eq("id", data.vacancyId).maybeSingle();
     if (!vac) throw new Error("Vacante no encontrada");
     const start = new Date(data.startISO);
     const end = new Date(start.getTime() + data.durationMinutes * 60_000);
@@ -434,6 +434,25 @@ export const addManualSlot = createServerFn({ method: "POST" })
       source: "manual", status: "open",
     });
     if (error) throw error;
+
+    // Ensure a scheduling config row exists and is enabled so invites can be sent
+    // when the recruiter is only using manual slots (no weekly rules).
+    const { data: existingCfg } = await context.supabase.from("vacancy_scheduling")
+      .select("enabled").eq("vacancy_id", data.vacancyId).eq("stage", data.stage).maybeSingle();
+    if (!existingCfg) {
+      await context.supabase.from("vacancy_scheduling").insert({
+        vacancy_id: data.vacancyId,
+        stage: data.stage,
+        org_id: vac.org_id,
+        recruiter_id: (vac as any).created_by ?? context.userId,
+        duration_minutes: data.durationMinutes,
+        enabled: true,
+      } as any);
+    } else if (!existingCfg.enabled) {
+      await context.supabase.from("vacancy_scheduling")
+        .update({ enabled: true })
+        .eq("vacancy_id", data.vacancyId).eq("stage", data.stage);
+    }
     return { ok: true };
   });
 
