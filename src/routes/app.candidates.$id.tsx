@@ -263,21 +263,6 @@ function CandidateDetail() {
               </ol>
             </TabsContent>
 
-            <TabsContent value="scorecard" className="mt-4 rounded-xl border border-border bg-card p-5">
-              <ScorecardForm appId={id} stage={app.stage} onSaved={() => qc.invalidateQueries({ queryKey: ["candidate", id] })} save={saveScore} />
-              {!!app.scorecards?.length && (
-                <div className="mt-6 space-y-3">
-                  <h4 className="text-sm font-semibold">Scorecards anteriores</h4>
-                  {app.scorecards.map((s: any) => (
-                    <div key={s.id} className="rounded-lg border border-border p-3 text-sm">
-                      <div className="flex justify-between"><span className="font-medium">{s.stage}</span><span>{s.overall}/5 · {s.recommendation}</span></div>
-                      {s.notes && <p className="mt-1 text-muted-foreground">{s.notes}</p>}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
             <TabsContent value="report" className="mt-4 space-y-3 rounded-xl border border-border bg-card p-5">
               <div>
                 <h4 className="text-sm font-semibold">Informe del candidato (Word)</h4>
