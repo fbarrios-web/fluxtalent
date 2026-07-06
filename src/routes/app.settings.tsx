@@ -224,11 +224,6 @@ function Settings() {
                 {errors.contactEmail && <p className="text-xs text-destructive">{errors.contactEmail}</p>}
               </div>
               <div className="space-y-1">
-                <Label>Email remitente <span className="text-destructive">*</span></Label>
-                <Input value={senderEmail} onChange={e => { setSenderEmail(e.target.value); setErrors(p => ({ ...p, senderEmail: "" })); }} placeholder="reclutamiento@empresa.com" className={errors.senderEmail ? "border-destructive ring-1 ring-destructive" : ""} />
-                {errors.senderEmail && <p className="text-xs text-destructive">{errors.senderEmail}</p>}
-              </div>
-              <div className="space-y-1">
                 <Label>Color de marca <span className="text-destructive">*</span></Label>
                 <div className="flex items-center gap-2">
                   <input type="color" value={brandColor} onChange={e => { setBrandColor(e.target.value); setErrors(p => ({ ...p, brandColor: "" })); }} className="h-10 w-14 rounded border border-input" />
