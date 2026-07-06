@@ -52,7 +52,7 @@ function CandidateDetail() {
   const draftEmail = useServerFn(aiDraftEmail);
   const interviewQs = useServerFn(aiInterviewQuestions);
   const analyzeInterview = useServerFn(aiAnalyzeInterview);
-  const saveScore = useServerFn(saveScorecard);
+  
 
   const { data: app, isLoading } = useQuery<any>({
     queryKey: ["candidate", id],
