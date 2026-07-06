@@ -127,8 +127,6 @@ function Settings() {
     if (!consultancyName.trim()) errs.consultancyName = "El nombre comercial es obligatorio";
     if (!contactEmail.trim()) errs.contactEmail = "El mail de contacto es obligatorio";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) errs.contactEmail = "Ingresá un email válido";
-    if (!senderEmail.trim()) errs.senderEmail = "El email remitente es obligatorio";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(senderEmail)) errs.senderEmail = "Ingresá un email válido";
     if (!brandColor.trim()) errs.brandColor = "El color de marca es obligatorio";
     if (!timezone.trim()) errs.timezone = "La zona horaria es obligatoria";
     return errs;
