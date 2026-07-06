@@ -40,6 +40,7 @@ import { Route as ApiPublicAnalyzeRouteImport } from './routes/api.public.analyz
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as ApiPublicScheduleLogoRouteImport } from './routes/api.public.schedule.logo'
 import { Route as ApiPublicScheduleBookRouteImport } from './routes/api.public.schedule.book'
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api.public.mp.webhook'
 import { Route as ApiPublicHooksProcessCvQueueRouteImport } from './routes/api.public.hooks.process-cv-queue'
@@ -201,6 +202,11 @@ const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   path: '/lovable/email/auth/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicScheduleLogoRoute = ApiPublicScheduleLogoRouteImport.update({
+  id: '/api/public/schedule/logo',
+  path: '/api/public/schedule/logo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicScheduleBookRoute = ApiPublicScheduleBookRouteImport.update({
   id: '/api/public/schedule/book',
   path: '/api/public/schedule/book',
@@ -256,6 +262,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
+  '/api/public/schedule/logo': typeof ApiPublicScheduleLogoRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -291,6 +298,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
+  '/api/public/schedule/logo': typeof ApiPublicScheduleLogoRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -329,6 +337,7 @@ export interface FileRoutesById {
   '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
+  '/api/public/schedule/logo': typeof ApiPublicScheduleLogoRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -368,6 +377,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-cv-queue'
     | '/api/public/mp/webhook'
     | '/api/public/schedule/book'
+    | '/api/public/schedule/logo'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -403,6 +413,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-cv-queue'
     | '/api/public/mp/webhook'
     | '/api/public/schedule/book'
+    | '/api/public/schedule/logo'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -440,6 +451,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-cv-queue'
     | '/api/public/mp/webhook'
     | '/api/public/schedule/book'
+    | '/api/public/schedule/logo'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -459,6 +471,7 @@ export interface RootRouteChildren {
   ApiPublicHooksProcessCvQueueRoute: typeof ApiPublicHooksProcessCvQueueRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
   ApiPublicScheduleBookRoute: typeof ApiPublicScheduleBookRoute
+  ApiPublicScheduleLogoRoute: typeof ApiPublicScheduleLogoRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -683,6 +696,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/schedule/logo': {
+      id: '/api/public/schedule/logo'
+      path: '/api/public/schedule/logo'
+      fullPath: '/api/public/schedule/logo'
+      preLoaderRoute: typeof ApiPublicScheduleLogoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/schedule/book': {
       id: '/api/public/schedule/book'
       path: '/api/public/schedule/book'
@@ -784,6 +804,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksProcessCvQueueRoute: ApiPublicHooksProcessCvQueueRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
   ApiPublicScheduleBookRoute: ApiPublicScheduleBookRoute,
+  ApiPublicScheduleLogoRoute: ApiPublicScheduleLogoRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,

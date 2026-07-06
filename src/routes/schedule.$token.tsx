@@ -37,6 +37,7 @@ function SchedulePage() {
   const [selected, setSelected] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState<{ meetLink: string | null; when: string } | null>(null);
+  const [logoSrc, setLogoSrc] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -49,6 +50,18 @@ function SchedulePage() {
     setLoading(false);
   }
   useEffect(() => { load(); }, [token]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/public/schedule/logo?token=${encodeURIComponent(token)}`);
+        const json = await res.json().catch(() => ({}));
+        if (!cancelled) setLogoSrc(json?.url ?? null);
+      } catch { if (!cancelled) setLogoSrc(null); }
+    })();
+    return () => { cancelled = true; };
+  }, [token]);
 
   async function book() {
     if (!selected || !data) return;
