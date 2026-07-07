@@ -10,12 +10,14 @@ export interface Plan {
   priceArs: number; // 0 = gratuito; -1 = a medida
   originalPriceArs?: number; // precio "de lista" para mostrar descuento
   tagline: string;
-  maxVacancies: number; // -1 = ilimitado
+  maxVacancies: number; // vacantes activas simultáneas (-1 = ilimitado)
+  maxNewVacanciesPerCycle: number; // nuevas vacantes por ciclo de facturación (-1 = ilimitado)
   maxCvsPerMonth: number; // -1 = ilimitado
   features: string[];
   highlighted?: boolean;
   contactOnly?: boolean;
 }
+
 
 export const TRIAL_DAYS = 15;
 
