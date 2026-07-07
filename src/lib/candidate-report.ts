@@ -98,7 +98,8 @@ export type CandidateReportInput = {
 };
 
 export async function generateCandidateReport({ org, candidate, vacancy, analysis }: CandidateReportInput) {
-  const color = org.brand_color || "#0F766E";
+  const rawColor = (org.brand_color || "").trim().replace(/^#/, "");
+  const color = /^[0-9a-fA-F]{6}$/.test(rawColor) ? `#${rawColor.toLowerCase()}` : "#0F766E";
   const logo = await fetchLogoBytes(org.logo_url);
   const headerName = org.consultancy_name || org.name || "Informe del candidato";
 
