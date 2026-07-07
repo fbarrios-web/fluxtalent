@@ -121,7 +121,7 @@ function Landing() {
               ["03", "La IA hace el ranking", "Score general + por categoría. Detecta fortalezas, gaps y red flags."],
               ["04", "Avanzás o descartás", "Kanban, emails con tu marca, descartes automáticos según umbral."],
               ["05", "Coordinás la entrevista", "El candidato elige horario. Se genera Meet/Zoom automáticamente."],
-              ["06", "Cargás el scorecard", "Feedback estructurado, comparación, decisión final."],
+              
             ].map(([n, t, d]) => (
               <li key={n} className="flex gap-6">
                 <div className="font-display text-3xl text-primary">{n}</div>
