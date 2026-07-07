@@ -91,6 +91,8 @@ function Dashboard() {
         </Link>
       </header>
 
+      <div className="mb-8"><UsageCard /></div>
+
       {sub && plan && (
         <div className="mb-8 rounded-2xl border border-border bg-card p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -100,54 +102,16 @@ function Dashboard() {
             </div>
             <Link to="/app/subscription" className="text-sm text-primary hover:underline">Ver suscripción →</Link>
           </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <div className="mt-3">
             <MiniStat
               icon={Clock}
               label={sub.subscription_status === "trialing" ? "Días de prueba restantes" : "Próximo cobro en"}
               value={`${sub.daysLeft} días`}
             />
-            <MiniStat
-              icon={Briefcase}
-              label="Vacantes"
-              value={`${usedVacancies} / ${formatLimit(plan.maxVacancies)}`}
-            />
-            <MiniStat
-              icon={FileText}
-              label="CVs / mes"
-              value={`${usedCvs} / ${formatLimit(plan.maxCvsPerMonth)}`}
-            />
           </div>
         </div>
       )}
 
-      {plan && (vacAtCap || cvAtCap || cvNearCap) && (
-        <div className={`mb-8 flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 ${cvAtCap || vacAtCap ? "border-destructive/40 bg-destructive/10" : "border-warning/40 bg-warning/10"}`}>
-          <div className="flex items-start gap-3">
-            <AlertTriangle className={`mt-0.5 h-5 w-5 ${cvAtCap || vacAtCap ? "text-destructive" : "text-warning-foreground"}`} />
-            <div className="text-sm">
-              <p className="font-semibold">
-                {vacAtCap && cvAtCap
-                  ? "Alcanzaste el tope de vacantes y de CVs del plan"
-                  : vacAtCap
-                    ? `Alcanzaste el tope de vacantes activas del plan ${plan.name}`
-                    : cvAtCap
-                      ? `Alcanzaste el tope de CVs del mes del plan ${plan.name}`
-                      : `Estás cerca del tope de CVs del mes (${usedCvs}/${plan.maxCvsPerMonth})`}
-              </p>
-              <p className="text-muted-foreground">
-                {cvAtCap
-                  ? "Las nuevas postulaciones de tus links públicos quedan bloqueadas hasta que actualices el plan o termine el mes."
-                  : vacAtCap
-                    ? "Cerrá una vacante o actualizá tu plan para crear más."
-                    : "Considerá actualizar tu plan para no interrumpir el ingreso de CVs."}
-              </p>
-            </div>
-          </div>
-          <Link to="/app/subscription" className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-            Actualizar plan →
-          </Link>
-        </div>
-      )}
 
 
       <div className="grid gap-4 md:grid-cols-4">
