@@ -133,8 +133,18 @@ export const updateVacancy = createServerFn({ method: "POST" })
       screening: z.array(screeningQuestionSchema).max(10).optional(),
     }).parse(input))
   .handler(async ({ data, context }) => {
+    // Reactivation gate: closed -> non-closed must respect max active vacancies of the plan.
+    if (data.patch.status && data.patch.status !== "closed") {
+      const { data: prev } = await context.supabase
+        .from("vacancies").select("status, org_id").eq("id", data.id).maybeSingle();
+      if (prev && prev.status === "closed" && prev.org_id) {
+        const { assertCanActivateVacancy } = await import("@/lib/plan-limits");
+        await assertCanActivateVacancy(context.supabase, prev.org_id);
+      }
+    }
     const { error } = await context.supabase.from("vacancies").update(data.patch).eq("id", data.id);
     if (error) throw error;
+
     if (data.screening) {
       await context.supabase.from("screening_questions").delete().eq("vacancy_id", data.id);
       if (data.screening.length) {
