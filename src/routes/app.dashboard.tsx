@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Briefcase, Users, Sparkles, TrendingUp, Plus, Clock, FileText, Loader2, AlertTriangle } from "lucide-react";
 import { getMySubscription } from "@/lib/subscription.functions";
 import { planByPrice, formatLimit } from "@/lib/plans";
+import { UsageCard } from "@/components/usage-card";
+
 
 export const Route = createFileRoute("/app/dashboard")({
   component: Dashboard,
