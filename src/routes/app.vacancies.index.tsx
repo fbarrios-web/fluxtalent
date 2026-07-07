@@ -4,6 +4,8 @@ import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, ExternalLink, Download, Search } from "lucide-react";
 import { downloadCSV } from "@/lib/export-csv";
+import { UsageCard } from "@/components/usage-card";
+
 
 export const Route = createFileRoute("/app/vacancies/")({
   component: VacanciesList,
@@ -56,7 +58,10 @@ function VacanciesList() {
         </div>
       </header>
 
+      <div className="mb-4"><UsageCard /></div>
+
       <div className="mb-4 relative max-w-md">
+
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input
           type="search"

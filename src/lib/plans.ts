@@ -10,12 +10,14 @@ export interface Plan {
   priceArs: number; // 0 = gratuito; -1 = a medida
   originalPriceArs?: number; // precio "de lista" para mostrar descuento
   tagline: string;
-  maxVacancies: number; // -1 = ilimitado
+  maxVacancies: number; // vacantes activas simultáneas (-1 = ilimitado)
+  maxNewVacanciesPerCycle: number; // nuevas vacantes por ciclo de facturación (-1 = ilimitado)
   maxCvsPerMonth: number; // -1 = ilimitado
   features: string[];
   highlighted?: boolean;
   contactOnly?: boolean;
 }
+
 
 export const TRIAL_DAYS = 15;
 
@@ -33,6 +35,8 @@ export const PLANS: Plan[] = [
     priceArs: 0,
     tagline: "Free por 15 días",
     maxVacancies: 1,
+    maxNewVacanciesPerCycle: 1,
+
     maxCvsPerMonth: 20,
     features: [
       "1 vacante activa",
@@ -47,6 +51,8 @@ export const PLANS: Plan[] = [
     originalPriceArs: 30000,
     tagline: "Ideal para reclutadores freelancers",
     maxVacancies: 5,
+    maxNewVacanciesPerCycle: 5,
+
     maxCvsPerMonth: 200,
     features: [
       "Hasta 5 vacantes activas",
@@ -62,6 +68,8 @@ export const PLANS: Plan[] = [
     originalPriceArs: 60000,
     tagline: "Ideal para consultoras y áreas de Talento con flujo constante.",
     maxVacancies: 20,
+    maxNewVacanciesPerCycle: 20,
+
     maxCvsPerMonth: 1000,
     highlighted: true,
     features: [
@@ -78,6 +86,8 @@ export const PLANS: Plan[] = [
     originalPriceArs: 120000,
     tagline: "Volumen alto, multi-equipo y soporte dedicado.",
     maxVacancies: -1,
+    maxNewVacanciesPerCycle: -1,
+
     maxCvsPerMonth: 1000,
     features: [
       "Vacantes ilimitadas",
@@ -92,6 +102,8 @@ export const PLANS: Plan[] = [
     priceArs: -1,
     tagline: "Todo lo de Enterprise + integraciones e informes a medida.",
     maxVacancies: -1,
+    maxNewVacanciesPerCycle: -1,
+
     maxCvsPerMonth: -1,
     contactOnly: true,
     features: [

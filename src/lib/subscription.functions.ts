@@ -459,3 +459,34 @@ export const requestInvoiceC = createServerFn({ method: "POST" })
     return { id: inserted.id, emailWarning };
   });
 
+
+/** Returns a live usage snapshot: active vacancies, new vacancies this cycle, CVs this cycle, renewal date, plan limits. */
+export const getUsageSummary = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const orgId = await getOrCreateOrgId(supabase, userId);
+    const {
+      getOrgPlan, getActiveVacancyCount, getNewVacanciesThisCycle,
+      getCvsThisCycle, getCurrentCycle,
+    } = await import("@/lib/plan-limits");
+    const [plan, activeVacancies, newVacancies, cvs, cycle] = await Promise.all([
+      getOrgPlan(supabase, orgId),
+      getActiveVacancyCount(supabase, orgId),
+      getNewVacanciesThisCycle(supabase, orgId),
+      getCvsThisCycle(supabase, orgId),
+      getCurrentCycle(supabase, orgId),
+    ]);
+    return {
+      planId: plan.id,
+      planName: plan.name,
+      activeVacancies,
+      maxActiveVacancies: plan.maxVacancies,
+      newVacanciesThisCycle: newVacancies,
+      maxNewVacanciesPerCycle: plan.maxNewVacanciesPerCycle,
+      cvsThisCycle: cvs,
+      maxCvsPerCycle: plan.maxCvsPerMonth,
+      cycleStart: cycle.start.toISOString(),
+      cycleEnd: cycle.end.toISOString(),
+    };
+  });
