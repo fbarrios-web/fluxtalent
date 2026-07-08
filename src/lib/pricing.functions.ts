@@ -30,7 +30,7 @@ export const adminUpdatePlanPricing = createServerFn({ method: "POST" })
     }).parse(input))
   .handler(async ({ data, context }) => {
     const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
-    if (!isAdmin) throw new Error("Forbidden");
+    if (!isAdmin) throw new Error("Acción solo permitida para administradores.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("plan_pricing")
