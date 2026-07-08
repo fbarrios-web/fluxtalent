@@ -32,7 +32,18 @@ function AdminUsers() {
       qc.invalidateQueries({ queryKey: ["admin-orgs"] });
       qc.invalidateQueries({ queryKey: ["admin-metrics"] });
     },
-    onError: (e: any) => toast.error(e.message ?? "Error"),
+    onError: (e: any) => toast.error(e.message ?? "No pudimos crear el usuario. Revisá los datos e intentá de nuevo."),
+  });
+
+  const delMut = useMutation({
+    mutationFn: (user_id: string) => del({ data: { user_id } }),
+    onSuccess: (r: any) => {
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+      qc.invalidateQueries({ queryKey: ["admin-orgs"] });
+      qc.invalidateQueries({ queryKey: ["admin-metrics"] });
+      toast.success(r?.deleted_org ? "Usuario y organización eliminados" : "Usuario eliminado");
+    },
+    onError: (e: any) => toast.error(e.message ?? "No pudimos eliminar el usuario."),
   });
 
   return (
