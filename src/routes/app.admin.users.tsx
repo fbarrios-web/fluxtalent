@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { adminCreateUser, adminListUsers } from "@/lib/admin.functions";
+import { adminCreateUser, adminListUsers, adminDeleteUser } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,7 @@ function AdminUsers() {
   const qc = useQueryClient();
   const list = useServerFn(adminListUsers);
   const create = useServerFn(adminCreateUser);
+  const del = useServerFn(adminDeleteUser);
 
   const { data: users, isLoading } = useQuery({ queryKey: ["admin-users"], queryFn: () => list() });
 
@@ -31,7 +32,18 @@ function AdminUsers() {
       qc.invalidateQueries({ queryKey: ["admin-orgs"] });
       qc.invalidateQueries({ queryKey: ["admin-metrics"] });
     },
-    onError: (e: any) => toast.error(e.message ?? "Error"),
+    onError: (e: any) => toast.error(e.message ?? "No pudimos crear el usuario. Revisá los datos e intentá de nuevo."),
+  });
+
+  const delMut = useMutation({
+    mutationFn: (user_id: string) => del({ data: { user_id } }),
+    onSuccess: (r: any) => {
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+      qc.invalidateQueries({ queryKey: ["admin-orgs"] });
+      qc.invalidateQueries({ queryKey: ["admin-metrics"] });
+      toast.success(r?.deleted_org ? "Usuario y organización eliminados" : "Usuario eliminado");
+    },
+    onError: (e: any) => toast.error(e.message ?? "No pudimos eliminar el usuario."),
   });
 
   return (
@@ -64,7 +76,7 @@ function AdminUsers() {
           <div className="mt-3 max-h-[600px] overflow-y-auto">
             <table className="w-full text-sm">
               <thead className="text-left text-xs uppercase text-muted-foreground">
-                <tr><th className="py-2">Nombre</th><th>Organización</th><th>Estado</th></tr>
+                <tr><th className="py-2">Nombre</th><th>Organización</th><th>Estado</th><th className="text-right">Acciones</th></tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {(users ?? []).map((u: any) => (
@@ -72,6 +84,21 @@ function AdminUsers() {
                     <td className="py-2">{u.display_name}</td>
                     <td>{u.organizations?.name ?? "—"}</td>
                     <td className="capitalize text-xs text-muted-foreground">{u.organizations?.subscription_status ?? "—"}</td>
+                    <td className="py-2 text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive hover:bg-destructive/10"
+                        disabled={delMut.isPending}
+                        onClick={() => {
+                          if (confirm(`¿Eliminar al usuario "${u.display_name}"?\n\nSi es el único de su organización, también se borran sus vacantes, postulaciones y datos. Esta acción no se puede deshacer.`)) {
+                            delMut.mutate(u.id);
+                          }
+                        }}
+                      >
+                        Eliminar
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

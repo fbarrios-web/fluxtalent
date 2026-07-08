@@ -55,7 +55,7 @@ export const submitSurvey = createServerFn({ method: "POST" })
 
 async function assertAdmin(supabase: any, userId: string) {
   const { data } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-  if (!data) throw new Error("Forbidden: admin only");
+  if (!data) throw new Error("Acción solo permitida para administradores.");
 }
 
 export const adminListSurveys = createServerFn({ method: "GET" })

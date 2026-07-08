@@ -73,7 +73,7 @@ export const analyzeApplication = createServerFn({ method: "POST" })
       .select("*, vacancy:vacancies(*)")
       .eq("id", data.applicationId)
       .single();
-    if (error || !app) throw new Error("Application no encontrada");
+    if (error || !app) throw new Error("No encontramos esta postulación. Puede que haya sido eliminada.");
 
     await supabase.from("applications").update({ ai_status: "running" }).eq("id", app.id);
 
@@ -216,7 +216,7 @@ export const aiInterviewQuestions = createServerFn({ method: "POST" })
       .select("*, vacancy:vacancies(*)")
       .eq("id", data.applicationId)
       .single();
-    if (!app) throw new Error("Not found");
+    if (!app) throw new Error("No encontramos esta postulación.");
     return aiJSON<{ questions: Array<{ topic: string; question: string; rationale: string }> }>({
       system: "Sos un entrevistador senior. Generás preguntas inteligentes en español.",
       user: `Generá 7 preguntas para una entrevista de etapa "${data.stage}" para el puesto ${app.vacancy.title}.
@@ -259,7 +259,7 @@ export const aiDraftEmail = createServerFn({ method: "POST" })
       .select("*, vacancy:vacancies(*)")
       .eq("id", data.applicationId)
       .single();
-    if (!app) throw new Error("Not found");
+    if (!app) throw new Error("No encontramos esta postulación.");
     const text = await aiText({
       system: "Sos un reclutador empático. Escribís emails cortos, claros y humanos en español.",
       user: `Redactá un email tipo "${data.kind}" para ${app.first_name} ${app.last_name} para la vacante ${app.vacancy.title}.
@@ -284,7 +284,7 @@ export const aiAnalyzeInterview = createServerFn({ method: "POST" })
       .select("*, vacancy:vacancies(title, requirements, responsibilities, nice_to_have, description)")
       .eq("id", data.applicationId)
       .single();
-    if (!app) throw new Error("Application no encontrada");
+    if (!app) throw new Error("No encontramos esta postulación.");
     const v: any = app.vacancy ?? {};
     const profileBlob = [
       `Candidato: ${app.first_name ?? ""} ${app.last_name ?? ""}`,
