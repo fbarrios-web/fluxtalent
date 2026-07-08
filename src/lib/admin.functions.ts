@@ -436,3 +436,36 @@ export const adminDeleteOrg = createServerFn({ method: "POST" })
 
     return { ok: true, deleted_users: userIds.length };
   });
+
+/** Delete a single user. If it's the last user of the org, delete the whole org. */
+export const adminDeleteUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ user_id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    if (data.user_id === context.userId) {
+      throw new Error("No podés eliminar tu propia cuenta desde el panel de admin.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: prof } = await supabaseAdmin.from("profiles").select("id, org_id").eq("id", data.user_id).single();
+    const orgId = prof?.org_id ?? null;
+
+    let deletedOrg = false;
+    if (orgId) {
+      const { count } = await supabaseAdmin.from("profiles").select("*", { count: "exact", head: true }).eq("org_id", orgId);
+      if ((count ?? 0) <= 1) {
+        // Last member — remove the whole organization (cascade cleans data).
+        const { error: rpcErr } = await supabaseAdmin.rpc("admin_delete_org", { _org_id: orgId });
+        if (rpcErr) throw new Error("No pudimos eliminar la organización asociada: " + rpcErr.message);
+        deletedOrg = true;
+      }
+    }
+
+    // Deleting the auth user cascades to profiles / user_roles / sessions.
+    const { error: delErr } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
+    if (delErr) throw new Error("No pudimos eliminar el usuario: " + delErr.message);
+
+    return { ok: true, deleted_org: deletedOrg };
+  });
+
