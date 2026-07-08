@@ -17,6 +17,7 @@ function AdminUsers() {
   const qc = useQueryClient();
   const list = useServerFn(adminListUsers);
   const create = useServerFn(adminCreateUser);
+  const del = useServerFn(adminDeleteUser);
 
   const { data: users, isLoading } = useQuery({ queryKey: ["admin-users"], queryFn: () => list() });
 
