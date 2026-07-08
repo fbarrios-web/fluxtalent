@@ -430,8 +430,13 @@ export const adminDeleteOrg = createServerFn({ method: "POST" })
     if (rpcErr) throw rpcErr;
 
     // Delete the auth users so the login is fully removed.
+    const failed: string[] = [];
     for (const uid of userIds) {
-      try { await supabaseAdmin.auth.admin.deleteUser(uid); } catch { /* ignore */ }
+      const { error: delErr } = await supabaseAdmin.auth.admin.deleteUser(uid);
+      if (delErr) failed.push(uid);
+    }
+    if (failed.length) {
+      throw new Error(`Eliminamos la organización pero no pudimos borrar ${failed.length} usuario/s de autenticación. Volvé a intentarlo o eliminalos individualmente desde "Usuarios".`);
     }
 
     return { ok: true, deleted_users: userIds.length };
