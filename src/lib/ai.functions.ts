@@ -216,7 +216,7 @@ export const aiInterviewQuestions = createServerFn({ method: "POST" })
       .select("*, vacancy:vacancies(*)")
       .eq("id", data.applicationId)
       .single();
-    if (!app) throw new Error("Not found");
+    if (!app) throw new Error("No encontramos esta postulación.");
     return aiJSON<{ questions: Array<{ topic: string; question: string; rationale: string }> }>({
       system: "Sos un entrevistador senior. Generás preguntas inteligentes en español.",
       user: `Generá 7 preguntas para una entrevista de etapa "${data.stage}" para el puesto ${app.vacancy.title}.
