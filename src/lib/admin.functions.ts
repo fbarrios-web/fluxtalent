@@ -5,7 +5,7 @@ import { z } from "zod";
 async function assertAdmin(supabase: any, userId: string) {
   const { data, error } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
   if (error) throw error;
-  if (!data) throw new Error("Forbidden: admin only");
+  if (!data) throw new Error("Acción solo permitida para administradores.");
 }
 
 export const adminAmI = createServerFn({ method: "GET" })
