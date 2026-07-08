@@ -284,7 +284,7 @@ export const aiAnalyzeInterview = createServerFn({ method: "POST" })
       .select("*, vacancy:vacancies(title, requirements, responsibilities, nice_to_have, description)")
       .eq("id", data.applicationId)
       .single();
-    if (!app) throw new Error("Application no encontrada");
+    if (!app) throw new Error("No encontramos esta postulación.");
     const v: any = app.vacancy ?? {};
     const profileBlob = [
       `Candidato: ${app.first_name ?? ""} ${app.last_name ?? ""}`,
