@@ -259,7 +259,7 @@ export const aiDraftEmail = createServerFn({ method: "POST" })
       .select("*, vacancy:vacancies(*)")
       .eq("id", data.applicationId)
       .single();
-    if (!app) throw new Error("Not found");
+    if (!app) throw new Error("No encontramos esta postulación.");
     const text = await aiText({
       system: "Sos un reclutador empático. Escribís emails cortos, claros y humanos en español.",
       user: `Redactá un email tipo "${data.kind}" para ${app.first_name} ${app.last_name} para la vacante ${app.vacancy.title}.
