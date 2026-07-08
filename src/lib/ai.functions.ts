@@ -73,7 +73,7 @@ export const analyzeApplication = createServerFn({ method: "POST" })
       .select("*, vacancy:vacancies(*)")
       .eq("id", data.applicationId)
       .single();
-    if (error || !app) throw new Error("Application no encontrada");
+    if (error || !app) throw new Error("No encontramos esta postulación. Puede que haya sido eliminada.");
 
     await supabase.from("applications").update({ ai_status: "running" }).eq("id", app.id);
 
