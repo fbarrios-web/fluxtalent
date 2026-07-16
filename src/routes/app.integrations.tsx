@@ -3,13 +3,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Calendar, Check, Loader2, AlertCircle, ShieldCheck, XCircle, Video } from "lucide-react";
+import { Calendar, Check, Loader2, AlertCircle, Video } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect } from "react";
-import { getGoogleStatus, googleStartUrl, googleDisconnect, verifyGoogleOAuthConfig } from "@/lib/scheduling.functions";
+import { getGoogleStatus, googleStartUrl, googleDisconnect } from "@/lib/scheduling.functions";
 import { getMicrosoftStatus, microsoftStartUrl, microsoftDisconnect } from "@/lib/microsoft.functions";
 
-const GOOGLE_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/google/callback";
 const MICROSOFT_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/microsoft/callback";
 
 export const Route = createFileRoute("/app/integrations")({
@@ -46,7 +45,7 @@ function IntegrationsPage() {
     <div className="p-6 md:p-10 max-w-3xl space-y-6">
       <div>
         <h1 className="text-2xl font-semibold mb-2">Integraciones</h1>
-        <p className="text-muted-foreground">Conectá tu cuenta para automatizar entrevistas y enviar invitaciones desde tu mail.</p>
+        <p className="text-muted-foreground">Conectá tu cuenta para automatizar entrevistas y enviar invitaciones desde tu mail. Solo podés tener un proveedor activo a la vez.</p>
       </div>
       <IntegrationsPanel />
       <MicrosoftPanel callbackUrl={MICROSOFT_CALLBACK_URL} />
@@ -54,16 +53,23 @@ function IntegrationsPage() {
   );
 }
 
-export function MicrosoftPanel({ callbackUrl }: { callbackUrl: string }) {
+export function MicrosoftPanel({ callbackUrl: _callbackUrl }: { callbackUrl?: string }) {
   const qc = useQueryClient();
   const getStatus = useServerFn(getMicrosoftStatus);
   const startUrl = useServerFn(microsoftStartUrl);
   const disconnect = useServerFn(microsoftDisconnect);
+  const getGoogle = useServerFn(getGoogleStatus);
 
   const { data, isLoading } = useQuery({
     queryKey: ["microsoft-status"],
     queryFn: () => getStatus(),
   });
+  const { data: googleData } = useQuery({
+    queryKey: ["google-status"],
+    queryFn: () => getGoogle(),
+  });
+
+  const otherConnected = !!googleData?.connected && !data?.connected;
 
   async function connect() {
     try {
@@ -91,7 +97,14 @@ export function MicrosoftPanel({ callbackUrl }: { callbackUrl: string }) {
           <Video className="h-5 w-5" />
         </div>
         <div className="flex-1">
-          <h2 className="font-semibold">Microsoft 365 — Outlook + Teams</h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="font-semibold">Microsoft 365 — Outlook + Teams</h2>
+            {!isLoading && (
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${data?.connected ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>
+                {data?.connected ? "Conectado" : "Desconectado"}
+              </span>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground mt-1">
             Enviá mails desde tu Outlook y creá reuniones de Teams automáticamente cuando agendes una entrevista.
           </p>
@@ -108,15 +121,18 @@ export function MicrosoftPanel({ callbackUrl }: { callbackUrl: string }) {
             </div>
           ) : (
             <div className="mt-4">
-              <Button onClick={connect}>Conectar Microsoft</Button>
-              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" />
-                Vamos a pedir permisos de Outlook (Mail.Send), Calendario y creación de reuniones de Teams.
-              </p>
-              <p className="mt-3 rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-                Redirect URI autorizada requerida en Entra ID:{" "}
-                <span className="font-mono text-foreground break-all">{callbackUrl}</span>
-              </p>
+              <Button onClick={connect} disabled={otherConnected}>Conectar Microsoft</Button>
+              {otherConnected ? (
+                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  Ya tenés Google conectado. Desconectalo primero para usar Microsoft.
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  Vamos a pedir permisos de Outlook (Mail.Send), Calendario y creación de reuniones de Teams.
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -130,25 +146,25 @@ export function IntegrationsPanel() {
   const qc = useQueryClient();
   const getStatus = useServerFn(getGoogleStatus);
   const startUrl = useServerFn(googleStartUrl);
-  const verifyOAuth = useServerFn(verifyGoogleOAuthConfig);
   const disconnect = useServerFn(googleDisconnect);
+  const getMs = useServerFn(getMicrosoftStatus);
 
   const { data, isLoading } = useQuery({
     queryKey: ["google-status"],
     queryFn: () => getStatus(),
   });
-
-  const { data: oauthCheck, isLoading: isVerifying } = useQuery({
-    queryKey: ["google-oauth-check"],
-    queryFn: () => verifyOAuth({ data: { origin: window.location.origin } }),
+  const { data: msData } = useQuery({
+    queryKey: ["microsoft-status"],
+    queryFn: () => getMs(),
   });
+
+  const otherConnected = !!msData?.connected && !data?.connected;
 
   async function connect() {
     try {
       const result = await startUrl({ data: { origin: window.location.origin } });
       if (!result.ok) {
-        toast.error("Google rechazó el callback configurado. Revisá la verificación OAuth.");
-        qc.invalidateQueries({ queryKey: ["google-oauth-check"] });
+        toast.error("Google rechazó el callback configurado. Contactá soporte.");
         return;
       }
       window.location.href = result.url;
@@ -170,7 +186,14 @@ export function IntegrationsPanel() {
           <Calendar className="h-5 w-5" />
         </div>
         <div className="flex-1">
-          <h2 className="font-semibold">Google Calendar + Gmail</h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="font-semibold">Google Calendar + Gmail</h2>
+            {!isLoading && (
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${data?.connected ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>
+                {data?.connected ? "Conectado" : "Desconectado"}
+              </span>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground mt-1">
             Cada entrevista agenda un evento en tu Calendar, genera el link de Meet automáticamente y envía la invitación desde tu mail.
           </p>
@@ -198,57 +221,20 @@ export function IntegrationsPanel() {
               )}
               <Button variant="outline" size="sm" onClick={onDisconnect}>Desconectar</Button>
             </div>
-
           ) : (
             <div className="mt-4">
-              <Button onClick={connect}>Conectar Google</Button>
-              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" />
-                Pediremos permisos para crear eventos en Calendar y enviar mails con tu cuenta.
-              </p>
-              <p className="mt-3 rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-                Callback autorizado requerido en Google: <span className="font-mono text-foreground">{GOOGLE_CALLBACK_URL}</span>
-              </p>
-              <div className="mt-3 rounded-md border border-border bg-muted/40 px-3 py-3 text-xs">
-                {isVerifying ? (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Loader2 className="h-3 w-3 animate-spin" /> Verificando OAuth con Google...
-                  </div>
-                ) : oauthCheck?.ok ? (
-                  <div className="space-y-2">
-                    {oauthCheck.verificationStatus === "requires_manual_check" ? (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <AlertCircle className="h-3 w-3" /> Google no permite verificar esto desde servidor; si al conectar falla, falta autorizar este callback.
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-primary">
-                        <ShieldCheck className="h-3 w-3" /> OAuth preparado para este callback.
-                      </div>
-                    )}
-                    <p className="font-mono text-muted-foreground break-all">{oauthCheck.callbackUri}</p>
-                    <p className="text-muted-foreground">
-                      Client ID: <span className="font-mono text-foreground break-all">{oauthCheck.diagnostics?.clientId ?? "No configurado"}</span>
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-destructive">
-                      <XCircle className="h-3 w-3" /> Google todavía bloquea el callback autorizado.
-                    </div>
-                    <p className="text-muted-foreground">
-                      Client ID usado: <span className="font-mono text-foreground break-all">{oauthCheck?.diagnostics?.clientId ?? "No configurado"}</span>
-                    </p>
-                    <p className="text-muted-foreground">
-                      Estado de credenciales: <span className="font-mono text-foreground">{oauthCheck?.credentials?.status ?? "sin verificar"}</span>
-                    </p>
-                    <div className="space-y-1 text-muted-foreground">
-                      {(oauthCheck?.requiredCallbackUris ?? [GOOGLE_CALLBACK_URL]).map((uri) => (
-                        <p key={uri} className="font-mono text-foreground break-all">{uri}</p>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <Button onClick={connect} disabled={otherConnected}>Conectar Google</Button>
+              {otherConnected ? (
+                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  Ya tenés Microsoft conectado. Desconectalo primero para usar Google.
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  Pediremos permisos para crear eventos en Calendar y enviar mails con tu cuenta.
+                </p>
+              )}
             </div>
           )}
         </div>
