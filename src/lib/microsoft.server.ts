@@ -125,7 +125,7 @@ export function microsoftAuthUrl(redirectUri: string, state: string) {
     response_type: "code",
     scope: MICROSOFT_SCOPES,
     response_mode: "query",
-    prompt: "select_account consent",
+    prompt: "select_account",
     state,
   });
   return `${AUTHORIZE_URL}?${params.toString()}`;
