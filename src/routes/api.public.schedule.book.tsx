@@ -88,6 +88,19 @@ export const Route = createFileRoute("/api/public/schedule/book")({
             status: "scheduled",
           }).eq("id", r.booking_id);
 
+          await supabaseAdmin.from("application_events").insert({
+            application_id: r.application_id,
+            actor_id: r.recruiter_id,
+            type: "interview_scheduled",
+            payload: {
+              stage: r.stage,
+              booking_id: r.booking_id,
+              provider,
+              event_id: event.eventId,
+              meeting_link: event.meetingLink ?? event.webLink,
+            },
+          });
+
           // 4) Send branded confirmation mail to candidate (via provider)
           const whenLabel = new Intl.DateTimeFormat("es-AR", {
             timeZone: tz, dateStyle: "full", timeStyle: "short",
