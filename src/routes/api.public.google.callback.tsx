@@ -32,6 +32,9 @@ export const Route = createFileRoute("/api/public/google/callback")({
           google_refresh_token: tokens.refresh_token,
           google_email: info.email,
           google_connected_at: new Date().toISOString(),
+          microsoft_refresh_token: null,
+          microsoft_email: null,
+          microsoft_connected_at: null,
         }).eq("id", verified.userId);
         if (updErr) {
           throw redirect({ href: `${integrationsPath}?error=store_failed` });

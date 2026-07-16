@@ -19,6 +19,68 @@ export const MICROSOFT_SCOPES = [
   "OnlineMeetings.ReadWrite",
 ].join(" ");
 
+const MICROSOFT_SCOPE_SET = new Set(MICROSOFT_SCOPES.split(/\s+/).filter(Boolean));
+
+const IANA_TO_WINDOWS_TZ: Record<string, string> = {
+  "America/Argentina/Buenos_Aires": "Argentina Standard Time",
+  "America/Argentina/Cordoba": "Argentina Standard Time",
+  "America/Argentina/Mendoza": "Argentina Standard Time",
+  "America/Argentina/Rosario": "Argentina Standard Time",
+  "America/Montevideo": "Montevideo Standard Time",
+  "America/Santiago": "Pacific SA Standard Time",
+  "America/Lima": "SA Pacific Standard Time",
+  "America/Bogota": "SA Pacific Standard Time",
+  "America/Mexico_City": "Central Standard Time (Mexico)",
+  "America/New_York": "Eastern Standard Time",
+  "America/Los_Angeles": "Pacific Standard Time",
+  "Europe/Madrid": "Romance Standard Time",
+  UTC: "UTC",
+};
+
+export function microsoftTimeZone(timezone: string | null | undefined) {
+  if (!timezone) return "Argentina Standard Time";
+  return IANA_TO_WINDOWS_TZ[timezone] ?? timezone;
+}
+
+function graphDateTime(iso: string, timezone: string | null | undefined) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso.replace(/Z$/, "");
+  const iana = timezone && IANA_TO_WINDOWS_TZ[timezone] ? timezone : timezone || "UTC";
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: iana,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23",
+    }).formatToParts(date).reduce<Record<string, string>>((acc, part) => {
+      if (part.type !== "literal") acc[part.type] = part.value;
+      return acc;
+    }, {});
+    return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}`;
+  } catch {
+    return iso.replace(/\.\d{3}Z$/, "").replace(/Z$/, "");
+  }
+}
+
+export function getMicrosoftTokenScopes(scope?: string | null): string[] {
+  return (scope || "").split(/\s+/).filter(Boolean);
+}
+
+export function hasRequiredMicrosoftScopes(scope?: string | null) {
+  const granted = new Set(getMicrosoftTokenScopes(scope).map(s => s.toLowerCase()));
+  const has = (value: string) => granted.has(value.toLowerCase());
+  return {
+    hasMailScope: has("Mail.Send"),
+    hasCalendarScope: has("Calendars.ReadWrite"),
+    hasTeamsScope: has("OnlineMeetings.ReadWrite"),
+    hasOfflineAccess: has("offline_access") || MICROSOFT_SCOPE_SET.has("offline_access"),
+  };
+}
+
 function clientCreds() {
   const id = process.env.MICROSOFT_OAUTH_CLIENT_ID;
   const secret = process.env.MICROSOFT_OAUTH_CLIENT_SECRET;
@@ -44,7 +106,7 @@ export function microsoftAuthUrl(redirectUri: string, state: string) {
     response_type: "code",
     scope: MICROSOFT_SCOPES,
     response_mode: "query",
-    prompt: "select_account",
+    prompt: "select_account consent",
     state,
   });
   return `${AUTHORIZE_URL}?${params.toString()}`;
@@ -89,7 +151,7 @@ export async function refreshAccessToken(refreshToken: string) {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
   });
-  if (!res.ok) throw new Error(`Microsoft refresh falló: ${await res.text()}`);
+  if (!res.ok) throw new Error(`Microsoft refresh falló [${res.status}]: ${await res.text()}`);
   return (await res.json()) as { access_token: string; expires_in: number; scope?: string; refresh_token?: string };
 }
 
@@ -112,11 +174,12 @@ export async function createOutlookEventWithTeams(params: {
   timezone: string;
   attendees: { email: string; name?: string }[];
 }) {
+  const timeZone = microsoftTimeZone(params.timezone);
   const baseBody = {
     subject: params.subject,
     body: { contentType: "HTML", content: params.bodyHtml },
-    start: { dateTime: params.startISO, timeZone: params.timezone },
-    end: { dateTime: params.endISO, timeZone: params.timezone },
+    start: { dateTime: graphDateTime(params.startISO, params.timezone), timeZone },
+    end: { dateTime: graphDateTime(params.endISO, params.timezone), timeZone },
     attendees: params.attendees.map(a => ({
       emailAddress: { address: a.email, name: a.name ?? a.email },
       type: "required",
@@ -133,12 +196,12 @@ export async function createOutlookEventWithTeams(params: {
   if (!res.ok) {
     const errText = await res.text();
     // Personal MSA / tenants sin Teams: reintentar sin online meeting.
-    if (/teamsForBusiness|OnlineMeeting|not supported|does not have a valid license|ErrorInvalidRequest/i.test(errText)) {
+    if (/teamsForBusiness|OnlineMeeting|not supported|does not have a valid license|ErrorInvalidRequest|UnableToCreateOnlineMeeting/i.test(errText)) {
       console.warn("[microsoft] Teams meeting not supported, creating plain calendar event:", errText);
       res = await post(baseBody);
-      if (!res.ok) throw new Error(`Outlook event insert falló: ${await res.text()}`);
+      if (!res.ok) throw new Error(`Outlook event insert falló [${res.status}]: ${await res.text()}`);
     } else {
-      throw new Error(`Outlook event insert falló: ${errText}`);
+      throw new Error(`Outlook event insert falló [${res.status}]: ${errText}`);
     }
   }
   const ev = (await res.json()) as any;
@@ -171,6 +234,6 @@ export async function sendOutlookMail(params: {
     headers: { Authorization: `Bearer ${params.accessToken}`, "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!res.ok && res.status !== 202) throw new Error(`Outlook sendMail falló: ${await res.text()}`);
+  if (!res.ok && res.status !== 202) throw new Error(`Outlook sendMail falló [${res.status}]: ${await res.text()}`);
   return { ok: true };
 }

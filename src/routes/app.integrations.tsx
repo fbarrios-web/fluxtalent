@@ -31,9 +31,11 @@ function IntegrationsPage() {
       toast.success("Google Calendar conectado");
       router.navigate({ to: "/app/integrations", replace: true });
       qc.invalidateQueries({ queryKey: ["google-status"] });
+      qc.invalidateQueries({ queryKey: ["microsoft-status"] });
     } else if (search.ok_ms === "1") {
       toast.success("Microsoft (Outlook + Teams) conectado");
       router.navigate({ to: "/app/integrations", replace: true });
+      qc.invalidateQueries({ queryKey: ["google-status"] });
       qc.invalidateQueries({ queryKey: ["microsoft-status"] });
     } else if (search.error) {
       toast.error(`No se pudo conectar: ${search.error}`);
@@ -58,18 +60,11 @@ export function MicrosoftPanel({ callbackUrl: _callbackUrl }: { callbackUrl?: st
   const getStatus = useServerFn(getMicrosoftStatus);
   const startUrl = useServerFn(microsoftStartUrl);
   const disconnect = useServerFn(microsoftDisconnect);
-  const getGoogle = useServerFn(getGoogleStatus);
 
   const { data, isLoading } = useQuery({
     queryKey: ["microsoft-status"],
     queryFn: () => getStatus(),
   });
-  const { data: googleData } = useQuery({
-    queryKey: ["google-status"],
-    queryFn: () => getGoogle(),
-  });
-
-  const otherConnected = !!googleData?.connected && !data?.connected;
 
   async function connect() {
     try {
@@ -87,6 +82,7 @@ export function MicrosoftPanel({ callbackUrl: _callbackUrl }: { callbackUrl?: st
   async function onDisconnect() {
     await disconnect();
     toast.success("Microsoft desconectado");
+    qc.invalidateQueries({ queryKey: ["google-status"] });
     qc.invalidateQueries({ queryKey: ["microsoft-status"] });
   }
 
@@ -117,22 +113,29 @@ export function MicrosoftPanel({ callbackUrl: _callbackUrl }: { callbackUrl?: st
                 <Check className="h-4 w-4 text-green-600" />
                 Conectado como <strong>{data.email}</strong>
               </div>
+              {(!data.hasMailScope || !data.hasCalendarScope || !data.hasTeamsScope) && (
+                <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive space-y-2">
+                  <div className="flex items-center gap-2 font-medium">
+                    <AlertCircle className="h-3 w-3" />
+                    Permisos incompletos. Reconectá Microsoft para autorizar:
+                  </div>
+                  <ul className="list-disc pl-5">
+                    {!data.hasMailScope && <li>Enviar mails desde Outlook</li>}
+                    {!data.hasCalendarScope && <li>Crear eventos en Calendario</li>}
+                    {!data.hasTeamsScope && <li>Crear reuniones de Teams</li>}
+                  </ul>
+                  <Button size="sm" onClick={connect}>Reconectar Microsoft</Button>
+                </div>
+              )}
               <Button variant="outline" size="sm" onClick={onDisconnect}>Desconectar</Button>
             </div>
           ) : (
             <div className="mt-4">
-              <Button onClick={connect} disabled={otherConnected}>Conectar Microsoft</Button>
-              {otherConnected ? (
-                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  Ya tenés Google conectado. Desconectalo primero para usar Microsoft.
-                </p>
-              ) : (
-                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  Vamos a pedir permisos de Outlook (Mail.Send), Calendario y creación de reuniones de Teams.
-                </p>
-              )}
+              <Button onClick={connect}>Conectar Microsoft</Button>
+              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                Al conectar Microsoft se desactiva Google para mantener un solo proveedor activo.
+              </p>
             </div>
           )}
         </div>
@@ -147,18 +150,11 @@ export function IntegrationsPanel() {
   const getStatus = useServerFn(getGoogleStatus);
   const startUrl = useServerFn(googleStartUrl);
   const disconnect = useServerFn(googleDisconnect);
-  const getMs = useServerFn(getMicrosoftStatus);
 
   const { data, isLoading } = useQuery({
     queryKey: ["google-status"],
     queryFn: () => getStatus(),
   });
-  const { data: msData } = useQuery({
-    queryKey: ["microsoft-status"],
-    queryFn: () => getMs(),
-  });
-
-  const otherConnected = !!msData?.connected && !data?.connected;
 
   async function connect() {
     try {
@@ -177,6 +173,7 @@ export function IntegrationsPanel() {
     await disconnect();
     toast.success("Cuenta desconectada");
     qc.invalidateQueries({ queryKey: ["google-status"] });
+    qc.invalidateQueries({ queryKey: ["microsoft-status"] });
   }
 
   return (
@@ -223,18 +220,11 @@ export function IntegrationsPanel() {
             </div>
           ) : (
             <div className="mt-4">
-              <Button onClick={connect} disabled={otherConnected}>Conectar Google</Button>
-              {otherConnected ? (
-                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  Ya tenés Microsoft conectado. Desconectalo primero para usar Google.
-                </p>
-              ) : (
-                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  Pediremos permisos para crear eventos en Calendar y enviar mails con tu cuenta.
-                </p>
-              )}
+              <Button onClick={connect}>Conectar Google</Button>
+              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                Al conectar Google se desactiva Microsoft para mantener un solo proveedor activo.
+              </p>
             </div>
           )}
         </div>

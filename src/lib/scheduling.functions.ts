@@ -194,7 +194,7 @@ export const getGoogleStatus = createServerFn({ method: "GET" })
     const { data } = await context.supabase.from("profiles")
       .select("google_email, google_connected_at, google_refresh_token").eq("id", context.userId).maybeSingle();
     const base = {
-      connected: !!data?.google_email,
+      connected: !!data?.google_email && !!data?.google_refresh_token,
       email: data?.google_email ?? null,
       connectedAt: data?.google_connected_at ?? null,
       hasGmailScope: false as boolean,
@@ -490,7 +490,7 @@ export async function inviteForInterview(
   }
 
   const { data: existing } = await supabase.from("interview_bookings")
-    .select("id, booking_token, status").eq("application_id", app.id).eq("stage", stage).maybeSingle();
+    .select("id, booking_token, status, scheduled_at").eq("application_id", app.id).eq("stage", stage).maybeSingle();
   let booking = existing;
   if (!booking) {
     const { data: created, error } = await supabase.from("interview_bookings").insert({
@@ -503,14 +503,33 @@ export async function inviteForInterview(
     if (error) throw error;
     booking = created;
   } else if (booking.status === "scheduled") {
-    return { ok: true, bookingToken: booking.booking_token, skipped: "already_scheduled" };
+    const scheduledAt = booking.scheduled_at ? new Date(booking.scheduled_at).getTime() : 0;
+    if (!scheduledAt || scheduledAt <= Date.now()) {
+      const { data: reopened, error } = await supabase.from("interview_bookings").update({
+        status: "pending",
+        slot_id: null,
+        scheduled_at: null,
+        meet_link: null,
+        google_event_id: null,
+      }).eq("id", booking.id).select("id, booking_token, status, scheduled_at").single();
+      if (error) throw error;
+      booking = reopened;
+    } else {
+      throw new Error("Esta entrevista ya está agendada. Si querés reenviar o cambiar el horario, liberá la reserva anterior desde Agenda.");
+    }
   }
 
   const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
   const scheduleUrl = `${origin}/schedule/${booking.booking_token}`;
 
   const { interviewInviteHtml } = await import("@/lib/email-templates");
-  const access_token = await providerAccessToken(recruiter, provider);
+  let access_token: string;
+  try {
+    access_token = await providerAccessToken(recruiter, provider);
+  } catch (e: any) {
+    console.error("[inviteForInterview] provider token failed", { provider, message: e?.message ?? String(e) });
+    throw new Error(`No se pudo autorizar ${provider === "microsoft" ? "Microsoft" : "Google"}. Reconectá la integración e intentá nuevamente.`);
+  }
   const logoUrl = await signedLogoUrl(supabase, org.logo_url);
   const brand = {
     consultancyName: org.consultancy_name || org.name,
@@ -527,16 +546,25 @@ export async function inviteForInterview(
     scheduleUrl,
     stageLabel,
   });
-  await sendUserMail({
-    profile: recruiter,
-    provider,
-    accessToken: access_token,
-    fromName: brand.consultancyName,
-    to: app.email,
-    subject: `Coordinemos tu ${stageLabel} — ${vac.title}`,
-    html,
-    replyTo: brand.contactEmail || undefined,
-  });
+  try {
+    await sendUserMail({
+      profile: recruiter,
+      provider,
+      accessToken: access_token,
+      fromName: brand.consultancyName,
+      to: app.email,
+      subject: `Coordinemos tu ${stageLabel} — ${vac.title}`,
+      html,
+      replyTo: brand.contactEmail || undefined,
+    });
+  } catch (e: any) {
+    const message = e?.message ?? String(e);
+    console.error("[inviteForInterview] mail send failed", { provider, to: app.email, message });
+    if (/insufficient.*scope|invalid_scope|ACCESS_TOKEN_SCOPE_INSUFFICIENT|Mail\.Send|Calendars\.ReadWrite|OnlineMeetings\.ReadWrite/i.test(message)) {
+      throw new Error(`Reconectá ${provider === "microsoft" ? "Microsoft" : "Google"} desde Integraciones para autorizar envío de mails y calendario.`);
+    }
+    throw new Error(`No se pudo enviar la invitación por ${provider === "microsoft" ? "Outlook" : "Gmail"}: ${message}`);
+  }
 
 
   await supabase.from("application_events").insert({
