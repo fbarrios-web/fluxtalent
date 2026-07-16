@@ -481,7 +481,7 @@ export async function inviteForInterview(
   if (!cfg || !cfg.enabled) throw new Error(`Configurá la agenda de ${STAGE_LABELS[stage]} para esta vacante antes de invitar.`);
   const recruiterId = cfg.recruiter_id ?? userId;
   const { data: recruiter } = await supabase.from("profiles")
-    .select("google_refresh_token, google_email, google_connected_at, microsoft_refresh_token, microsoft_email, microsoft_connected_at, display_name")
+    .select("id, google_refresh_token, google_email, google_connected_at, microsoft_refresh_token, microsoft_email, microsoft_connected_at, display_name")
     .eq("id", recruiterId).maybeSingle();
   const { pickProvider, providerAccessToken, sendUserMail } = await import("@/lib/mail-provider.server");
   const provider = recruiter ? pickProvider(recruiter) : null;
@@ -616,7 +616,7 @@ export async function sendStageEmail(
   if (!tpl) throw new Error("Template de email no encontrado. Configurá los templates en Configuración.");
 
   const { data: sender } = await supabase.from("profiles")
-    .select("google_refresh_token, google_email, google_connected_at, microsoft_refresh_token, microsoft_email, microsoft_connected_at, display_name")
+    .select("id, google_refresh_token, google_email, google_connected_at, microsoft_refresh_token, microsoft_email, microsoft_connected_at, display_name")
     .eq("id", userId).maybeSingle();
   const { pickProvider, providerAccessToken, sendUserMail } = await import("@/lib/mail-provider.server");
   const provider = sender ? pickProvider(sender) : null;

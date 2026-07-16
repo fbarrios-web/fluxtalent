@@ -34,7 +34,7 @@ export const Route = createFileRoute("/api/public/schedule/book")({
           .select("name, consultancy_name, contact_email, brand_color, logo_url, signature_html, timezone")
           .eq("id", r.org_id).single();
         const { data: recruiter } = await supabaseAdmin.from("profiles")
-          .select("google_refresh_token, google_email, google_connected_at, microsoft_refresh_token, microsoft_email, microsoft_connected_at, display_name").eq("id", r.recruiter_id).single();
+          .select("id, google_refresh_token, google_email, google_connected_at, microsoft_refresh_token, microsoft_email, microsoft_connected_at, display_name").eq("id", r.recruiter_id).single();
         const { data: stageCfg } = await supabaseAdmin.from("vacancy_scheduling")
           .select("interviewer_email, extra_invitees")
           .eq("vacancy_id", r.vacancy_id).eq("stage", r.stage).maybeSingle();
