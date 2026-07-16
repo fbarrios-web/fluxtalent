@@ -100,7 +100,7 @@ export const getMicrosoftStatus = createServerFn({ method: "GET" })
     try {
       const { refreshAccessToken, hasRequiredMicrosoftScopes } = await import("@/lib/microsoft.server");
       const tokens = await refreshAccessToken(data.microsoft_refresh_token);
-      const scopes = hasRequiredMicrosoftScopes(tokens.scope);
+      const scopes = hasRequiredMicrosoftScopes(tokens.scope, tokens.access_token);
       base.hasMailScope = scopes.hasMailScope;
       base.hasCalendarScope = scopes.hasCalendarScope;
       base.hasTeamsScope = scopes.hasTeamsScope;
