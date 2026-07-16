@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { IntegrationsPanel } from "@/routes/app.integrations";
+import { IntegrationsPanel, MicrosoftPanel } from "@/routes/app.integrations";
+
+const MICROSOFT_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/microsoft/callback";
 
 export const Route = createFileRoute("/app/settings")({
   component: Settings,
