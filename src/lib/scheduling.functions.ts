@@ -481,10 +481,12 @@ export async function inviteForInterview(
   if (!cfg || !cfg.enabled) throw new Error(`Configurá la agenda de ${STAGE_LABELS[stage]} para esta vacante antes de invitar.`);
   const recruiterId = cfg.recruiter_id ?? userId;
   const { data: recruiter } = await supabase.from("profiles")
-    .select("google_refresh_token, google_email, display_name")
+    .select("google_refresh_token, google_email, google_connected_at, microsoft_refresh_token, microsoft_email, microsoft_connected_at, display_name")
     .eq("id", recruiterId).maybeSingle();
-  if (!recruiter?.google_refresh_token || !recruiter.google_email) {
-    throw new Error("El reclutador debe conectar su Google Calendar antes de invitar.");
+  const { pickProvider, providerAccessToken, sendUserMail } = await import("@/lib/mail-provider.server");
+  const provider = recruiter ? pickProvider(recruiter) : null;
+  if (!recruiter || !provider) {
+    throw new Error("El reclutador debe conectar Google o Microsoft en Integraciones antes de invitar.");
   }
 
   const { data: existing } = await supabase.from("interview_bookings")
@@ -507,9 +509,8 @@ export async function inviteForInterview(
   const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
   const scheduleUrl = `${origin}/schedule/${booking.booking_token}`;
 
-  const { refreshAccessToken, sendGmail } = await import("@/lib/google.server");
   const { interviewInviteHtml } = await import("@/lib/email-templates");
-  const { access_token } = await refreshAccessToken(recruiter.google_refresh_token);
+  const access_token = await providerAccessToken(recruiter, provider);
   const logoUrl = await signedLogoUrl(supabase, org.logo_url);
   const brand = {
     consultancyName: org.consultancy_name || org.name,
@@ -526,15 +527,17 @@ export async function inviteForInterview(
     scheduleUrl,
     stageLabel,
   });
-  await sendGmail({
+  await sendUserMail({
+    profile: recruiter,
+    provider,
     accessToken: access_token,
     fromName: brand.consultancyName,
-    fromEmail: recruiter.google_email,
     to: app.email,
     subject: `Coordinemos tu ${stageLabel} — ${vac.title}`,
     html,
     replyTo: brand.contactEmail || undefined,
   });
+
 
   await supabase.from("application_events").insert({
     application_id: app.id,
@@ -585,10 +588,12 @@ export async function sendStageEmail(
   if (!tpl) throw new Error("Template de email no encontrado. Configurá los templates en Configuración.");
 
   const { data: sender } = await supabase.from("profiles")
-    .select("google_refresh_token, google_email, display_name")
+    .select("google_refresh_token, google_email, google_connected_at, microsoft_refresh_token, microsoft_email, microsoft_connected_at, display_name")
     .eq("id", userId).maybeSingle();
-  if (!sender?.google_refresh_token || !sender.google_email) {
-    throw new Error("Conectá Gmail en Integraciones para enviar mails automáticos.");
+  const { pickProvider, providerAccessToken, sendUserMail } = await import("@/lib/mail-provider.server");
+  const provider = sender ? pickProvider(sender) : null;
+  if (!sender || !provider) {
+    throw new Error("Conectá Gmail u Outlook en Integraciones para enviar mails automáticos.");
   }
 
   const logoUrl = await signedLogoUrl(supabase, org.logo_url);
@@ -609,17 +614,18 @@ export async function sendStageEmail(
     signatureHtml: org.signature_html,
   }, `<div style="font-size:15px;line-height:1.7;color:#111">${escapeHtmlMultiline(bodyText)}</div>`);
 
-  const { refreshAccessToken, sendGmail } = await import("@/lib/google.server");
-  const { access_token } = await refreshAccessToken(sender.google_refresh_token);
-  await sendGmail({
+  const access_token = await providerAccessToken(sender, provider);
+  await sendUserMail({
+    profile: sender,
+    provider,
     accessToken: access_token,
     fromName: org.consultancy_name || org.name,
-    fromEmail: sender.google_email,
     to: app.email,
     subject,
     html,
     replyTo: org.contact_email || undefined,
   });
+
 
   await supabase.from("application_events").insert({
     application_id: app.id,
