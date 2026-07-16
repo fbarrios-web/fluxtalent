@@ -102,7 +102,7 @@ function NewVacancy() {
               <ul className="mt-2 list-disc pl-5 text-sm">
                 {!gate?.gmailOk && (
                   <li>
-                    Conectar tu cuenta de <b>Gmail</b>{" "}
+                    Conectar tu cuenta de <b>Google</b> o <b>Microsoft</b>{" "}
                     <Link to="/app/integrations" className="text-primary underline">Ir a Integraciones</Link>
                   </li>
                 )}
