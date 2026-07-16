@@ -34,12 +34,15 @@ export const Route = createFileRoute("/api/public/schedule/book")({
           .select("name, consultancy_name, contact_email, brand_color, logo_url, signature_html, timezone")
           .eq("id", r.org_id).single();
         const { data: recruiter } = await supabaseAdmin.from("profiles")
-          .select("google_refresh_token, google_email, display_name").eq("id", r.recruiter_id).single();
+          .select("google_refresh_token, google_email, google_connected_at, microsoft_refresh_token, microsoft_email, microsoft_connected_at, display_name").eq("id", r.recruiter_id).single();
         const { data: stageCfg } = await supabaseAdmin.from("vacancy_scheduling")
           .select("interviewer_email, extra_invitees")
           .eq("vacancy_id", r.vacancy_id).eq("stage", r.stage).maybeSingle();
 
-        if (!app || !vac || !org || !recruiter?.google_refresh_token || !recruiter.google_email) {
+        const { pickProvider, providerEmail, providerAccessToken, sendUserMail, createUserMeetingEvent } = await import("@/lib/mail-provider.server");
+        const provider = recruiter ? pickProvider(recruiter as any) : null;
+
+        if (!app || !vac || !org || !recruiter || !provider) {
           // Roll back the slot
           await supabaseAdmin.from("availability_slots").update({ status: "open" }).eq("id", parsed.data.slotId);
           await supabaseAdmin.from("interview_bookings").update({ slot_id: null, scheduled_at: null }).eq("id", r.booking_id);
@@ -47,7 +50,7 @@ export const Route = createFileRoute("/api/public/schedule/book")({
         }
 
         // 3) Create Calendar event
-        const { refreshAccessToken, createCalendarEventWithMeet, sendGmail } = await import("@/lib/google.server");
+        const senderEmail = providerEmail(recruiter as any, provider);
         const { interviewConfirmCandidateHtml, interviewConfirmRecruiterHtml } = await import("@/lib/email-templates");
         const tz = org.timezone || "America/Argentina/Buenos_Aires";
         const candidateName = `${app.first_name ?? ""} ${app.last_name ?? ""}`.trim() || app.email;
@@ -61,15 +64,18 @@ export const Route = createFileRoute("/api/public/schedule/book")({
         const attendeesMap = new Map<string, { email: string; name?: string }>();
         attendeesMap.set(app.email.toLowerCase(), { email: app.email, name: candidateName });
         if (interviewerEmail) attendeesMap.set(interviewerEmail.toLowerCase(), { email: interviewerEmail });
-        attendeesMap.set(recruiter.google_email.toLowerCase(), { email: recruiter.google_email, name: recruiter.display_name ?? "" });
+        attendeesMap.set(senderEmail.toLowerCase(), { email: senderEmail, name: recruiter.display_name ?? "" });
         for (const e of extraInvitees) attendeesMap.set(e.toLowerCase(), { email: e });
 
         try {
-          const { access_token } = await refreshAccessToken(recruiter.google_refresh_token);
-          const event = await createCalendarEventWithMeet({
+          const access_token = await providerAccessToken(recruiter as any, provider);
+          const descriptionText = `Entrevista para ${vac.title}\nPostulante: ${candidateName} (${app.email})`;
+          const event = await createUserMeetingEvent({
+            provider,
             accessToken: access_token,
             summary,
-            description: `Entrevista para ${vac.title}\nPostulante: ${candidateName} (${app.email})`,
+            descriptionText,
+            descriptionHtml: `<p>${descriptionText.replace(/\n/g, "<br/>")}</p>`,
             startISO: r.start_at,
             endISO: r.end_at,
             timezone: tz,
@@ -78,11 +84,11 @@ export const Route = createFileRoute("/api/public/schedule/book")({
 
           await supabaseAdmin.from("interview_bookings").update({
             google_event_id: event.eventId,
-            meet_link: event.meetLink,
+            meet_link: event.meetingLink,
             status: "scheduled",
           }).eq("id", r.booking_id);
 
-          // 4) Send branded confirmation mail to candidate (via recruiter's Gmail)
+          // 4) Send branded confirmation mail to candidate (via provider)
           const whenLabel = new Intl.DateTimeFormat("es-AR", {
             timeZone: tz, dateStyle: "full", timeStyle: "short",
           }).format(new Date(r.start_at));
@@ -94,12 +100,13 @@ export const Route = createFileRoute("/api/public/schedule/book")({
             signatureHtml: org.signature_html,
           };
           let emailWarning: string | null = null;
-          if (event.meetLink) {
+          if (event.meetingLink) {
             try {
-              await sendGmail({
+              await sendUserMail({
+                profile: recruiter as any,
+                provider,
                 accessToken: access_token,
                 fromName: brand.consultancyName,
-                fromEmail: recruiter.google_email,
                 to: app.email,
                 subject: `Confirmación de entrevista — ${vac.title}`,
                 html: interviewConfirmCandidateHtml({
@@ -107,16 +114,17 @@ export const Route = createFileRoute("/api/public/schedule/book")({
                   firstName: app.first_name || "",
                   vacancyTitle: vac.title,
                   whenLabel,
-                  meetLink: event.meetLink,
+                  meetLink: event.meetingLink,
                 }),
                 replyTo: brand.contactEmail || undefined,
               });
 
-              await sendGmail({
+              await sendUserMail({
+                profile: recruiter as any,
+                provider,
                 accessToken: access_token,
                 fromName: brand.consultancyName,
-                fromEmail: recruiter.google_email,
-                to: recruiter.google_email,
+                to: senderEmail,
                 subject: `Nueva entrevista agendada — ${candidateName}`,
                 html: interviewConfirmRecruiterHtml({
                   ...brand,
@@ -124,21 +132,21 @@ export const Route = createFileRoute("/api/public/schedule/book")({
                   candidateEmail: app.email,
                   vacancyTitle: vac.title,
                   whenLabel,
-                  meetLink: event.meetLink,
+                  meetLink: event.meetingLink,
                 }),
               });
             } catch (mailErr: any) {
               const msg = mailErr?.message ?? String(mailErr);
-              console.error("[schedule.book] Gmail send failed:", msg);
-              emailWarning = /insufficient.*scope|invalid_scope|ACCESS_TOKEN_SCOPE_INSUFFICIENT/i.test(msg)
-                ? "El reclutador debe reconectar Google para autorizar el envío de mails (permiso gmail.send)."
+              console.error("[schedule.book] mail send failed:", msg);
+              emailWarning = /insufficient.*scope|invalid_scope|ACCESS_TOKEN_SCOPE_INSUFFICIENT|Mail\.Send/i.test(msg)
+                ? `El reclutador debe reconectar ${provider === "microsoft" ? "Microsoft" : "Google"} para autorizar el envío de mails.`
                 : /SERVICE_DISABLED|has not been used|Gmail API has not been/i.test(msg)
-                  ? "Gmail API no está habilitada en el proyecto de Google del reclutador."
+                  ? "La API de correo no está habilitada en la cuenta del reclutador."
                   : `No se pudo enviar el mail de confirmación: ${msg}`;
             }
           }
 
-          return Response.json({ ok: true, meetLink: event.meetLink, emailWarning });
+          return Response.json({ ok: true, meetLink: event.meetingLink, emailWarning });
 
         } catch (e: any) {
           // Roll back
@@ -146,6 +154,7 @@ export const Route = createFileRoute("/api/public/schedule/book")({
           await supabaseAdmin.from("interview_bookings").update({ slot_id: null, scheduled_at: null }).eq("id", r.booking_id);
           return Response.json({ error: `No se pudo crear la reunión: ${e?.message ?? e}` }, { status: 500 });
         }
+
       },
     },
   },
