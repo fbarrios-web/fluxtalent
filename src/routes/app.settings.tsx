@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { IntegrationsPanel } from "@/routes/app.integrations";
+import { IntegrationsPanel, MicrosoftPanel } from "@/routes/app.integrations";
+
+const MICROSOFT_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/microsoft/callback";
 
 export const Route = createFileRoute("/app/settings")({
   component: Settings,
@@ -271,12 +273,13 @@ function Settings() {
           </section>
         </TabsContent>
 
-        <TabsContent value="integraciones" className="mt-6">
+        <TabsContent value="integraciones" className="mt-6 space-y-6">
           <div className="rounded-2xl border border-border bg-card p-6">
             <h3 className="font-semibold">Integraciones</h3>
-            <p className="text-sm text-muted-foreground">Conectá Google Calendar + Gmail para automatizar entrevistas e invitaciones.</p>
-            <div className="mt-4">
+            <p className="text-sm text-muted-foreground">Conectá tu calendario y mail para automatizar entrevistas e invitaciones. Solo podés tener un proveedor activo a la vez.</p>
+            <div className="mt-4 space-y-4">
               <IntegrationsPanel />
+              <MicrosoftPanel callbackUrl={MICROSOFT_CALLBACK_URL} />
             </div>
           </div>
         </TabsContent>
