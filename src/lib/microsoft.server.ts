@@ -70,8 +70,27 @@ export function getMicrosoftTokenScopes(scope?: string | null): string[] {
   return (scope || "").split(/\s+/).filter(Boolean);
 }
 
-export function hasRequiredMicrosoftScopes(scope?: string | null) {
-  const granted = new Set(getMicrosoftTokenScopes(scope).map(s => s.toLowerCase()));
+function tokenPayload(accessToken?: string | null): Record<string, unknown> | null {
+  if (!accessToken) return null;
+  const [, payload] = accessToken.split(".");
+  if (!payload) return null;
+  try {
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const json = atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "="));
+    return JSON.parse(json) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+export function getMicrosoftGrantedScopes(scope?: string | null, accessToken?: string | null): string[] {
+  const payload = tokenPayload(accessToken);
+  const jwtScope = typeof payload?.scp === "string" ? payload.scp : "";
+  return getMicrosoftTokenScopes([scope, jwtScope].filter(Boolean).join(" "));
+}
+
+export function hasRequiredMicrosoftScopes(scope?: string | null, accessToken?: string | null) {
+  const granted = new Set(getMicrosoftGrantedScopes(scope, accessToken).map(s => s.toLowerCase()));
   const has = (value: string) => granted.has(value.toLowerCase());
   return {
     hasMailScope: has("Mail.Send"),
