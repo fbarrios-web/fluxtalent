@@ -100,7 +100,9 @@ export async function getUserInfo(accessToken: string) {
   return { email: j.mail || j.userPrincipalName || "", displayName: j.displayName ?? null };
 }
 
-/** Create an Outlook Calendar event with a Teams meeting link and send invites. */
+/** Create an Outlook Calendar event with a Teams meeting link and send invites.
+ *  Falls back to a plain calendar event (no online meeting) when the account
+ *  can't provision Teams (personal MSA accounts, tenants without Teams). */
 export async function createOutlookEventWithTeams(params: {
   accessToken: string;
   subject: string;
@@ -110,7 +112,7 @@ export async function createOutlookEventWithTeams(params: {
   timezone: string;
   attendees: { email: string; name?: string }[];
 }) {
-  const body = {
+  const baseBody = {
     subject: params.subject,
     body: { contentType: "HTML", content: params.bodyHtml },
     start: { dateTime: params.startISO, timeZone: params.timezone },
@@ -119,15 +121,26 @@ export async function createOutlookEventWithTeams(params: {
       emailAddress: { address: a.email, name: a.name ?? a.email },
       type: "required",
     })),
-    isOnlineMeeting: true,
-    onlineMeetingProvider: "teamsForBusiness",
   };
-  const res = await fetch(GRAPH_CREATE_EVENT, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${params.accessToken}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`Outlook event insert falló: ${await res.text()}`);
+  async function post(body: unknown) {
+    return fetch(GRAPH_CREATE_EVENT, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${params.accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  }
+  let res = await post({ ...baseBody, isOnlineMeeting: true, onlineMeetingProvider: "teamsForBusiness" });
+  if (!res.ok) {
+    const errText = await res.text();
+    // Personal MSA / tenants sin Teams: reintentar sin online meeting.
+    if (/teamsForBusiness|OnlineMeeting|not supported|does not have a valid license|ErrorInvalidRequest/i.test(errText)) {
+      console.warn("[microsoft] Teams meeting not supported, creating plain calendar event:", errText);
+      res = await post(baseBody);
+      if (!res.ok) throw new Error(`Outlook event insert falló: ${await res.text()}`);
+    } else {
+      throw new Error(`Outlook event insert falló: ${errText}`);
+    }
+  }
   const ev = (await res.json()) as any;
   return {
     eventId: ev.id as string,
