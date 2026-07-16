@@ -86,12 +86,28 @@ export const getMicrosoftStatus = createServerFn({ method: "GET" })
     const { data } = await context.supabase.from("profiles")
       .select("microsoft_email, microsoft_connected_at, microsoft_refresh_token")
       .eq("id", context.userId).maybeSingle();
-    return {
-      connected: !!data?.microsoft_email,
+    const base = {
+      connected: !!data?.microsoft_email && !!data?.microsoft_refresh_token,
       email: data?.microsoft_email ?? null,
       connectedAt: data?.microsoft_connected_at ?? null,
       hasRefreshToken: !!data?.microsoft_refresh_token,
+      hasMailScope: false as boolean,
+      hasCalendarScope: false as boolean,
+      hasTeamsScope: false as boolean,
+      scopeCheckError: null as string | null,
     };
+    if (!data?.microsoft_refresh_token) return base;
+    try {
+      const { refreshAccessToken, hasRequiredMicrosoftScopes } = await import("@/lib/microsoft.server");
+      const tokens = await refreshAccessToken(data.microsoft_refresh_token);
+      const scopes = hasRequiredMicrosoftScopes(tokens.scope, tokens.access_token);
+      base.hasMailScope = scopes.hasMailScope;
+      base.hasCalendarScope = scopes.hasCalendarScope;
+      base.hasTeamsScope = scopes.hasTeamsScope;
+    } catch (e: any) {
+      base.scopeCheckError = e?.message ?? String(e);
+    }
+    return base;
   });
 
 export const microsoftDisconnect = createServerFn({ method: "POST" })

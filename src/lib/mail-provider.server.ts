@@ -4,6 +4,7 @@
 // Server-only. Cargar dinámicamente desde handlers.
 
 export type ProviderProfile = {
+  id?: string | null;
   google_refresh_token?: string | null;
   google_email?: string | null;
   google_connected_at?: string | null;
@@ -36,7 +37,11 @@ export function providerEmail(p: ProviderProfile, provider: Provider): string {
 export async function providerAccessToken(p: ProviderProfile, provider: Provider): Promise<string> {
   if (provider === "microsoft") {
     const { refreshAccessToken } = await import("@/lib/microsoft.server");
-    const { access_token } = await refreshAccessToken(p.microsoft_refresh_token!);
+    const { access_token, refresh_token } = await refreshAccessToken(p.microsoft_refresh_token!);
+    if (refresh_token && refresh_token !== p.microsoft_refresh_token && p.id) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.from("profiles").update({ microsoft_refresh_token: refresh_token }).eq("id", p.id);
+    }
     return access_token;
   }
   const { refreshAccessToken } = await import("@/lib/google.server");
