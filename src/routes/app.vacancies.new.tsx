@@ -36,13 +36,13 @@ function NewVacancy() {
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return null;
-      const { data: profile } = await supabase.from("profiles").select("google_refresh_token, org_id").eq("id", u.user.id).maybeSingle();
+      const { data: profile } = await supabase.from("profiles").select("google_refresh_token, microsoft_refresh_token, org_id").eq("id", u.user.id).maybeSingle();
       let org: any = null;
       if (profile?.org_id) {
         const { data } = await supabase.from("organizations").select("name").eq("id", profile.org_id).maybeSingle();
         org = data;
       }
-      const gmailOk = !!profile?.google_refresh_token;
+      const gmailOk = !!profile?.google_refresh_token || !!profile?.microsoft_refresh_token;
       const orgOk = !!org?.name;
       return { gmailOk, orgOk };
     },
@@ -102,7 +102,7 @@ function NewVacancy() {
               <ul className="mt-2 list-disc pl-5 text-sm">
                 {!gate?.gmailOk && (
                   <li>
-                    Conectar tu cuenta de <b>Gmail</b>{" "}
+                    Conectar tu cuenta de <b>Google</b> o <b>Microsoft</b>{" "}
                     <Link to="/app/integrations" className="text-primary underline">Ir a Integraciones</Link>
                   </li>
                 )}
