@@ -3,17 +3,20 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Calendar, Check, Loader2, AlertCircle, ShieldCheck, XCircle } from "lucide-react";
+import { Calendar, Check, Loader2, AlertCircle, ShieldCheck, XCircle, Video } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { getGoogleStatus, googleStartUrl, googleDisconnect, verifyGoogleOAuthConfig } from "@/lib/scheduling.functions";
+import { getMicrosoftStatus, microsoftStartUrl, microsoftDisconnect } from "@/lib/microsoft.functions";
 
 const GOOGLE_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/google/callback";
+const MICROSOFT_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/microsoft/callback";
 
 export const Route = createFileRoute("/app/integrations")({
   component: IntegrationsPage,
   validateSearch: (s: Record<string, unknown>) => ({
     ok: typeof s.ok === "string" ? s.ok : undefined,
+    ok_ms: typeof s.ok_ms === "string" ? s.ok_ms : undefined,
     error: typeof s.error === "string" ? s.error : undefined,
   }),
   head: () => ({ meta: [{ title: "Integraciones — FLUX Talent" }] }),
@@ -29,18 +32,96 @@ function IntegrationsPage() {
       toast.success("Google Calendar conectado");
       router.navigate({ to: "/app/integrations", replace: true });
       qc.invalidateQueries({ queryKey: ["google-status"] });
+    } else if (search.ok_ms === "1") {
+      toast.success("Microsoft (Outlook + Teams) conectado");
+      router.navigate({ to: "/app/integrations", replace: true });
+      qc.invalidateQueries({ queryKey: ["microsoft-status"] });
     } else if (search.error) {
       toast.error(`No se pudo conectar: ${search.error}`);
       router.navigate({ to: "/app/integrations", replace: true });
     }
-  }, [search.ok, search.error, qc, router]);
+  }, [search.ok, search.ok_ms, search.error, qc, router]);
 
   return (
-    <div className="p-6 md:p-10 max-w-3xl">
-      <h1 className="text-2xl font-semibold mb-2">Integraciones</h1>
-      <p className="text-muted-foreground mb-8">Conectá tu cuenta para automatizar entrevistas con Meet y enviar invitaciones desde tu mail.</p>
+    <div className="p-6 md:p-10 max-w-3xl space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold mb-2">Integraciones</h1>
+        <p className="text-muted-foreground">Conectá tu cuenta para automatizar entrevistas y enviar invitaciones desde tu mail.</p>
+      </div>
       <IntegrationsPanel />
+      <MicrosoftPanel callbackUrl={MICROSOFT_CALLBACK_URL} />
     </div>
+  );
+}
+
+export function MicrosoftPanel({ callbackUrl }: { callbackUrl: string }) {
+  const qc = useQueryClient();
+  const getStatus = useServerFn(getMicrosoftStatus);
+  const startUrl = useServerFn(microsoftStartUrl);
+  const disconnect = useServerFn(microsoftDisconnect);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["microsoft-status"],
+    queryFn: () => getStatus(),
+  });
+
+  async function connect() {
+    try {
+      const result = await startUrl({ data: { origin: window.location.origin } });
+      if (!result.ok) {
+        toast.error("Microsoft OAuth no está configurado o el redirect no coincide.");
+        return;
+      }
+      window.location.href = result.url;
+    } catch (e: any) {
+      toast.error(e?.message ?? "Error al iniciar conexión");
+    }
+  }
+
+  async function onDisconnect() {
+    await disconnect();
+    toast.success("Microsoft desconectado");
+    qc.invalidateQueries({ queryKey: ["microsoft-status"] });
+  }
+
+  return (
+    <Card className="p-6">
+      <div className="flex items-start gap-4">
+        <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
+          <Video className="h-5 w-5" />
+        </div>
+        <div className="flex-1">
+          <h2 className="font-semibold">Microsoft 365 — Outlook + Teams</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Enviá mails desde tu Outlook y creá reuniones de Teams automáticamente cuando agendes una entrevista.
+          </p>
+
+          {isLoading ? (
+            <div className="mt-4"><Loader2 className="h-4 w-4 animate-spin" /></div>
+          ) : data?.connected ? (
+            <div className="mt-4 space-y-3">
+              <div className="flex items-center gap-2 text-sm">
+                <Check className="h-4 w-4 text-green-600" />
+                Conectado como <strong>{data.email}</strong>
+              </div>
+              <Button variant="outline" size="sm" onClick={onDisconnect}>Desconectar</Button>
+            </div>
+          ) : (
+            <div className="mt-4">
+              <Button onClick={connect}>Conectar Microsoft</Button>
+              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                Vamos a pedir permisos de Outlook (Mail.Send), Calendario y creación de reuniones de Teams.
+              </p>
+              <p className="mt-3 rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                Redirect URI autorizada requerida en Entra ID:{" "}
+                <span className="font-mono text-foreground break-all">{callbackUrl}</span>
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </Card>
   );
 }
 

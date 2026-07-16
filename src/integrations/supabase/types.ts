@@ -707,6 +707,9 @@ export type Database = {
           google_email: string | null
           google_refresh_token: string | null
           id: string
+          microsoft_connected_at: string | null
+          microsoft_email: string | null
+          microsoft_refresh_token: string | null
           org_id: string | null
           province: string | null
           setup_completed_at: string | null
@@ -723,6 +726,9 @@ export type Database = {
           google_email?: string | null
           google_refresh_token?: string | null
           id: string
+          microsoft_connected_at?: string | null
+          microsoft_email?: string | null
+          microsoft_refresh_token?: string | null
           org_id?: string | null
           province?: string | null
           setup_completed_at?: string | null
@@ -739,6 +745,9 @@ export type Database = {
           google_email?: string | null
           google_refresh_token?: string | null
           id?: string
+          microsoft_connected_at?: string | null
+          microsoft_email?: string | null
+          microsoft_refresh_token?: string | null
           org_id?: string | null
           province?: string | null
           setup_completed_at?: string | null

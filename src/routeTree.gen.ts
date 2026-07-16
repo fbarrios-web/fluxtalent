@@ -43,6 +43,7 @@ import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/em
 import { Route as ApiPublicScheduleLogoRouteImport } from './routes/api.public.schedule.logo'
 import { Route as ApiPublicScheduleBookRouteImport } from './routes/api.public.schedule.book'
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api.public.mp.webhook'
+import { Route as ApiPublicMicrosoftCallbackRouteImport } from './routes/api.public.microsoft.callback'
 import { Route as ApiPublicHooksProcessCvQueueRouteImport } from './routes/api.public.hooks.process-cv-queue'
 import { Route as ApiPublicGoogleCallbackRouteImport } from './routes/api.public.google.callback'
 
@@ -217,6 +218,12 @@ const ApiPublicMpWebhookRoute = ApiPublicMpWebhookRouteImport.update({
   path: '/api/public/mp/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMicrosoftCallbackRoute =
+  ApiPublicMicrosoftCallbackRouteImport.update({
+    id: '/api/public/microsoft/callback',
+    path: '/api/public/microsoft/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksProcessCvQueueRoute =
   ApiPublicHooksProcessCvQueueRouteImport.update({
     id: '/api/public/hooks/process-cv-queue',
@@ -260,6 +267,7 @@ export interface FileRoutesByFullPath {
   '/app/vacancies/': typeof AppVacanciesIndexRoute
   '/api/public/google/callback': typeof ApiPublicGoogleCallbackRoute
   '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
+  '/api/public/microsoft/callback': typeof ApiPublicMicrosoftCallbackRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
   '/api/public/schedule/logo': typeof ApiPublicScheduleLogoRoute
@@ -296,6 +304,7 @@ export interface FileRoutesByTo {
   '/app/vacancies': typeof AppVacanciesIndexRoute
   '/api/public/google/callback': typeof ApiPublicGoogleCallbackRoute
   '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
+  '/api/public/microsoft/callback': typeof ApiPublicMicrosoftCallbackRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
   '/api/public/schedule/logo': typeof ApiPublicScheduleLogoRoute
@@ -335,6 +344,7 @@ export interface FileRoutesById {
   '/app/vacancies/': typeof AppVacanciesIndexRoute
   '/api/public/google/callback': typeof ApiPublicGoogleCallbackRoute
   '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
+  '/api/public/microsoft/callback': typeof ApiPublicMicrosoftCallbackRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
   '/api/public/schedule/logo': typeof ApiPublicScheduleLogoRoute
@@ -375,6 +385,7 @@ export interface FileRouteTypes {
     | '/app/vacancies/'
     | '/api/public/google/callback'
     | '/api/public/hooks/process-cv-queue'
+    | '/api/public/microsoft/callback'
     | '/api/public/mp/webhook'
     | '/api/public/schedule/book'
     | '/api/public/schedule/logo'
@@ -411,6 +422,7 @@ export interface FileRouteTypes {
     | '/app/vacancies'
     | '/api/public/google/callback'
     | '/api/public/hooks/process-cv-queue'
+    | '/api/public/microsoft/callback'
     | '/api/public/mp/webhook'
     | '/api/public/schedule/book'
     | '/api/public/schedule/logo'
@@ -449,6 +461,7 @@ export interface FileRouteTypes {
     | '/app/vacancies/'
     | '/api/public/google/callback'
     | '/api/public/hooks/process-cv-queue'
+    | '/api/public/microsoft/callback'
     | '/api/public/mp/webhook'
     | '/api/public/schedule/book'
     | '/api/public/schedule/logo'
@@ -469,6 +482,7 @@ export interface RootRouteChildren {
   ApiPublicApplyRoute: typeof ApiPublicApplyRoute
   ApiPublicGoogleCallbackRoute: typeof ApiPublicGoogleCallbackRoute
   ApiPublicHooksProcessCvQueueRoute: typeof ApiPublicHooksProcessCvQueueRoute
+  ApiPublicMicrosoftCallbackRoute: typeof ApiPublicMicrosoftCallbackRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
   ApiPublicScheduleBookRoute: typeof ApiPublicScheduleBookRoute
   ApiPublicScheduleLogoRoute: typeof ApiPublicScheduleLogoRoute
@@ -717,6 +731,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMpWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/microsoft/callback': {
+      id: '/api/public/microsoft/callback'
+      path: '/api/public/microsoft/callback'
+      fullPath: '/api/public/microsoft/callback'
+      preLoaderRoute: typeof ApiPublicMicrosoftCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/process-cv-queue': {
       id: '/api/public/hooks/process-cv-queue'
       path: '/api/public/hooks/process-cv-queue'
@@ -802,6 +823,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicApplyRoute: ApiPublicApplyRoute,
   ApiPublicGoogleCallbackRoute: ApiPublicGoogleCallbackRoute,
   ApiPublicHooksProcessCvQueueRoute: ApiPublicHooksProcessCvQueueRoute,
+  ApiPublicMicrosoftCallbackRoute: ApiPublicMicrosoftCallbackRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
   ApiPublicScheduleBookRoute: ApiPublicScheduleBookRoute,
   ApiPublicScheduleLogoRoute: ApiPublicScheduleLogoRoute,
@@ -812,13 +834,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
