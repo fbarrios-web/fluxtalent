@@ -214,11 +214,20 @@ export async function createOutlookEventWithTeams(params: {
   let res = await post({ ...baseBody, isOnlineMeeting: true, onlineMeetingProvider: "teamsForBusiness" });
   if (!res.ok) {
     const errText = await res.text();
-    // Personal MSA / tenants sin Teams: reintentar sin online meeting.
-    if (/teamsForBusiness|OnlineMeeting|not supported|does not have a valid license|ErrorInvalidRequest|UnableToCreateOnlineMeeting/i.test(errText)) {
-      console.warn("[microsoft] Teams meeting not supported, creating plain calendar event:", errText);
-      res = await post(baseBody);
-      if (!res.ok) throw new Error(`Outlook event insert falló [${res.status}]: ${await res.text()}`);
+    if (/teamsForBusiness|OnlineMeeting|not supported|does not have a valid license|ErrorInvalidRequest|UnableToCreateOnlineMeeting|consumer/i.test(errText)) {
+      console.warn("[microsoft] teamsForBusiness falló, reintentando con teamsForConsumer:", errText);
+      res = await post({ ...baseBody, isOnlineMeeting: true, onlineMeetingProvider: "teamsForConsumer" });
+      if (!res.ok) {
+        const err2 = await res.text();
+        console.warn("[microsoft] teamsForConsumer falló, reintentando sin proveedor específico:", err2);
+        res = await post({ ...baseBody, isOnlineMeeting: true });
+        if (!res.ok) {
+          const err3 = await res.text();
+          console.warn("[microsoft] isOnlineMeeting sin proveedor falló, creando evento plano:", err3);
+          res = await post(baseBody);
+          if (!res.ok) throw new Error(`Outlook event insert falló [${res.status}]: ${await res.text()}`);
+        }
+      }
     } else {
       throw new Error(`Outlook event insert falló [${res.status}]: ${errText}`);
     }
