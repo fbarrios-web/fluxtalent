@@ -36,13 +36,13 @@ function NewVacancy() {
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return null;
-      const { data: profile } = await supabase.from("profiles").select("google_refresh_token, org_id").eq("id", u.user.id).maybeSingle();
+      const { data: profile } = await supabase.from("profiles").select("google_refresh_token, microsoft_refresh_token, org_id").eq("id", u.user.id).maybeSingle();
       let org: any = null;
       if (profile?.org_id) {
         const { data } = await supabase.from("organizations").select("name").eq("id", profile.org_id).maybeSingle();
         org = data;
       }
-      const gmailOk = !!profile?.google_refresh_token;
+      const gmailOk = !!profile?.google_refresh_token || !!profile?.microsoft_refresh_token;
       const orgOk = !!org?.name;
       return { gmailOk, orgOk };
     },
