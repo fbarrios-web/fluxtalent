@@ -11,11 +11,23 @@ export type PlanPricingRow = {
 
 /** Public: list plan pricing overrides for everyone (landing, subscription, etc). */
 export const getPlanPricing = createServerFn({ method: "GET" }).handler(async () => {
-  const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
+  const sb = createClient(process.env.SUPABASE_URL!, key, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      fetch: (input, init) => {
+        const h = new Headers(init?.headers);
+        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
+        h.set("apikey", key);
+        return fetch(input, { ...init, headers: h });
+      },
+    },
   });
   const { data, error } = await sb.from("plan_pricing").select("plan_id, base_price_ars, discount_pct");
-  if (error) throw error;
+  if (error) {
+    console.error("[getPlanPricing] falló:", error);
+    return [] as PlanPricingRow[];
+  }
   return (data ?? []) as PlanPricingRow[];
 });
 
