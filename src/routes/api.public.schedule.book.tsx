@@ -84,7 +84,7 @@ export const Route = createFileRoute("/api/public/schedule/book")({
 
           await supabaseAdmin.from("interview_bookings").update({
             google_event_id: event.eventId,
-            meet_link: event.meetingLink,
+            meet_link: event.meetingLink ?? event.webLink,
             status: "scheduled",
           }).eq("id", r.booking_id);
 
@@ -99,9 +99,9 @@ export const Route = createFileRoute("/api/public/schedule/book")({
             logoUrl: org.logo_url,
             signatureHtml: org.signature_html,
           };
+          const linkForEmail = event.meetingLink ?? event.webLink ?? "";
           let emailWarning: string | null = null;
-          if (event.meetingLink) {
-            try {
+          try {
               await sendUserMail({
                 profile: recruiter as any,
                 provider,
@@ -114,7 +114,7 @@ export const Route = createFileRoute("/api/public/schedule/book")({
                   firstName: app.first_name || "",
                   vacancyTitle: vac.title,
                   whenLabel,
-                  meetLink: event.meetingLink,
+                  meetLink: linkForEmail,
                 }),
                 replyTo: brand.contactEmail || undefined,
               });
@@ -132,7 +132,7 @@ export const Route = createFileRoute("/api/public/schedule/book")({
                   candidateEmail: app.email,
                   vacancyTitle: vac.title,
                   whenLabel,
-                  meetLink: event.meetingLink,
+                  meetLink: linkForEmail,
                 }),
               });
             } catch (mailErr: any) {
@@ -144,9 +144,11 @@ export const Route = createFileRoute("/api/public/schedule/book")({
                   ? "La API de correo no está habilitada en la cuenta del reclutador."
                   : `No se pudo enviar el mail de confirmación: ${msg}`;
             }
+          if (!event.meetingLink && !emailWarning) {
+            emailWarning = "La cuenta Microsoft conectada no permite crear reuniones de Teams (cuenta personal o sin licencia). Se envió el mail con el link del evento de Outlook.";
           }
 
-          return Response.json({ ok: true, meetLink: event.meetingLink, emailWarning });
+          return Response.json({ ok: true, meetLink: event.meetingLink ?? event.webLink, emailWarning });
 
         } catch (e: any) {
           // Roll back
