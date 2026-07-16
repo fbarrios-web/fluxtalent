@@ -113,7 +113,7 @@ function SchedulePage() {
         <p className="text-muted-foreground mb-6">Tu entrevista quedó agendada para <strong className="text-foreground">{confirmed.when}</strong>. Te enviamos la invitación por mail.</p>
         {confirmed.meetLink && (
           <a href={confirmed.meetLink} target="_blank" rel="noreferrer">
-            <Button style={{ background: brand }}>Abrir Google Meet</Button>
+            <Button style={{ background: brand }}>Abrir videollamada</Button>
           </a>
         )}
       </div>
@@ -128,7 +128,7 @@ function SchedulePage() {
       <div className="max-w-md w-full bg-card border rounded-xl p-8 text-center">
         <h1 className="text-2xl font-semibold mb-2">Entrevista agendada</h1>
         <p className="text-muted-foreground mb-4">{when}</p>
-        {data.meet_link && <a href={data.meet_link} target="_blank" rel="noreferrer"><Button style={{ background: brand }}>Abrir Google Meet</Button></a>}
+        {data.meet_link && <a href={data.meet_link} target="_blank" rel="noreferrer"><Button style={{ background: brand }}>Abrir videollamada</Button></a>}
       </div>
     </div>;
   }
