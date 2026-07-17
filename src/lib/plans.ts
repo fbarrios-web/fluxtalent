@@ -51,10 +51,11 @@ export const PLANS: Plan[] = [
     name: "Starter",
     priceArs: 24000,
     originalPriceArs: 30000,
+    priceUsd: 29,
+    paddlePriceId: "starter_monthly_usd",
     tagline: "Ideal para reclutadores freelancers",
     maxVacancies: 5,
     maxNewVacanciesPerCycle: 5,
-
     maxCvsPerMonth: 200,
     features: [
       "Hasta 5 vacantes activas",
@@ -68,10 +69,11 @@ export const PLANS: Plan[] = [
     name: "Pro",
     priceArs: 48000,
     originalPriceArs: 60000,
+    priceUsd: 59,
+    paddlePriceId: "pro_monthly_usd",
     tagline: "Ideal para consultoras y áreas de Talento con flujo constante.",
     maxVacancies: 20,
     maxNewVacanciesPerCycle: 20,
-
     maxCvsPerMonth: 1000,
     highlighted: true,
     features: [
@@ -86,10 +88,11 @@ export const PLANS: Plan[] = [
     name: "Enterprise",
     priceArs: 96000,
     originalPriceArs: 120000,
+    priceUsd: 119,
+    paddlePriceId: "enterprise_monthly_usd",
     tagline: "Volumen alto, multi-equipo y soporte dedicado.",
     maxVacancies: -1,
     maxNewVacanciesPerCycle: -1,
-
     maxCvsPerMonth: 1000,
     features: [
       "Vacantes ilimitadas",
