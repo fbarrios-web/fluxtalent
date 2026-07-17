@@ -141,6 +141,13 @@ export function formatArs(n: number): string {
   return `ARS ${n.toLocaleString("es-AR")}`;
 }
 
+export function formatUsd(n: number | undefined): string {
+  if (n == null) return "—";
+  if (n === -1) return "A medida";
+  if (n === 0) return "Gratis";
+  return `USD $${n}`;
+}
+
 export type PricingOverride = { plan_id: string; base_price_ars: number; discount_pct: number };
 
 /** Returns PLANS with priceArs / originalPriceArs overridden from DB pricing overrides. */
