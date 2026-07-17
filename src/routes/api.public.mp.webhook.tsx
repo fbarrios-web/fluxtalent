@@ -120,22 +120,21 @@ export const Route = createFileRoute("/api/public/mp/webhook")({
             // Send subscription confirmation email to org owner
             try {
               const { data: owner } = await supabaseAdmin
-                .from("profiles").select("id, full_name, email:id").eq("org_id", orgId).order("created_at", { ascending: true }).limit(1).maybeSingle();
-              const userId = (owner as any)?.id as string | undefined;
-              let recipientEmail: string | undefined;
-              let fullName: string | undefined = (owner as any)?.full_name ?? undefined;
+                .from("profiles").select("id, full_name").eq("org_id", orgId).order("created_at", { ascending: true }).limit(1).maybeSingle();
+              const userId = owner?.id;
+              const fullName = owner?.full_name ?? undefined;
               if (userId) {
                 const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
-                recipientEmail = authUser?.user?.email ?? undefined;
-              }
-              if (recipientEmail) {
-                const { dispatchTransactionalEmail } = await import("@/lib/email/dispatch.server");
-                await dispatchTransactionalEmail({
-                  templateName: "subscription-confirmed",
-                  recipientEmail,
-                  templateData: { fullName, planName: plan.name, amountArs: txAmount, periodEnd },
-                  idempotencyKey: `sub-confirmed-${p.id}`,
-                });
+                const recipientEmail = authUser?.user?.email;
+                if (recipientEmail) {
+                  const { dispatchTransactionalEmail } = await import("@/lib/email/dispatch.server");
+                  await dispatchTransactionalEmail({
+                    templateName: "subscription-confirmed",
+                    recipientEmail,
+                    templateData: { fullName, planName: plan.name, amountArs: txAmount, periodEnd },
+                    idempotencyKey: `sub-confirmed-${p.id}`,
+                  });
+                }
               }
             } catch (e) { console.error("[mp.webhook] email confirm failed", e); }
           } else if (["rejected", "cancelled", "refunded"].includes(p.status)) {
