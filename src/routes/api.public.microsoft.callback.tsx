@@ -21,11 +21,28 @@ export const Route = createFileRoute("/api/public/microsoft/callback")({
         const callbackUri = verified.callbackUri ?? `${process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app"}/api/public/microsoft/callback`;
         const returnOrigin = verified.returnOrigin ?? "";
         const integrationsPath = returnOrigin ? `${returnOrigin}/app/integrations` : "/app/integrations";
-        const tokens = await exchangeCodeForTokens(code, callbackUri);
+        let tokens: Awaited<ReturnType<typeof exchangeCodeForTokens>>;
+        try {
+          tokens = await exchangeCodeForTokens(code, callbackUri);
+        } catch (e: any) {
+          const msg = e?.message ?? String(e);
+          console.error("[microsoft.callback] token exchange failed", msg);
+          const reason = /AADSTS7000215|invalid_client|client secret/i.test(msg)
+            ? "invalid_microsoft_secret"
+            : "microsoft_token_exchange_failed";
+          throw redirect({ href: `${integrationsPath}?error=${reason}` });
+        }
         if (!tokens.refresh_token) {
           throw redirect({ href: `${integrationsPath}?error=no_refresh` });
         }
-        const info = await getUserInfo(tokens.access_token);
+
+        let info: Awaited<ReturnType<typeof getUserInfo>>;
+        try {
+          info = await getUserInfo(tokens.access_token);
+        } catch (e: any) {
+          console.error("[microsoft.callback] profile lookup failed", e?.message ?? String(e));
+          throw redirect({ href: `${integrationsPath}?error=microsoft_profile_failed` });
+        }
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { error: updErr } = await supabaseAdmin.from("profiles").update({

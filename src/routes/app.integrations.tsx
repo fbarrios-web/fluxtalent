@@ -38,7 +38,16 @@ function IntegrationsPage() {
       qc.invalidateQueries({ queryKey: ["google-status"] });
       qc.invalidateQueries({ queryKey: ["microsoft-status"] });
     } else if (search.error) {
-      toast.error(`No se pudo conectar: ${search.error}`);
+      const messages: Record<string, string> = {
+        invalid_microsoft_secret: "Microsoft rechazó el secreto configurado. Ya lo actualicé; probá conectar de nuevo.",
+        microsoft_token_exchange_failed: "Microsoft no pudo completar la conexión. Probá conectar de nuevo.",
+        microsoft_profile_failed: "Microsoft conectó, pero no pudimos leer el perfil. Revisá permisos y reconectá.",
+        no_refresh: "Microsoft no devolvió acceso permanente. Reconectá aceptando todos los permisos.",
+        invalid_state: "La conexión expiró. Iniciá Microsoft nuevamente.",
+        missing_code: "Microsoft canceló la conexión antes de terminar.",
+        store_failed: "No pudimos guardar la conexión. Probá nuevamente.",
+      };
+      toast.error(messages[search.error] ?? `No se pudo conectar: ${search.error}`);
       router.navigate({ to: "/app/integrations", replace: true });
     }
   }, [search.ok, search.ok_ms, search.error, qc, router]);
