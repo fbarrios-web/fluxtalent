@@ -24,12 +24,15 @@ export const Route = createFileRoute("/app/subscription")({
 
 function SubscriptionPage() {
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [currency, setCurrency] = useState<"ars" | "usd">("ars");
   const qc = useQueryClient();
   const getSub = useServerFn(getMySubscription);
   const createPre = useServerFn(createPreapproval);
   const cancel = useServerFn(cancelSubscription);
   const startCheckout = useServerFn(startPlanCheckout);
   const getPricing = useServerFn(getPlanPricing);
+  const changePlan = useServerFn(changePaddlePlan);
+  const { openCheckout, loading: paddleLoading } = usePaddleCheckout();
   const { data: overrides } = useQuery({ queryKey: ["plan-pricing"], queryFn: () => getPricing() });
   const plans = mergePlanOverrides(overrides);
 
