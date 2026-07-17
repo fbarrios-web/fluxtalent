@@ -285,6 +285,8 @@ export const cancelSubscription = createServerFn({ method: "POST" })
     // Soft cancel: keep `current_period_end` intact so the user retains access
     // through the end of the paid period (e.g., paid on 20/6 + canceled on 10/7
     // ⇒ still has access until 20/7). The webhook + canWrite logic handles expiry.
+    const { data: orgRow } = await supabaseAdmin
+      .from("organizations").select("current_period_end, plan_price_ars").eq("id", orgId).maybeSingle();
     const { error } = await supabaseAdmin
       .from("organizations")
       .update({ subscription_status: "canceled" })
@@ -296,6 +298,21 @@ export const cancelSubscription = createServerFn({ method: "POST" })
       event_type: "subscription.canceled",
       metadata: { source: "user_action", mp_preapproval_id: org?.mp_preapproval_id ?? null },
     });
+    // Cancellation email
+    try {
+      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+      const recipientEmail = authUser?.user?.email;
+      if (recipientEmail) {
+        const { data: prof } = await supabaseAdmin.from("profiles").select("full_name").eq("id", userId).maybeSingle();
+        const { dispatchTransactionalEmail } = await import("@/lib/email/dispatch.server");
+        await dispatchTransactionalEmail({
+          templateName: "subscription-canceled",
+          recipientEmail,
+          templateData: { fullName: prof?.full_name ?? undefined, periodEnd: orgRow?.current_period_end ?? undefined },
+          idempotencyKey: `sub-canceled-${orgId}-${Date.now()}`,
+        });
+      }
+    } catch (e) { console.error("[cancelSubscription] email failed", e); }
     return { ok: true };
   });
 
@@ -477,6 +494,39 @@ export const getUsageSummary = createServerFn({ method: "GET" })
       getCvsThisCycle(supabase, orgId),
       getCurrentCycle(supabase, orgId),
     ]);
+    // Fire-and-forget capacity warning email at 80%+ (deduped by 7d activity event)
+    try {
+      const pct = (n: number, m: number) => (m > 0 ? (n / m) * 100 : 0);
+      const worst = Math.max(
+        pct(activeVacancies, plan.maxVacancies ?? 0),
+        pct(newVacancies, plan.maxNewVacanciesPerCycle ?? 0),
+        pct(cvs, plan.maxCvsPerMonth ?? 0),
+      );
+      if (worst >= 80) {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+        const { data: recent } = await supabaseAdmin
+          .from("activity_events").select("id")
+          .eq("org_id", orgId).eq("event_type", "capacity.warning_sent")
+          .gte("created_at", sevenDaysAgo).limit(1).maybeSingle();
+        if (!recent) {
+          const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+          const recipientEmail = authUser?.user?.email;
+          if (recipientEmail) {
+            const { data: prof } = await supabaseAdmin.from("profiles").select("full_name").eq("id", userId).maybeSingle();
+            const isFree = (plan.id ?? "").toLowerCase().includes("free");
+            const { dispatchTransactionalEmail } = await import("@/lib/email/dispatch.server");
+            await dispatchTransactionalEmail({
+              templateName: "capacity-warning",
+              recipientEmail,
+              templateData: { fullName: prof?.full_name ?? undefined, planName: plan.name, isFree, usagePct: Math.round(worst), resourceLabel: "tu plan" },
+              idempotencyKey: `cap-warn-${orgId}-${new Date().toISOString().slice(0, 10)}`,
+            });
+            await supabaseAdmin.from("activity_events").insert({ org_id: orgId, event_type: "capacity.warning_sent", metadata: { pct: Math.round(worst) } });
+          }
+        }
+      }
+    } catch (e) { console.error("[getUsageSummary] capacity email failed", e); }
     return {
       planId: plan.id,
       planName: plan.name,

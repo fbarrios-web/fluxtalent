@@ -98,6 +98,16 @@ function AuthPage() {
           throw err;
         }
         toast.success("¡Cuenta creada!");
+        // Welcome email (fire and forget)
+        try {
+          const { sendTransactionalEmail } = await import("@/lib/email/send");
+          void sendTransactionalEmail({
+            templateName: "welcome",
+            recipientEmail: email,
+            templateData: { fullName: fullName?.trim() || displayName || email.split("@")[0] },
+            idempotencyKey: `welcome-${email.toLowerCase()}`,
+          });
+        } catch {}
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
