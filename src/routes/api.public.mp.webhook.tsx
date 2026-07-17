@@ -104,9 +104,10 @@ export const Route = createFileRoute("/api/public/mp/webhook")({
           }, { onConflict: "provider,provider_payment_id" });
 
           if (p.status === "approved") {
+            const periodEnd = new Date(Date.now() + 30 * 86400000).toISOString();
             const update: { subscription_status: "active"; current_period_end: string; last_payment_at: string; plan_price_ars: number } = {
               subscription_status: "active",
-              current_period_end: new Date(Date.now() + 30 * 86400000).toISOString(),
+              current_period_end: periodEnd,
               last_payment_at: p.date_approved ?? new Date().toISOString(),
               plan_price_ars: plan.priceArs > 0 ? plan.priceArs : txAmount,
             };
@@ -116,6 +117,27 @@ export const Route = createFileRoute("/api/public/mp/webhook")({
               event_type: "mp.payment_approved",
               metadata: { amount: txAmount, plan_id: plan.id, plan_name: plan.name },
             });
+            // Send subscription confirmation email to org owner
+            try {
+              const { data: owner } = await supabaseAdmin
+                .from("profiles").select("id, full_name, email:id").eq("org_id", orgId).order("created_at", { ascending: true }).limit(1).maybeSingle();
+              const userId = (owner as any)?.id as string | undefined;
+              let recipientEmail: string | undefined;
+              let fullName: string | undefined = (owner as any)?.full_name ?? undefined;
+              if (userId) {
+                const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+                recipientEmail = authUser?.user?.email ?? undefined;
+              }
+              if (recipientEmail) {
+                const { dispatchTransactionalEmail } = await import("@/lib/email/dispatch.server");
+                await dispatchTransactionalEmail({
+                  templateName: "subscription-confirmed",
+                  recipientEmail,
+                  templateData: { fullName, planName: plan.name, amountArs: txAmount, periodEnd },
+                  idempotencyKey: `sub-confirmed-${p.id}`,
+                });
+              }
+            } catch (e) { console.error("[mp.webhook] email confirm failed", e); }
           } else if (["rejected", "cancelled", "refunded"].includes(p.status)) {
             await supabaseAdmin.from("organizations").update({ subscription_status: "past_due" }).eq("id", orgId);
           }
