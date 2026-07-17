@@ -113,6 +113,14 @@ export function MicrosoftPanel({ callbackUrl: _callbackUrl }: { callbackUrl?: st
           <p className="text-sm text-muted-foreground mt-1">
             Enviá mails desde tu Outlook y creá reuniones de Teams automáticamente cuando agendes una entrevista.
           </p>
+          <div className="mt-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 flex items-start gap-2">
+            <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+            <span>
+              <strong>Solo cuentas empresariales o educativas</strong> (Microsoft 365 Business / Education con buzón Exchange Online activo).
+              Las cuentas personales (@outlook.com, @hotmail.com, @live.com) no pueden crear reuniones de Teams ni enviar mails vía Graph API —
+              es una limitación de Microsoft, no de FLUX Talent. Si tenés una cuenta personal, usá la integración con Google.
+            </span>
+          </div>
 
           {isLoading ? (
             <div className="mt-4"><Loader2 className="h-4 w-4 animate-spin" /></div>
