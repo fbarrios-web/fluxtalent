@@ -285,6 +285,8 @@ export const cancelSubscription = createServerFn({ method: "POST" })
     // Soft cancel: keep `current_period_end` intact so the user retains access
     // through the end of the paid period (e.g., paid on 20/6 + canceled on 10/7
     // ⇒ still has access until 20/7). The webhook + canWrite logic handles expiry.
+    const { data: orgRow } = await supabaseAdmin
+      .from("organizations").select("current_period_end, plan_price_ars").eq("id", orgId).maybeSingle();
     const { error } = await supabaseAdmin
       .from("organizations")
       .update({ subscription_status: "canceled" })
@@ -296,6 +298,21 @@ export const cancelSubscription = createServerFn({ method: "POST" })
       event_type: "subscription.canceled",
       metadata: { source: "user_action", mp_preapproval_id: org?.mp_preapproval_id ?? null },
     });
+    // Cancellation email
+    try {
+      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+      const recipientEmail = authUser?.user?.email;
+      if (recipientEmail) {
+        const { data: prof } = await supabaseAdmin.from("profiles").select("full_name").eq("id", userId).maybeSingle();
+        const { dispatchTransactionalEmail } = await import("@/lib/email/dispatch.server");
+        await dispatchTransactionalEmail({
+          templateName: "subscription-canceled",
+          recipientEmail,
+          templateData: { fullName: prof?.full_name ?? undefined, periodEnd: orgRow?.current_period_end ?? undefined },
+          idempotencyKey: `sub-canceled-${orgId}-${Date.now()}`,
+        });
+      }
+    } catch (e) { console.error("[cancelSubscription] email failed", e); }
     return { ok: true };
   });
 
