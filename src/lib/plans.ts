@@ -9,10 +9,12 @@ export interface Plan {
   name: string;
   priceArs: number; // 0 = gratuito; -1 = a medida
   originalPriceArs?: number; // precio "de lista" para mostrar descuento
+  priceUsd?: number; // 0 / -1 mismas reglas
+  paddlePriceId?: "starter_monthly_usd" | "pro_monthly_usd" | "enterprise_monthly_usd";
   tagline: string;
-  maxVacancies: number; // vacantes activas simultáneas (-1 = ilimitado)
-  maxNewVacanciesPerCycle: number; // nuevas vacantes por ciclo de facturación (-1 = ilimitado)
-  maxCvsPerMonth: number; // -1 = ilimitado
+  maxVacancies: number;
+  maxNewVacanciesPerCycle: number;
+  maxCvsPerMonth: number;
   features: string[];
   highlighted?: boolean;
   contactOnly?: boolean;
