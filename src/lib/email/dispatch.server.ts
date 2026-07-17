@@ -36,8 +36,8 @@ export async function dispatchTransactionalEmail(params: DispatchParams): Promis
 
     // Idempotency: skip if already sent
     if (idempotencyKey) {
-      const { data: existing } = await supabaseAdmin
-        .from('email_send_log').select('id').eq('idempotency_key', idempotencyKey).limit(1).maybeSingle()
+      const { data: existing } = await (supabaseAdmin as any)
+        .from('email_send_log').select('id').eq('metadata->>idempotency_key', idempotencyKey).limit(1).maybeSingle()
       if (existing) return { ok: true }
     }
 
