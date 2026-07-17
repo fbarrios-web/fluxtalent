@@ -34,12 +34,7 @@ export async function dispatchTransactionalEmail(params: DispatchParams): Promis
       .from('suppressed_emails').select('email').eq('email', recipientEmail.toLowerCase()).maybeSingle()
     if (suppressed) return { ok: false, error: 'suppressed' }
 
-    // Idempotency: skip if already sent
-    if (idempotencyKey) {
-      const { data: existing } = await (supabaseAdmin as any)
-        .from('email_send_log').select('id').eq('metadata->>idempotency_key', idempotencyKey).limit(1).maybeSingle()
-      if (existing) return { ok: true }
-    }
+    // Idempotency is enforced downstream by enqueue_email (idempotency_key).
 
     // Unsubscribe token (best effort)
     let unsubscribeToken = ''
