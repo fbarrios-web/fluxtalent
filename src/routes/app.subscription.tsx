@@ -11,8 +11,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertTriangle, CheckCircle2, CreditCard, FileText, Loader2, ShieldCheck, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
-import { planByPrice, formatLimit, formatArs, TRIAL_DAYS, mergePlanOverrides, MP_PLAN_LINKS } from "@/lib/plans";
+import { planByPrice, formatLimit, formatArs, formatUsd, TRIAL_DAYS, mergePlanOverrides, MP_PLAN_LINKS } from "@/lib/plans";
 import { getPlanPricing } from "@/lib/pricing.functions";
+import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
+import { changePaddlePlan } from "@/utils/payments.functions";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 export const Route = createFileRoute("/app/subscription")({
   component: SubscriptionPage,
@@ -21,12 +24,15 @@ export const Route = createFileRoute("/app/subscription")({
 
 function SubscriptionPage() {
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [currency, setCurrency] = useState<"ars" | "usd">("ars");
   const qc = useQueryClient();
   const getSub = useServerFn(getMySubscription);
   const createPre = useServerFn(createPreapproval);
   const cancel = useServerFn(cancelSubscription);
   const startCheckout = useServerFn(startPlanCheckout);
   const getPricing = useServerFn(getPlanPricing);
+  const changePlan = useServerFn(changePaddlePlan);
+  const { openCheckout, loading: paddleLoading } = usePaddleCheckout();
   const { data: overrides } = useQuery({ queryKey: ["plan-pricing"], queryFn: () => getPricing() });
   const plans = mergePlanOverrides(overrides);
 
@@ -196,12 +202,38 @@ function SubscriptionPage() {
 
       {/* Planes */}
       <div className="mt-10">
-        <h2 className="font-display text-2xl">Planes disponibles</h2>
-        <p className="text-sm text-muted-foreground">{"\n"}</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-display text-2xl">Planes disponibles</h2>
+          <div className="inline-flex overflow-hidden rounded-full border border-border text-sm">
+            <button
+              type="button"
+              onClick={() => setCurrency("ars")}
+              className={`px-4 py-1.5 ${currency === "ars" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
+            >
+              ARS · Mercado Pago
+            </button>
+            <button
+              type="button"
+              onClick={() => setCurrency("usd")}
+              className={`px-4 py-1.5 ${currency === "usd" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
+            >
+              USD · Tarjeta internacional
+            </button>
+          </div>
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {currency === "ars"
+            ? "Cobramos en pesos argentinos vía Mercado Pago."
+            : "Cobramos en dólares vía Paddle. Ideal para clientes fuera de Argentina."}
+        </p>
+
+        {currency === "usd" && <div className="mt-3"><PaymentTestModeBanner /></div>}
 
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {plans.map(p => {
             const isCurrent = p.id === activePlan.id;
+            const hasUsd = currency === "usd" && !!p.paddlePriceId && p.priceUsd != null && p.priceUsd > 0;
+
             return (
               <div
                 key={p.id}
@@ -217,35 +249,83 @@ function SubscriptionPage() {
                   {isCurrent && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">Tu plan</span>}
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">{p.tagline}</p>
+
                 <div className="mt-4">
-                  {p.originalPriceArs != null && p.originalPriceArs > p.priceArs && p.priceArs > 0 && (
-                    <span className="mr-2 text-sm text-muted-foreground line-through">
-                      ARS {p.originalPriceArs.toLocaleString("es-AR")}
-                    </span>
-                  )}
-                  <span className="font-display text-3xl">{formatArs(p.priceArs)}</span>
-                  {p.priceArs === 0 ? (
-                    <span className="text-sm text-muted-foreground"> / {TRIAL_DAYS} días</span>
-                  ) : p.priceArs === -1 ? null : (
-                    <span className="text-sm text-muted-foreground"> / mes</span>
-                  )}
-                  {p.originalPriceArs != null && p.originalPriceArs > p.priceArs && p.priceArs > 0 && (
-                    <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                      -{Math.round((1 - p.priceArs / p.originalPriceArs) * 100)}%
-                    </span>
+                  {currency === "ars" ? (
+                    <>
+                      {p.originalPriceArs != null && p.originalPriceArs > p.priceArs && p.priceArs > 0 && (
+                        <span className="mr-2 text-sm text-muted-foreground line-through">
+                          ARS {p.originalPriceArs.toLocaleString("es-AR")}
+                        </span>
+                      )}
+                      <span className="font-display text-3xl">{formatArs(p.priceArs)}</span>
+                      {p.priceArs === 0 ? (
+                        <span className="text-sm text-muted-foreground"> / {TRIAL_DAYS} días</span>
+                      ) : p.priceArs === -1 ? null : (
+                        <span className="text-sm text-muted-foreground"> / mes</span>
+                      )}
+                      {p.originalPriceArs != null && p.originalPriceArs > p.priceArs && p.priceArs > 0 && (
+                        <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                          -{Math.round((1 - p.priceArs / p.originalPriceArs) * 100)}%
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-display text-3xl">{formatUsd(p.priceUsd ?? (p.priceArs === -1 ? -1 : p.priceArs === 0 ? 0 : undefined))}</span>
+                      {p.priceUsd && p.priceUsd > 0 && (
+                        <span className="text-sm text-muted-foreground"> / mes</span>
+                      )}
+                    </>
                   )}
                 </div>
+
                 <ul className="mt-5 space-y-2 text-sm">
                   {p.features.map(f => (
                     <li key={f} className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> {f}</li>
                   ))}
                 </ul>
+
                 <div className="mt-6 flex-1" />
+
                 {isCurrent ? (
                   <Button variant="outline" disabled className="mt-4 w-full">Plan actual</Button>
                 ) : p.contactOnly ? (
                   <Button asChild className="mt-4 w-full" variant="outline">
                     <a href="mailto:soporte@fluxtalent.com.ar?subject=Plan%20Custom%20FLUX%20Talent">Contactar a ventas</a>
+                  </Button>
+                ) : hasUsd ? (
+                  <Button
+                    className="mt-4 w-full"
+                    variant={p.highlighted ? "default" : "outline"}
+                    disabled={paddleLoading}
+                    onClick={async () => {
+                      const { data: userData } = await supabase.auth.getUser();
+                      const user = userData.user;
+                      if (!user) { toast.error("Iniciá sesión"); return; }
+                      // If org already has Paddle sub, do plan-change instead of new checkout
+                      if (sub.paddle_subscription_id) {
+                        try {
+                          const r = await changePlan({ data: { newPriceId: p.paddlePriceId! } });
+                          toast.success(r.applied === "immediate"
+                            ? "Upgrade aplicado. Los cupos se reiniciaron."
+                            : "Downgrade agendado para el próximo ciclo.");
+                          qc.invalidateQueries({ queryKey: ["my-subscription"] });
+                        } catch (e: any) {
+                          toast.error(e?.message ?? "No se pudo cambiar el plan");
+                        }
+                        return;
+                      }
+                      const orgId = (sub as any).id ?? (sub as any).org_id;
+                      openCheckout({
+                        priceId: p.paddlePriceId!,
+                        customerEmail: user.email ?? undefined,
+                        customData: { userId: user.id, orgId: String(orgId) },
+                      }).catch((e: any) => toast.error(e?.message ?? "No se pudo abrir el checkout"));
+                    }}
+                  >
+                    {paddleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
+                    Suscribirme a {p.name} (USD)
                   </Button>
                 ) : MP_PLAN_LINKS[p.id] ? (
                   <Button

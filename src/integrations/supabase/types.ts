@@ -568,7 +568,10 @@ export type Database = {
           logo_url: string | null
           mp_preapproval_id: string | null
           name: string
+          paddle_customer_id: string | null
+          paddle_subscription_id: string | null
           parent_org_id: string | null
+          plan_currency: string
           plan_price_ars: number
           sender_email: string | null
           signature_html: string | null
@@ -589,7 +592,10 @@ export type Database = {
           logo_url?: string | null
           mp_preapproval_id?: string | null
           name: string
+          paddle_customer_id?: string | null
+          paddle_subscription_id?: string | null
           parent_org_id?: string | null
+          plan_currency?: string
           plan_price_ars?: number
           sender_email?: string | null
           signature_html?: string | null
@@ -610,7 +616,10 @@ export type Database = {
           logo_url?: string | null
           mp_preapproval_id?: string | null
           name?: string
+          paddle_customer_id?: string | null
+          paddle_subscription_id?: string | null
           parent_org_id?: string | null
+          plan_currency?: string
           plan_price_ars?: number
           sender_email?: string | null
           signature_html?: string | null
@@ -878,6 +887,65 @@ export type Database = {
             columns: ["vacancy_id"]
             isOneToOne: false
             referencedRelation: "vacancies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean | null
+          created_at: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          environment: string
+          id: string
+          org_id: string
+          paddle_customer_id: string
+          paddle_subscription_id: string
+          price_id: string
+          product_id: string
+          status: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
+          id?: string
+          org_id: string
+          paddle_customer_id: string
+          paddle_subscription_id: string
+          price_id: string
+          product_id: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
+          id?: string
+          org_id?: string
+          paddle_customer_id?: string
+          paddle_subscription_id?: string
+          price_id?: string
+          product_id?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]

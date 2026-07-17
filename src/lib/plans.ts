@@ -9,10 +9,12 @@ export interface Plan {
   name: string;
   priceArs: number; // 0 = gratuito; -1 = a medida
   originalPriceArs?: number; // precio "de lista" para mostrar descuento
+  priceUsd?: number; // 0 / -1 mismas reglas
+  paddlePriceId?: "starter_monthly_usd" | "pro_monthly_usd" | "enterprise_monthly_usd";
   tagline: string;
-  maxVacancies: number; // vacantes activas simultáneas (-1 = ilimitado)
-  maxNewVacanciesPerCycle: number; // nuevas vacantes por ciclo de facturación (-1 = ilimitado)
-  maxCvsPerMonth: number; // -1 = ilimitado
+  maxVacancies: number;
+  maxNewVacanciesPerCycle: number;
+  maxCvsPerMonth: number;
   features: string[];
   highlighted?: boolean;
   contactOnly?: boolean;
@@ -49,10 +51,11 @@ export const PLANS: Plan[] = [
     name: "Starter",
     priceArs: 24000,
     originalPriceArs: 30000,
+    priceUsd: 29,
+    paddlePriceId: "starter_monthly_usd",
     tagline: "Ideal para reclutadores freelancers",
     maxVacancies: 5,
     maxNewVacanciesPerCycle: 5,
-
     maxCvsPerMonth: 200,
     features: [
       "Hasta 5 vacantes activas",
@@ -66,10 +69,11 @@ export const PLANS: Plan[] = [
     name: "Pro",
     priceArs: 48000,
     originalPriceArs: 60000,
+    priceUsd: 59,
+    paddlePriceId: "pro_monthly_usd",
     tagline: "Ideal para consultoras y áreas de Talento con flujo constante.",
     maxVacancies: 20,
     maxNewVacanciesPerCycle: 20,
-
     maxCvsPerMonth: 1000,
     highlighted: true,
     features: [
@@ -84,10 +88,11 @@ export const PLANS: Plan[] = [
     name: "Enterprise",
     priceArs: 96000,
     originalPriceArs: 120000,
+    priceUsd: 119,
+    paddlePriceId: "enterprise_monthly_usd",
     tagline: "Volumen alto, multi-equipo y soporte dedicado.",
     maxVacancies: -1,
     maxNewVacanciesPerCycle: -1,
-
     maxCvsPerMonth: 1000,
     features: [
       "Vacantes ilimitadas",
@@ -134,6 +139,13 @@ export function formatArs(n: number): string {
   if (n === -1) return "A medida";
   if (n === 0) return "Gratis";
   return `ARS ${n.toLocaleString("es-AR")}`;
+}
+
+export function formatUsd(n: number | undefined): string {
+  if (n == null) return "—";
+  if (n === -1) return "A medida";
+  if (n === 0) return "Gratis";
+  return `USD $${n}`;
 }
 
 export type PricingOverride = { plan_id: string; base_price_ars: number; discount_pct: number };
