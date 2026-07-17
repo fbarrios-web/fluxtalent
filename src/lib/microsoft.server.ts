@@ -1,8 +1,12 @@
 // Server-only helpers for Microsoft OAuth (Entra ID) + Graph (Outlook Mail + Calendar + Teams).
 // Never import this from route files at module scope — load via dynamic import in handlers.
 
-const TOKEN_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/token";
-const AUTHORIZE_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
+// Use /organizations endpoint: solo cuentas de trabajo/escuela (Microsoft 365 Business).
+// Evita el error "This page didn't load" que muestra Microsoft cuando una cuenta personal
+// (@outlook.com/@hotmail.com) intenta consentir scopes como OnlineMeetings.ReadWrite
+// que no están disponibles para consumidores.
+const TOKEN_URL = "https://login.microsoftonline.com/organizations/oauth2/v2.0/token";
+const AUTHORIZE_URL = "https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize";
 const GRAPH_ME = "https://graph.microsoft.com/v1.0/me";
 const GRAPH_SENDMAIL = "https://graph.microsoft.com/v1.0/me/sendMail";
 const GRAPH_CREATE_EVENT = "https://graph.microsoft.com/v1.0/me/events";
