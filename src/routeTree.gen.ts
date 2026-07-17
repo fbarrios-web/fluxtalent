@@ -46,6 +46,7 @@ import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/em
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicScheduleLogoRouteImport } from './routes/api.public.schedule.logo'
 import { Route as ApiPublicScheduleBookRouteImport } from './routes/api.public.schedule.book'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api.public.mp.webhook'
 import { Route as ApiPublicMicrosoftCallbackRouteImport } from './routes/api.public.microsoft.callback'
 import { Route as ApiPublicHooksProcessCvQueueRouteImport } from './routes/api.public.hooks.process-cv-queue'
@@ -239,6 +240,12 @@ const ApiPublicScheduleBookRoute = ApiPublicScheduleBookRouteImport.update({
   path: '/api/public/schedule/book',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicMpWebhookRoute = ApiPublicMpWebhookRouteImport.update({
   id: '/api/public/mp/webhook',
   path: '/api/public/mp/webhook',
@@ -297,6 +304,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
   '/api/public/microsoft/callback': typeof ApiPublicMicrosoftCallbackRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
   '/api/public/schedule/logo': typeof ApiPublicScheduleLogoRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -338,6 +346,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
   '/api/public/microsoft/callback': typeof ApiPublicMicrosoftCallbackRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
   '/api/public/schedule/logo': typeof ApiPublicScheduleLogoRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -382,6 +391,7 @@ export interface FileRoutesById {
   '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
   '/api/public/microsoft/callback': typeof ApiPublicMicrosoftCallbackRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
   '/api/public/schedule/logo': typeof ApiPublicScheduleLogoRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -427,6 +437,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-cv-queue'
     | '/api/public/microsoft/callback'
     | '/api/public/mp/webhook'
+    | '/api/public/payments/webhook'
     | '/api/public/schedule/book'
     | '/api/public/schedule/logo'
     | '/lovable/email/auth/preview'
@@ -468,6 +479,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-cv-queue'
     | '/api/public/microsoft/callback'
     | '/api/public/mp/webhook'
+    | '/api/public/payments/webhook'
     | '/api/public/schedule/book'
     | '/api/public/schedule/logo'
     | '/lovable/email/auth/preview'
@@ -511,6 +523,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/process-cv-queue'
     | '/api/public/microsoft/callback'
     | '/api/public/mp/webhook'
+    | '/api/public/payments/webhook'
     | '/api/public/schedule/book'
     | '/api/public/schedule/logo'
     | '/lovable/email/auth/preview'
@@ -536,6 +549,7 @@ export interface RootRouteChildren {
   ApiPublicHooksProcessCvQueueRoute: typeof ApiPublicHooksProcessCvQueueRoute
   ApiPublicMicrosoftCallbackRoute: typeof ApiPublicMicrosoftCallbackRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicScheduleBookRoute: typeof ApiPublicScheduleBookRoute
   ApiPublicScheduleLogoRoute: typeof ApiPublicScheduleLogoRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -806,6 +820,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicScheduleBookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/mp/webhook': {
       id: '/api/public/mp/webhook'
       path: '/api/public/mp/webhook'
@@ -909,6 +930,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksProcessCvQueueRoute: ApiPublicHooksProcessCvQueueRoute,
   ApiPublicMicrosoftCallbackRoute: ApiPublicMicrosoftCallbackRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicScheduleBookRoute: ApiPublicScheduleBookRoute,
   ApiPublicScheduleLogoRoute: ApiPublicScheduleLogoRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
