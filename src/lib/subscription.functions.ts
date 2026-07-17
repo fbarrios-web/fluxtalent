@@ -388,89 +388,48 @@ export const requestInvoiceC = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
-    const SUPPORT_EMAIL = "soporte@fluxtalent.com.ar";
-    const esc = (s: string) => String(s ?? "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
-    const subject = `Factura C · ${org?.name ?? "Cliente"}`;
-    const html = `
-      <h2>Nueva solicitud de Factura C</h2>
-      <h3 style="margin-top:16px">Datos del usuario</h3>
-      <p><strong>Organización:</strong> ${esc(org?.name ?? "—")}</p>
-      <p><strong>Nombre:</strong> ${esc(profile?.full_name || profile?.display_name || "—")}</p>
-      <p><strong>Email de la cuenta:</strong> ${esc(userEmail || "—")}</p>
-      <p><strong>DNI del usuario:</strong> ${esc(profile?.dni || "—")}</p>
-      <p><strong>Teléfono del perfil:</strong> —</p>
-      <p><strong>País / Provincia:</strong> ${esc(profile?.country || "—")} / ${esc(profile?.province || "—")}</p>
-      <h3 style="margin-top:16px">Datos del formulario de facturación</h3>
-      <p><strong>Razón social / Nombre:</strong> ${esc(data.business_name)}</p>
-      <p><strong>CUIT / DNI:</strong> ${esc(data.cuit_or_dni)}</p>
-      <p><strong>Email de facturación:</strong> ${esc(data.email)}</p>
-      <p><strong>Teléfono de contacto:</strong> ${esc(data.phone)}</p>
-      <p><strong>Domicilio:</strong> ${esc(data.address || "—")}</p>
-      <p><strong>Monto:</strong> ${data.amount_ars ?? org?.plan_price_ars ?? "—"} ARS</p>
-      <p><strong>Notas:</strong> ${esc(data.notes || "—")}</p>
-      <hr/>
-      <p style="font-size:12px;color:#666">ID solicitud: ${inserted.id}</p>
-    `;
-
-    let emailWarning: string | null = null;
+    // Enviamos la notificación por el mismo pipeline que el resto de los mails
+    // (Lovable Emails / dominio verificado notify.fluxtalent.com.ar).
+    // El template tiene `to: 'soporte@fluxtalent.com.ar'` fijo, así que el
+    // recipientEmail que pasemos se ignora — igual usamos el del solicitante
+    // para que quede registrado en el log.
     let emailSent = false;
-
-    // 1) Intento principal: Resend (si está configurado como secret RESEND_API_KEY)
-    const resendKey = process.env.RESEND_API_KEY;
-    if (resendKey) {
-      try {
-        const res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            from: "FLUX Talent <soporte@fluxtalent.com.ar>",
-            to: [SUPPORT_EMAIL],
-            reply_to: data.email,
-            subject,
-            html,
-          }),
-        });
-        if (res.ok) emailSent = true;
-        else console.error("[requestInvoiceC] Resend error:", res.status, await res.text());
-      } catch (e: any) {
-        console.error("[requestInvoiceC] Resend fetch failed:", e?.message ?? e);
+    let emailWarning: string | null = null;
+    try {
+      const { dispatchTransactionalEmail } = await import("@/lib/email/dispatch.server");
+      const res = await dispatchTransactionalEmail({
+        templateName: "invoice-request",
+        recipientEmail: "soporte@fluxtalent.com.ar",
+        idempotencyKey: `invoice-c-${inserted.id}`,
+        templateData: {
+          orgName: org?.name ?? "Cliente",
+          requestId: inserted.id,
+          amountArs: data.amount_ars ?? org?.plan_price_ars ?? undefined,
+          fullName: profile?.full_name || profile?.display_name || undefined,
+          userEmail: userEmail || undefined,
+          userDni: profile?.dni || undefined,
+          country: profile?.country || undefined,
+          province: profile?.province || undefined,
+          businessName: data.business_name,
+          cuitOrDni: data.cuit_or_dni,
+          billingEmail: data.email,
+          phone: data.phone,
+          address: data.address || undefined,
+          notes: data.notes || undefined,
+        },
+      });
+      if (res.ok) emailSent = true;
+      else {
+        emailWarning = res.error ?? null;
+        console.error("[requestInvoiceC] dispatch failed:", res.error);
       }
-    }
-
-    // 2) Fallback: Gmail del admin (si está conectado)
-    if (!emailSent) {
-      try {
-        const { data: adminRole } = await supabaseAdmin
-          .from("user_roles").select("user_id").eq("role", "admin").limit(1).maybeSingle();
-        if (adminRole?.user_id) {
-          const { data: adminProfile } = await supabaseAdmin
-            .from("profiles")
-            .select("google_refresh_token, google_email, display_name")
-            .eq("id", adminRole.user_id)
-            .maybeSingle();
-          if (adminProfile?.google_refresh_token && adminProfile.google_email) {
-            const { refreshAccessToken, sendGmail } = await import("@/lib/google.server");
-            const { access_token } = await refreshAccessToken(adminProfile.google_refresh_token);
-            await sendGmail({
-              accessToken: access_token,
-              fromName: adminProfile.display_name || "FLUX Talent",
-              fromEmail: adminProfile.google_email,
-              to: SUPPORT_EMAIL,
-              subject,
-              html,
-              replyTo: data.email,
-            });
-            emailSent = true;
-          }
-        }
-      } catch (e: any) {
-        console.error("[requestInvoiceC] Gmail fallback failed:", e?.message ?? e);
-      }
+    } catch (e: any) {
+      emailWarning = e?.message ?? "dispatch_failed";
+      console.error("[requestInvoiceC] dispatch threw:", e?.message ?? e);
     }
 
     if (!emailSent) {
-      // La solicitud queda guardada y visible en el panel admin.
-      console.warn("[requestInvoiceC] no email transport available; request stored only");
+      console.warn("[requestInvoiceC] email not sent, request stored:", inserted.id);
     }
 
     return { id: inserted.id, emailWarning };
