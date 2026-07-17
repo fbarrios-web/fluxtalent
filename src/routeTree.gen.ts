@@ -16,6 +16,7 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as ScheduleTokenRouteImport } from './routes/schedule.$token'
+import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as ApplySlugRouteImport } from './routes/apply.$slug'
 import { Route as AppSubscriptionRouteImport } from './routes/app.subscription'
 import { Route as AppSetupRouteImport } from './routes/app.setup'
@@ -26,6 +27,7 @@ import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppAdminRouteImport } from './routes/app.admin'
 import { Route as AppVacanciesIndexRouteImport } from './routes/app.vacancies.index'
 import { Route as AppAdminIndexRouteImport } from './routes/app.admin.index'
+import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as AppVacanciesNewRouteImport } from './routes/app.vacancies.new'
 import { Route as AppVacanciesVacancyIdRouteImport } from './routes/app.vacancies.$vacancyId'
 import { Route as AppCandidatesIdRouteImport } from './routes/app.candidates.$id'
@@ -37,6 +39,8 @@ import { Route as AppAdminPaymentsRouteImport } from './routes/app.admin.payment
 import { Route as AppAdminOrgsRouteImport } from './routes/app.admin.orgs'
 import { Route as ApiPublicApplyRouteImport } from './routes/api.public.apply'
 import { Route as ApiPublicAnalyzeRouteImport } from './routes/api.public.analyze'
+import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -80,6 +84,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const ScheduleTokenRoute = ScheduleTokenRouteImport.update({
   id: '/schedule/$token',
   path: '/schedule/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
+  id: '/email/unsubscribe',
+  path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApplySlugRoute = ApplySlugRouteImport.update({
@@ -131,6 +140,11 @@ const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppAdminRoute,
+} as any)
+const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
+  id: '/lovable/email/suppression',
+  path: '/lovable/email/suppression',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AppVacanciesNewRoute = AppVacanciesNewRouteImport.update({
   id: '/vacancies/new',
@@ -187,6 +201,18 @@ const ApiPublicAnalyzeRoute = ApiPublicAnalyzeRouteImport.update({
   path: '/api/public/analyze',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailTransactionalSendRoute =
+  LovableEmailTransactionalSendRouteImport.update({
+    id: '/lovable/email/transactional/send',
+    path: '/lovable/email/transactional/send',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
     id: '/lovable/email/queue/process',
@@ -250,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/app/setup': typeof AppSetupRoute
   '/app/subscription': typeof AppSubscriptionRoute
   '/apply/$slug': typeof ApplySlugRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/schedule/$token': typeof ScheduleTokenRoute
   '/app/': typeof AppIndexRoute
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
@@ -263,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/vacancies/$vacancyId': typeof AppVacanciesVacancyIdRoute
   '/app/vacancies/new': typeof AppVacanciesNewRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/vacancies/': typeof AppVacanciesIndexRoute
   '/api/public/google/callback': typeof ApiPublicGoogleCallbackRoute
@@ -274,6 +302,8 @@ export interface FileRoutesByFullPath {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -287,6 +317,7 @@ export interface FileRoutesByTo {
   '/app/setup': typeof AppSetupRoute
   '/app/subscription': typeof AppSubscriptionRoute
   '/apply/$slug': typeof ApplySlugRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/schedule/$token': typeof ScheduleTokenRoute
   '/app': typeof AppIndexRoute
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
@@ -300,6 +331,7 @@ export interface FileRoutesByTo {
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/vacancies/$vacancyId': typeof AppVacanciesVacancyIdRoute
   '/app/vacancies/new': typeof AppVacanciesNewRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/app/admin': typeof AppAdminIndexRoute
   '/app/vacancies': typeof AppVacanciesIndexRoute
   '/api/public/google/callback': typeof ApiPublicGoogleCallbackRoute
@@ -311,6 +343,8 @@ export interface FileRoutesByTo {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -327,6 +361,7 @@ export interface FileRoutesById {
   '/app/setup': typeof AppSetupRoute
   '/app/subscription': typeof AppSubscriptionRoute
   '/apply/$slug': typeof ApplySlugRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/schedule/$token': typeof ScheduleTokenRoute
   '/app/': typeof AppIndexRoute
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
@@ -340,6 +375,7 @@ export interface FileRoutesById {
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/vacancies/$vacancyId': typeof AppVacanciesVacancyIdRoute
   '/app/vacancies/new': typeof AppVacanciesNewRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/vacancies/': typeof AppVacanciesIndexRoute
   '/api/public/google/callback': typeof ApiPublicGoogleCallbackRoute
@@ -351,6 +387,8 @@ export interface FileRoutesById {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -368,6 +406,7 @@ export interface FileRouteTypes {
     | '/app/setup'
     | '/app/subscription'
     | '/apply/$slug'
+    | '/email/unsubscribe'
     | '/schedule/$token'
     | '/app/'
     | '/api/public/analyze'
@@ -381,6 +420,7 @@ export interface FileRouteTypes {
     | '/app/candidates/$id'
     | '/app/vacancies/$vacancyId'
     | '/app/vacancies/new'
+    | '/lovable/email/suppression'
     | '/app/admin/'
     | '/app/vacancies/'
     | '/api/public/google/callback'
@@ -392,6 +432,8 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -405,6 +447,7 @@ export interface FileRouteTypes {
     | '/app/setup'
     | '/app/subscription'
     | '/apply/$slug'
+    | '/email/unsubscribe'
     | '/schedule/$token'
     | '/app'
     | '/api/public/analyze'
@@ -418,6 +461,7 @@ export interface FileRouteTypes {
     | '/app/candidates/$id'
     | '/app/vacancies/$vacancyId'
     | '/app/vacancies/new'
+    | '/lovable/email/suppression'
     | '/app/admin'
     | '/app/vacancies'
     | '/api/public/google/callback'
@@ -429,6 +473,8 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   id:
     | '__root__'
     | '/'
@@ -444,6 +490,7 @@ export interface FileRouteTypes {
     | '/app/setup'
     | '/app/subscription'
     | '/apply/$slug'
+    | '/email/unsubscribe'
     | '/schedule/$token'
     | '/app/'
     | '/api/public/analyze'
@@ -457,6 +504,7 @@ export interface FileRouteTypes {
     | '/app/candidates/$id'
     | '/app/vacancies/$vacancyId'
     | '/app/vacancies/new'
+    | '/lovable/email/suppression'
     | '/app/admin/'
     | '/app/vacancies/'
     | '/api/public/google/callback'
@@ -468,6 +516,8 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -477,9 +527,11 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   TrustRoute: typeof TrustRoute
   ApplySlugRoute: typeof ApplySlugRoute
+  EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   ScheduleTokenRoute: typeof ScheduleTokenRoute
   ApiPublicAnalyzeRoute: typeof ApiPublicAnalyzeRoute
   ApiPublicApplyRoute: typeof ApiPublicApplyRoute
+  LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicGoogleCallbackRoute: typeof ApiPublicGoogleCallbackRoute
   ApiPublicHooksProcessCvQueueRoute: typeof ApiPublicHooksProcessCvQueueRoute
   ApiPublicMicrosoftCallbackRoute: typeof ApiPublicMicrosoftCallbackRoute
@@ -489,6 +541,8 @@ export interface RootRouteChildren {
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -540,6 +594,13 @@ declare module '@tanstack/react-router' {
       path: '/schedule/$token'
       fullPath: '/schedule/$token'
       preLoaderRoute: typeof ScheduleTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/email/unsubscribe': {
+      id: '/email/unsubscribe'
+      path: '/email/unsubscribe'
+      fullPath: '/email/unsubscribe'
+      preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/apply/$slug': {
@@ -611,6 +672,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/admin/'
       preLoaderRoute: typeof AppAdminIndexRouteImport
       parentRoute: typeof AppAdminRoute
+    }
+    '/lovable/email/suppression': {
+      id: '/lovable/email/suppression'
+      path: '/lovable/email/suppression'
+      fullPath: '/lovable/email/suppression'
+      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/app/vacancies/new': {
       id: '/app/vacancies/new'
@@ -687,6 +755,20 @@ declare module '@tanstack/react-router' {
       path: '/api/public/analyze'
       fullPath: '/api/public/analyze'
       preLoaderRoute: typeof ApiPublicAnalyzeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/send': {
+      id: '/lovable/email/transactional/send'
+      path: '/lovable/email/transactional/send'
+      fullPath: '/lovable/email/transactional/send'
+      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lovable/email/queue/process': {
@@ -818,9 +900,11 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   TrustRoute: TrustRoute,
   ApplySlugRoute: ApplySlugRoute,
+  EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   ScheduleTokenRoute: ScheduleTokenRoute,
   ApiPublicAnalyzeRoute: ApiPublicAnalyzeRoute,
   ApiPublicApplyRoute: ApiPublicApplyRoute,
+  LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicGoogleCallbackRoute: ApiPublicGoogleCallbackRoute,
   ApiPublicHooksProcessCvQueueRoute: ApiPublicHooksProcessCvQueueRoute,
   ApiPublicMicrosoftCallbackRoute: ApiPublicMicrosoftCallbackRoute,
@@ -830,17 +914,9 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
