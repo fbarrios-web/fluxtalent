@@ -1,0 +1,1 @@
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS currency text NOT NULL DEFAULT 'ars';
