@@ -380,7 +380,7 @@ function SubscriptionPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {history.map((p: any) => {
-                const providerLabel = p.provider === "mercadopago" ? "Mercado Pago" : p.provider === "manual" ? "Manual" : p.provider;
+                const providerLabel = p.provider === "mercadopago" ? "Mercado Pago" : p.provider === "paddle" ? "Paddle (USD)" : p.provider === "manual" ? "Manual" : p.provider;
                 const statusMap: Record<string, { label: string; cls: string }> = {
                   approved: { label: "Aprobado", cls: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
                   pending: { label: "Pendiente", cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
@@ -390,10 +390,12 @@ function SubscriptionPage() {
                   refunded: { label: "Reembolsado", cls: "bg-muted text-muted-foreground" },
                 };
                 const st = statusMap[p.status] ?? { label: p.status, cls: "bg-primary/10 text-primary" };
+                const amt = Number(p.amount_ars);
+                const amountLabel = p.currency === "usd" ? formatUsd(amt) : formatArs(amt);
                 return (
                   <tr key={p.id}>
                     <td className="py-2">{new Date(p.paid_at ?? p.created_at).toLocaleDateString("es-AR")}</td>
-                    <td>{formatArs(Number(p.amount_ars))}</td>
+                    <td>{amountLabel}</td>
                     <td>{providerLabel}</td>
                     <td><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${st.cls}`}>{st.label}</span></td>
                   </tr>
