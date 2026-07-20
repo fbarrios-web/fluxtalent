@@ -114,6 +114,14 @@ async function handleSubscriptionUpdated(data: any, env: PaddleEnv) {
   const priceId = items?.[0]?.price?.importMeta?.externalId as string | undefined;
   const productId = items?.[0]?.product?.importMeta?.externalId as string | undefined;
 
+  // Capture the previous price_id BEFORE updating so we can detect real plan changes
+  const { data: prevRow } = await getSupabase()
+    .from("subscriptions")
+    .select("org_id, price_id")
+    .eq("paddle_subscription_id", id)
+    .eq("environment", env)
+    .maybeSingle();
+
   const patch: Record<string, any> = {
     status,
     current_period_start: currentBillingPeriod?.startsAt,
@@ -124,27 +132,30 @@ async function handleSubscriptionUpdated(data: any, env: PaddleEnv) {
   if (priceId) patch.price_id = priceId;
   if (productId) patch.product_id = productId;
 
-  const { data: subRow } = await getSupabase()
+  await getSupabase()
     .from("subscriptions")
     .update(patch)
     .eq("paddle_subscription_id", id)
-    .eq("environment", env)
-    .select("org_id, price_id")
-    .maybeSingle();
+    .eq("environment", env);
 
-  // Sync plan tier on org (handles upgrades that took effect immediately)
-  if (subRow?.org_id && priceId) {
+  // Sync plan tier on org (handles upgrades that took effect immediately).
+  // Only reset counters when the plan actually CHANGED — not on renewals,
+  // proration adjustments, or dunning transitions.
+  if (prevRow?.org_id && priceId) {
     const mapping = planFromPriceId(priceId);
     if (mapping) {
-      await getSupabase().from("organizations").update({
+      const planChanged = prevRow.price_id && prevRow.price_id !== priceId;
+      const orgPatch: Record<string, any> = {
         plan_price_ars: mapping.priceArs,
         plan_currency: "usd",
         current_period_end: currentBillingPeriod?.endsAt,
         subscription_status: status === "past_due" ? "past_due" : "active",
-        // Reset counters on plan change
-        new_vacancies_used: 0,
-        cvs_used: 0,
-      } as any).eq("id", subRow.org_id);
+      };
+      if (planChanged) {
+        orgPatch.new_vacancies_used = 0;
+        orgPatch.cvs_used = 0;
+      }
+      await getSupabase().from("organizations").update(orgPatch).eq("id", prevRow.org_id);
     }
   }
 }
@@ -172,6 +183,45 @@ async function handleSubscriptionCanceled(data: any, env: PaddleEnv) {
   }
 }
 
+/** Records a successful Paddle transaction in the unified payments log. */
+async function handleTransactionCompleted(data: any, env: PaddleEnv) {
+  const { id, subscriptionId, customerId, details, billedAt, customData } = data;
+  const orgId: string | undefined = customData?.orgId;
+
+  // Prefer the subscription row's org, fall back to customData
+  let resolvedOrgId = orgId;
+  if (!resolvedOrgId && subscriptionId) {
+    const { data: sub } = await getSupabase()
+      .from("subscriptions")
+      .select("org_id")
+      .eq("paddle_subscription_id", subscriptionId)
+      .eq("environment", env)
+      .maybeSingle();
+    resolvedOrgId = (sub as any)?.org_id;
+  }
+  if (!resolvedOrgId) return;
+
+  // Paddle returns totals in the lowest denomination (cents). Convert to major units.
+  const totalMinor = Number(details?.totals?.total ?? 0);
+  const currency = (details?.totals?.currencyCode ?? "USD").toLowerCase();
+  const amount = totalMinor / 100;
+
+  await getSupabase().from("payments").insert({
+    org_id: resolvedOrgId,
+    provider: "paddle",
+    provider_payment_id: id,
+    amount_ars: amount, // legacy column reused; UI reads `currency` to format
+    currency,
+    status: "approved",
+    paid_at: billedAt ?? new Date().toISOString(),
+    raw: { subscriptionId, customerId, env, totals: details?.totals },
+  } as any);
+
+  await getSupabase().from("organizations")
+    .update({ last_payment_at: billedAt ?? new Date().toISOString() } as any)
+    .eq("id", resolvedOrgId);
+}
+
 async function handleWebhook(req: Request, env: PaddleEnv) {
   const event = await verifyWebhook(req, env);
   switch (event.eventType) {
@@ -183,6 +233,9 @@ async function handleWebhook(req: Request, env: PaddleEnv) {
       break;
     case EventName.SubscriptionCanceled:
       await handleSubscriptionCanceled(event.data, env);
+      break;
+    case EventName.TransactionCompleted:
+      await handleTransactionCompleted(event.data, env);
       break;
     default:
       console.log("Unhandled event:", event.eventType);
