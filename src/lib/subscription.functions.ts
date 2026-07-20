@@ -270,7 +270,13 @@ export const cancelSubscription = createServerFn({ method: "POST" })
     const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
     const orgId = await getOrCreateOrgId(supabase, userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: org } = await supabaseAdmin.from("organizations").select("mp_preapproval_id").eq("id", orgId).maybeSingle();
+    const { data: org } = await supabaseAdmin
+      .from("organizations")
+      .select("mp_preapproval_id, paddle_subscription_id, plan_currency")
+      .eq("id", orgId)
+      .maybeSingle();
+
+    // Cancel Mercado Pago preapproval (ARS)
     if (org?.mp_preapproval_id && token) {
       try {
         await fetch(`https://api.mercadopago.com/preapproval/${org.mp_preapproval_id}`, {
@@ -282,6 +288,26 @@ export const cancelSubscription = createServerFn({ method: "POST" })
         console.error("[cancelSubscription] MP cancel failed", e);
       }
     }
+
+    // Cancel Paddle subscription at end of period (USD)
+    if (org?.paddle_subscription_id) {
+      try {
+        const { data: sub } = await supabaseAdmin
+          .from("subscriptions")
+          .select("environment")
+          .eq("paddle_subscription_id", org.paddle_subscription_id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const env = (sub?.environment ?? "sandbox") as "sandbox" | "live";
+        const { getPaddleClient } = await import("@/lib/paddle.server");
+        const paddle = getPaddleClient(env);
+        await paddle.subscriptions.cancel(org.paddle_subscription_id, { effectiveFrom: "next_billing_period" });
+      } catch (e) {
+        console.error("[cancelSubscription] Paddle cancel failed", e);
+      }
+    }
+
     // Soft cancel: keep `current_period_end` intact so the user retains access
     // through the end of the paid period (e.g., paid on 20/6 + canceled on 10/7
     // ⇒ still has access until 20/7). The webhook + canWrite logic handles expiry.
