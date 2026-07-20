@@ -8,13 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { AlertTriangle, CheckCircle2, CreditCard, FileText, Loader2, ShieldCheck, Sparkles, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CreditCard, ExternalLink, FileText, Loader2, ShieldCheck, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { planByPrice, formatLimit, formatArs, formatUsd, TRIAL_DAYS, mergePlanOverrides, MP_PLAN_LINKS } from "@/lib/plans";
 import { getPlanPricing } from "@/lib/pricing.functions";
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
-import { changePaddlePlan } from "@/utils/payments.functions";
+import { changePaddlePlan, getPaddlePortalUrl } from "@/utils/payments.functions";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 export const Route = createFileRoute("/app/subscription")({
