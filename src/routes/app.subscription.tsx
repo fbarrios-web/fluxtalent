@@ -8,13 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { AlertTriangle, CheckCircle2, CreditCard, FileText, Loader2, ShieldCheck, Sparkles, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CreditCard, ExternalLink, FileText, Loader2, ShieldCheck, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { planByPrice, formatLimit, formatArs, formatUsd, TRIAL_DAYS, mergePlanOverrides, MP_PLAN_LINKS } from "@/lib/plans";
 import { getPlanPricing } from "@/lib/pricing.functions";
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
-import { changePaddlePlan } from "@/utils/payments.functions";
+import { changePaddlePlan, getPaddlePortalUrl } from "@/utils/payments.functions";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 export const Route = createFileRoute("/app/subscription")({
@@ -32,6 +32,7 @@ function SubscriptionPage() {
   const startCheckout = useServerFn(startPlanCheckout);
   const getPricing = useServerFn(getPlanPricing);
   const changePlan = useServerFn(changePaddlePlan);
+  const getPortal = useServerFn(getPaddlePortalUrl);
   const { openCheckout, loading: paddleLoading } = usePaddleCheckout();
   const { data: overrides } = useQuery({ queryKey: ["plan-pricing"], queryFn: () => getPricing() });
   const plans = mergePlanOverrides(overrides);
@@ -45,7 +46,7 @@ function SubscriptionPage() {
   const { data: history } = useQuery({
     queryKey: ["my-payments"],
     queryFn: async () => {
-      const { data } = await supabase.from("payments").select("id, amount_ars, status, paid_at, created_at, provider").order("created_at", { ascending: false });
+      const { data } = await supabase.from("payments").select("id, amount_ars, currency, status, paid_at, created_at, provider").order("created_at", { ascending: false });
       return data ?? [];
     },
   });
@@ -125,7 +126,9 @@ function SubscriptionPage() {
                   ? `Gratis / ${TRIAL_DAYS} días`
                   : activePlan.priceArs === -1
                     ? "A medida"
-                    : `${formatArs(activePlan.priceArs)} / mes`}
+                    : sub.plan_currency === "usd" && activePlan.priceUsd
+                      ? `${formatUsd(activePlan.priceUsd)} / mes`
+                      : `${formatArs(activePlan.priceArs)} / mes`}
               </span>
               {activePlan.originalPriceArs != null && activePlan.originalPriceArs > activePlan.priceArs && activePlan.priceArs > 0 && (
                 <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
@@ -179,7 +182,7 @@ function SubscriptionPage() {
                     <div className="space-y-2 pt-2 text-sm">
                       <p>Al cancelar:</p>
                       <ul className="list-disc space-y-1 pl-5">
-                        <li>Se da de baja tu suscripción en Mercado Pago y no se generarán nuevos cobros.</li>
+                        <li>Se da de baja tu suscripción {sub.plan_currency === "usd" ? "en Paddle (USD)" : "en Mercado Pago"} y no se generarán nuevos cobros.</li>
                         <li><strong>Conservás el acceso completo al sistema hasta el final del período ya pago</strong> (por ejemplo: si pagaste el 20/6 y cancelás el 10/7, podés seguir usándolo hasta el 20/7).</li>
                         <li>Al vencer el período, las funcionalidades (crear vacantes, recibir CVs, análisis con IA) quedan deshabilitadas hasta reactivar la suscripción.</li>
                         <li>Tus datos se conservan: si te volvés a suscribir, recuperás todo.</li>
@@ -196,6 +199,21 @@ function SubscriptionPage() {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+          )}
+          {isActive && sub.paddle_subscription_id && (
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  const { url } = await getPortal();
+                  window.open(url, "_blank", "noopener,noreferrer");
+                } catch (e: any) {
+                  toast.error(e?.message ?? "No se pudo abrir el portal");
+                }
+              }}
+            >
+              <ExternalLink className="mr-2 h-4 w-4" /> Gestionar en el portal
+            </Button>
           )}
         </div>
       </div>
@@ -362,7 +380,7 @@ function SubscriptionPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {history.map((p: any) => {
-                const providerLabel = p.provider === "mercadopago" ? "Mercado Pago" : p.provider === "manual" ? "Manual" : p.provider;
+                const providerLabel = p.provider === "mercadopago" ? "Mercado Pago" : p.provider === "paddle" ? "Paddle (USD)" : p.provider === "manual" ? "Manual" : p.provider;
                 const statusMap: Record<string, { label: string; cls: string }> = {
                   approved: { label: "Aprobado", cls: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
                   pending: { label: "Pendiente", cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
@@ -372,10 +390,12 @@ function SubscriptionPage() {
                   refunded: { label: "Reembolsado", cls: "bg-muted text-muted-foreground" },
                 };
                 const st = statusMap[p.status] ?? { label: p.status, cls: "bg-primary/10 text-primary" };
+                const amt = Number(p.amount_ars);
+                const amountLabel = p.currency === "usd" ? formatUsd(amt) : formatArs(amt);
                 return (
                   <tr key={p.id}>
                     <td className="py-2">{new Date(p.paid_at ?? p.created_at).toLocaleDateString("es-AR")}</td>
-                    <td>{formatArs(Number(p.amount_ars))}</td>
+                    <td>{amountLabel}</td>
                     <td>{providerLabel}</td>
                     <td><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${st.cls}`}>{st.label}</span></td>
                   </tr>
