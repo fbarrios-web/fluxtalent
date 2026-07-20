@@ -32,6 +32,7 @@ function SubscriptionPage() {
   const startCheckout = useServerFn(startPlanCheckout);
   const getPricing = useServerFn(getPlanPricing);
   const changePlan = useServerFn(changePaddlePlan);
+  const getPortal = useServerFn(getPaddlePortalUrl);
   const { openCheckout, loading: paddleLoading } = usePaddleCheckout();
   const { data: overrides } = useQuery({ queryKey: ["plan-pricing"], queryFn: () => getPricing() });
   const plans = mergePlanOverrides(overrides);
@@ -45,7 +46,7 @@ function SubscriptionPage() {
   const { data: history } = useQuery({
     queryKey: ["my-payments"],
     queryFn: async () => {
-      const { data } = await supabase.from("payments").select("id, amount_ars, status, paid_at, created_at, provider").order("created_at", { ascending: false });
+      const { data } = await supabase.from("payments").select("id, amount_ars, currency, status, paid_at, created_at, provider").order("created_at", { ascending: false });
       return data ?? [];
     },
   });
