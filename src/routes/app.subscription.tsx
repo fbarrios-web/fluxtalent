@@ -126,7 +126,9 @@ function SubscriptionPage() {
                   ? `Gratis / ${TRIAL_DAYS} días`
                   : activePlan.priceArs === -1
                     ? "A medida"
-                    : `${formatArs(activePlan.priceArs)} / mes`}
+                    : sub.plan_currency === "usd" && activePlan.priceUsd
+                      ? `${formatUsd(activePlan.priceUsd)} / mes`
+                      : `${formatArs(activePlan.priceArs)} / mes`}
               </span>
               {activePlan.originalPriceArs != null && activePlan.originalPriceArs > activePlan.priceArs && activePlan.priceArs > 0 && (
                 <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
