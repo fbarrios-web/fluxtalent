@@ -200,6 +200,21 @@ function SubscriptionPage() {
               </DialogContent>
             </Dialog>
           )}
+          {isActive && sub.paddle_subscription_id && (
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  const { url } = await getPortal();
+                  window.open(url, "_blank", "noopener,noreferrer");
+                } catch (e: any) {
+                  toast.error(e?.message ?? "No se pudo abrir el portal");
+                }
+              }}
+            >
+              <ExternalLink className="mr-2 h-4 w-4" /> Gestionar en el portal
+            </Button>
+          )}
         </div>
       </div>
 
