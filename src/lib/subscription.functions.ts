@@ -55,14 +55,14 @@ export const getMySubscription = createServerFn({ method: "GET" })
 
     const { data: org, error } = await supabase
       .from("organizations")
-      .select("id, name, subscription_status, trial_ends_at, plan_price_ars, current_period_end, last_payment_at, mp_preapproval_id")
+      .select("id, name, subscription_status, trial_ends_at, plan_price_ars, current_period_end, last_payment_at, mp_preapproval_id, paddle_subscription_id, paddle_customer_id, plan_currency")
       .eq("id", orgId)
       .maybeSingle();
     if (error || !org) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: adminOrg } = await supabaseAdmin
         .from("organizations")
-        .select("id, name, subscription_status, trial_ends_at, plan_price_ars, current_period_end, last_payment_at, mp_preapproval_id")
+        .select("id, name, subscription_status, trial_ends_at, plan_price_ars, current_period_end, last_payment_at, mp_preapproval_id, paddle_subscription_id, paddle_customer_id, plan_currency")
         .eq("id", orgId)
         .maybeSingle();
       if (!adminOrg) return null;
