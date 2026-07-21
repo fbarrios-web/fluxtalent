@@ -171,7 +171,7 @@ function AdminOrgs() {
               );
             })}
             {!rows.length && (
-              <tr><td colSpan={7} className="px-4 py-10 text-center text-sm text-muted-foreground">Sin resultados</td></tr>
+              <tr><td colSpan={10} className="px-4 py-10 text-center text-sm text-muted-foreground">Sin resultados</td></tr>
             )}
           </tbody>
         </table>
