@@ -121,7 +121,7 @@ function AdminOrgs() {
     let r = (data ?? []).filter(o => {
       if (filter && !o.name.toLowerCase().includes(filter.toLowerCase())) return false;
       if (emailFilter && !((o as any).owner_email ?? "").toLowerCase().includes(emailFilter.toLowerCase())) return false;
-      if (statusFilter !== "all" && o.subscription_status !== statusFilter) return false;
+      if (statusFilter !== "all" && effectiveStatus(o) !== statusFilter) return false;
       if (planFilter !== "all") {
         const plan = (o as any).is_unlimited ? "unlimited" : planByPrice(o.plan_price_ars).id;
         if (plan !== planFilter) return false;
@@ -222,6 +222,8 @@ function AdminOrgs() {
               <SelectItem value="active">Activo</SelectItem>
               <SelectItem value="past_due">Vencido</SelectItem>
               <SelectItem value="canceled">Cancelado</SelectItem>
+              <SelectItem value="trial_expired">Prueba vencida</SelectItem>
+              <SelectItem value="subscription_expired">Suscripción vencida</SelectItem>
             </SelectContent>
           </Select>
           <Select value={planFilter} onValueChange={setPlanFilter}>
@@ -318,7 +320,7 @@ function AdminOrgs() {
                       </td>
                     )}
                     {isVisible("cvs") && <td className="px-4 py-3 text-sm border-b border-border">{(o as any).cvs_processed ?? 0}</td>}
-                    {isVisible("status") && <td className="px-4 py-3 border-b border-border"><StatusBadge s={o.subscription_status} /></td>}
+                    {isVisible("status") && <td className="px-4 py-3 border-b border-border"><StatusBadge s={effectiveStatus(o)} /></td>}
                     {isVisible("expiry") && (
                       <td className="px-4 py-3 border-b border-border">
                         {expiry ? (
@@ -492,14 +494,32 @@ function AssignPlanDialog({ open, org, onClose, onAssign, pending }: {
   );
 }
 
+function effectiveStatus(o: any): string {
+  const s = o?.subscription_status;
+  const now = Date.now();
+  if (s === "trialing" && o?.trial_ends_at && new Date(o.trial_ends_at).getTime() < now) return "trial_expired";
+  if (s === "active" && o?.current_period_end && new Date(o.current_period_end).getTime() < now) return "subscription_expired";
+  return s;
+}
+
 function StatusBadge({ s }: { s: string }) {
+  const labels: Record<string, string> = {
+    trialing: "Trial",
+    active: "Activa",
+    past_due: "Vencido",
+    canceled: "Cancelada",
+    trial_expired: "Prueba vencida",
+    subscription_expired: "Suscripción vencida",
+  };
   const m: Record<string, string> = {
     trialing: "bg-accent text-accent-foreground",
     active: "bg-primary/10 text-primary",
     past_due: "bg-destructive/10 text-destructive",
     canceled: "bg-muted text-muted-foreground",
+    trial_expired: "bg-destructive/10 text-destructive",
+    subscription_expired: "bg-destructive/10 text-destructive",
   };
-  return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${m[s] ?? "bg-muted"}`}>{s}</span>;
+  return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${m[s] ?? "bg-muted"}`}>{labels[s] ?? s}</span>;
 }
 
 function ActionMenu({ onPick, disabled }: { orgId: string; onPick: (a: any) => void; disabled: boolean }) {
