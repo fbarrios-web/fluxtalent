@@ -73,6 +73,17 @@ function AdminOrgs() {
     onError: (e: any) => toast.error(e.message ?? "Error al eliminar"),
   });
 
+  const archiveMut = useMutation({
+    mutationFn: (vars: { org_id: string; archived: boolean }) => archiveFn({ data: vars }),
+    onSuccess: (_r, vars) => {
+      qc.invalidateQueries({ queryKey: ["admin-orgs"] });
+      qc.invalidateQueries({ queryKey: ["admin-metrics"] });
+      toast.success(vars.archived ? "Organización archivada" : "Organización restaurada");
+    },
+    onError: (e: any) => toast.error(e.message ?? "Error"),
+  });
+
+
   const [planDialog, setPlanDialog] = useState<{ orgId: string; orgName: string } | null>(null);
 
   if (isLoading) return <div className="grid h-64 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></div>;
