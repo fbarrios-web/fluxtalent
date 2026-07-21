@@ -492,14 +492,32 @@ function AssignPlanDialog({ open, org, onClose, onAssign, pending }: {
   );
 }
 
+function effectiveStatus(o: any): string {
+  const s = o?.subscription_status;
+  const now = Date.now();
+  if (s === "trialing" && o?.trial_ends_at && new Date(o.trial_ends_at).getTime() < now) return "trial_expired";
+  if (s === "active" && o?.current_period_end && new Date(o.current_period_end).getTime() < now) return "subscription_expired";
+  return s;
+}
+
 function StatusBadge({ s }: { s: string }) {
+  const labels: Record<string, string> = {
+    trialing: "Trial",
+    active: "Activa",
+    past_due: "Vencido",
+    canceled: "Cancelada",
+    trial_expired: "Prueba vencida",
+    subscription_expired: "Suscripción vencida",
+  };
   const m: Record<string, string> = {
     trialing: "bg-accent text-accent-foreground",
     active: "bg-primary/10 text-primary",
     past_due: "bg-destructive/10 text-destructive",
     canceled: "bg-muted text-muted-foreground",
+    trial_expired: "bg-destructive/10 text-destructive",
+    subscription_expired: "bg-destructive/10 text-destructive",
   };
-  return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${m[s] ?? "bg-muted"}`}>{s}</span>;
+  return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${m[s] ?? "bg-muted"}`}>{labels[s] ?? s}</span>;
 }
 
 function ActionMenu({ onPick, disabled }: { orgId: string; onPick: (a: any) => void; disabled: boolean }) {
