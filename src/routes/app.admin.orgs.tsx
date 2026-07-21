@@ -121,7 +121,7 @@ function AdminOrgs() {
     let r = (data ?? []).filter(o => {
       if (filter && !o.name.toLowerCase().includes(filter.toLowerCase())) return false;
       if (emailFilter && !((o as any).owner_email ?? "").toLowerCase().includes(emailFilter.toLowerCase())) return false;
-      if (statusFilter !== "all" && o.subscription_status !== statusFilter) return false;
+      if (statusFilter !== "all" && effectiveStatus(o) !== statusFilter) return false;
       if (planFilter !== "all") {
         const plan = (o as any).is_unlimited ? "unlimited" : planByPrice(o.plan_price_ars).id;
         if (plan !== planFilter) return false;
