@@ -491,7 +491,7 @@ export const adminDeleteUser = createServerFn({ method: "POST" })
       const { count } = await supabaseAdmin.from("profiles").select("*", { count: "exact", head: true }).eq("org_id", orgId);
       if ((count ?? 0) <= 1) {
         // Last member — remove the whole organization (cascade cleans data).
-        const { error: rpcErr } = await supabaseAdmin.rpc("admin_delete_org", { _org_id: orgId });
+        const { error: rpcErr } = await context.supabase.rpc("admin_delete_org", { _org_id: orgId });
         if (rpcErr) throw new Error("No pudimos eliminar la organización asociada: " + rpcErr.message);
         deletedOrg = true;
       }
