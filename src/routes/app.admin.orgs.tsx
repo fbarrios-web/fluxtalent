@@ -94,6 +94,9 @@ function AdminOrgs() {
             <tr>
               <th className="px-4 py-3">Organización</th>
               <th className="px-4 py-3">Email</th>
+              <th className="px-4 py-3">Usuarios</th>
+              <th className="px-4 py-3">Vacantes</th>
+              <th className="px-4 py-3">CVs procesados</th>
               <th className="px-4 py-3">Estado</th>
               <th className="px-4 py-3">Vence</th>
               <th className="px-4 py-3">Plan</th>
