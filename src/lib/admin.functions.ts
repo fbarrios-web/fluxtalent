@@ -110,10 +110,39 @@ export const adminListOrgs = createServerFn({ method: "GET" })
       });
     }
 
+    // Per-org stats: users count, vacancies (total & active), CVs processed
+    const usersByOrg = new Map<string, number>();
+    const vacTotalByOrg = new Map<string, number>();
+    const vacActiveByOrg = new Map<string, number>();
+    const cvsByOrg = new Map<string, number>();
+
+    if (orgIds.length) {
+      const [{ data: allProfs }, { data: vacs }, { data: apps }] = await Promise.all([
+        supabaseAdmin.from("profiles").select("org_id").in("org_id", orgIds),
+        supabaseAdmin.from("vacancies").select("org_id, status").in("org_id", orgIds),
+        supabaseAdmin.from("applications").select("org_id, cv_url").in("org_id", orgIds),
+      ]);
+      (allProfs ?? []).forEach((p: any) => {
+        if (p.org_id) usersByOrg.set(p.org_id, (usersByOrg.get(p.org_id) ?? 0) + 1);
+      });
+      (vacs ?? []).forEach((v: any) => {
+        if (!v.org_id) return;
+        vacTotalByOrg.set(v.org_id, (vacTotalByOrg.get(v.org_id) ?? 0) + 1);
+        if (v.status === "active") vacActiveByOrg.set(v.org_id, (vacActiveByOrg.get(v.org_id) ?? 0) + 1);
+      });
+      (apps ?? []).forEach((a: any) => {
+        if (a.org_id && a.cv_url) cvsByOrg.set(a.org_id, (cvsByOrg.get(a.org_id) ?? 0) + 1);
+      });
+    }
+
     return orgs.map((o: any) => ({
       ...o,
       owner_email: ownerByOrg.get(o.id)?.email ?? "",
       owner_name: ownerByOrg.get(o.id)?.display_name ?? "",
+      users_count: usersByOrg.get(o.id) ?? 0,
+      vacancies_total: vacTotalByOrg.get(o.id) ?? 0,
+      vacancies_active: vacActiveByOrg.get(o.id) ?? 0,
+      cvs_processed: cvsByOrg.get(o.id) ?? 0,
     }));
   });
 
