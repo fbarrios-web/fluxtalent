@@ -455,7 +455,8 @@ export const adminDeleteOrg = createServerFn({ method: "POST" })
     const userIds = (profs ?? []).map((p: any) => p.id);
 
     // Purge all org data via SECURITY DEFINER function.
-    const { error: rpcErr } = await supabaseAdmin.rpc("admin_delete_org", { _org_id: data.org_id });
+    // Use the authenticated client so auth.uid() is populated inside the RPC guard.
+    const { error: rpcErr } = await context.supabase.rpc("admin_delete_org", { _org_id: data.org_id });
     if (rpcErr) throw rpcErr;
 
     // Delete the auth users so the login is fully removed.
