@@ -510,3 +510,20 @@ export const adminDeleteUser = createServerFn({ method: "POST" })
     return { ok: true, deleted_org: deletedOrg };
   });
 
+/** Archive or unarchive an organization: hides it from admin lists and metrics. */
+export const adminSetOrgArchived = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ org_id: z.string().uuid(), archived: z.boolean() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("organizations")
+      .update({ archived_at: data.archived ? new Date().toISOString() : null } as never)
+      .eq("id", data.org_id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+
