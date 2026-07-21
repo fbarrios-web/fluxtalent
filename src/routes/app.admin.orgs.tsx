@@ -222,6 +222,8 @@ function AdminOrgs() {
               <SelectItem value="active">Activo</SelectItem>
               <SelectItem value="past_due">Vencido</SelectItem>
               <SelectItem value="canceled">Cancelado</SelectItem>
+              <SelectItem value="trial_expired">Prueba vencida</SelectItem>
+              <SelectItem value="subscription_expired">Suscripción vencida</SelectItem>
             </SelectContent>
           </Select>
           <Select value={planFilter} onValueChange={setPlanFilter}>
