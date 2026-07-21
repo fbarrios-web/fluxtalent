@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrustRouteImport } from './routes/trust'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/app'
@@ -55,6 +56,11 @@ import { Route as ApiPublicGoogleCallbackRouteImport } from './routes/api.public
 const TrustRoute = TrustRouteImport.update({
   id: '/trust',
   path: '/trust',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -274,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
   '/app/admin': typeof AppAdminRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
@@ -317,6 +324,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/enterprise': typeof AppEnterpriseRoute
@@ -361,6 +369,7 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
   '/app/admin': typeof AppAdminRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
@@ -407,6 +416,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth'
     | '/reset-password'
+    | '/terms'
     | '/trust'
     | '/app/admin'
     | '/app/dashboard'
@@ -450,6 +460,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/terms'
     | '/trust'
     | '/app/dashboard'
     | '/app/enterprise'
@@ -493,6 +504,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth'
     | '/reset-password'
+    | '/terms'
     | '/trust'
     | '/app/admin'
     | '/app/dashboard'
@@ -538,6 +550,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  TermsRoute: typeof TermsRoute
   TrustRoute: typeof TrustRoute
   ApplySlugRoute: typeof ApplySlugRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
@@ -566,6 +579,13 @@ declare module '@tanstack/react-router' {
       path: '/trust'
       fullPath: '/trust'
       preLoaderRoute: typeof TrustRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -919,6 +939,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  TermsRoute: TermsRoute,
   TrustRoute: TrustRoute,
   ApplySlugRoute: ApplySlugRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
