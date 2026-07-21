@@ -23,15 +23,16 @@ export const adminMetrics = createServerFn({ method: "GET" })
     const sb = supabaseAdmin;
 
     const [{ count: orgs }, { count: users }, { count: vacancies }, { count: applications }, { data: orgsByStatus }, { data: payments30 }, { data: signups14 }, { data: events7 }] = await Promise.all([
-      sb.from("organizations").select("*", { count: "exact", head: true }),
+      sb.from("organizations").select("*", { count: "exact", head: true }).is("archived_at", null),
       sb.from("profiles").select("*", { count: "exact", head: true }),
       sb.from("vacancies").select("*", { count: "exact", head: true }),
       sb.from("applications").select("*", { count: "exact", head: true }),
-      sb.from("organizations").select("subscription_status, plan_price_ars, is_unlimited"),
+      sb.from("organizations").select("subscription_status, plan_price_ars, is_unlimited").is("archived_at", null),
       sb.from("payments").select("amount_ars, paid_at, created_at").gte("created_at", new Date(Date.now() - 30 * 86400000).toISOString()),
-      sb.from("organizations").select("created_at").gte("created_at", new Date(Date.now() - 14 * 86400000).toISOString()),
+      sb.from("organizations").select("created_at").gte("created_at", new Date(Date.now() - 14 * 86400000).toISOString()).is("archived_at", null),
       sb.from("activity_events").select("event_type, created_at").gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()),
     ]);
+
 
     const byStatus = (orgsByStatus ?? []).reduce<Record<string, number>>((acc, r: any) => {
       acc[r.subscription_status] = (acc[r.subscription_status] ?? 0) + 1;
