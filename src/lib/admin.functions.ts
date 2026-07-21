@@ -174,7 +174,7 @@ export const adminGrantLicense = createServerFn({ method: "POST" })
       case "activate_30": patch = { subscription_status: "active", current_period_end: days(30), last_payment_at: new Date().toISOString() }; break;
       case "activate_90": patch = { subscription_status: "active", current_period_end: days(90), last_payment_at: new Date().toISOString() }; break;
       case "activate_365": patch = { subscription_status: "active", current_period_end: days(365), last_payment_at: new Date().toISOString() }; break;
-      case "extend_trial_15": patch = { subscription_status: "trialing", trial_ends_at: days(15) }; break;
+      case "extend_trial_15": patch = { subscription_status: "trialing", trial_ends_at: days(15), new_vacancies_used: 0, cvs_used: 0, archived_at: null }; break;
       case "mark_paid_manual": patch = { subscription_status: "active", current_period_end: days(30), last_payment_at: new Date().toISOString() }; break;
       case "suspend": patch = { subscription_status: "past_due" }; break;
       case "cancel": patch = { subscription_status: "canceled", archived_at: new Date().toISOString() }; break;
@@ -223,6 +223,37 @@ export const adminGrantLicense = createServerFn({ method: "POST" })
     await supabaseAdmin.from("activity_events").insert({
       org_id: data.org_id, user_id: context.userId, event_type: `admin.${data.action}`, metadata: { plan_price_ars: data.plan_price_ars, days: data.days },
     });
+
+    // Notify user when the trial is extended by admin.
+    if (data.action === "extend_trial_15") {
+      try {
+        const { data: profs } = await supabaseAdmin
+          .from("profiles")
+          .select("id, display_name, created_at")
+          .eq("org_id", data.org_id)
+          .order("created_at", { ascending: true })
+          .limit(1);
+        const owner = profs?.[0];
+        if (owner?.id) {
+          const { data: userInfo } = await supabaseAdmin.auth.admin.getUserById(owner.id);
+          const email = userInfo?.user?.email;
+          if (email) {
+            const { dispatchTransactionalEmail } = await import("@/lib/email/dispatch.server");
+            await dispatchTransactionalEmail({
+              templateName: "trial-extended",
+              recipientEmail: email,
+              templateData: {
+                fullName: owner.display_name ?? undefined,
+                appUrl: "https://fluxtalent.com.ar/app/dashboard",
+              },
+              idempotencyKey: `trial-extended-${data.org_id}-${Date.now()}`,
+            });
+          }
+        }
+      } catch (e) {
+        console.error("[extend_trial_15] email dispatch failed", e);
+      }
+    }
 
     return { ok: true };
   });
