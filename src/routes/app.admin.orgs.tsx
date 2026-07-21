@@ -318,7 +318,7 @@ function AdminOrgs() {
                       </td>
                     )}
                     {isVisible("cvs") && <td className="px-4 py-3 text-sm border-b border-border">{(o as any).cvs_processed ?? 0}</td>}
-                    {isVisible("status") && <td className="px-4 py-3 border-b border-border"><StatusBadge s={o.subscription_status} /></td>}
+                    {isVisible("status") && <td className="px-4 py-3 border-b border-border"><StatusBadge s={effectiveStatus(o)} /></td>}
                     {isVisible("expiry") && (
                       <td className="px-4 py-3 border-b border-border">
                         {expiry ? (
