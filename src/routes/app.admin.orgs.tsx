@@ -118,6 +118,12 @@ function AdminOrgs() {
                     <div className="text-sm">{(o as any).owner_email || <span className="text-muted-foreground">—</span>}</div>
                     {(o as any).owner_name && <div className="text-xs text-muted-foreground">{(o as any).owner_name}</div>}
                   </td>
+                  <td className="px-4 py-3 text-sm">{(o as any).users_count ?? 0}</td>
+                  <td className="px-4 py-3 text-sm">
+                    <div>{(o as any).vacancies_total ?? 0} <span className="text-xs text-muted-foreground">totales</span></div>
+                    <div className="text-xs text-muted-foreground">{(o as any).vacancies_active ?? 0} activas</div>
+                  </td>
+                  <td className="px-4 py-3 text-sm">{(o as any).cvs_processed ?? 0}</td>
                   <td className="px-4 py-3"><StatusBadge s={o.subscription_status} /></td>
                   <td className="px-4 py-3">
                     {expiry ? (
