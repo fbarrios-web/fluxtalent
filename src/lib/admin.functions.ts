@@ -68,17 +68,22 @@ export const adminMetrics = createServerFn({ method: "GET" })
     };
   });
 
-export const adminListOrgs = createServerFn({ method: "GET" })
+export const adminListOrgs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((input: unknown) =>
+    z.object({ archived: z.boolean().optional() }).default({}).parse(input ?? {}))
+  .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin
+    let q = supabaseAdmin
       .from("organizations")
-      .select("id, name, subscription_status, trial_ends_at, current_period_end, plan_price_ars, last_payment_at, created_at, mp_preapproval_id, parent_org_id, is_unlimited")
+      .select("id, name, subscription_status, trial_ends_at, current_period_end, plan_price_ars, last_payment_at, created_at, mp_preapproval_id, parent_org_id, is_unlimited, archived_at")
       .order("created_at", { ascending: false });
+    q = data.archived ? q.not("archived_at", "is", null) : q.is("archived_at", null);
+    const { data: rows, error } = await q;
     if (error) throw error;
-    const orgs = data ?? [];
+    const orgs = rows ?? [];
+
 
     // Look up the owner email for each org (first profile in the org)
     const orgIds = orgs.map((o: any) => o.id);
