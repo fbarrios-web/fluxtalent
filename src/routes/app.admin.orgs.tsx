@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { adminListOrgs, adminGrantLicense, adminExportClients, adminDeleteOrg } from "@/lib/admin.functions";
+import { adminListOrgs, adminGrantLicense, adminExportClients, adminDeleteOrg, adminSetOrgArchived } from "@/lib/admin.functions";
 import { Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -34,10 +34,16 @@ function AdminOrgs() {
   const grant = useServerFn(adminGrantLicense);
   const exportFn = useServerFn(adminExportClients);
   const delFn = useServerFn(adminDeleteOrg);
+  const archiveFn = useServerFn(adminSetOrgArchived);
   const [filter, setFilter] = useState("");
   const [exporting, setExporting] = useState(false);
+  const [view, setView] = useState<"active" | "archived">("active");
 
-  const { data, isLoading } = useQuery({ queryKey: ["admin-orgs"], queryFn: () => list() });
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-orgs", view],
+    queryFn: () => list({ data: { archived: view === "archived" } }),
+  });
+
 
   const handleExport = async () => {
     setExporting(true);
@@ -67,6 +73,17 @@ function AdminOrgs() {
     onError: (e: any) => toast.error(e.message ?? "Error al eliminar"),
   });
 
+  const archiveMut = useMutation({
+    mutationFn: (vars: { org_id: string; archived: boolean }) => archiveFn({ data: vars }),
+    onSuccess: (_r, vars) => {
+      qc.invalidateQueries({ queryKey: ["admin-orgs"] });
+      qc.invalidateQueries({ queryKey: ["admin-metrics"] });
+      toast.success(vars.archived ? "Organización archivada" : "Organización restaurada");
+    },
+    onError: (e: any) => toast.error(e.message ?? "Error"),
+  });
+
+
   const [planDialog, setPlanDialog] = useState<{ orgId: string; orgName: string } | null>(null);
 
   if (isLoading) return <div className="grid h-64 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></div>;
@@ -76,17 +93,34 @@ function AdminOrgs() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <input
-          value={filter}
-          onChange={e => setFilter(e.target.value)}
-          placeholder="Buscar organización…"
-          className="w-full max-w-sm rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-        />
+        <div className="flex items-center gap-2">
+          <div className="inline-flex rounded-lg border border-border bg-card p-0.5">
+            <button
+              onClick={() => setView("active")}
+              className={`rounded-md px-3 py-1.5 text-sm ${view === "active" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              Activas
+            </button>
+            <button
+              onClick={() => setView("archived")}
+              className={`rounded-md px-3 py-1.5 text-sm ${view === "archived" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              Archivadas
+            </button>
+          </div>
+          <input
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+            placeholder="Buscar organización…"
+            className="w-full max-w-sm rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
         <Button variant="outline" size="sm" onClick={handleExport} disabled={exporting}>
           {exporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
           Exportar clientes (Excel)
         </Button>
       </div>
+
 
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         <table className="w-full text-sm">
@@ -152,6 +186,15 @@ function AdminOrgs() {
                         Asignar plan
                       </Button>
                       <ActionMenu orgId={o.id} onPick={(action) => mut.mutate({ org_id: o.id, action })} disabled={mut.isPending} />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={archiveMut.isPending}
+                        onClick={() => archiveMut.mutate({ org_id: o.id, archived: view === "active" })}
+                      >
+                        {view === "active" ? "Archivar" : "Restaurar"}
+                      </Button>
+
                       <Button
                         variant="outline"
                         size="sm"

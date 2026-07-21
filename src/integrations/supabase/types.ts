@@ -557,6 +557,7 @@ export type Database = {
       }
       organizations: {
         Row: {
+          archived_at: string | null
           brand_color: string | null
           consultancy_name: string | null
           contact_email: string | null
@@ -581,6 +582,7 @@ export type Database = {
           trial_ends_at: string
         }
         Insert: {
+          archived_at?: string | null
           brand_color?: string | null
           consultancy_name?: string | null
           contact_email?: string | null
@@ -605,6 +607,7 @@ export type Database = {
           trial_ends_at?: string
         }
         Update: {
+          archived_at?: string | null
           brand_color?: string | null
           consultancy_name?: string | null
           contact_email?: string | null

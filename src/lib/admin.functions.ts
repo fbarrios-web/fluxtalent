@@ -23,15 +23,16 @@ export const adminMetrics = createServerFn({ method: "GET" })
     const sb = supabaseAdmin;
 
     const [{ count: orgs }, { count: users }, { count: vacancies }, { count: applications }, { data: orgsByStatus }, { data: payments30 }, { data: signups14 }, { data: events7 }] = await Promise.all([
-      sb.from("organizations").select("*", { count: "exact", head: true }),
+      sb.from("organizations").select("*", { count: "exact", head: true }).is("archived_at", null),
       sb.from("profiles").select("*", { count: "exact", head: true }),
       sb.from("vacancies").select("*", { count: "exact", head: true }),
       sb.from("applications").select("*", { count: "exact", head: true }),
-      sb.from("organizations").select("subscription_status, plan_price_ars, is_unlimited"),
+      sb.from("organizations").select("subscription_status, plan_price_ars, is_unlimited").is("archived_at", null),
       sb.from("payments").select("amount_ars, paid_at, created_at").gte("created_at", new Date(Date.now() - 30 * 86400000).toISOString()),
-      sb.from("organizations").select("created_at").gte("created_at", new Date(Date.now() - 14 * 86400000).toISOString()),
+      sb.from("organizations").select("created_at").gte("created_at", new Date(Date.now() - 14 * 86400000).toISOString()).is("archived_at", null),
       sb.from("activity_events").select("event_type, created_at").gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()),
     ]);
+
 
     const byStatus = (orgsByStatus ?? []).reduce<Record<string, number>>((acc, r: any) => {
       acc[r.subscription_status] = (acc[r.subscription_status] ?? 0) + 1;
@@ -68,17 +69,22 @@ export const adminMetrics = createServerFn({ method: "GET" })
     };
   });
 
-export const adminListOrgs = createServerFn({ method: "GET" })
+export const adminListOrgs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((input: unknown) =>
+    z.object({ archived: z.boolean().optional() }).default({}).parse(input ?? {}))
+  .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin
+    let q = supabaseAdmin
       .from("organizations")
-      .select("id, name, subscription_status, trial_ends_at, current_period_end, plan_price_ars, last_payment_at, created_at, mp_preapproval_id, parent_org_id, is_unlimited")
+      .select("id, name, subscription_status, trial_ends_at, current_period_end, plan_price_ars, last_payment_at, created_at, mp_preapproval_id, parent_org_id, is_unlimited, archived_at")
       .order("created_at", { ascending: false });
+    q = data.archived ? q.not("archived_at", "is", null) : q.is("archived_at", null);
+    const { data: rows, error } = await q;
     if (error) throw error;
-    const orgs = data ?? [];
+    const orgs = rows ?? [];
+
 
     // Look up the owner email for each org (first profile in the org)
     const orgIds = orgs.map((o: any) => o.id);
@@ -171,7 +177,7 @@ export const adminGrantLicense = createServerFn({ method: "POST" })
       case "extend_trial_15": patch = { subscription_status: "trialing", trial_ends_at: days(15) }; break;
       case "mark_paid_manual": patch = { subscription_status: "active", current_period_end: days(30), last_payment_at: new Date().toISOString() }; break;
       case "suspend": patch = { subscription_status: "past_due" }; break;
-      case "cancel": patch = { subscription_status: "canceled" }; break;
+      case "cancel": patch = { subscription_status: "canceled", archived_at: new Date().toISOString() }; break;
       case "set_plan": {
         if (data.plan_price_ars === undefined) throw new Error("Falta el precio del plan");
         const periodDays = data.days ?? 30;
@@ -503,4 +509,21 @@ export const adminDeleteUser = createServerFn({ method: "POST" })
 
     return { ok: true, deleted_org: deletedOrg };
   });
+
+/** Archive or unarchive an organization: hides it from admin lists and metrics. */
+export const adminSetOrgArchived = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ org_id: z.string().uuid(), archived: z.boolean() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("organizations")
+      .update({ archived_at: data.archived ? new Date().toISOString() : null } as never)
+      .eq("id", data.org_id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
 
