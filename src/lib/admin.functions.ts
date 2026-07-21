@@ -177,7 +177,7 @@ export const adminGrantLicense = createServerFn({ method: "POST" })
       case "extend_trial_15": patch = { subscription_status: "trialing", trial_ends_at: days(15) }; break;
       case "mark_paid_manual": patch = { subscription_status: "active", current_period_end: days(30), last_payment_at: new Date().toISOString() }; break;
       case "suspend": patch = { subscription_status: "past_due" }; break;
-      case "cancel": patch = { subscription_status: "canceled" }; break;
+      case "cancel": patch = { subscription_status: "canceled", archived_at: new Date().toISOString() }; break;
       case "set_plan": {
         if (data.plan_price_ars === undefined) throw new Error("Falta el precio del plan");
         const periodDays = data.days ?? 30;
