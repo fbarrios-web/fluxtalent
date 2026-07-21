@@ -189,6 +189,15 @@ function AdminOrgs() {
                       <Button
                         variant="outline"
                         size="sm"
+                        disabled={archiveMut.isPending}
+                        onClick={() => archiveMut.mutate({ org_id: o.id, archived: view === "active" })}
+                      >
+                        {view === "active" ? "Archivar" : "Restaurar"}
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
                         className="text-destructive hover:bg-destructive/10"
                         disabled={delMut.isPending}
                         onClick={() => {
