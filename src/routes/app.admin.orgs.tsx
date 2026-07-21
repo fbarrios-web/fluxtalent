@@ -34,10 +34,16 @@ function AdminOrgs() {
   const grant = useServerFn(adminGrantLicense);
   const exportFn = useServerFn(adminExportClients);
   const delFn = useServerFn(adminDeleteOrg);
+  const archiveFn = useServerFn(adminSetOrgArchived);
   const [filter, setFilter] = useState("");
   const [exporting, setExporting] = useState(false);
+  const [view, setView] = useState<"active" | "archived">("active");
 
-  const { data, isLoading } = useQuery({ queryKey: ["admin-orgs"], queryFn: () => list() });
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-orgs", view],
+    queryFn: () => list({ data: { archived: view === "archived" } }),
+  });
+
 
   const handleExport = async () => {
     setExporting(true);
