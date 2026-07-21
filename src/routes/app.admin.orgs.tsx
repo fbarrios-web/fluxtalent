@@ -94,6 +94,9 @@ function AdminOrgs() {
             <tr>
               <th className="px-4 py-3">Organización</th>
               <th className="px-4 py-3">Email</th>
+              <th className="px-4 py-3">Usuarios</th>
+              <th className="px-4 py-3">Vacantes</th>
+              <th className="px-4 py-3">CVs procesados</th>
               <th className="px-4 py-3">Estado</th>
               <th className="px-4 py-3">Vence</th>
               <th className="px-4 py-3">Plan</th>
@@ -115,6 +118,12 @@ function AdminOrgs() {
                     <div className="text-sm">{(o as any).owner_email || <span className="text-muted-foreground">—</span>}</div>
                     {(o as any).owner_name && <div className="text-xs text-muted-foreground">{(o as any).owner_name}</div>}
                   </td>
+                  <td className="px-4 py-3 text-sm">{(o as any).users_count ?? 0}</td>
+                  <td className="px-4 py-3 text-sm">
+                    <div>{(o as any).vacancies_total ?? 0} <span className="text-xs text-muted-foreground">totales</span></div>
+                    <div className="text-xs text-muted-foreground">{(o as any).vacancies_active ?? 0} activas</div>
+                  </td>
+                  <td className="px-4 py-3 text-sm">{(o as any).cvs_processed ?? 0}</td>
                   <td className="px-4 py-3"><StatusBadge s={o.subscription_status} /></td>
                   <td className="px-4 py-3">
                     {expiry ? (
@@ -162,7 +171,7 @@ function AdminOrgs() {
               );
             })}
             {!rows.length && (
-              <tr><td colSpan={7} className="px-4 py-10 text-center text-sm text-muted-foreground">Sin resultados</td></tr>
+              <tr><td colSpan={10} className="px-4 py-10 text-center text-sm text-muted-foreground">Sin resultados</td></tr>
             )}
           </tbody>
         </table>
