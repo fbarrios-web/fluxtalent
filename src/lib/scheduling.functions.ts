@@ -324,7 +324,7 @@ export const saveVacancyScheduling = createServerFn({ method: "POST" })
       .delete()
       .eq("vacancy_id", data.vacancyId)
       .eq("stage", data.stage)
-      .eq("source", "rule")
+      .or("source.is.null,source.eq.rule")
       .neq("status", "booked")
       .gt("start_at", new Date().toISOString());
 
@@ -350,7 +350,7 @@ export const regenerateSlots = createServerFn({ method: "POST" })
       .delete()
       .eq("vacancy_id", data.vacancyId)
       .eq("stage", data.stage)
-      .eq("source", "rule")
+      .or("source.is.null,source.eq.rule")
       .neq("status", "booked")
       .gt("start_at", new Date().toISOString());
 

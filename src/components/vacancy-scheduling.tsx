@@ -6,6 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Loader2, Plus, X, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -68,6 +78,8 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
   const [rules, setRules] = useState<Rule[]>([]);
   const [manualDate, setManualDate] = useState("");
   const [manualTime, setManualTime] = useState("");
+  const [ruleToDelete, setRuleToDelete] = useState<{ index: number; rule: Rule } | null>(null);
+  const [deletingRule, setDeletingRule] = useState(false);
 
   useEffect(() => {
     if (data) {
@@ -109,24 +121,33 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
     setNewInvitee("");
   }
 
+  function buildRulesPayload(nextRules: Rule[]) {
+    return nextRules
+      .filter(r => r.weekdays.length > 0)
+      .map(r => ({
+        weekdays: r.weekdays,
+        startTime: r.startTime,
+        endTime: r.endTime,
+        effectiveFrom: r.effectiveFrom || null,
+        effectiveUntil: r.effectiveUntil || null,
+      }));
+  }
+
+  async function persistRules(nextRules: Rule[]) {
+    const payload = buildRulesPayload(nextRules);
+    await save({ data: {
+      vacancyId, stage,
+      durationMinutes: duration, instructions, enabled,
+      interviewerEmail: interviewerEmail || null,
+      extraInvitees,
+      rules: payload,
+    } });
+    return payload;
+  }
+
   async function onSave() {
     try {
-      const payload = rules
-        .filter(r => r.weekdays.length > 0)
-        .map(r => ({
-          weekdays: r.weekdays,
-          startTime: r.startTime,
-          endTime: r.endTime,
-          effectiveFrom: r.effectiveFrom || null,
-          effectiveUntil: r.effectiveUntil || null,
-        }));
-      await save({ data: {
-        vacancyId, stage,
-        durationMinutes: duration, instructions, enabled,
-        interviewerEmail: interviewerEmail || null,
-        extraInvitees,
-        rules: payload,
-      } });
+      const payload = await persistRules(rules);
       let createdMsg = "";
       if (payload.length > 0) {
         try {
@@ -137,6 +158,28 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
       toast.success("Configuración guardada" + createdMsg);
       qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId, stage] });
     } catch (e: any) { toast.error(e.message); }
+  }
+
+  async function confirmDeleteRule() {
+    if (!ruleToDelete) return;
+    const nextRules = rules.filter((_, j) => j !== ruleToDelete.index);
+    setDeletingRule(true);
+    try {
+      const payload = await persistRules(nextRules);
+      let createdMsg = "";
+      if (payload.length > 0) {
+        const res = await regen({ data: { vacancyId, stage, days: 30 } });
+        createdMsg = ` ${res.created} slots vigentes fueron recalculados.`;
+      }
+      setRules(nextRules);
+      setRuleToDelete(null);
+      toast.success(`Franja eliminada. Los slots asociados fueron eliminados.${createdMsg}`);
+      qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId, stage] });
+    } catch (e: any) {
+      toast.error(e.message || "No se pudo eliminar la franja");
+    } finally {
+      setDeletingRule(false);
+    }
   }
 
   async function onRegenerate() {
@@ -245,7 +288,7 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
                     })}
                   </div>
                 </div>
-                <Button size="icon" variant="ghost" onClick={() => setRules(rules.filter((_, j) => j !== i))}>
+                <Button size="icon" variant="ghost" aria-label="Eliminar franja" onClick={() => setRuleToDelete({ index: i, rule: r })}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
@@ -294,6 +337,27 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
           <Button onClick={onAddManual} disabled={!manualDate || !manualTime}>Agregar</Button>
         </div>
       </div>
+
+      <AlertDialog open={!!ruleToDelete} onOpenChange={(open) => { if (!open && !deletingRule) setRuleToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar esta franja horaria?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminará la franja de {ruleToDelete?.rule.startTime} a {ruleToDelete?.rule.endTime} y sus slots futuros libres o bloqueados. Las entrevistas ya reservadas y los horarios manuales no se eliminan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingRule}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deletingRule}
+              onClick={(event) => { event.preventDefault(); confirmDeleteRule(); }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingRule ? <Loader2 className="h-4 w-4 animate-spin" /> : "Eliminar franja y slots"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="rounded-xl border bg-card p-5">
         <h3 className="font-semibold mb-3">Calendario ({data?.slots?.length ?? 0})</h3>
