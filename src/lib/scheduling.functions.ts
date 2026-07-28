@@ -317,6 +317,17 @@ export const saveVacancyScheduling = createServerFn({ method: "POST" })
       const { error } = await context.supabase.from("availability_rules").insert(expanded);
       if (error) throw error;
     }
+
+    // Las franjas cambiaron: borramos los slots futuros generados por reglas
+    // (no tocamos los manuales ni los ya reservados). Se regeneran a continuación.
+    await context.supabase.from("availability_slots")
+      .delete()
+      .eq("vacancy_id", data.vacancyId)
+      .eq("stage", data.stage)
+      .eq("source", "rule")
+      .neq("status", "booked")
+      .gt("start_at", new Date().toISOString());
+
     return { ok: true };
   });
 
