@@ -223,16 +223,36 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
     } catch (e: any) { toast.error(e.message); }
   }
 
-  async function onAddManual() {
-    if (!manualDate || !manualTime) return;
+  async function doAddManual(iso: string) {
     try {
-      const iso = new Date(`${manualDate}T${manualTime}:00`).toISOString();
       await addManual({ data: { vacancyId, stage, startISO: iso, durationMinutes: duration } });
       setManualTime("");
       toast.success("Slot agregado");
       qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId, stage] });
     } catch (e: any) { toast.error(e.message); }
   }
+
+  async function onAddManual() {
+    if (!manualDate || !manualTime) return;
+    const iso = new Date(`${manualDate}T${manualTime}:00`).toISOString();
+    setCheckingOverlaps(true);
+    try {
+      const res = await checkOverlaps({ data: {
+        vacancyId, stage, durationMinutes: duration, rules: [], manualStartISO: iso,
+      } });
+      if (res.count > 0) {
+        setOverlapWarning({
+          count: res.count,
+          overlaps: res.overlaps as Overlap[],
+          onConfirm: () => doAddManual(iso),
+        });
+        return;
+      }
+    } catch { /* noop */ }
+    finally { setCheckingOverlaps(false); }
+    await doAddManual(iso);
+  }
+
 
   async function toggle(slotId: string, current: string) {
     try {
