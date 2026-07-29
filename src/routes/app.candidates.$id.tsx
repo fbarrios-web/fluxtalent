@@ -244,7 +244,7 @@ function CandidateDetail() {
                   <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="interview_invite">Invitar a entrevista</SelectItem>
-                    <SelectItem value="rejection">Descarte amable</SelectItem>
+                    <SelectItem value="rejection">No avanza (amable)</SelectItem>
                     <SelectItem value="followup">Seguimiento</SelectItem>
                   </SelectContent>
                 </Select>
