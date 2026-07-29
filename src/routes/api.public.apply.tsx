@@ -23,12 +23,23 @@ export const Route = createFileRoute("/api/public/apply")({
           const last_name = String(form.get("last_name") ?? "").trim();
           const email = String(form.get("email") ?? "").trim().toLowerCase();
           const phone = String(form.get("phone") ?? "").trim() || null;
-          const linkedin = String(form.get("linkedin") ?? "").trim() || null;
+          const linkedinRaw = String(form.get("linkedin") ?? "").trim();
           const answers = JSON.parse(String(form.get("answers") ?? "{}"));
           const cv = form.get("cv") as File | null;
 
           if (!vacancyId || !first_name || !last_name || !email) {
             return Response.json({ error: "Faltan campos requeridos" }, { status: 400, headers: cors });
+          }
+          if (!phone) {
+            return Response.json({ error: "El teléfono es obligatorio" }, { status: 400, headers: cors });
+          }
+          if (!cv || cv.size === 0) {
+            return Response.json({ error: "El CV es obligatorio" }, { status: 400, headers: cors });
+          }
+          const { normalizeLinkedin } = await import("@/lib/linkedin");
+          const linkedin = linkedinRaw ? normalizeLinkedin(linkedinRaw) : null;
+          if (linkedinRaw && !linkedin) {
+            return Response.json({ error: "El link de LinkedIn no es válido" }, { status: 400, headers: cors });
           }
           if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             return Response.json({ error: "Email inválido" }, { status: 400, headers: cors });
