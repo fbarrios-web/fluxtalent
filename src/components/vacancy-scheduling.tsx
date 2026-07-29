@@ -16,12 +16,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Loader2, Plus, X, RefreshCw } from "lucide-react";
+import { Loader2, Plus, X, RefreshCw, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import {
   getVacancyScheduling, saveVacancyScheduling, regenerateSlots,
-  setSlotStatus, addManualSlot,
+  setSlotStatus, addManualSlot, checkSchedulingOverlaps,
 } from "@/lib/scheduling.functions";
+
 
 const WEEKDAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 const STAGES = [
@@ -56,6 +57,14 @@ export function VacancyScheduling({ vacancyId }: { vacancyId: string }) {
   );
 }
 
+const STAGE_LABELS: Record<string, string> = {
+  interview_1: "Entrevista 1",
+  interview_2: "Entrevista 2",
+  interview_3: "Entrevista 3",
+};
+
+type Overlap = { start: string; vacancyTitle: string; stage: string; sameVacancy: boolean };
+
 function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: StageId }) {
   const qc = useQueryClient();
   const get = useServerFn(getVacancyScheduling);
@@ -63,6 +72,7 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
   const regen = useServerFn(regenerateSlots);
   const setStatus = useServerFn(setSlotStatus);
   const addManual = useServerFn(addManualSlot);
+  const checkOverlaps = useServerFn(checkSchedulingOverlaps);
 
   const { data, isLoading } = useQuery({
     queryKey: ["vac-sched", vacancyId, stage],
@@ -80,6 +90,11 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
   const [manualTime, setManualTime] = useState("");
   const [ruleToDelete, setRuleToDelete] = useState<{ index: number; rule: Rule } | null>(null);
   const [deletingRule, setDeletingRule] = useState(false);
+  const [checkingOverlaps, setCheckingOverlaps] = useState(false);
+  const [overlapWarning, setOverlapWarning] = useState<
+    { count: number; overlaps: Overlap[]; onConfirm: () => void } | null
+  >(null);
+
 
   useEffect(() => {
     if (data) {
@@ -145,7 +160,7 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
     return payload;
   }
 
-  async function onSave() {
+  async function doSave() {
     try {
       const payload = await persistRules(rules);
       let createdMsg = "";
@@ -159,6 +174,24 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
       qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId, stage] });
     } catch (e: any) { toast.error(e.message); }
   }
+
+  async function onSave() {
+    const payload = buildRulesPayload(rules);
+    if (payload.length === 0) { await doSave(); return; }
+    setCheckingOverlaps(true);
+    try {
+      const res = await checkOverlaps({ data: {
+        vacancyId, stage, durationMinutes: duration, days: 30, rules: payload,
+      } });
+      if (res.count > 0) {
+        setOverlapWarning({ count: res.count, overlaps: res.overlaps as Overlap[], onConfirm: doSave });
+        return;
+      }
+    } catch { /* si falla el chequeo, seguimos con el guardado */ }
+    finally { setCheckingOverlaps(false); }
+    await doSave();
+  }
+
 
   async function confirmDeleteRule() {
     if (!ruleToDelete) return;
@@ -190,16 +223,36 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
     } catch (e: any) { toast.error(e.message); }
   }
 
-  async function onAddManual() {
-    if (!manualDate || !manualTime) return;
+  async function doAddManual(iso: string) {
     try {
-      const iso = new Date(`${manualDate}T${manualTime}:00`).toISOString();
       await addManual({ data: { vacancyId, stage, startISO: iso, durationMinutes: duration } });
       setManualTime("");
       toast.success("Slot agregado");
       qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId, stage] });
     } catch (e: any) { toast.error(e.message); }
   }
+
+  async function onAddManual() {
+    if (!manualDate || !manualTime) return;
+    const iso = new Date(`${manualDate}T${manualTime}:00`).toISOString();
+    setCheckingOverlaps(true);
+    try {
+      const res = await checkOverlaps({ data: {
+        vacancyId, stage, durationMinutes: duration, rules: [], manualStartISO: iso,
+      } });
+      if (res.count > 0) {
+        setOverlapWarning({
+          count: res.count,
+          overlaps: res.overlaps as Overlap[],
+          onConfirm: () => doAddManual(iso),
+        });
+        return;
+      }
+    } catch { /* noop */ }
+    finally { setCheckingOverlaps(false); }
+    await doAddManual(iso);
+  }
+
 
   async function toggle(slotId: string, current: string) {
     try {
@@ -318,7 +371,9 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
           ))}
         </div>
         <div className="flex gap-2 pt-2 border-t">
-          <Button onClick={onSave}>Guardar</Button>
+          <Button onClick={onSave} disabled={checkingOverlaps}>
+            {checkingOverlaps ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" />Verificando…</> : "Guardar"}
+          </Button>
           <Button variant="outline" onClick={onRegenerate}><RefreshCw className="h-4 w-4 mr-1" />Regenerar 30 días</Button>
         </div>
       </div>
@@ -334,9 +389,50 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
             <Label>Hora</Label>
             <Input type="time" value={manualTime} onChange={e => setManualTime(e.target.value)} />
           </div>
-          <Button onClick={onAddManual} disabled={!manualDate || !manualTime}>Agregar</Button>
+          <Button onClick={onAddManual} disabled={!manualDate || !manualTime || checkingOverlaps}>Agregar</Button>
         </div>
       </div>
+
+      <AlertDialog open={!!overlapWarning} onOpenChange={(open) => { if (!open) setOverlapWarning(null); }}>
+        <AlertDialogContent className="max-w-2xl">
+          <AlertDialogHeader>
+            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
+              <AlertTriangle className="h-8 w-8 text-destructive" />
+            </div>
+            <AlertDialogTitle className="text-center text-xl">
+              Se detectaron {overlapWarning?.count} horarios superpuestos
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              Estos horarios se pisan con agendas de otras vacantes o de otras etapas de esta misma búsqueda.
+              Si continuás, ambos horarios quedarán disponibles y podrías recibir dos entrevistas a la misma hora.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="max-h-64 overflow-y-auto rounded-lg border divide-y text-sm">
+            {overlapWarning?.overlaps.map((o, i) => (
+              <div key={i} className="flex items-center justify-between gap-3 px-3 py-2">
+                <span className="font-medium">
+                  {new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short" }).format(new Date(o.start))}
+                </span>
+                <span className="text-right text-muted-foreground">
+                  {o.sameVacancy ? "Esta vacante" : o.vacancyTitle} · {STAGE_LABELS[o.stage] ?? o.stage}
+                </span>
+              </div>
+            ))}
+            {overlapWarning && overlapWarning.count > overlapWarning.overlaps.length && (
+              <div className="px-3 py-2 text-xs text-muted-foreground">
+                y {overlapWarning.count - overlapWarning.overlaps.length} más…
+              </div>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar y elegir otro horario</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { const fn = overlapWarning?.onConfirm; setOverlapWarning(null); fn?.(); }}>
+              Continuar igual
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
       <AlertDialog open={!!ruleToDelete} onOpenChange={(open) => { if (!open && !deletingRule) setRuleToDelete(null); }}>
         <AlertDialogContent>
