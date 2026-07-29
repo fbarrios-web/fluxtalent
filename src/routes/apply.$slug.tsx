@@ -35,6 +35,12 @@ function ApplyPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!vacancy) return;
+    if (!cv) { toast.error("Adjuntá tu CV para postularte."); return; }
+    if (!form.phone.trim()) { toast.error("El teléfono es obligatorio."); return; }
+    if (form.linkedin.trim() && !isValidLinkedin(form.linkedin)) {
+      toast.error("El link de LinkedIn no es válido. Ej: linkedin.com/in/tu-usuario");
+      return;
+    }
     setSubmitting(true);
     const fd = new FormData();
     fd.set("vacancy_id", vacancy.id);
