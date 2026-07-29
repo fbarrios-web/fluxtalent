@@ -168,6 +168,14 @@ export const Route = createFileRoute("/api/public/apply")({
             return Response.json({ error: "Error al procesar la postulación. Intentá de nuevo." }, { status: 500, headers: cors });
           }
 
+          // Descarte automático por respuestas de filtro: mail de "No avanza".
+          if (autoDiscard) {
+            try {
+              const { sendAutoRejectionEmail } = await import("@/lib/stage-email.server");
+              await sendAutoRejectionEmail(supabaseAdmin, appRow.id);
+            } catch (e) { console.error("[apply] auto-reject email", e); }
+          }
+
           // Best-effort low-latency kick: dispatch the analysis right away so
           // ideal-case CVs finish in a few seconds. The handler is cancelled
           // when the response is sent on Cloudflare Workers, so this is NOT

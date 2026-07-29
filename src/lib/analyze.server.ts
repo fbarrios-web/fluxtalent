@@ -117,7 +117,11 @@ Extraé experiencia, formación y skills del CV. Calculá match (0-100) general 
         application_id: app.id, type: "auto_reject",
         payload: { reason: `match ${result.match_score}% < ${min}%` },
       });
+      // Dispara el email de "No avanza" (best-effort: no rompe el análisis).
+      const { sendAutoRejectionEmail } = await import("@/lib/stage-email.server");
+      await sendAutoRejectionEmail(supabaseAdmin, app.id);
     }
+
   } catch (e) {
     await supabaseAdmin.from("applications").update({ ai_status: "error" }).eq("id", app.id);
     throw e;

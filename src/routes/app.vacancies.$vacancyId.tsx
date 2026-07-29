@@ -26,7 +26,7 @@ const STAGES = [
   { id: "interview_2", label: "Entrevista 2",  color: "bg-indigo-200 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200" },
   { id: "interview_3", label: "Entrevista 3",  color: "bg-violet-200 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200" },
   { id: "hired",       label: "Contratado",    color: "bg-emerald-200 text-emerald-900 dark:bg-emerald-500/20 dark:text-emerald-200" },
-  { id: "rejected",    label: "Descartado",    color: "bg-red-200 text-red-800 dark:bg-red-500/20 dark:text-red-200" },
+  { id: "rejected",    label: "No avanza",      color: "bg-red-200 text-red-800 dark:bg-red-500/20 dark:text-red-200" },
 ] as const;
 
 export const Route = createFileRoute("/app/vacancies/$vacancyId")({
@@ -97,7 +97,7 @@ function VacancyDetail() {
     qc.invalidateQueries({ queryKey: ["vacancy-apps", vacancyId] });
     if ((res as any)?.inviteWarning) toast.warning((res as any).inviteWarning);
     else if (stage.startsWith("interview_")) toast.success("Invitación enviada al postulante");
-    else if (stage === "rejected") toast.success("Email de descarte enviado");
+    else if (stage === "rejected") toast.success("Email de \"No avanza\" enviado");
   }
 
   return (
