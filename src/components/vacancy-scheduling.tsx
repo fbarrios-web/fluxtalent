@@ -371,7 +371,9 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
           ))}
         </div>
         <div className="flex gap-2 pt-2 border-t">
-          <Button onClick={onSave}>Guardar</Button>
+          <Button onClick={onSave} disabled={checkingOverlaps}>
+            {checkingOverlaps ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" />Verificando…</> : "Guardar"}
+          </Button>
           <Button variant="outline" onClick={onRegenerate}><RefreshCw className="h-4 w-4 mr-1" />Regenerar 30 días</Button>
         </div>
       </div>
@@ -387,9 +389,50 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
             <Label>Hora</Label>
             <Input type="time" value={manualTime} onChange={e => setManualTime(e.target.value)} />
           </div>
-          <Button onClick={onAddManual} disabled={!manualDate || !manualTime}>Agregar</Button>
+          <Button onClick={onAddManual} disabled={!manualDate || !manualTime || checkingOverlaps}>Agregar</Button>
         </div>
       </div>
+
+      <AlertDialog open={!!overlapWarning} onOpenChange={(open) => { if (!open) setOverlapWarning(null); }}>
+        <AlertDialogContent className="max-w-2xl">
+          <AlertDialogHeader>
+            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
+              <AlertTriangle className="h-8 w-8 text-destructive" />
+            </div>
+            <AlertDialogTitle className="text-center text-xl">
+              Se detectaron {overlapWarning?.count} horarios superpuestos
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              Estos horarios se pisan con agendas de otras vacantes o de otras etapas de esta misma búsqueda.
+              Si continuás, ambos horarios quedarán disponibles y podrías recibir dos entrevistas a la misma hora.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="max-h-64 overflow-y-auto rounded-lg border divide-y text-sm">
+            {overlapWarning?.overlaps.map((o, i) => (
+              <div key={i} className="flex items-center justify-between gap-3 px-3 py-2">
+                <span className="font-medium">
+                  {new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short" }).format(new Date(o.start))}
+                </span>
+                <span className="text-right text-muted-foreground">
+                  {o.sameVacancy ? "Esta vacante" : o.vacancyTitle} · {STAGE_LABELS[o.stage] ?? o.stage}
+                </span>
+              </div>
+            ))}
+            {overlapWarning && overlapWarning.count > overlapWarning.overlaps.length && (
+              <div className="px-3 py-2 text-xs text-muted-foreground">
+                y {overlapWarning.count - overlapWarning.overlaps.length} más…
+              </div>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar y elegir otro horario</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { const fn = overlapWarning?.onConfirm; setOverlapWarning(null); fn?.(); }}>
+              Continuar igual
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
       <AlertDialog open={!!ruleToDelete} onOpenChange={(open) => { if (!open && !deletingRule) setRuleToDelete(null); }}>
         <AlertDialogContent>
