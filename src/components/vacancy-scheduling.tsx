@@ -160,7 +160,7 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
     return payload;
   }
 
-  async function onSave() {
+  async function doSave() {
     try {
       const payload = await persistRules(rules);
       let createdMsg = "";
@@ -174,6 +174,24 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
       qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId, stage] });
     } catch (e: any) { toast.error(e.message); }
   }
+
+  async function onSave() {
+    const payload = buildRulesPayload(rules);
+    if (payload.length === 0) { await doSave(); return; }
+    setCheckingOverlaps(true);
+    try {
+      const res = await checkOverlaps({ data: {
+        vacancyId, stage, durationMinutes: duration, days: 30, rules: payload,
+      } });
+      if (res.count > 0) {
+        setOverlapWarning({ count: res.count, overlaps: res.overlaps as Overlap[], onConfirm: doSave });
+        return;
+      }
+    } catch { /* si falla el chequeo, seguimos con el guardado */ }
+    finally { setCheckingOverlaps(false); }
+    await doSave();
+  }
+
 
   async function confirmDeleteRule() {
     if (!ruleToDelete) return;
