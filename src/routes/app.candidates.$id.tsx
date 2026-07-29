@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { analyzeApplication, aiInterviewQuestions, aiDraftEmail, aiAnalyzeInterview } from "@/lib/ai.functions";
 import { moveApplicationStage, getSignedCvUrl } from "@/lib/recruiting.functions";
 import { generateCandidateReport } from "@/lib/candidate-report";
+import { normalizeLinkedin } from "@/lib/linkedin";
 import { ArrowLeft, Sparkles, Loader2, FileText, Mail, MessageSquare, AlertTriangle, CheckCircle2, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -162,7 +163,7 @@ function CandidateDetail() {
               <h1 className="font-display text-4xl">{app.first_name} {app.last_name}</h1>
               <p className="text-muted-foreground">{app.email}{app.phone ? ` · ${app.phone}` : ""}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                {app.linkedin && <a href={app.linkedin} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">LinkedIn</a>}
+                {app.linkedin && normalizeLinkedin(app.linkedin) && <a href={normalizeLinkedin(app.linkedin)!} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">LinkedIn</a>}
                 {app.cv_url && <button onClick={openCv} className="inline-flex items-center gap-1 text-xs text-primary hover:underline"><FileText className="h-3 w-3" /> Ver CV</button>}
               </div>
             </div>

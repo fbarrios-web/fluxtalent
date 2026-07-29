@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { isValidLinkedin } from "@/lib/linkedin";
 
 export const Route = createFileRoute("/apply/$slug")({
   component: ApplyPage,
@@ -35,6 +36,12 @@ function ApplyPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!vacancy) return;
+    if (!cv) { toast.error("Adjuntá tu CV para postularte."); return; }
+    if (!form.phone.trim()) { toast.error("El teléfono es obligatorio."); return; }
+    if (form.linkedin.trim() && !isValidLinkedin(form.linkedin)) {
+      toast.error("El link de LinkedIn no es válido. Ej: linkedin.com/in/tu-usuario");
+      return;
+    }
     setSubmitting(true);
     const fd = new FormData();
     fd.set("vacancy_id", vacancy.id);
@@ -85,16 +92,16 @@ function ApplyPage() {
             <div><Label>Nombre *</Label><Input required value={form.first_name} onChange={e => setForm(f => ({ ...f, first_name: e.target.value }))} /></div>
             <div><Label>Apellido *</Label><Input required value={form.last_name} onChange={e => setForm(f => ({ ...f, last_name: e.target.value }))} /></div>
             <div><Label>Email *</Label><Input required type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></div>
-            <div><Label>Teléfono</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
+            <div><Label>Teléfono *</Label><Input required value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
             <div className="md:col-span-2"><Label>LinkedIn</Label><Input placeholder="https://linkedin.com/in/…" value={form.linkedin} onChange={e => setForm(f => ({ ...f, linkedin: e.target.value }))} /></div>
           </div>
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6">
-          <h3 className="font-semibold">CV (PDF)</h3>
+          <h3 className="font-semibold">CV (PDF) *</h3>
           <label className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border p-6 text-sm text-muted-foreground hover:border-primary hover:text-foreground">
             <Upload className="h-4 w-4" />
-            {cv ? cv.name : "Adjuntar CV (PDF, máx 10MB)"}
+            {cv ? cv.name : "Adjuntar CV (PDF, máx 10MB) — obligatorio"}
             <input type="file" accept="application/pdf" className="hidden" onChange={e => setCv(e.target.files?.[0] ?? null)} />
           </label>
         </div>
