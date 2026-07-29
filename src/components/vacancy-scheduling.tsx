@@ -57,6 +57,14 @@ export function VacancyScheduling({ vacancyId }: { vacancyId: string }) {
   );
 }
 
+const STAGE_LABELS: Record<string, string> = {
+  interview_1: "Entrevista 1",
+  interview_2: "Entrevista 2",
+  interview_3: "Entrevista 3",
+};
+
+type Overlap = { start: string; vacancyTitle: string; stage: string; sameVacancy: boolean };
+
 function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: StageId }) {
   const qc = useQueryClient();
   const get = useServerFn(getVacancyScheduling);
@@ -64,6 +72,7 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
   const regen = useServerFn(regenerateSlots);
   const setStatus = useServerFn(setSlotStatus);
   const addManual = useServerFn(addManualSlot);
+  const checkOverlaps = useServerFn(checkSchedulingOverlaps);
 
   const { data, isLoading } = useQuery({
     queryKey: ["vac-sched", vacancyId, stage],
@@ -81,6 +90,11 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
   const [manualTime, setManualTime] = useState("");
   const [ruleToDelete, setRuleToDelete] = useState<{ index: number; rule: Rule } | null>(null);
   const [deletingRule, setDeletingRule] = useState(false);
+  const [checkingOverlaps, setCheckingOverlaps] = useState(false);
+  const [overlapWarning, setOverlapWarning] = useState<
+    { count: number; overlaps: Overlap[]; onConfirm: () => void } | null
+  >(null);
+
 
   useEffect(() => {
     if (data) {
