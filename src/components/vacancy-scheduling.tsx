@@ -16,12 +16,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Loader2, Plus, X, RefreshCw } from "lucide-react";
+import { Loader2, Plus, X, RefreshCw, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import {
   getVacancyScheduling, saveVacancyScheduling, regenerateSlots,
-  setSlotStatus, addManualSlot,
+  setSlotStatus, addManualSlot, checkSchedulingOverlaps,
 } from "@/lib/scheduling.functions";
+
 
 const WEEKDAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 const STAGES = [
