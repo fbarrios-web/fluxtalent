@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { analyzeApplication, aiInterviewQuestions, aiDraftEmail, aiAnalyzeInterview } from "@/lib/ai.functions";
 import { moveApplicationStage, getSignedCvUrl } from "@/lib/recruiting.functions";
 import { generateCandidateReport } from "@/lib/candidate-report";
+import { normalizeLinkedin } from "@/lib/linkedin";
 import { ArrowLeft, Sparkles, Loader2, FileText, Mail, MessageSquare, AlertTriangle, CheckCircle2, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
