@@ -331,7 +331,49 @@ export const saveVacancyScheduling = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const checkSchedulingOverlaps = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({
+    vacancyId: z.string().uuid(),
+    stage: stageEnum.default("interview_1"),
+    durationMinutes: z.number().int().min(15).max(240),
+    days: z.number().int().min(7).max(60).default(30),
+    rules: z.array(z.object({
+      weekdays: z.array(z.number().int().min(0).max(6)).min(1),
+      startTime: z.string().regex(/^\d{2}:\d{2}$/),
+      endTime: z.string().regex(/^\d{2}:\d{2}$/),
+      effectiveFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+      effectiveUntil: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+    })).max(50).default([]),
+    manualStartISO: z.string().optional().nullable(),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: vac } = await context.supabase.from("vacancies")
+      .select("id, org_id").eq("id", data.vacancyId).maybeSingle();
+    if (!vac) throw new Error("Vacante no encontrada");
+    const { data: org } = await context.supabase.from("organizations")
+      .select("timezone").eq("id", vac.org_id).maybeSingle();
+    const tz = org?.timezone || "America/Argentina/Buenos_Aires";
+
+    const { expandRulesToSlots, findOverlaps } = await import("@/lib/scheduling-overlap.server");
+    const candidates = data.manualStartISO
+      ? [{
+          start: new Date(data.manualStartISO).toISOString(),
+          end: new Date(new Date(data.manualStartISO).getTime() + data.durationMinutes * 60_000).toISOString(),
+        }]
+      : expandRulesToSlots(data.rules, data.durationMinutes, tz, data.days);
+
+    const overlaps = await findOverlaps(context.supabase, {
+      orgId: vac.org_id,
+      vacancyId: data.vacancyId,
+      stage: data.stage,
+      candidates,
+    });
+    return { count: overlaps.length, overlaps: overlaps.slice(0, 30), timezone: tz };
+  });
+
 export const regenerateSlots = createServerFn({ method: "POST" })
+
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({
     vacancyId: z.string().uuid(),
