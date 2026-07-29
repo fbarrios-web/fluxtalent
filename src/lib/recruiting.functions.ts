@@ -347,7 +347,8 @@ export const manualCreateApplication = createServerFn({ method: "POST" })
     const { data: appRow, error } = await supabase.from("applications").insert({
       vacancy_id: vac.id, org_id: vac.org_id,
       first_name: data.first_name, last_name: data.last_name,
-      email: data.email, phone: data.phone || null, linkedin: data.linkedin || null,
+      email: data.email, phone: data.phone || null,
+      linkedin: (await import("@/lib/linkedin")).normalizeLinkedin(data.linkedin),
       cv_url, source: "manual",
       ai_status: analyzeAi ? "pending" : "skipped",
     }).select("id").single();
