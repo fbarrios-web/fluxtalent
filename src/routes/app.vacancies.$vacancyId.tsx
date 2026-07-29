@@ -126,7 +126,7 @@ function VacancyDetail() {
           )}
           <EditVacancyDialog vacancy={v} onSaved={() => qc.invalidateQueries({ queryKey: ["vacancy", vacancyId] })} />
           <VacancyImageDialog vacancy={v} applyUrl={applyUrl} />
-          <AddCandidateDialog vacancyId={v.id} onAdded={() => qc.invalidateQueries({ queryKey: ["vacancy-apps", vacancyId] })} />
+          
           <BulkUploadDialog vacancyId={v.id} onDone={() => qc.invalidateQueries({ queryKey: ["vacancy-apps", vacancyId] })} />
           <Button variant="outline" onClick={copyLink}><Copy className="mr-2 h-3.5 w-3.5" /> Copiar link</Button>
           <Button
@@ -812,10 +812,10 @@ function BulkUploadDialog({ vacancyId, onDone }: { vacancyId: string; onDone: ()
 
   return (
     <>
-      <Button variant="outline" onClick={() => setOpen(true)}><Upload className="mr-2 h-3.5 w-3.5" /> Carga masiva</Button>
+      <Button variant="outline" onClick={() => setOpen(true)}><Upload className="mr-2 h-3.5 w-3.5" /> Cargar CV/s</Button>
       <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
         <DialogContent className="max-h-[85vh] max-w-xl overflow-y-auto">
-          <DialogHeader><DialogTitle>Carga masiva de CVs</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Cargar CV/s</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
               Adjuntá uno o varios CVs (PDF). La IA va a leer automáticamente nombre y email de cada archivo y crear el candidato en la vacante.
