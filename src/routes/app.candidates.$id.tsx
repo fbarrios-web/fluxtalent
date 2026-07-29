@@ -19,10 +19,10 @@ const STAGES = ["received", "interview_1", "interview_2", "interview_3", "hired"
 
 const STAGE_LABEL: Record<string, string> = {
   received: "Recibidos", interview_1: "Entrevista 1", interview_2: "Entrevista 2",
-  interview_3: "Entrevista 3", hired: "Contratado", rejected: "Descartado",
+  interview_3: "Entrevista 3", hired: "Contratado", rejected: "No avanza",
 };
 const EMAIL_KIND_LABEL: Record<string, string> = {
-  rejection: "descarte", interview_invite: "invitación a entrevista",
+  rejection: "no avanza", interview_invite: "invitación a entrevista",
   offer: "oferta", followup: "seguimiento", custom: "personalizado",
 };
 function eventLabel(e: any): string {
@@ -30,7 +30,9 @@ function eventLabel(e: any): string {
   const p = e?.payload ?? {};
   if (t === "stage_change") return `Movido a ${STAGE_LABEL[p.stage] ?? p.stage}`;
   if (t === "email_sent") return `Email enviado${p.kind ? ` (${EMAIL_KIND_LABEL[p.kind] ?? p.kind})` : ""}`;
-  if (t === "rejection_email_sent") return "Email de descarte enviado";
+  if (t === "rejection_email_sent") return "Email de \"No avanza\" enviado";
+  if (t === "auto_reject") return `Movido a No avanza automáticamente${p.reason ? ` (${p.reason})` : ""}`;
+
   if (t === "offer_email_sent") return "Email de oferta enviado";
   if (t === "interview_invite_sent") return "Invitación a entrevista enviada";
   if (t === "interview_scheduled") return "Entrevista agendada";
