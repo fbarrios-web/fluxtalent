@@ -233,16 +233,19 @@ function SubscriptionPage() {
             <button
               type="button"
               onClick={() => setCurrency("usd")}
-              className={`px-4 py-1.5 ${currency === "usd" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
+              className={`flex items-center gap-2 px-4 py-1.5 ${currency === "usd" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
             >
               USD · Tarjeta internacional
+              <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
+                Próximamente
+              </span>
             </button>
           </div>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           {currency === "ars"
             ? "Cobramos en pesos argentinos vía Mercado Pago."
-            : "Cobramos en dólares vía Paddle. Ideal para clientes fuera de Argentina."}
+            : "El pago en dólares está en etapa final de habilitación. Si necesitás pagar en USD, escribinos a soporte@fluxtalent.com.ar."}
         </p>
 
         {currency === "usd" && <div className="mt-3"><PaymentTestModeBanner /></div>}

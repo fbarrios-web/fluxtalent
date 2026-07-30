@@ -216,15 +216,18 @@ function SetupPage() {
               <button
                 type="button"
                 onClick={() => setCurrency("usd")}
-                className={`rounded-full px-4 py-1 ${currency === "usd" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                className={`flex items-center gap-2 rounded-full px-4 py-1 ${currency === "usd" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
               >
                 Dólares (USD)
+                <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
+                  Próximamente
+                </span>
               </button>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
               {currency === "ars"
                 ? "Débito automático mensual con Mercado Pago."
-                : "Pago con tarjeta internacional, suscripción mensual automática."}
+                : "El pago en dólares está en etapa final de habilitación. Escribinos a soporte@fluxtalent.com.ar si necesitás pagar en USD."}
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2">

@@ -227,14 +227,24 @@ function Landing() {
                   key={c}
                   type="button"
                   onClick={() => setCurrency(c)}
-                  className={`rounded-full px-4 py-1.5 font-medium transition ${
+                  className={`flex items-center gap-2 rounded-full px-4 py-1.5 font-medium transition ${
                     currency === c ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {c === "ars" ? "Pesos (ARS)" : "Dólares (USD)"}
+                  {c === "usd" && (
+                    <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
+                      Próximamente
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
+            {currency === "usd" && (
+              <p className="mt-3 text-xs text-muted-foreground">
+                El pago en dólares está en etapa final de habilitación.
+              </p>
+            )}
           </div>
 
           <div className="mt-12 grid gap-6 md:grid-cols-3">
