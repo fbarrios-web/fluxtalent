@@ -75,8 +75,9 @@ async function handleSubscriptionCreated(data: any, env: PaddleEnv) {
 
   // Activate the plan on the organization
   const mapping = planFromPriceId(priceId);
+  let orgUpdateErr: any = null;
   if (mapping) {
-    await getSupabase().from("organizations").update({
+    const { error } = await getSupabase().from("organizations").update({
       subscription_status: "active",
       plan_price_ars: mapping.priceArs,
       plan_currency: "usd",
@@ -84,10 +85,20 @@ async function handleSubscriptionCreated(data: any, env: PaddleEnv) {
       paddle_customer_id: customerId,
       current_period_end: currentBillingPeriod?.endsAt,
       last_payment_at: new Date().toISOString(),
-      // Reset cycle counters
-      new_vacancies_used: 0,
-      cvs_used: 0,
+      grace_until: null,
     } as any).eq("id", orgId);
+    if (orgUpdateErr) {
+      console.error("[paddle.webhook] org activation failed:", orgUpdateErr.message);
+    }
+  }
+
+  // Una sola suscripción activa por org: si venía pagando en ARS, cancelamos
+  // la preapproval de Mercado Pago para que no haya doble cobro.
+  try {
+    const { cancelMercadoPagoSubscription } = await import("@/lib/billing-provider.server");
+    await cancelMercadoPagoSubscription(getSupabase(), orgId);
+  } catch (e) {
+    console.error("[paddle.webhook] MP auto-cancel failed", e);
   }
 
   // Fetch user email + org name for notifications
@@ -145,17 +156,19 @@ async function handleSubscriptionUpdated(data: any, env: PaddleEnv) {
     const mapping = planFromPriceId(priceId);
     if (mapping) {
       const planChanged = prevRow.price_id && prevRow.price_id !== priceId;
+      const { graceDeadline } = await import("@/lib/entitlement");
       const orgPatch: Record<string, any> = {
         plan_price_ars: mapping.priceArs,
         plan_currency: "usd",
         current_period_end: currentBillingPeriod?.endsAt,
         subscription_status: status === "past_due" ? "past_due" : "active",
+        // 2 días de gracia mientras Paddle reintenta el cobro; al volver a
+        // activo limpiamos la gracia.
+        grace_until: status === "past_due" ? graceDeadline() : null,
       };
-      if (planChanged) {
-        orgPatch.new_vacancies_used = 0;
-        orgPatch.cvs_used = 0;
-      }
-      await getSupabase().from("organizations").update(orgPatch).eq("id", prevRow.org_id);
+      void planChanged;
+      const { error: orgErr } = await getSupabase().from("organizations").update(orgPatch).eq("id", prevRow.org_id);
+      if (orgErr) console.error("[paddle.webhook] org sync failed:", orgErr.message);
     }
   }
 }
@@ -206,7 +219,7 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
   const currency = (details?.totals?.currencyCode ?? "USD").toLowerCase();
   const amount = totalMinor / 100;
 
-  await getSupabase().from("payments").insert({
+  await getSupabase().from("payments").upsert({
     org_id: resolvedOrgId,
     provider: "paddle",
     provider_payment_id: id,
@@ -215,11 +228,50 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
     status: "approved",
     paid_at: billedAt ?? new Date().toISOString(),
     raw: { subscriptionId, customerId, env, totals: details?.totals },
-  } as any);
+  } as any, { onConflict: "provider,provider_payment_id" });
 
   await getSupabase().from("organizations")
     .update({ last_payment_at: billedAt ?? new Date().toISOString() } as any)
     .eq("id", resolvedOrgId);
+}
+
+/** Cobro rechazado: 2 días de gracia + aviso al usuario. */
+async function handleTransactionPaymentFailed(data: any, env: PaddleEnv) {
+  const { id, subscriptionId, customData } = data;
+  let orgId: string | undefined = customData?.orgId;
+  if (!orgId && subscriptionId) {
+    const { data: sub } = await getSupabase()
+      .from("subscriptions")
+      .select("org_id")
+      .eq("paddle_subscription_id", subscriptionId)
+      .eq("environment", env)
+      .maybeSingle();
+    orgId = (sub as any)?.org_id;
+  }
+  if (!orgId) return;
+
+  const { graceDeadline } = await import("@/lib/entitlement");
+  const until = graceDeadline();
+  await getSupabase().from("organizations").update({
+    subscription_status: "past_due",
+    grace_until: until,
+  } as any).eq("id", orgId);
+
+  await getSupabase().from("activity_events").insert({
+    org_id: orgId,
+    event_type: "payment.failed",
+    metadata: { provider: "paddle", transaction_id: id, grace_until: until },
+  });
+
+  const { data: owner } = await getSupabase()
+    .from("profiles").select("id").eq("org_id", orgId)
+    .order("created_at", { ascending: true }).limit(1).maybeSingle();
+  if (owner?.id) {
+    const { data: authUser } = await getSupabase().auth.admin.getUserById(owner.id);
+    const email = authUser?.user?.email;
+    if (email) await sendUserEmail(email, "capacity-warning", { reason: "payment_failed", graceUntil: until });
+  }
+  await notifySupport("Cobro USD rechazado", `Org: ${orgId}\nTransacción: ${id}\nGracia hasta: ${until}`);
 }
 
 async function handleWebhook(req: Request, env: PaddleEnv) {
@@ -236,6 +288,9 @@ async function handleWebhook(req: Request, env: PaddleEnv) {
       break;
     case EventName.TransactionCompleted:
       await handleTransactionCompleted(event.data, env);
+      break;
+    case EventName.TransactionPaymentFailed:
+      await handleTransactionPaymentFailed(event.data, env);
       break;
     default:
       console.log("Unhandled event:", event.eventType);
