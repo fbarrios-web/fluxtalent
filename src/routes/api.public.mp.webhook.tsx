@@ -179,7 +179,7 @@ export const Route = createFileRoute("/api/public/mp/webhook")({
                 pa.next_payment_date ?? new Date(Date.now() + 30 * 86400000).toISOString(),
             };
             if (plan && plan.priceArs > 0) patch.plan_price_ars = plan.priceArs;
-            await supabaseAdmin.from("organizations").update(patch).eq("id", orgId);
+            await supabaseAdmin.from("organizations").update(patch as any).eq("id", orgId);
             await supabaseAdmin.from("activity_events").insert({
               org_id: orgId,
               event_type: "mp.preapproval_authorized",
