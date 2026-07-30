@@ -75,9 +75,8 @@ async function handleSubscriptionCreated(data: any, env: PaddleEnv) {
 
   // Activate the plan on the organization
   const mapping = planFromPriceId(priceId);
-  let orgUpdateErr: any = null;
   if (mapping) {
-    const { error } = await getSupabase().from("organizations").update({
+    const { error: orgUpdateErr } = await getSupabase().from("organizations").update({
       subscription_status: "active",
       plan_price_ars: mapping.priceArs,
       plan_currency: "usd",
@@ -91,6 +90,7 @@ async function handleSubscriptionCreated(data: any, env: PaddleEnv) {
       console.error("[paddle.webhook] org activation failed:", orgUpdateErr.message);
     }
   }
+
 
   // Una sola suscripción activa por org: si venía pagando en ARS, cancelamos
   // la preapproval de Mercado Pago para que no haya doble cobro.
