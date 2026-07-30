@@ -26,6 +26,8 @@ function Landing() {
   const getPricing = useServerFn(getPlanPricing);
   const { data: overrides } = useQuery({ queryKey: ["plan-pricing"], queryFn: () => getPricing() });
   const plans = mergePlanOverrides(overrides);
+  const [currency, setCurrency] = useState<"ars" | "usd">("ars");
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur">
