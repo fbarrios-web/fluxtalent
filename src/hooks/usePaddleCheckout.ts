@@ -1,8 +1,11 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { initializePaddle, getPaddlePriceId } from "@/lib/paddle";
 
 export function usePaddleCheckout() {
   const [loading, setLoading] = useState(false);
+  const qc = useQueryClient();
 
   const openCheckout = async (options: {
     priceId: string;
@@ -27,6 +30,18 @@ export function usePaddleCheckout() {
         items: [{ priceId: paddlePriceId, quantity: options.quantity ?? 1 }],
         customer: options.customerEmail ? { email: options.customerEmail } : undefined,
         customData: options.customData,
+        eventCallback: (ev: any) => {
+          if (ev?.name === "checkout.completed") {
+            toast.success("¡Pago confirmado! Estamos activando tu plan…");
+            // El webhook activa la org; refrescamos unas veces hasta verlo.
+            [1500, 4000, 8000, 15000].forEach(ms =>
+              setTimeout(() => {
+                qc.invalidateQueries({ queryKey: ["my-subscription"] });
+                qc.invalidateQueries({ queryKey: ["usage-summary"] });
+              }, ms),
+            );
+          }
+        },
         settings: {
           displayMode: "overlay",
           ...(successUrl ? { successUrl } : {}),

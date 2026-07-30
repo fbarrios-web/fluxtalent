@@ -105,13 +105,21 @@ export const Route = createFileRoute("/api/public/mp/webhook")({
 
           if (p.status === "approved") {
             const periodEnd = new Date(Date.now() + 30 * 86400000).toISOString();
-            const update: { subscription_status: "active"; current_period_end: string; last_payment_at: string; plan_price_ars: number } = {
+            const update = {
               subscription_status: "active",
               current_period_end: periodEnd,
               last_payment_at: p.date_approved ?? new Date().toISOString(),
               plan_price_ars: plan.priceArs > 0 ? plan.priceArs : txAmount,
-            };
-            await supabaseAdmin.from("organizations").update(update).eq("id", orgId);
+              plan_currency: "ars",
+              grace_until: null,
+            } as any;
+            const { error: orgErr } = await supabaseAdmin.from("organizations").update(update).eq("id", orgId);
+            if (orgErr) console.error("[mp.webhook] org activation failed:", orgErr.message);
+            // Si la org tenía suscripción en USD, la cancelamos: una sola activa.
+            try {
+              const { cancelPaddleSubscription } = await import("@/lib/billing-provider.server");
+              await cancelPaddleSubscription(supabaseAdmin, orgId);
+            } catch (e) { console.error("[mp.webhook] paddle auto-cancel failed", e); }
             await supabaseAdmin.from("activity_events").insert({
               org_id: orgId,
               event_type: "mp.payment_approved",
@@ -138,7 +146,18 @@ export const Route = createFileRoute("/api/public/mp/webhook")({
               }
             } catch (e) { console.error("[mp.webhook] email confirm failed", e); }
           } else if (["rejected", "cancelled", "refunded"].includes(p.status)) {
-            await supabaseAdmin.from("organizations").update({ subscription_status: "past_due" }).eq("id", orgId);
+            // Cobro rechazado: 2 días de gracia mientras Mercado Pago reintenta.
+            const { graceDeadline } = await import("@/lib/entitlement");
+            const graceUntil = graceDeadline();
+            await supabaseAdmin
+              .from("organizations")
+              .update({ subscription_status: "past_due", grace_until: graceUntil } as any)
+              .eq("id", orgId);
+            await supabaseAdmin.from("activity_events").insert({
+              org_id: orgId,
+              event_type: "payment.failed",
+              metadata: { provider: "mercadopago", payment_id: String(p.id), status: p.status, grace_until: graceUntil },
+            });
           }
         } else if (type === "preapproval" || type === "subscription_preapproval") {
           const pa: any = await fetchMP(`/preapproval/${dataId}`);
@@ -149,9 +168,15 @@ export const Route = createFileRoute("/api/public/mp/webhook")({
           const { PLANS } = await import("@/lib/plans");
           const plan = planIdRaw ? PLANS.find(x => x.id === planIdRaw) : undefined;
           if (pa.status === "authorized") {
-            const patch: { subscription_status: "active"; mp_preapproval_id: string; plan_price_ars?: number } = {
+            // Fijamos el fin de período: sin esto, cancelar dejaba a la org sin
+            // acceso al instante en vez de mantener el mes ya pagado.
+            const patch: Record<string, any> = {
               subscription_status: "active",
               mp_preapproval_id: pa.id,
+              plan_currency: "ars",
+              grace_until: null,
+              current_period_end:
+                pa.next_payment_date ?? new Date(Date.now() + 30 * 86400000).toISOString(),
             };
             if (plan && plan.priceArs > 0) patch.plan_price_ars = plan.priceArs;
             await supabaseAdmin.from("organizations").update(patch).eq("id", orgId);
