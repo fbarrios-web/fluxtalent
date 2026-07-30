@@ -4,7 +4,9 @@ import {
   Brain, FileText, MessageSquareText, Mic, PenTool, Zap, TrendingUp,
 } from "lucide-react";
 import { FluxLogo } from "@/components/flux-logo";
-import { TRIAL_DAYS, formatArs, mergePlanOverrides } from "@/lib/plans";
+import { TRIAL_DAYS, formatArs, formatUsd, mergePlanOverrides } from "@/lib/plans";
+import { useState } from "react";
+
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getPlanPricing } from "@/lib/pricing.functions";
@@ -24,6 +26,8 @@ function Landing() {
   const getPricing = useServerFn(getPlanPricing);
   const { data: overrides } = useQuery({ queryKey: ["plan-pricing"], queryFn: () => getPricing() });
   const plans = mergePlanOverrides(overrides);
+  const [currency, setCurrency] = useState<"ars" | "usd">("ars");
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur">
@@ -217,6 +221,20 @@ function Landing() {
             <p className="mt-3 text-muted-foreground">
               El plan <strong>Free</strong> incluye <strong>{TRIAL_DAYS} días gratis</strong>, sin tarjeta. Los planes pagos no tienen período de prueba.
             </p>
+            <div className="mt-6 inline-flex rounded-full border border-border bg-card p-1 text-sm">
+              {(["ars", "usd"] as const).map(c => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCurrency(c)}
+                  className={`rounded-full px-4 py-1.5 font-medium transition ${
+                    currency === c ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {c === "ars" ? "Pesos (ARS)" : "Dólares (USD)"}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="mt-12 grid gap-6 md:grid-cols-3">
@@ -233,23 +251,39 @@ function Landing() {
                 <h3 className="font-display text-2xl">{p.name}</h3>
                 <p className="mt-1 min-h-[2.5rem] text-sm text-muted-foreground">{p.tagline}</p>
                 <div className="mt-5">
-                  {p.originalPriceArs != null && p.originalPriceArs > p.priceArs && (
-                    <span className="mr-2 text-lg text-muted-foreground line-through">
-                      ARS {p.originalPriceArs.toLocaleString("es-AR")}
-                    </span>
-                  )}
-                  <span className="font-display text-4xl">{formatArs(p.priceArs)}</span>
-                  {p.priceArs === 0 ? (
-                    <span className="text-sm text-muted-foreground"> / {TRIAL_DAYS} días</span>
-                  ) : p.priceArs === -1 ? null : (
-                    <span className="text-sm text-muted-foreground"> / mes</span>
-                  )}
-                  {p.originalPriceArs != null && p.originalPriceArs > p.priceArs && p.priceArs > 0 && (
-                    <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                      -{Math.round((1 - p.priceArs / p.originalPriceArs) * 100)}%
-                    </span>
+                  {currency === "ars" ? (
+                    <>
+                      {p.originalPriceArs != null && p.originalPriceArs > p.priceArs && (
+                        <span className="mr-2 text-lg text-muted-foreground line-through">
+                          ARS {p.originalPriceArs.toLocaleString("es-AR")}
+                        </span>
+                      )}
+                      <span className="font-display text-4xl">{formatArs(p.priceArs)}</span>
+                      {p.priceArs === 0 ? (
+                        <span className="text-sm text-muted-foreground"> / {TRIAL_DAYS} días</span>
+                      ) : p.priceArs === -1 ? null : (
+                        <span className="text-sm text-muted-foreground"> / mes</span>
+                      )}
+                      {p.originalPriceArs != null && p.originalPriceArs > p.priceArs && p.priceArs > 0 && (
+                        <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                          -{Math.round((1 - p.priceArs / p.originalPriceArs) * 100)}%
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-display text-4xl">
+                        {p.priceArs === 0 ? "Gratis" : p.priceArs === -1 ? "A medida" : formatUsd(p.priceUsd)}
+                      </span>
+                      {p.priceArs === 0 ? (
+                        <span className="text-sm text-muted-foreground"> / {TRIAL_DAYS} días</span>
+                      ) : p.priceArs === -1 || p.priceUsd == null ? null : (
+                        <span className="text-sm text-muted-foreground"> / mes</span>
+                      )}
+                    </>
                   )}
                 </div>
+
                 <ul className="mt-6 space-y-2 text-sm">
                   {p.features.map(f => (
                     <li key={f} className="flex items-start gap-2">
