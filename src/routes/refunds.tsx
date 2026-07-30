@@ -29,12 +29,15 @@ function RefundsPage() {
         <h1>Política de Reembolsos</h1>
         <p className="text-sm text-muted-foreground">Última actualización: 30 de julio de 2026</p>
 
-        <h2>Garantía de 5 días</h2>
+        <h2>Garantía de 14 días</h2>
         <p>
-          Ofrecemos una <strong>garantía de devolución de 5 días corridos contados desde la fecha
-          del pago</strong> para las suscripciones a FLUX Talent. Si dentro de ese plazo no está
-          satisfecho, puede solicitar el reembolso íntegro del importe abonado.
+          FLUX Talent se contrata como <strong>membresía mensual</strong>. Ofrecemos una{" "}
+          <strong>garantía de devolución de 14 días corridos contados desde la fecha del pago</strong>:
+          si dentro de ese plazo no está satisfecho, puede solicitar el reembolso íntegro del importe
+          abonado. Pasados los 14 días, el mes en curso no es reembolsable, pero puede cancelar en
+          cualquier momento para evitar cargos futuros (ver "Cancelación de suscripción").
         </p>
+
 
         <h2>Cómo solicitar un reembolso</h2>
         <h3>Pagos en USD (procesados por Paddle)</h3>
