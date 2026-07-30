@@ -15,7 +15,6 @@ import { planByPrice, formatLimit, formatArs, formatUsd, TRIAL_DAYS, mergePlanOv
 import { getPlanPricing } from "@/lib/pricing.functions";
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
 import { changePaddlePlan, getPaddlePortalUrl } from "@/utils/payments.functions";
-import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 export const Route = createFileRoute("/app/subscription")({
   component: SubscriptionPage,
@@ -248,7 +247,6 @@ function SubscriptionPage() {
             : "El pago en dólares está en etapa final de habilitación. Si necesitás pagar en USD, escribinos a soporte@fluxtalent.com.ar."}
         </p>
 
-        {currency === "usd" && <div className="mt-3"><PaymentTestModeBanner /></div>}
 
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {plans.map(p => {
