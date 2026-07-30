@@ -59,17 +59,11 @@ export const Route = createFileRoute("/api/public/apply")({
           // (canceled past period_end, past_due, or trial expired).
           const { data: org } = await supabaseAdmin
             .from("organizations")
-            .select("subscription_status, trial_ends_at, current_period_end")
+            .select("subscription_status, trial_ends_at, current_period_end, grace_until, is_unlimited")
             .eq("id", vac.org_id)
             .maybeSingle();
-          const now = Date.now();
-          const trialEnds = org?.trial_ends_at ? new Date(org.trial_ends_at).getTime() : 0;
-          const periodEnds = org?.current_period_end ? new Date(org.current_period_end).getTime() : 0;
-          const subActive =
-            (org?.subscription_status === "trialing" && trialEnds > now) ||
-            (org?.subscription_status === "active" && (!org.current_period_end || periodEnds > now)) ||
-            (org?.subscription_status === "canceled" && periodEnds > now);
-          if (!subActive) {
+          const { canWriteOrg } = await import("@/lib/entitlement");
+          if (!canWriteOrg(org)) {
             return Response.json({ error: "Esta vacante no está recibiendo postulaciones en este momento." }, { status: 403, headers: cors });
           }
 

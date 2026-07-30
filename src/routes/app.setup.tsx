@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Loader2, ArrowRight, CheckCircle2, Building2, Check } from "lucide-react";
 import { toast } from "sonner";
 import { chooseFreePlan, startPlanCheckout } from "@/lib/subscription.functions";
-import { PLANS, formatArs, type PlanId } from "@/lib/plans";
+import { PLANS, formatArs, formatUsd, type PlanId } from "@/lib/plans";
+import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
 
 export const Route = createFileRoute("/app/setup")({
   component: SetupPage,
@@ -40,6 +41,8 @@ function SetupPage() {
   const [personalDone, setPersonalDone] = useState(false);
   const [planDone, setPlanDone] = useState(false);
   const [activating, setActivating] = useState<PlanId | null>(null);
+  const [currency, setCurrency] = useState<"ars" | "usd">("ars");
+  const { openCheckout, loading: paddleLoading } = usePaddleCheckout();
 
   useEffect(() => {
     if (me?.profile) {
@@ -96,6 +99,20 @@ function SetupPage() {
         toast.success("Plan Free activado · 15 días de prueba");
         await qc.invalidateQueries({ queryKey: ["my-subscription"] });
         setPlanDone(true);
+      } else if (currency === "usd") {
+        const plan = PLANS.find(x => x.id === planId);
+        const { data: u } = await supabase.auth.getUser();
+        if (!plan?.paddlePriceId || !u?.user) throw new Error("No pudimos abrir el checkout en USD");
+        await openCheckout({
+          priceId: plan.paddlePriceId,
+          customerEmail: u.user.email ?? undefined,
+          customData: { userId: u.user.id, orgId: String((me?.profile as any)?.org_id ?? "") },
+        });
+        // Igual que el flujo en ARS: dejamos el setup marcado al iniciar el pago.
+        await supabase.from("profiles").update({ setup_completed_at: new Date().toISOString() } as any).eq("id", u.user.id);
+        await qc.invalidateQueries({ queryKey: ["profile-setup-check"] });
+        setPlanDone(true);
+        setActivating(null);
       } else {
         const r = await startCheckout({ data: { planId: planId as "starter" | "pro" | "enterprise" } });
         window.location.href = r.url;
@@ -186,7 +203,28 @@ function SetupPage() {
           <div className="rounded-2xl border border-border bg-card p-6">
             <h3 className="font-semibold">Elegí el plan con el que querés empezar</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              El plan <b>Free</b> incluye 15 días de prueba (1 vacante y 20 CVs). Los planes pagos no incluyen período de prueba: te derivamos al pago seguro de Mercado Pago.
+              El plan <b>Free</b> incluye 15 días de prueba (1 vacante y 20 CVs). Los planes pagos no incluyen período de prueba: te derivamos al pago seguro.
+            </p>
+            <div className="mt-4 inline-flex rounded-full border border-border p-1 text-sm">
+              <button
+                type="button"
+                onClick={() => setCurrency("ars")}
+                className={`rounded-full px-4 py-1 ${currency === "ars" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+              >
+                Pesos (ARS)
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrency("usd")}
+                className={`rounded-full px-4 py-1 ${currency === "usd" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+              >
+                Dólares (USD)
+              </button>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {currency === "ars"
+                ? "Débito automático mensual con Mercado Pago."
+                : "Pago con tarjeta internacional, suscripción mensual automática."}
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
@@ -203,11 +241,20 @@ function SetupPage() {
                     {p.highlighted && <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">RECOMENDADO</span>}
                   </div>
                   <div className="mt-3 flex items-baseline gap-2">
-                    {p.originalPriceArs && p.originalPriceArs > p.priceArs && (
-                      <span className="text-xs text-muted-foreground line-through">{formatArs(p.originalPriceArs)}</span>
+                    {currency === "ars" ? (
+                      <>
+                        {p.originalPriceArs && p.originalPriceArs > p.priceArs && (
+                          <span className="text-xs text-muted-foreground line-through">{formatArs(p.originalPriceArs)}</span>
+                        )}
+                        <span className="text-2xl font-semibold">{formatArs(p.priceArs)}</span>
+                        {p.priceArs > 0 && <span className="text-xs text-muted-foreground">/ mes</span>}
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-2xl font-semibold">{isFree ? formatUsd(0) : formatUsd(p.priceUsd)}</span>
+                        {!isFree && <span className="text-xs text-muted-foreground">/ mes</span>}
+                      </>
                     )}
-                    <span className="text-2xl font-semibold">{formatArs(p.priceArs)}</span>
-                    {p.priceArs > 0 && <span className="text-xs text-muted-foreground">/ mes</span>}
                   </div>
                   <ul className="mt-3 space-y-1.5 text-sm">
                     {p.features.slice(0, 4).map(f => (
@@ -216,12 +263,12 @@ function SetupPage() {
                   </ul>
                   <Button
                     onClick={() => pickPlan(p.id as PlanId)}
-                    disabled={!!activating}
+                    disabled={!!activating || paddleLoading || (currency === "usd" && !isFree && !p.paddlePriceId)}
                     variant={isFree ? "outline" : "default"}
                     className="mt-5 w-full"
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isFree ? "Empezar gratis (15 días)" : `Suscribirme a ${p.name}`}
+                    {isFree ? "Empezar gratis (15 días)" : `Suscribirme a ${p.name}${currency === "usd" ? " (USD)" : ""}`}
                   </Button>
                 </div>
               );

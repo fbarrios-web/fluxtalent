@@ -72,18 +72,12 @@ export const createVacancy = createServerFn({ method: "POST" })
     await assertCanCreateVacancy(supabase, profile.org_id!);
     const { data: subOrg } = await supabase
       .from("organizations")
-      .select("subscription_status, trial_ends_at, current_period_end")
+      .select("subscription_status, trial_ends_at, current_period_end, grace_until, is_unlimited")
       .eq("id", profile.org_id!)
       .maybeSingle();
     {
-      const now = Date.now();
-      const trialEnds = subOrg?.trial_ends_at ? new Date(subOrg.trial_ends_at).getTime() : 0;
-      const periodEnds = subOrg?.current_period_end ? new Date(subOrg.current_period_end).getTime() : 0;
-      const subActive =
-        (subOrg?.subscription_status === "trialing" && trialEnds > now) ||
-        (subOrg?.subscription_status === "active" && (!subOrg.current_period_end || periodEnds > now)) ||
-        (subOrg?.subscription_status === "canceled" && periodEnds > now);
-      if (!subActive) {
+      const { canWriteOrg } = await import("@/lib/entitlement");
+      if (!canWriteOrg(subOrg)) {
         throw new Error("Tu suscripción no está activa. Reactivala para crear nuevas vacantes.");
       }
     }
