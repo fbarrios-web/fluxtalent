@@ -4,7 +4,9 @@ import {
   Brain, FileText, MessageSquareText, Mic, PenTool, Zap, TrendingUp,
 } from "lucide-react";
 import { FluxLogo } from "@/components/flux-logo";
-import { TRIAL_DAYS, formatArs, mergePlanOverrides } from "@/lib/plans";
+import { TRIAL_DAYS, formatArs, formatUsd, mergePlanOverrides } from "@/lib/plans";
+import { useState } from "react";
+
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getPlanPricing } from "@/lib/pricing.functions";
