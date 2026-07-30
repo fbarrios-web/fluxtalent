@@ -563,6 +563,7 @@ export type Database = {
           contact_email: string | null
           created_at: string
           current_period_end: string | null
+          grace_until: string | null
           id: string
           is_unlimited: boolean
           last_payment_at: string | null
@@ -588,6 +589,7 @@ export type Database = {
           contact_email?: string | null
           created_at?: string
           current_period_end?: string | null
+          grace_until?: string | null
           id?: string
           is_unlimited?: boolean
           last_payment_at?: string | null
@@ -613,6 +615,7 @@ export type Database = {
           contact_email?: string | null
           created_at?: string
           current_period_end?: string | null
+          grace_until?: string | null
           id?: string
           is_unlimited?: boolean
           last_payment_at?: string | null
