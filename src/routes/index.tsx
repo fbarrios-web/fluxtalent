@@ -335,6 +335,7 @@ function Landing() {
           <Link to="/terms" className="underline hover:text-foreground">Términos y Condiciones</Link>
           <Link to="/privacy" className="underline hover:text-foreground">Política de Privacidad</Link>
           <Link to="/refunds" className="underline hover:text-foreground">Política de Reembolsos</Link>
+          <Link to="/trust" className="underline hover:text-foreground">Política de Seguridad</Link>
         </p>
       </footer>
 
