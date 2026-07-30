@@ -108,6 +108,10 @@ function SetupPage() {
           customerEmail: u.user.email ?? undefined,
           customData: { userId: u.user.id, orgId: String((me?.profile as any)?.org_id ?? "") },
         });
+        // Igual que el flujo en ARS: dejamos el setup marcado al iniciar el pago.
+        await supabase.from("profiles").update({ setup_completed_at: new Date().toISOString() } as any).eq("id", u.user.id);
+        await qc.invalidateQueries({ queryKey: ["profile-setup-check"] });
+        setPlanDone(true);
         setActivating(null);
       } else {
         const r = await startCheckout({ data: { planId: planId as "starter" | "pro" | "enterprise" } });

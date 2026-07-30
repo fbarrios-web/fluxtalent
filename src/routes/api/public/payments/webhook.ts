@@ -92,6 +92,15 @@ async function handleSubscriptionCreated(data: any, env: PaddleEnv) {
   }
 
 
+  // El usuario ya eligió plan: destrabamos el setup inicial.
+  if (userId) {
+    await getSupabase()
+      .from("profiles")
+      .update({ setup_completed_at: new Date().toISOString() } as any)
+      .eq("id", userId)
+      .is("setup_completed_at", null);
+  }
+
   // Una sola suscripción activa por org: si venía pagando en ARS, cancelamos
   // la preapproval de Mercado Pago para que no haya doble cobro.
   try {
