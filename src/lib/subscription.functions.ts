@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { MP_PLAN_LINKS, PLANS, type PlanId } from "@/lib/plans";
+import { canWriteOrg, effectiveStatus } from "@/lib/entitlement";
 
 async function createMissingWorkspace(supabaseAdmin: any, userId: string) {
   const { data: userRes } = await supabaseAdmin.auth.admin.getUserById(userId);
@@ -55,14 +56,14 @@ export const getMySubscription = createServerFn({ method: "GET" })
 
     const { data: org, error } = await supabase
       .from("organizations")
-      .select("id, name, subscription_status, trial_ends_at, plan_price_ars, current_period_end, last_payment_at, mp_preapproval_id, paddle_subscription_id, paddle_customer_id, plan_currency")
+      .select("id, name, subscription_status, trial_ends_at, plan_price_ars, current_period_end, last_payment_at, mp_preapproval_id, paddle_subscription_id, paddle_customer_id, plan_currency, grace_until, is_unlimited")
       .eq("id", orgId)
       .maybeSingle();
     if (error || !org) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: adminOrg } = await supabaseAdmin
         .from("organizations")
-        .select("id, name, subscription_status, trial_ends_at, plan_price_ars, current_period_end, last_payment_at, mp_preapproval_id, paddle_subscription_id, paddle_customer_id, plan_currency")
+        .select("id, name, subscription_status, trial_ends_at, plan_price_ars, current_period_end, last_payment_at, mp_preapproval_id, paddle_subscription_id, paddle_customer_id, plan_currency, grace_until, is_unlimited")
         .eq("id", orgId)
         .maybeSingle();
       if (!adminOrg) return null;
@@ -82,13 +83,9 @@ function buildSubscriptionSnapshot(org: any) {
         : org.subscription_status === "active"
           ? Math.max(0, Math.ceil((periodEnds - now) / 86_400_000))
           : 0;
-    const canWrite =
-      (org.subscription_status === "trialing" && trialEnds > now) ||
-      (org.subscription_status === "active" && (!org.current_period_end || periodEnds > now)) ||
-      // Canceled subs keep access until the paid period ends.
-      (org.subscription_status === "canceled" && org.current_period_end && periodEnds > now);
-
-    return { ...org, daysLeft, canWrite };
+    const canWrite = canWriteOrg(org, now);
+    const status = effectiveStatus(org, now);
+    return { ...org, daysLeft, canWrite, effective_status: status };
 }
 
 /** Create a Mercado Pago preapproval (suscripción mensual) and return checkout URL. */
@@ -166,10 +163,25 @@ export const startPlanCheckout = createServerFn({ method: "POST" })
     // a `active`. Esto evita que el usuario use el sistema si abandona el checkout
     // sin pagar (sin esto, el status `trialing` heredado del alta le daba acceso).
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Una sola suscripción activa por org: cancelamos la anterior (cambio de
+    // plan en ARS o migración desde USD) para evitar doble cobro.
+    try {
+      const { cancelMercadoPagoSubscription, cancelPaddleSubscription } =
+        await import("@/lib/billing-provider.server");
+      await cancelMercadoPagoSubscription(supabaseAdmin, orgId);
+      await cancelPaddleSubscription(supabaseAdmin, orgId);
+    } catch (e) {
+      console.error("[startPlanCheckout] auto-cancel previo falló", e);
+    }
+
     await supabaseAdmin
       .from("organizations")
       .update({
         plan_price_ars: plan.priceArs,
+        plan_currency: "ars",
+        paddle_subscription_id: null as any,
+        grace_until: null as any,
         subscription_status: "past_due",
         trial_ends_at: null as any,
         current_period_end: null as any,
