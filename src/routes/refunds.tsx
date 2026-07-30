@@ -6,9 +6,9 @@ export const Route = createFileRoute("/refunds")({
   head: () => ({
     meta: [
       { title: "Política de Reembolsos — FLUX Talent" },
-      { name: "description", content: "Garantía de devolución de 5 días corridos desde la fecha del pago en FLUX Talent." },
+      { name: "description", content: "Membresía mensual con garantía de devolución de 14 días corridos desde la fecha del pago." },
       { property: "og:title", content: "Política de Reembolsos — FLUX Talent" },
-      { property: "og:description", content: "Garantía de devolución de 5 días corridos desde la fecha del pago en FLUX Talent." },
+      { property: "og:description", content: "Membresía mensual con garantía de devolución de 14 días corridos desde la fecha del pago." },
     ],
   }),
 });
@@ -29,12 +29,15 @@ function RefundsPage() {
         <h1>Política de Reembolsos</h1>
         <p className="text-sm text-muted-foreground">Última actualización: 30 de julio de 2026</p>
 
-        <h2>Garantía de 5 días</h2>
+        <h2>Garantía de 14 días</h2>
         <p>
-          Ofrecemos una <strong>garantía de devolución de 5 días corridos contados desde la fecha
-          del pago</strong> para las suscripciones a FLUX Talent. Si dentro de ese plazo no está
-          satisfecho, puede solicitar el reembolso íntegro del importe abonado.
+          FLUX Talent se contrata como <strong>membresía mensual</strong>. Ofrecemos una{" "}
+          <strong>garantía de devolución de 14 días corridos contados desde la fecha del pago</strong>:
+          si dentro de ese plazo no está satisfecho, puede solicitar el reembolso íntegro del importe
+          abonado. Pasados los 14 días, el mes en curso no es reembolsable, pero puede cancelar en
+          cualquier momento para evitar cargos futuros (ver "Cancelación de suscripción").
         </p>
+
 
         <h2>Cómo solicitar un reembolso</h2>
         <h3>Pagos en USD (procesados por Paddle)</h3>
@@ -69,13 +72,13 @@ function RefundsPage() {
           cancelación es efectiva al finalizar el período pago vigente: mantendrá el acceso hasta esa
           fecha y no se generarán cargos posteriores. La cancelación por sí sola no genera reembolso;
           si adicionalmente desea el reembolso del período en curso, solicítelo dentro del plazo de
-          5 días corridos desde el pago indicado arriba.
+          14 días corridos desde el pago indicado arriba.
         </p>
 
         <h2>Renovaciones automáticas</h2>
         <p>
           Las suscripciones se renuevan automáticamente. Si un cargo de renovación no fue intencional
-          y nos contacta dentro de los 5 días corridos posteriores al mismo, procesaremos el reembolso.
+          y nos contacta dentro de los 14 días corridos posteriores al mismo, procesaremos el reembolso.
         </p>
 
         <h2>Contacto</h2>
