@@ -6,9 +6,9 @@ export const Route = createFileRoute("/refunds")({
   head: () => ({
     meta: [
       { title: "Política de Reembolsos — FLUX Talent" },
-      { name: "description", content: "Garantía de devolución de 5 días corridos desde la fecha del pago en FLUX Talent." },
+      { name: "description", content: "Membresía mensual con garantía de devolución de 14 días corridos desde la fecha del pago." },
       { property: "og:title", content: "Política de Reembolsos — FLUX Talent" },
-      { property: "og:description", content: "Garantía de devolución de 5 días corridos desde la fecha del pago en FLUX Talent." },
+      { property: "og:description", content: "Membresía mensual con garantía de devolución de 14 días corridos desde la fecha del pago." },
     ],
   }),
 });
@@ -72,13 +72,13 @@ function RefundsPage() {
           cancelación es efectiva al finalizar el período pago vigente: mantendrá el acceso hasta esa
           fecha y no se generarán cargos posteriores. La cancelación por sí sola no genera reembolso;
           si adicionalmente desea el reembolso del período en curso, solicítelo dentro del plazo de
-          5 días corridos desde el pago indicado arriba.
+          14 días corridos desde el pago indicado arriba.
         </p>
 
         <h2>Renovaciones automáticas</h2>
         <p>
           Las suscripciones se renuevan automáticamente. Si un cargo de renovación no fue intencional
-          y nos contacta dentro de los 5 días corridos posteriores al mismo, procesaremos el reembolso.
+          y nos contacta dentro de los 14 días corridos posteriores al mismo, procesaremos el reembolso.
         </p>
 
         <h2>Contacto</h2>
