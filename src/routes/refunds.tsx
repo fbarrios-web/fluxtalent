@@ -6,9 +6,9 @@ export const Route = createFileRoute("/refunds")({
   head: () => ({
     meta: [
       { title: "Política de Reembolsos — FLUX Talent" },
-      { name: "description", content: "Garantía de devolución de 30 días para suscripciones de FLUX Talent." },
+      { name: "description", content: "Garantía de devolución de 5 días corridos desde la fecha del pago en FLUX Talent." },
       { property: "og:title", content: "Política de Reembolsos — FLUX Talent" },
-      { property: "og:description", content: "Garantía de devolución de 30 días para suscripciones de FLUX Talent." },
+      { property: "og:description", content: "Garantía de devolución de 5 días corridos desde la fecha del pago en FLUX Talent." },
     ],
   }),
 });
@@ -27,13 +27,13 @@ function RefundsPage() {
 
       <main className="mx-auto max-w-3xl px-6 py-12 prose prose-slate dark:prose-invert">
         <h1>Política de Reembolsos</h1>
-        <p className="text-sm text-muted-foreground">Última actualización: 21 de julio de 2026</p>
+        <p className="text-sm text-muted-foreground">Última actualización: 30 de julio de 2026</p>
 
-        <h2>Garantía de 30 días</h2>
+        <h2>Garantía de 5 días</h2>
         <p>
-          Ofrecemos una <strong>garantía de devolución de 30 días</strong> para las suscripciones a
-          FLUX Talent. Si dentro de los 30 días posteriores a la compra no está satisfecho, puede
-          solicitar el reembolso íntegro del importe abonado.
+          Ofrecemos una <strong>garantía de devolución de 5 días corridos contados desde la fecha
+          del pago</strong> para las suscripciones a FLUX Talent. Si dentro de ese plazo no está
+          satisfecho, puede solicitar el reembolso íntegro del importe abonado.
         </p>
 
         <h2>Cómo solicitar un reembolso</h2>
@@ -69,13 +69,13 @@ function RefundsPage() {
           cancelación es efectiva al finalizar el período pago vigente: mantendrá el acceso hasta esa
           fecha y no se generarán cargos posteriores. La cancelación por sí sola no genera reembolso;
           si adicionalmente desea el reembolso del período en curso, solicítelo dentro del plazo de
-          30 días indicado arriba.
+          5 días corridos desde el pago indicado arriba.
         </p>
 
         <h2>Renovaciones automáticas</h2>
         <p>
           Las suscripciones se renuevan automáticamente. Si un cargo de renovación no fue intencional
-          y nos contacta dentro de los 30 días posteriores al mismo, procesaremos el reembolso.
+          y nos contacta dentro de los 5 días corridos posteriores al mismo, procesaremos el reembolso.
         </p>
 
         <h2>Contacto</h2>
