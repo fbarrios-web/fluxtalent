@@ -19,17 +19,33 @@ export function SubscriptionBanner() {
     );
   }
   if (data.subscription_status === "past_due") {
+    const graceMs = (data as any).grace_until ? new Date((data as any).grace_until).getTime() - Date.now() : 0;
+    const graceDays = Math.max(0, Math.ceil(graceMs / 86_400_000));
     return (
       <Bar tone="danger" icon={AlertCircle}>
-        Tu suscripción está <b>pendiente de pago</b>. No vas a poder usar el sistema hasta que Mercado Pago confirme el cobro.
+        {graceMs > 0 ? (
+          <>
+            No pudimos confirmar tu pago. Te damos <b>{graceDays} {graceDays === 1 ? "día" : "días"}</b> de gracia
+            para regularizarlo sin perder el acceso.
+          </>
+        ) : (
+          <>Tu suscripción está <b>pendiente de pago</b> y la cuenta quedó en modo solo-lectura.</>
+        )}
         <Link to="/app/subscription" className="ml-2 underline font-medium">Completar pago →</Link>
       </Bar>
     );
   }
   if (!data.canWrite) {
+    const st = (data as any).effective_status;
+    const msg =
+      st === "trial_expired"
+        ? "Tu período de prueba terminó."
+        : st === "subscription_expired" || st === "canceled_expired"
+          ? "Tu suscripción venció."
+          : "Tu cuenta no tiene una suscripción activa.";
     return (
       <Bar tone="danger" icon={Lock}>
-        Tu período de prueba terminó. Estás en <b>modo solo-lectura</b>.
+        {msg} Estás en <b>modo solo-lectura</b>.
         <Link to="/app/subscription" className="ml-2 underline font-medium">Activar suscripción →</Link>
       </Bar>
     );
