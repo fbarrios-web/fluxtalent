@@ -229,7 +229,7 @@ function AppLayout() {
         </header>
         <SubscriptionBanner />
         <SatisfactionSurvey />
-        <ProductTour open={tour.open} onClose={tour.close} />
+        <ProductTour open={tour.open} onClose={tour.close} flow={activeFlow} />
         <div className="flex-1"><Outlet /></div>
         <footer className="border-t border-border px-6 py-4 text-center text-xs text-muted-foreground">
           © 2026 FLUX Automatizaciones. Todos los derechos reservados.
