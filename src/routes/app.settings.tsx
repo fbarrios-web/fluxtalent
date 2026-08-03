@@ -280,7 +280,11 @@ function Settings() {
           <div className="rounded-2xl border border-border bg-card p-6">
             <h3 className="font-semibold">Integraciones</h3>
             <p className="text-sm text-muted-foreground">Conectá tu calendario y mail para automatizar entrevistas e invitaciones. Solo podés tener un proveedor activo a la vez.</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              ¿Preferís no integrar? Podés usar el sistema igual, pero <strong>no se van a enviar las comunicaciones automáticas</strong> (invitaciones a entrevista, avisos de etapa) ni se van a crear los eventos con link de videollamada.
+            </p>
             <div className="mt-4 space-y-4">
+              <GoogleSetupGuide defaultOpen={search.tab === "integraciones"} />
               <IntegrationsPanel />
               <MicrosoftPanel callbackUrl={MICROSOFT_CALLBACK_URL} />
             </div>
