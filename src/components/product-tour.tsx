@@ -131,26 +131,32 @@ const SCHEDULING_STEPS: Step[] = [
     body: "Te muestro cómo dejar lista la agenda de entrevistas: duración de los turnos, disponibilidad, horarios puntuales y cómo reserva el postulante.",
   },
   {
+    target: '[data-tour="sched-stages"]',
     title: "La agenda se configura por etapa",
     body: "Arriba elegís la etapa (Entrevista 1, 2 o 3): la duración, la disponibilidad y los turnos que cargues aplican sólo a esa etapa. Si usás más de una instancia de entrevista, configurá cada una.",
   },
   {
+    target: '[data-tour="sched-general"]',
     title: "Agenda · Configuración general",
     body: "Definís la duración de cada turno en minutos (30, 45, 60…), el email del entrevistador —se suma como invitado al evento del calendario— y podés agregar invitados extra. También hay un campo de instrucciones para el postulante que viaja en la invitación.",
   },
   {
+    target: '[data-tour="sched-weekly"]',
     title: "Agenda · Disponibilidad semanal recurrente",
     body: "Es la forma más rápida: elegís uno o varios días de la semana (ej. lunes/miércoles), la hora de inicio y de fin, y opcionalmente desde/hasta cuándo se aplica esa franja. El sistema parte ese rango en turnos según la duración configurada.",
   },
   {
+    target: '[data-tour="sched-save"]',
     title: "Agenda · Guardar y regenerar",
     body: "Después de cargar las franjas tocá “Guardar”. Con “Regenerar 30 días” se recrean los turnos del próximo mes a partir de tus reglas. Si borrás una franja, se eliminan sus turnos futuros que nadie haya reservado.",
   },
   {
+    target: '[data-tour="sched-manual"]',
     title: "Agenda · Horarios puntuales",
     body: "Si necesitás un turno suelto fuera de la rutina, usá “Agregar horario puntual”: cargás fecha y hora y queda disponible sólo esa vez.",
   },
   {
+    target: '[data-tour="sched-calendar"]',
     title: "Agenda · Calendario y bloqueos",
     body: "Abajo ves todos los turnos generados. Podés bloquear o liberar cada uno con un clic (bloqueado = el postulante no lo ve). Los turnos ya reservados quedan marcados con el candidato.",
   },
