@@ -14,7 +14,7 @@ const MICROSOFT_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/micros
 
 export const Route = createFileRoute("/app/integrations")({
   component: IntegrationsPage,
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { ok?: string; ok_ms?: string; error?: string } => ({
     ok: typeof s.ok === "string" ? s.ok : undefined,
     ok_ms: typeof s.ok_ms === "string" ? s.ok_ms : undefined,
     error: typeof s.error === "string" ? s.error : undefined,
