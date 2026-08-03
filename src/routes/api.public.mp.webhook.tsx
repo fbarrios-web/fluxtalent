@@ -136,7 +136,7 @@ export const Route = createFileRoute("/api/public/mp/webhook")({
               plan,
               preapprovalId,
               raw: { ...p, resolved_plan: plan.id },
-              kind: previousActive(previousStatusPlaceholder) ? "renewal" : "checkout",
+              kind: preapprovalId ? "renewal" : "checkout",
             });
             // Si la org tenía suscripción en USD, la cancelamos: una sola activa.
             try {
