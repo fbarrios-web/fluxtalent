@@ -33,7 +33,12 @@ function AppLayout() {
   const loc = useLocation();
   const amI = useServerFn(adminAmI);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const tour = useProductTour();
+  const tourFlow: TourFlow = /^\/app\/vacancies\/[^/]+$/.test(loc.pathname) && !/\/app\/vacancies\/new$/.test(loc.pathname)
+    ? "vacancy"
+    : /^\/app\/candidates\/[^/]+$/.test(loc.pathname)
+      ? "candidate"
+      : "general";
+  const tour = useProductTour(tourFlow);
   const { data: roleData } = useQuery({
     queryKey: ["am-i-admin"],
     queryFn: () => amI(),
