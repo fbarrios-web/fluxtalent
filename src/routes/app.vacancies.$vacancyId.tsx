@@ -8,6 +8,7 @@ import { moveApplicationStage, updateVacancy, bulkCreateApplicationFromCv } from
 import { ArrowLeft, ExternalLink, Copy, Loader2, Download, ChevronLeft, ChevronRight, Pencil, ImageIcon, Sparkles, Upload, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { IntegrationAlert } from "@/components/integration-alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -176,6 +177,7 @@ function VacancyDetail() {
         </div>
 
         <TabsContent value="pipeline" className="mt-6">
+          <IntegrationAlert context="kanban" />
           <div className="flex gap-3 overflow-x-auto overflow-y-hidden pb-4 max-h-[calc(100vh-220px)]">
 
             {STAGES.map(s => {
@@ -283,6 +285,7 @@ function VacancyDetail() {
           </div>
         </TabsContent>
         <TabsContent value="scheduling" className="mt-6">
+          <IntegrationAlert context="agenda" />
           <VacancyScheduling vacancyId={vacancyId} />
         </TabsContent>
       </Tabs>

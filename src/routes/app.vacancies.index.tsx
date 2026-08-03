@@ -52,7 +52,7 @@ function VacanciesList() {
           >
             <Download className="h-4 w-4" /> <span className="hidden sm:inline">Exportar Excel</span><span className="sm:hidden">Excel</span>
           </button>
-          <Link to="/app/vacancies/new" className="inline-flex items-center gap-2 rounded-full bg-primary px-3 sm:px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+          <Link data-tour="new-vacancy" to="/app/vacancies/new" className="inline-flex items-center gap-2 rounded-full bg-primary px-3 sm:px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
             <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Nueva vacante</span><span className="sm:hidden">Nueva</span>
           </Link>
         </div>

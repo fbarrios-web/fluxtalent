@@ -10,16 +10,22 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { IntegrationsPanel, MicrosoftPanel } from "@/routes/app.integrations";
+import { GoogleSetupGuide } from "@/components/google-setup-guide";
 
 const MICROSOFT_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/microsoft/callback";
 
 export const Route = createFileRoute("/app/settings")({
   component: Settings,
+  validateSearch: (s: Record<string, unknown>) => ({
+    tab: s.tab === "integraciones" ? "integraciones" : undefined,
+  }),
   head: () => ({ meta: [{ title: "Configuración — FLUX Talent" }] }),
 });
 
 function Settings() {
   const qc = useQueryClient();
+  const search = Route.useSearch();
+
 
   const { data: account } = useQuery({
     queryKey: ["my-account"],
@@ -189,7 +195,7 @@ function Settings() {
       <h1 className="font-display text-4xl">Empresa</h1>
       <p className="mt-1 text-muted-foreground">Personalizá tu workspace y la comunicación con candidatos.</p>
 
-      <Tabs defaultValue="cuenta" className="mt-8">
+      <Tabs defaultValue={search.tab === "integraciones" ? "integraciones" : "cuenta"} className="mt-8">
         <TabsList>
           <TabsTrigger value="cuenta">Cuenta y empresa</TabsTrigger>
           <TabsTrigger value="integraciones">Integraciones</TabsTrigger>
@@ -277,7 +283,11 @@ function Settings() {
           <div className="rounded-2xl border border-border bg-card p-6">
             <h3 className="font-semibold">Integraciones</h3>
             <p className="text-sm text-muted-foreground">Conectá tu calendario y mail para automatizar entrevistas e invitaciones. Solo podés tener un proveedor activo a la vez.</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              ¿Preferís no integrar? Podés usar el sistema igual, pero <strong>no se van a enviar las comunicaciones automáticas</strong> (invitaciones a entrevista, avisos de etapa) ni se van a crear los eventos con link de videollamada.
+            </p>
             <div className="mt-4 space-y-4">
+              <GoogleSetupGuide defaultOpen={search.tab === "integraciones"} />
               <IntegrationsPanel />
               <MicrosoftPanel callbackUrl={MICROSOFT_CALLBACK_URL} />
             </div>

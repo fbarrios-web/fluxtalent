@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useEffect } from "react";
 import { getGoogleStatus, googleStartUrl, googleDisconnect } from "@/lib/scheduling.functions";
 import { getMicrosoftStatus, microsoftStartUrl, microsoftDisconnect } from "@/lib/microsoft.functions";
+import { GoogleSetupGuide } from "@/components/google-setup-guide";
 
 const MICROSOFT_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/microsoft/callback";
 
@@ -57,7 +58,11 @@ function IntegrationsPage() {
       <div>
         <h1 className="text-2xl font-semibold mb-2">Integraciones</h1>
         <p className="text-muted-foreground">Conectá tu cuenta para automatizar entrevistas y enviar invitaciones desde tu mail. Solo podés tener un proveedor activo a la vez.</p>
+        <p className="text-sm text-muted-foreground mt-2">
+          ¿Preferís no integrar? Podés seguir usando el sistema, pero <strong>no se envían las comunicaciones automáticas</strong> ni se crean los eventos con link de videollamada.
+        </p>
       </div>
+      <GoogleSetupGuide defaultOpen />
       <IntegrationsPanel />
       <MicrosoftPanel callbackUrl={MICROSOFT_CALLBACK_URL} />
     </div>

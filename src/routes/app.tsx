@@ -3,11 +3,12 @@ import { useEffect, useState } from "react";
 import { useAuth, signOut } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { LayoutDashboard, Briefcase, Settings, LogOut, Loader2, CreditCard, ShieldCheck, Building2, Menu } from "lucide-react";
+import { LayoutDashboard, Briefcase, Settings, LogOut, Loader2, CreditCard, ShieldCheck, Building2, Menu, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FluxLogo } from "@/components/flux-logo";
 import { SubscriptionBanner } from "@/components/subscription-banner";
 import { SatisfactionSurvey } from "@/components/satisfaction-survey";
+import { ProductTour, useProductTour } from "@/components/product-tour";
 import { adminAmI } from "@/lib/admin.functions";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,11 +19,11 @@ export const Route = createFileRoute("/app")({
 });
 
 const navItems = [
-  { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/app/vacancies", label: "Vacantes", icon: Briefcase },
-  { to: "/app/enterprise", label: "Multi-organización", icon: Building2 },
-  { to: "/app/subscription", label: "Suscripción", icon: CreditCard },
-  { to: "/app/settings", label: "Configuración", icon: Settings },
+  { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard, tour: "nav-dashboard" },
+  { to: "/app/vacancies", label: "Vacantes", icon: Briefcase, tour: "nav-vacancies" },
+  { to: "/app/enterprise", label: "Multi-organización", icon: Building2, tour: "nav-enterprise" },
+  { to: "/app/subscription", label: "Suscripción", icon: CreditCard, tour: "nav-subscription" },
+  { to: "/app/settings", label: "Configuración", icon: Settings, tour: "nav-settings" },
 ];
 
 
@@ -32,6 +33,7 @@ function AppLayout() {
   const loc = useLocation();
   const amI = useServerFn(adminAmI);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const tour = useProductTour();
   const { data: roleData } = useQuery({
     queryKey: ["am-i-admin"],
     queryFn: () => amI(),
@@ -98,6 +100,7 @@ function AppLayout() {
           <Link
             key={item.to}
             to={item.to}
+            data-tour={item.tour}
             onClick={onNavigate}
             className={cn(
               "mb-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
@@ -145,6 +148,15 @@ function AppLayout() {
       </aside>
 
       <main className="min-w-0 flex flex-col">
+        <div className="hidden justify-end border-b border-border bg-background px-6 py-2 md:flex">
+          <button
+            data-tour="help-button"
+            onClick={tour.start}
+            className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            <HelpCircle className="h-4 w-4" /> Ayuda / Recorrido guiado
+          </button>
+        </div>
         <header className="flex items-center gap-3 bg-primary px-4 py-3 md:hidden">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
@@ -176,9 +188,17 @@ function AppLayout() {
             </div>
             <span className="text-base tracking-tight">FLUX <span className="opacity-70 font-normal">Talent</span></span>
           </Link>
+          <button
+            onClick={tour.start}
+            aria-label="Ayuda"
+            className="ml-auto inline-flex items-center gap-1 rounded-full border border-primary-foreground/30 bg-primary-foreground/10 px-3 py-1.5 text-xs font-medium text-primary-foreground"
+          >
+            <HelpCircle className="h-4 w-4" /> Ayuda
+          </button>
         </header>
         <SubscriptionBanner />
         <SatisfactionSurvey />
+        <ProductTour open={tour.open} onClose={tour.close} />
         <div className="flex-1"><Outlet /></div>
         <footer className="border-t border-border px-6 py-4 text-center text-xs text-muted-foreground">
           © 2026 FLUX Automatizaciones. Todos los derechos reservados.
