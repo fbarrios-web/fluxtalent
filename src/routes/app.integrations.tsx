@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useEffect } from "react";
 import { getGoogleStatus, googleStartUrl, googleDisconnect } from "@/lib/scheduling.functions";
 import { getMicrosoftStatus, microsoftStartUrl, microsoftDisconnect } from "@/lib/microsoft.functions";
+import { GoogleSetupGuide } from "@/components/google-setup-guide";
 
 const MICROSOFT_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/microsoft/callback";
 
