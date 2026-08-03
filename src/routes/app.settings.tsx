@@ -195,7 +195,7 @@ function Settings() {
       <h1 className="font-display text-4xl">Empresa</h1>
       <p className="mt-1 text-muted-foreground">Personalizá tu workspace y la comunicación con candidatos.</p>
 
-      <Tabs defaultValue="cuenta" className="mt-8">
+      <Tabs defaultValue={search.tab === "integraciones" ? "integraciones" : "cuenta"} className="mt-8">
         <TabsList>
           <TabsTrigger value="cuenta">Cuenta y empresa</TabsTrigger>
           <TabsTrigger value="integraciones">Integraciones</TabsTrigger>
