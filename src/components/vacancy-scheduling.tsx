@@ -265,7 +265,7 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
 
   return (
     <div className="space-y-6 p-1">
-      <div className="rounded-xl border bg-card p-5 space-y-4">
+      <div data-tour="sched-general" className="rounded-xl border bg-card p-5 space-y-4">
         <h3 className="font-semibold">Configuración general</h3>
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
@@ -312,7 +312,7 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
         </div>
       </div>
 
-      <div className="rounded-xl border bg-card p-5 space-y-4">
+      <div data-tour="sched-weekly" className="rounded-xl border bg-card p-5 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold">Disponibilidad semanal recurrente</h3>
           <Button size="sm" variant="outline" onClick={() => setRules([...rules, { weekdays: [1], startTime: "09:00", endTime: "12:00", effectiveFrom: "", effectiveUntil: "" }])}>
@@ -370,7 +370,7 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
             </div>
           ))}
         </div>
-        <div className="flex gap-2 pt-2 border-t">
+        <div data-tour="sched-save" className="flex gap-2 pt-2 border-t">
           <Button onClick={onSave} disabled={checkingOverlaps}>
             {checkingOverlaps ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" />Verificando…</> : "Guardar"}
           </Button>
@@ -378,7 +378,7 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
         </div>
       </div>
 
-      <div className="rounded-xl border bg-card p-5 space-y-4">
+      <div data-tour="sched-manual" className="rounded-xl border bg-card p-5 space-y-4">
         <h3 className="font-semibold">Agregar horario puntual</h3>
         <div className="flex flex-wrap items-end gap-2">
           <div>
@@ -455,7 +455,7 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="rounded-xl border bg-card p-5">
+      <div data-tour="sched-calendar" className="rounded-xl border bg-card p-5">
         <h3 className="font-semibold mb-3">Calendario ({data?.slots?.length ?? 0})</h3>
         {(!data?.slots || data.slots.length === 0) ? (
           <p className="text-sm text-muted-foreground">Sin slots cargados. Configurá la disponibilidad y tocá "Regenerar".</p>
