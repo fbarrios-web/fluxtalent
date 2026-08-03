@@ -359,7 +359,12 @@ export const cancelSubscription = createServerFn({ method: "POST" })
       org_id: orgId,
       user_id: userId,
       event_type: "subscription.canceled",
-      metadata: { source: "user_action", mp_preapproval_id: org?.mp_preapproval_id ?? null },
+      metadata: {
+        source: "user_action",
+        mp_preapproval_id: org?.mp_preapproval_id ?? null,
+        mp_canceled: mpCanceled,
+        mp_error: mpError,
+      },
     });
     // Cancellation email
     try {
