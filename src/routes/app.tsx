@@ -19,11 +19,11 @@ export const Route = createFileRoute("/app")({
 });
 
 const navItems = [
-  { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/app/vacancies", label: "Vacantes", icon: Briefcase },
-  { to: "/app/enterprise", label: "Multi-organización", icon: Building2 },
-  { to: "/app/subscription", label: "Suscripción", icon: CreditCard },
-  { to: "/app/settings", label: "Configuración", icon: Settings },
+  { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard, tour: "nav-dashboard" },
+  { to: "/app/vacancies", label: "Vacantes", icon: Briefcase, tour: "nav-vacancies" },
+  { to: "/app/enterprise", label: "Multi-organización", icon: Building2, tour: "nav-enterprise" },
+  { to: "/app/subscription", label: "Suscripción", icon: CreditCard, tour: "nav-subscription" },
+  { to: "/app/settings", label: "Configuración", icon: Settings, tour: "nav-settings" },
 ];
 
 
