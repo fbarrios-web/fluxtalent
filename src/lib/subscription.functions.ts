@@ -381,7 +381,15 @@ export const cancelSubscription = createServerFn({ method: "POST" })
         });
       }
     } catch (e) { console.error("[cancelSubscription] email failed", e); }
-    return { ok: true };
+    return {
+      ok: true,
+      mpCanceled,
+      // Si el proveedor rechazó la baja, avisamos para que soporte la haga a mano
+      // en vez de dejar al usuario creyendo que no le van a cobrar más.
+      warning: mpError
+        ? "Cancelamos tu plan en FLUX Talent, pero no pudimos confirmar la baja del débito automático en Mercado Pago. Escribinos a soporte@fluxtalent.com.ar para verificarlo."
+        : null,
+    };
   });
 
 /** Log a navigation/usage event from the client. */
