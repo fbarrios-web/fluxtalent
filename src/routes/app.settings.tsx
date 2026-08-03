@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { IntegrationsPanel, MicrosoftPanel } from "@/routes/app.integrations";
+import { GoogleSetupGuide } from "@/components/google-setup-guide";
 
 const MICROSOFT_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/microsoft/callback";
 
