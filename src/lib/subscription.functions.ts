@@ -288,18 +288,43 @@ export const cancelSubscription = createServerFn({ method: "POST" })
       .eq("id", orgId)
       .maybeSingle();
 
-    // Cancel Mercado Pago preapproval (ARS)
-    if (org?.mp_preapproval_id && token) {
+    // Cancel Mercado Pago preapproval (ARS). Si no tenemos el id guardado,
+    // lo buscamos en Mercado Pago por external_reference antes de rendirnos:
+    // sin esto la suscripción seguía cobrándose todos los meses.
+    let mpCanceled = false;
+    let mpError: string | null = null;
+    if (token) {
       try {
-        await fetch(`https://api.mercadopago.com/preapproval/${org.mp_preapproval_id}`, {
-          method: "PUT",
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "cancelled" }),
-        });
-      } catch (e) {
+        let preapprovalId = org?.mp_preapproval_id as string | null;
+        if (!preapprovalId) {
+          const search = await fetch(
+            `https://api.mercadopago.com/preapproval/search?external_reference=${encodeURIComponent(orgId)}&limit=10`,
+            { headers: { Authorization: `Bearer ${token}` } },
+          );
+          const json: any = search.ok ? await search.json() : null;
+          const found = (json?.results ?? []).find((r: any) => r.status === "authorized" || r.status === "pending");
+          preapprovalId = found?.id ?? null;
+        }
+        if (preapprovalId) {
+          const res = await fetch(`https://api.mercadopago.com/preapproval/${preapprovalId}`, {
+            method: "PUT",
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "cancelled" }),
+          });
+          if (res.ok) {
+            mpCanceled = true;
+            await supabaseAdmin.from("organizations").update({ mp_preapproval_id: null } as any).eq("id", orgId);
+          } else {
+            mpError = `${res.status}: ${await res.text().catch(() => "")}`;
+            console.error("[cancelSubscription] MP cancel rejected", mpError);
+          }
+        }
+      } catch (e: any) {
+        mpError = e?.message ?? "unknown";
         console.error("[cancelSubscription] MP cancel failed", e);
       }
     }
+
 
     // Cancel Paddle subscription at end of period (USD)
     if (org?.paddle_subscription_id) {
@@ -334,7 +359,12 @@ export const cancelSubscription = createServerFn({ method: "POST" })
       org_id: orgId,
       user_id: userId,
       event_type: "subscription.canceled",
-      metadata: { source: "user_action", mp_preapproval_id: org?.mp_preapproval_id ?? null },
+      metadata: {
+        source: "user_action",
+        mp_preapproval_id: org?.mp_preapproval_id ?? null,
+        mp_canceled: mpCanceled,
+        mp_error: mpError,
+      },
     });
     // Cancellation email
     try {
@@ -351,7 +381,15 @@ export const cancelSubscription = createServerFn({ method: "POST" })
         });
       }
     } catch (e) { console.error("[cancelSubscription] email failed", e); }
-    return { ok: true };
+    return {
+      ok: true,
+      mpCanceled,
+      // Si el proveedor rechazó la baja, avisamos para que soporte la haga a mano
+      // en vez de dejar al usuario creyendo que no le van a cobrar más.
+      warning: mpError
+        ? "Cancelamos tu plan en FLUX Talent, pero no pudimos confirmar la baja del débito automático en Mercado Pago. Escribinos a soporte@fluxtalent.com.ar para verificarlo."
+        : null,
+    };
   });
 
 /** Log a navigation/usage event from the client. */
