@@ -10,7 +10,9 @@ type Step = {
   body: string;
 };
 
-const STEPS: Step[] = [
+export type TourFlow = "general" | "vacancy" | "candidate";
+
+const GENERAL_STEPS: Step[] = [
   {
     title: "¡Bienvenid@ a FLUX Talent!",
     body: "Te muestro en 1 minuto cómo publicar tu primera búsqueda, recibir CVs con match automático y activar las comunicaciones. Podés salir cuando quieras.",
@@ -62,29 +64,174 @@ const STEPS: Step[] = [
   },
 ];
 
-const SEEN_KEY = "flux-tour-seen-v1";
+const VACANCY_STEPS: Step[] = [
+  {
+    title: "Recorrido de la vacante",
+    body: "Te muestro cómo se gestiona una búsqueda: los botones de arriba, el tablero de etapas, el buscador y la configuración de la agenda.",
+  },
+  {
+    target: '[data-tour="vacancy-status"]',
+    title: "Activar / Desactivar la búsqueda",
+    body: "Con este botón cerrás o reabrís la vacante. Si está desactivada, el formulario público deja de recibir postulaciones.",
+  },
+  {
+    target: '[data-tour="vacancy-edit"]',
+    title: "Editar la vacante",
+    body: "Cambiá el título, la descripción, los requisitos o el match mínimo. Ojo: si cambiás la descripción, los CVs nuevos se evalúan con esos criterios.",
+  },
+  {
+    target: '[data-tour="vacancy-image"]',
+    title: "Imagen para difundir",
+    body: "Genera una placa lista para publicar en redes con los datos de la búsqueda, tu logo y el link de postulación.",
+  },
+  {
+    target: '[data-tour="vacancy-upload"]',
+    title: "Cargar CV/s",
+    body: "Subí currículums que ya tenías (uno o varios a la vez). Se procesan y se les calcula el match igual que a los que llegan por el formulario.",
+  },
+  {
+    target: '[data-tour="vacancy-link"]',
+    title: "Copiar link y ver el formulario",
+    body: "“Copiar link” te da la URL del formulario público para difundir. “Ver form” lo abre tal cual lo ve el postulante. “Exportar Excel” baja la lista completa.",
+  },
+  {
+    target: '[data-tour="vacancy-tabs"]',
+    title: "Vistas de la búsqueda",
+    body: "Etapas es el tablero, Tabla es la lista completa ordenable, Detalle de vacante muestra la descripción y Agenda configura las entrevistas.",
+  },
+  {
+    target: '[data-tour="vacancy-search"]',
+    title: "Buscador de postulantes",
+    body: "Escribí nombre o email para filtrar el tablero y la tabla al instante.",
+  },
+  {
+    target: '[data-tour="kanban-collapse"]',
+    title: "Minimizar y expandir columnas",
+    body: "Con esta flecha achicás una etapa para ganar espacio; tocando la columna minimizada vuelve a expandirse. Igual podés soltar tarjetas sobre una columna minimizada.",
+  },
+  {
+    title: "Mover postulantes",
+    body: "Arrastrá cada tarjeta entre etapas. Al moverla se dispara el email correspondiente (invitación a entrevista o “No avanza”) si tenés la integración conectada.",
+  },
+  {
+    target: '[data-tour="vacancy-scheduling"]',
+    title: "Agenda de entrevistas",
+    body: "En esta pestaña definís los horarios disponibles por etapa: podés crear franjas por regla (días y horarios que se repiten) o slots manuales. El postulante recibe un link para elegir turno y se crea el evento en tu calendario con la videollamada.",
+  },
+  {
+    title: "Importante sobre la agenda",
+    body: "Si no tenés Google o Microsoft conectado vas a ver una alerta amarilla: sin integración no se envían las invitaciones ni se crean los eventos. Si detectamos superposición de horarios con otra búsqueda, te avisamos antes de guardar.",
+  },
+  {
+    target: '[data-tour="help-button"]',
+    title: "Volvé cuando quieras",
+    body: "Desde “Ayuda” arriba a la derecha podés reactivar este recorrido en cualquier momento.",
+  },
+];
 
-export function useProductTour() {
+const CANDIDATE_STEPS: Step[] = [
+  {
+    title: "Recorrido de la postulación",
+    body: "Acá tenés todo sobre un postulante: sus datos, el análisis de IA, el historial y las herramientas para avanzarlo.",
+  },
+  {
+    target: '[data-tour="cand-header"]',
+    title: "Datos del postulante",
+    body: "Nombre, email y teléfono, más los accesos directos a su LinkedIn y a su CV en PDF. A la derecha ves el puntaje de match con la vacante.",
+  },
+  {
+    target: '[data-tour="cand-ai"]',
+    title: "Análisis con IA",
+    body: "Resumen automático del perfil frente a la búsqueda, desglose del match por criterio y fortalezas, gaps y red flags. Podés volver a analizarlo si cambiaste la descripción del puesto.",
+  },
+  {
+    target: '[data-tour="cand-stage"]',
+    title: "Etapa",
+    body: "Cambiá la etapa del postulante desde acá. Es lo mismo que arrastrar la tarjeta en el tablero y también dispara el email correspondiente.",
+  },
+  {
+    target: '[data-tour="cand-history"]',
+    title: "Historial",
+    body: "Cada movimiento queda registrado: cambios de etapa, emails enviados, entrevistas agendadas y análisis de IA, con fecha y hora.",
+  },
+  {
+    target: '[data-tour="cand-tab-screening"]',
+    title: "Filtro",
+    body: "Las respuestas a las preguntas de filtro que completó en el formulario de postulación.",
+  },
+  {
+    target: '[data-tour="cand-tab-profile"]',
+    title: "Resumen del perfil",
+    body: "Lo que la IA extrajo del CV: experiencia, formación y habilidades, ordenado para leerlo de un vistazo.",
+  },
+  {
+    target: '[data-tour="cand-tab-email"]',
+    title: "Email",
+    body: "Elegí el tipo de mensaje (invitación, no avanza, seguimiento) y la IA lo redacta con el contexto del postulante. Lo podés editar antes de enviarlo.",
+  },
+  {
+    target: '[data-tour="cand-tab-interview"]',
+    title: "Entrevista",
+    body: "Generá preguntas a medida según el perfil y la etapa, con el porqué de cada una para guiar la entrevista.",
+  },
+  {
+    target: '[data-tour="cand-tab-report"]',
+    title: "Informe",
+    body: "Pegá la transcripción o el resumen de la entrevista: la IA la cruza con el perfil y la vacante y descargás un informe en Word con tu logo. No incluye la transcripción cruda.",
+  },
+  {
+    target: '[data-tour="help-button"]',
+    title: "Listo",
+    body: "Desde “Ayuda” arriba a la derecha volvés a ver este recorrido cuando quieras.",
+  },
+];
+
+export const TOUR_STEPS: Record<TourFlow, Step[]> = {
+  general: GENERAL_STEPS,
+  vacancy: VACANCY_STEPS,
+  candidate: CANDIDATE_STEPS,
+};
+
+export const TOUR_LABEL: Record<TourFlow, string> = {
+  general: "Recorrido general",
+  vacancy: "Recorrido de la vacante",
+  candidate: "Recorrido de la postulación",
+};
+
+const seenKey = (flow: TourFlow) => `flux-tour-seen-${flow}-v1`;
+
+export function useProductTour(flow: TourFlow) {
   const [open, setOpen] = useState(false);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!localStorage.getItem(SEEN_KEY)) setOpen(true);
-  }, []);
+    let cancelled = false;
+    // small delay so the page content is mounted before measuring targets
+    const t = setTimeout(() => {
+      if (cancelled) return;
+      if (!localStorage.getItem(seenKey(flow))) setOpen(true);
+      else setOpen(false);
+    }, 600);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [flow]);
+
   const start = useCallback(() => setOpen(true), []);
   const close = useCallback(() => {
     setOpen(false);
-    try { localStorage.setItem(SEEN_KEY, "1"); } catch { /* ignore */ }
-  }, []);
-  return { open, start, close };
+    try { localStorage.setItem(seenKey(flow), "1"); } catch { /* ignore */ }
+  }, [flow]);
+
+  return { open, start, close, flow };
 }
 
-export function ProductTour({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function ProductTour({ open, onClose, flow = "general" }: { open: boolean; onClose: () => void; flow?: TourFlow }) {
   const [index, setIndex] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const nav = useNavigate();
-  const step = STEPS[index];
+  const steps = TOUR_STEPS[flow] ?? TOUR_STEPS.general;
+  const step = steps[index];
 
-  useEffect(() => { if (open) setIndex(0); }, [open]);
+  useEffect(() => { if (open) setIndex(0); }, [open, flow]);
 
   useEffect(() => {
     if (!open || !step?.route) return;
@@ -105,7 +252,7 @@ export function ProductTour({ open, onClose }: { open: boolean; onClose: () => v
 
   if (!open || !step) return null;
 
-  const last = index === STEPS.length - 1;
+  const last = index === steps.length - 1;
   const pad = 6;
   const cardTop = rect
     ? Math.min(rect.bottom + 12, (typeof window !== "undefined" ? window.innerHeight : 800) - 240)
@@ -140,7 +287,7 @@ export function ProductTour({ open, onClose }: { open: boolean; onClose: () => v
         <button onClick={onClose} aria-label="Cerrar recorrido" className="absolute right-3 top-3 text-muted-foreground hover:text-foreground">
           <X className="h-4 w-4" />
         </button>
-        <div className="text-xs font-medium text-primary">Paso {index + 1} de {STEPS.length}</div>
+        <div className="text-xs font-medium text-primary">{TOUR_LABEL[flow]} · Paso {index + 1} de {steps.length}</div>
         <h3 className="mt-1 text-base font-semibold">{step.title}</h3>
         <p className="mt-2 text-sm text-muted-foreground">{step.body}</p>
         <div className="mt-4 flex items-center justify-between gap-2">
