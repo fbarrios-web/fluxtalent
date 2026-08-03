@@ -252,11 +252,19 @@ export function useProductTour(flow: TourFlow) {
     // small delay so the page content is mounted before measuring targets
     const t = setTimeout(() => {
       if (cancelled) return;
-      if (!localStorage.getItem(seenKey(flow))) setOpen(true);
-      else setOpen(false);
+      let seen = true;
+      try { seen = !!localStorage.getItem(seenKey(flow)); } catch { /* ignore */ }
+      if (!seen) {
+        // mark as seen as soon as it auto-opens, so it never shows twice
+        try { localStorage.setItem(seenKey(flow), "1"); } catch { /* ignore */ }
+        setOpen(true);
+      } else {
+        setOpen(false);
+      }
     }, 600);
     return () => { cancelled = true; clearTimeout(t); };
   }, [flow]);
+
 
   const start = useCallback(() => setOpen(true), []);
   const close = useCallback(() => {
