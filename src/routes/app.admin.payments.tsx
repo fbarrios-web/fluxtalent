@@ -3,12 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { adminListPayments } from "@/lib/admin.functions";
 import { Loader2 } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/app/admin/payments")({
   component: AdminPayments,
 });
 
 function AdminPayments() {
+  const t = useT();
   const fn = useServerFn(adminListPayments);
   const { data, isLoading } = useQuery({ queryKey: ["admin-payments"], queryFn: () => fn() });
 
@@ -19,7 +21,7 @@ function AdminPayments() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-border bg-primary p-5 text-primary-foreground">
-        <p className="text-xs opacity-80">Total recaudado (aprobados)</p>
+        <p className="text-xs opacity-80">{t("Total recaudado (aprobados)")}</p>
         <p className="font-display text-3xl">ARS {total.toLocaleString("es-AR")}</p>
       </div>
 
@@ -27,12 +29,12 @@ function AdminPayments() {
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
             <tr>
-              <th className="px-4 py-3">Fecha</th>
-              <th className="px-4 py-3">Organización</th>
-              <th className="px-4 py-3">Proveedor</th>
-              <th className="px-4 py-3">Monto</th>
-              <th className="px-4 py-3">Estado</th>
-              <th className="px-4 py-3">ID</th>
+              <th className="px-4 py-3">{t("Fecha")}</th>
+              <th className="px-4 py-3">{t("Organización")}</th>
+              <th className="px-4 py-3">{t("Proveedor")}</th>
+              <th className="px-4 py-3">{t("Monto")}</th>
+              <th className="px-4 py-3">{t("Estado")}</th>
+              <th className="px-4 py-3">{t("ID")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -46,7 +48,7 @@ function AdminPayments() {
                 <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{p.provider_payment_id ?? "—"}</td>
               </tr>
             ))}
-            {!data?.length && <tr><td colSpan={6} className="px-4 py-10 text-center text-sm text-muted-foreground">Sin pagos todavía</td></tr>}
+            {!data?.length && <tr><td colSpan={6} className="px-4 py-10 text-center text-sm text-muted-foreground">{t("Sin pagos todavía")}</td></tr>}
           </tbody>
         </table>
       </div>

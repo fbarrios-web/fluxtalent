@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getUsageSummary } from "@/lib/subscription.functions";
 import { AlertTriangle, Briefcase, FileText, Sparkles, CalendarClock } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 function fmt(n: number) { return n === -1 ? "∞" : n.toLocaleString("es-AR"); }
 function pct(used: number, max: number) { return max <= 0 ? 0 : Math.min(100, Math.round((used / max) * 100)); }
@@ -27,6 +28,7 @@ function Bar({ used, max, label, icon: Icon, tone }: { used: number; max: number
 }
 
 export function UsageCard() {
+  const t = useT();
   const fn = useServerFn(getUsageSummary);
   const { data } = useQuery({ queryKey: ["usage-summary"], queryFn: () => fn(), refetchOnWindowFocus: false });
   if (!data) return null;
@@ -36,29 +38,29 @@ export function UsageCard() {
   const cvsPct = pct(data.cvsThisCycle, data.maxCvsPerCycle);
 
   const alerts: string[] = [];
-  if (data.maxActiveVacancies !== -1 && activePct >= 80) alerts.push(`Vacantes activas al ${activePct}% del límite del plan.`);
-  if (data.maxNewVacanciesPerCycle !== -1 && newPct >= 80) alerts.push(`Vacantes nuevas del ciclo al ${newPct}% del límite.`);
-  if (data.maxCvsPerCycle !== -1 && cvsPct >= 80) alerts.push(`CVs procesados al ${cvsPct}% del cupo del ciclo.`);
+  if (data.maxActiveVacancies !== -1 && activePct >= 80) alerts.push(t("Vacantes activas al {pct}% del límite del plan.", { pct: activePct }));
+  if (data.maxNewVacanciesPerCycle !== -1 && newPct >= 80) alerts.push(t("Vacantes nuevas del ciclo al {pct}% del límite.", { pct: newPct }));
+  if (data.maxCvsPerCycle !== -1 && cvsPct >= 80) alerts.push(t("CVs procesados al {pct}% del cupo del ciclo.", { pct: cvsPct }));
 
   return (
     <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h3 className="font-medium">Uso del plan {data.planName}</h3>
+          <h3 className="font-medium">{t("Uso del plan {name}", { name: data.planName })}</h3>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <CalendarClock className="h-3 w-3" /> Renovación: {new Date(data.cycleEnd).toLocaleDateString("es-AR")}
+            <CalendarClock className="h-3 w-3" /> {t("Renovación: {date}", { date: new Date(data.cycleEnd).toLocaleDateString("es-AR") })}
           </p>
         </div>
         {alerts.length > 0 && (
           <div className="rounded-full bg-warning/20 text-foreground px-3 py-1 text-xs font-medium flex items-center gap-1">
-            <AlertTriangle className="h-3.5 w-3.5" /> Cerca del límite
+            <AlertTriangle className="h-3.5 w-3.5" /> {t("Cerca del límite")}
           </div>
         )}
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
-        <Bar used={data.activeVacancies} max={data.maxActiveVacancies} label="Vacantes activas" icon={Briefcase} />
-        <Bar used={data.newVacanciesThisCycle} max={data.maxNewVacanciesPerCycle} label="Nuevas del ciclo" icon={Sparkles} />
-        <Bar used={data.cvsThisCycle} max={data.maxCvsPerCycle} label="CVs del ciclo" icon={FileText} />
+        <Bar used={data.activeVacancies} max={data.maxActiveVacancies} label={t("Vacantes activas")} icon={Briefcase} />
+        <Bar used={data.newVacanciesThisCycle} max={data.maxNewVacanciesPerCycle} label={t("Nuevas del ciclo")} icon={Sparkles} />
+        <Bar used={data.cvsThisCycle} max={data.maxCvsPerCycle} label={t("CVs del ciclo")} icon={FileText} />
       </div>
       {alerts.length > 0 && (
         <ul className="text-xs text-muted-foreground space-y-0.5 border-t border-border pt-2">

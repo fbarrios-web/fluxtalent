@@ -30,6 +30,7 @@ import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe
 import { Route as ScheduleTokenRouteImport } from './routes/schedule.$token'
 import { Route as ApiPublicAnalyzeRouteImport } from './routes/api.public.analyze'
 import { Route as ApiPublicApplyRouteImport } from './routes/api.public.apply'
+import { Route as ApiPublicGeoRouteImport } from './routes/api.public.geo'
 import { Route as AppAdminIndexRouteImport } from './routes/app.admin.index'
 import { Route as AppAdminOrgsRouteImport } from './routes/app.admin.orgs'
 import { Route as AppAdminPaymentsRouteImport } from './routes/app.admin.payments'
@@ -158,6 +159,11 @@ const ApiPublicAnalyzeRoute = ApiPublicAnalyzeRouteImport.update({
 const ApiPublicApplyRoute = ApiPublicApplyRouteImport.update({
   id: '/api/public/apply',
   path: '/api/public/apply',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicGeoRoute = ApiPublicGeoRouteImport.update({
+  id: '/api/public/geo',
+  path: '/api/public/geo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
@@ -309,6 +315,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
+  '/api/public/geo': typeof ApiPublicGeoRoute
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
   '/app/admin/pricing': typeof AppAdminPricingRoute
@@ -354,6 +361,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
+  '/api/public/geo': typeof ApiPublicGeoRoute
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
   '/app/admin/pricing': typeof AppAdminPricingRoute
@@ -402,6 +410,7 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
+  '/api/public/geo': typeof ApiPublicGeoRoute
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
   '/app/admin/pricing': typeof AppAdminPricingRoute
@@ -451,6 +460,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/api/public/analyze'
     | '/api/public/apply'
+    | '/api/public/geo'
     | '/app/admin/orgs'
     | '/app/admin/payments'
     | '/app/admin/pricing'
@@ -496,6 +506,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/api/public/analyze'
     | '/api/public/apply'
+    | '/api/public/geo'
     | '/app/admin/orgs'
     | '/app/admin/payments'
     | '/app/admin/pricing'
@@ -543,6 +554,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/api/public/analyze'
     | '/api/public/apply'
+    | '/api/public/geo'
     | '/app/admin/orgs'
     | '/app/admin/payments'
     | '/app/admin/pricing'
@@ -583,6 +595,7 @@ export interface RootRouteChildren {
   ScheduleTokenRoute: typeof ScheduleTokenRoute
   ApiPublicAnalyzeRoute: typeof ApiPublicAnalyzeRoute
   ApiPublicApplyRoute: typeof ApiPublicApplyRoute
+  ApiPublicGeoRoute: typeof ApiPublicGeoRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicGoogleCallbackRoute: typeof ApiPublicGoogleCallbackRoute
   ApiPublicHooksProcessCvQueueRoute: typeof ApiPublicHooksProcessCvQueueRoute
@@ -745,6 +758,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/apply'
       fullPath: '/api/public/apply'
       preLoaderRoute: typeof ApiPublicApplyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/geo': {
+      id: '/api/public/geo'
+      path: '/api/public/geo'
+      fullPath: '/api/public/geo'
+      preLoaderRoute: typeof ApiPublicGeoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/admin/': {
@@ -988,6 +1008,7 @@ const rootRouteChildren: RootRouteChildren = {
   ScheduleTokenRoute: ScheduleTokenRoute,
   ApiPublicAnalyzeRoute: ApiPublicAnalyzeRoute,
   ApiPublicApplyRoute: ApiPublicApplyRoute,
+  ApiPublicGeoRoute: ApiPublicGeoRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicGoogleCallbackRoute: ApiPublicGoogleCallbackRoute,
   ApiPublicHooksProcessCvQueueRoute: ApiPublicHooksProcessCvQueueRoute,

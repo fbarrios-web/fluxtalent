@@ -15,6 +15,7 @@ import { planByPrice, formatLimit, formatArs, formatUsd, TRIAL_DAYS, mergePlanOv
 import { getPlanPricing } from "@/lib/pricing.functions";
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
 import { changePaddlePlan, getPaddlePortalUrl } from "@/utils/payments.functions";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/app/subscription")({
   component: SubscriptionPage,
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/app/subscription")({
 });
 
 function SubscriptionPage() {
+  const t = useT();
   const [cancelOpen, setCancelOpen] = useState(false);
   const [currency, setCurrency] = useState<"ars" | "usd">("ars");
   const qc = useQueryClient();
@@ -53,21 +55,21 @@ function SubscriptionPage() {
   const subscribeMut = useMutation({
     mutationFn: () => createPre(),
     onSuccess: (r) => { window.location.href = r.init_point; },
-    onError: (e: any) => toast.error(e.message ?? "Error"),
+    onError: (e: any) => toast.error(e.message ?? t("Error")),
   });
   const cancelMut = useMutation({
     mutationFn: () => cancel(),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["my-subscription"] });
       setCancelOpen(false);
-      toast.success("Suscripción cancelada. Vas a conservar el acceso hasta el final del período pago.");
+      toast.success(t("Suscripción cancelada. Vas a conservar el acceso hasta el final del período pago."));
     },
-    onError: (e: any) => toast.error(e?.message ?? "No se pudo cancelar la suscripción"),
+    onError: (e: any) => toast.error(e?.message ?? t("No se pudo cancelar la suscripción")),
   });
   const planCheckoutMut = useMutation({
     mutationFn: (planId: "starter" | "pro" | "enterprise") => startCheckout({ data: { planId } }),
     onSuccess: (r) => { window.open(r.url, "_blank", "noopener"); },
-    onError: (e: any) => toast.error(e.message ?? "No se pudo iniciar el checkout"),
+    onError: (e: any) => toast.error(e.message ?? t("No se pudo iniciar el checkout")),
   });
 
   if (isLoading) return <div className="grid h-96 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></div>;
@@ -75,8 +77,8 @@ function SubscriptionPage() {
   if (error) {
     return (
       <div className="mx-auto max-w-3xl p-6 md:p-10">
-        <h1 className="font-display text-4xl">Suscripción</h1>
-        <p className="mt-2 text-destructive">No se pudo cargar tu suscripción. Probá recargar la página.</p>
+        <h1 className="font-display text-4xl">{t("Suscripción")}</h1>
+        <p className="mt-2 text-destructive">{t("No se pudo cargar tu suscripción. Probá recargar la página.")}</p>
       </div>
     );
   }
@@ -84,8 +86,8 @@ function SubscriptionPage() {
   if (!sub) {
     return (
       <div className="mx-auto max-w-3xl p-6 md:p-10">
-        <h1 className="font-display text-4xl">Suscripción</h1>
-        <p className="mt-2 text-muted-foreground">No encontramos tu organización. Completá el alta para activar tu prueba gratuita.</p>
+        <h1 className="font-display text-4xl">{t("Suscripción")}</h1>
+        <p className="mt-2 text-muted-foreground">{t("No encontramos tu organización. Completá el alta para activar tu prueba gratuita.")}</p>
       </div>
     );
   }
@@ -96,23 +98,23 @@ function SubscriptionPage() {
   const isActive = sub.subscription_status === "active";
 
   const statusBadges: Record<string, { label: string; cls: string }> = {
-    trialing: { label: `En prueba · ${sub.daysLeft} días restantes`, cls: "bg-accent text-accent-foreground" },
-    active: { label: "Activa", cls: "bg-primary/10 text-primary" },
-    past_due: { label: "Pago pendiente", cls: "bg-destructive/10 text-destructive" },
-    canceled: { label: "Cancelada", cls: "bg-muted text-muted-foreground" },
+    trialing: { label: t("En prueba · {n} días restantes", { n: sub.daysLeft }), cls: "bg-accent text-accent-foreground" },
+    active: { label: t("Activa"), cls: "bg-primary/10 text-primary" },
+    past_due: { label: t("Pago pendiente"), cls: "bg-destructive/10 text-destructive" },
+    canceled: { label: t("Cancelada"), cls: "bg-muted text-muted-foreground" },
   };
   const statusBadge = statusBadges[sub.subscription_status] ?? { label: String(sub.subscription_status), cls: "bg-muted text-muted-foreground" };
 
   return (
     <div className="mx-auto max-w-5xl p-6 md:p-10">
-      <h1 className="font-display text-4xl">Suscripción</h1>
-      <p className="mt-1 text-muted-foreground">Gestioná tu plan, tu prueba y tus pagos.</p>
+      <h1 className="font-display text-4xl">{t("Suscripción")}</h1>
+      <p className="mt-1 text-muted-foreground">{t("Gestioná tu plan, tu prueba y tus pagos.")}</p>
 
       {/* Estado actual */}
       <div className="mt-8 rounded-2xl border border-border bg-card p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-sm text-muted-foreground">Plan {isTrial ? "en prueba" : "activo"}</p>
+            <p className="text-sm text-muted-foreground">{t("Plan {status}", { status: isTrial ? t("en prueba") : t("activo") })}</p>
             <p className="font-display text-3xl">FLUX Talent — {activePlan.name}</p>
             <div className="mt-1 flex items-baseline gap-2">
               {activePlan.originalPriceArs != null && activePlan.originalPriceArs > activePlan.priceArs && activePlan.priceArs > 0 && (
@@ -122,12 +124,12 @@ function SubscriptionPage() {
               )}
               <span className="text-sm text-muted-foreground">
                 {activePlan.priceArs === 0
-                  ? `Gratis / ${TRIAL_DAYS} días`
+                  ? t("Gratis / {n} días", { n: TRIAL_DAYS })
                   : activePlan.priceArs === -1
-                    ? "A medida"
+                    ? t("A medida")
                     : sub.plan_currency === "usd" && activePlan.priceUsd
-                      ? `${formatUsd(activePlan.priceUsd)} / mes`
-                      : `${formatArs(activePlan.priceArs)} / mes`}
+                      ? t("{price} / mes", { price: formatUsd(activePlan.priceUsd) })
+                      : t("{price} / mes", { price: formatArs(activePlan.priceArs) })}
               </span>
               {activePlan.originalPriceArs != null && activePlan.originalPriceArs > activePlan.priceArs && activePlan.priceArs > 0 && (
                 <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
@@ -140,10 +142,10 @@ function SubscriptionPage() {
         </div>
 
         <div className="mt-6 grid gap-3 md:grid-cols-4">
-          <Info label={isTrial ? "Días de prueba restantes" : isActive ? "Próximo cobro en" : "Estado"} value={isTrial || isActive ? `${sub.daysLeft} días` : "—"} />
-          <Info label="Vacantes incluidas" value={formatLimit(activePlan.maxVacancies)} />
-          <Info label="CVs / mes incluidos" value={formatLimit(activePlan.maxCvsPerMonth)} />
-          <Info label="Último pago" value={sub.last_payment_at ? new Date(sub.last_payment_at).toLocaleDateString("es-AR") : "—"} />
+          <Info label={isTrial ? t("Días de prueba restantes") : isActive ? t("Próximo cobro en") : t("Estado")} value={isTrial || isActive ? t("{n} días", { n: sub.daysLeft }) : "—"} />
+          <Info label={t("Vacantes incluidas")} value={formatLimit(activePlan.maxVacancies)} />
+          <Info label={t("CVs / mes incluidos")} value={formatLimit(activePlan.maxCvsPerMonth)} />
+          <Info label={t("Último pago")} value={sub.last_payment_at ? new Date(sub.last_payment_at).toLocaleDateString("es-AR") : "—"} />
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
@@ -159,7 +161,7 @@ function SubscriptionPage() {
                   size="lg"
                 >
                   {(subscribeMut.isPending || planCheckoutMut.isPending) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
-                  {isTrial ? `Activar ${targetPlan?.name ?? "suscripción"} ahora` : `Suscribirme a ${targetPlan?.name ?? "FLUX Talent"}`}
+                  {isTrial ? t("Activar {name} ahora", { name: targetPlan?.name ?? t("suscripción") }) : t("Suscribirme a {name}", { name: targetPlan?.name ?? "FLUX Talent" })}
                 </Button>
               );
             })()
@@ -168,32 +170,32 @@ function SubscriptionPage() {
             <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" className="text-destructive hover:text-destructive">
-                  <X className="mr-2 h-4 w-4" /> Cancelar suscripción
+                  <X className="mr-2 h-4 w-4" /> {t("Cancelar suscripción")}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <AlertTriangle className="h-5 w-5 text-destructive" />
-                    Cancelar suscripción
+                    {t("Cancelar suscripción")}
                   </DialogTitle>
                   <DialogDescription asChild>
                     <div className="space-y-2 pt-2 text-sm">
-                      <p>Al cancelar:</p>
+                      <p>{t("Al cancelar:")}</p>
                       <ul className="list-disc space-y-1 pl-5">
-                        <li>Se da de baja tu suscripción {sub.plan_currency === "usd" ? "en Paddle (USD)" : "en Mercado Pago"} y no se generarán nuevos cobros.</li>
-                        <li><strong>Conservás el acceso completo al sistema hasta el final del período ya pago</strong> (por ejemplo: si pagaste el 20/6 y cancelás el 10/7, podés seguir usándolo hasta el 20/7).</li>
-                        <li>Al vencer el período, las funcionalidades (crear vacantes, recibir CVs, análisis con IA) quedan deshabilitadas hasta reactivar la suscripción.</li>
-                        <li>Tus datos se conservan: si te volvés a suscribir, recuperás todo.</li>
+                        <li>{t("Se da de baja tu suscripción {provider} y no se generarán nuevos cobros.", { provider: sub.plan_currency === "usd" ? t("en Paddle (USD)") : t("en Mercado Pago") })}</li>
+                        <li><strong>{t("Conservás el acceso completo al sistema hasta el final del período ya pago")}</strong>{t(" (por ejemplo: si pagaste el 20/6 y cancelás el 10/7, podés seguir usándolo hasta el 20/7).")}</li>
+                        <li>{t("Al vencer el período, las funcionalidades (crear vacantes, recibir CVs, análisis con IA) quedan deshabilitadas hasta reactivar la suscripción.")}</li>
+                        <li>{t("Tus datos se conservan: si te volvés a suscribir, recuperás todo.")}</li>
                       </ul>
                     </div>
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                  <Button variant="ghost" onClick={() => setCancelOpen(false)} disabled={cancelMut.isPending}>Volver</Button>
+                  <Button variant="ghost" onClick={() => setCancelOpen(false)} disabled={cancelMut.isPending}>{t("Volver")}</Button>
                   <Button variant="destructive" onClick={() => cancelMut.mutate()} disabled={cancelMut.isPending}>
                     {cancelMut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Sí, cancelar suscripción
+                    {t("Sí, cancelar suscripción")}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -207,11 +209,11 @@ function SubscriptionPage() {
                   const { url } = await getPortal();
                   window.open(url, "_blank", "noopener,noreferrer");
                 } catch (e: any) {
-                  toast.error(e?.message ?? "No se pudo abrir el portal");
+                  toast.error(e?.message ?? t("No se pudo abrir el portal"));
                 }
               }}
             >
-              <ExternalLink className="mr-2 h-4 w-4" /> Gestionar en el portal
+              <ExternalLink className="mr-2 h-4 w-4" /> {t("Gestionar en el portal")}
             </Button>
           )}
         </div>
@@ -220,31 +222,31 @@ function SubscriptionPage() {
       {/* Planes */}
       <div className="mt-10">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-display text-2xl">Planes disponibles</h2>
+          <h2 className="font-display text-2xl">{t("Planes disponibles")}</h2>
           <div className="inline-flex overflow-hidden rounded-full border border-border text-sm">
             <button
               type="button"
               onClick={() => setCurrency("ars")}
               className={`px-4 py-1.5 ${currency === "ars" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
             >
-              ARS · Mercado Pago
+              {t("ARS · Mercado Pago")}
             </button>
             <button
               type="button"
               onClick={() => setCurrency("usd")}
               className={`flex items-center gap-2 px-4 py-1.5 ${currency === "usd" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
             >
-              USD · Tarjeta internacional
+              {t("USD · Tarjeta internacional")}
               <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
-                Próximamente
+                {t("Próximamente")}
               </span>
             </button>
           </div>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           {currency === "ars"
-            ? "Cobramos en pesos argentinos vía Mercado Pago."
-            : "El pago en dólares está en etapa final de habilitación. Si necesitás pagar en USD, escribinos a soporte@fluxtalent.com.ar."}
+            ? t("Cobramos en pesos argentinos vía Mercado Pago.")
+            : t("El pago en dólares está en etapa final de habilitación. Si necesitás pagar en USD, escribinos a soporte@fluxtalent.com.ar.")}
         </p>
 
 
@@ -260,12 +262,12 @@ function SubscriptionPage() {
               >
                 {p.highlighted && (
                   <span className="absolute -top-3 left-6 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
-                    <Sparkles className="h-3 w-3" /> Recomendado
+                    <Sparkles className="h-3 w-3" /> {t("Recomendado")}
                   </span>
                 )}
                 <div className="flex items-baseline justify-between">
                   <h3 className="font-display text-2xl">{p.name}</h3>
-                  {isCurrent && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">Tu plan</span>}
+                  {isCurrent && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{t("Tu plan")}</span>}
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">{p.tagline}</p>
 
@@ -308,10 +310,10 @@ function SubscriptionPage() {
                 <div className="mt-6 flex-1" />
 
                 {isCurrent ? (
-                  <Button variant="outline" disabled className="mt-4 w-full">Plan actual</Button>
+                  <Button variant="outline" disabled className="mt-4 w-full">{t("Plan actual")}</Button>
                 ) : p.contactOnly ? (
                   <Button asChild className="mt-4 w-full" variant="outline">
-                    <a href="mailto:soporte@fluxtalent.com.ar?subject=Plan%20Custom%20FLUX%20Talent">Contactar a ventas</a>
+                    <a href="mailto:soporte@fluxtalent.com.ar?subject=Plan%20Custom%20FLUX%20Talent">{t("Contactar a ventas")}</a>
                   </Button>
                 ) : hasUsd ? (
                   <Button
@@ -321,17 +323,17 @@ function SubscriptionPage() {
                     onClick={async () => {
                       const { data: userData } = await supabase.auth.getUser();
                       const user = userData.user;
-                      if (!user) { toast.error("Iniciá sesión"); return; }
+                      if (!user) { toast.error(t("Iniciá sesión")); return; }
                       // If org already has Paddle sub, do plan-change instead of new checkout
                       if (sub.paddle_subscription_id) {
                         try {
                           const r = await changePlan({ data: { newPriceId: p.paddlePriceId! } });
                           toast.success(r.applied === "immediate"
-                            ? "Upgrade aplicado. Los cupos se reiniciaron."
-                            : "Downgrade agendado para el próximo ciclo.");
+                            ? t("Upgrade aplicado. Los cupos se reiniciaron.")
+                            : t("Downgrade agendado para el próximo ciclo."));
                           qc.invalidateQueries({ queryKey: ["my-subscription"] });
                         } catch (e: any) {
-                          toast.error(e?.message ?? "No se pudo cambiar el plan");
+                          toast.error(e?.message ?? t("No se pudo cambiar el plan"));
                         }
                         return;
                       }
@@ -340,11 +342,11 @@ function SubscriptionPage() {
                         priceId: p.paddlePriceId!,
                         customerEmail: user.email ?? undefined,
                         customData: { userId: user.id, orgId: String(orgId) },
-                      }).catch((e: any) => toast.error(e?.message ?? "No se pudo abrir el checkout"));
+                      }).catch((e: any) => toast.error(e?.message ?? t("No se pudo abrir el checkout")));
                     }}
                   >
                     {paddleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
-                    Suscribirme a {p.name} (USD)
+                    {t("Suscribirme a {name} (USD)", { name: p.name })}
                   </Button>
                 ) : MP_PLAN_LINKS[p.id] ? (
                   <Button
@@ -358,10 +360,10 @@ function SubscriptionPage() {
                     ) : (
                       <CreditCard className="mr-2 h-4 w-4" />
                     )}
-                    Suscribirme a {p.name}
+                    {t("Suscribirme a {name}", { name: p.name })}
                   </Button>
                 ) : (
-                  <Button variant="outline" disabled className="mt-4 w-full">Próximamente</Button>
+                  <Button variant="outline" disabled className="mt-4 w-full">{t("Próximamente")}</Button>
                 )}
               </div>
             );
@@ -371,24 +373,24 @@ function SubscriptionPage() {
 
       {/* Historial */}
       <div className="mt-10 rounded-2xl border border-border bg-card p-6">
-        <h2 className="font-semibold">Historial de pagos</h2>
+        <h2 className="font-semibold">{t("Historial de pagos")}</h2>
         {!history?.length ? (
-          <p className="mt-3 text-sm text-muted-foreground">Cuando hagas tu primer pago, aparece acá.</p>
+          <p className="mt-3 text-sm text-muted-foreground">{t("Cuando hagas tu primer pago, aparece acá.")}</p>
         ) : (
           <table className="mt-4 w-full text-sm">
             <thead className="text-left text-xs uppercase text-muted-foreground">
-              <tr><th className="py-2">Fecha</th><th>Monto</th><th>Método</th><th>Estado</th></tr>
+              <tr><th className="py-2">{t("Fecha")}</th><th>{t("Monto")}</th><th>{t("Método")}</th><th>{t("Estado")}</th></tr>
             </thead>
             <tbody className="divide-y divide-border">
               {history.map((p: any) => {
-                const providerLabel = p.provider === "mercadopago" ? "Mercado Pago" : p.provider === "paddle" ? "Paddle (USD)" : p.provider === "manual" ? "Manual" : p.provider;
+                const providerLabel = p.provider === "mercadopago" ? "Mercado Pago" : p.provider === "paddle" ? "Paddle (USD)" : p.provider === "manual" ? t("Manual") : p.provider;
                 const statusMap: Record<string, { label: string; cls: string }> = {
-                  approved: { label: "Aprobado", cls: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
-                  pending: { label: "Pendiente", cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
-                  in_process: { label: "En proceso", cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
-                  rejected: { label: "Rechazado", cls: "bg-destructive/10 text-destructive" },
-                  cancelled: { label: "Cancelado", cls: "bg-muted text-muted-foreground" },
-                  refunded: { label: "Reembolsado", cls: "bg-muted text-muted-foreground" },
+                  approved: { label: t("Aprobado"), cls: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
+                  pending: { label: t("Pendiente"), cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+                  in_process: { label: t("En proceso"), cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+                  rejected: { label: t("Rechazado"), cls: "bg-destructive/10 text-destructive" },
+                  cancelled: { label: t("Cancelado"), cls: "bg-muted text-muted-foreground" },
+                  refunded: { label: t("Reembolsado"), cls: "bg-muted text-muted-foreground" },
                 };
                 const st = statusMap[p.status] ?? { label: p.status, cls: "bg-primary/10 text-primary" };
                 const amt = Number(p.amount_ars);
@@ -408,7 +410,7 @@ function SubscriptionPage() {
       </div>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-        <p className="flex items-center gap-2 text-xs text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" /> Pago seguro vía Mercado Pago. Cancelás cuando quieras.</p>
+        <p className="flex items-center gap-2 text-xs text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" /> {t("Pago seguro vía Mercado Pago. Cancelás cuando quieras.")}</p>
         <InvoiceCDialog defaultAmount={sub.plan_price_ars} />
       </div>
     </div>
@@ -425,6 +427,7 @@ function Info({ label, value }: { label: string; value: string }) {
 }
 
 function InvoiceCDialog({ defaultAmount }: { defaultAmount: number | null }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     business_name: "",
@@ -438,61 +441,61 @@ function InvoiceCDialog({ defaultAmount }: { defaultAmount: number | null }) {
   const mut = useMutation({
     mutationFn: () => submit({ data: { ...form, amount_ars: defaultAmount ?? undefined } }),
     onSuccess: (r: any) => {
-      toast.success("Solicitud enviada. Te facturamos a la brevedad.");
+      toast.success(t("Solicitud enviada. Te facturamos a la brevedad."));
       if (r?.emailWarning) toast.warning(r.emailWarning);
       setOpen(false);
       setForm({ business_name: "", cuit_or_dni: "", email: "", phone: "", address: "", notes: "" });
     },
-    onError: (e: any) => toast.error(e?.message ?? "No se pudo enviar la solicitud"),
+    onError: (e: any) => toast.error(e?.message ?? t("No se pudo enviar la solicitud")),
   });
 
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm"><FileText className="mr-2 h-4 w-4" /> Solicitar Factura C</Button>
+        <Button variant="outline" size="sm"><FileText className="mr-2 h-4 w-4" /> {t("Solicitar Factura C")}</Button>
       </DialogTrigger>
       <DialogContent>
-        <DialogHeader><DialogTitle>Solicitar Factura C</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t("Solicitar Factura C")}</DialogTitle></DialogHeader>
         <div className="grid gap-3">
           <div>
-            <Label>Razón social o nombre</Label>
+            <Label>{t("Razón social o nombre")}</Label>
             <Input value={form.business_name} onChange={e => setForm(f => ({ ...f, business_name: e.target.value }))} />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <Label>CUIT / DNI</Label>
+              <Label>{t("CUIT / DNI")}</Label>
               <Input value={form.cuit_or_dni} onChange={e => setForm(f => ({ ...f, cuit_or_dni: e.target.value }))} />
             </div>
             <div>
-              <Label>Email de facturación</Label>
+              <Label>{t("Email de facturación")}</Label>
               <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <Label>Teléfono</Label>
+              <Label>{t("Teléfono")}</Label>
               <Input type="tel" placeholder="+54 ..." value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
             </div>
             <div>
-              <Label>Domicilio (opcional)</Label>
+              <Label>{t("Domicilio (opcional)")}</Label>
               <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
             </div>
           </div>
 
           <div>
-            <Label>Notas (opcional)</Label>
+            <Label>{t("Notas (opcional)")}</Label>
             <Textarea rows={3} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
           </div>
           {defaultAmount != null && (
-            <p className="text-xs text-muted-foreground">Monto a facturar: {formatArs(defaultAmount)}</p>
+            <p className="text-xs text-muted-foreground">{t("Monto a facturar: {amount}", { amount: formatArs(defaultAmount) })}</p>
           )}
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button variant="ghost" onClick={() => setOpen(false)}>{t("Cancelar")}</Button>
           <Button onClick={() => mut.mutate()} disabled={mut.isPending || !form.business_name || !form.cuit_or_dni || !form.email || !form.phone}>
             {mut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Enviar solicitud
+            {t("Enviar solicitud")}
           </Button>
         </DialogFooter>
       </DialogContent>

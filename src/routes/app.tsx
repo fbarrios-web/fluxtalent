@@ -13,6 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { adminAmI } from "@/lib/admin.functions";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
+import { useT } from "@/lib/i18n";
 
 
 export const Route = createFileRoute("/app")({
@@ -29,6 +30,7 @@ const navItems = [
 
 
 function AppLayout() {
+  const t = useT();
   const { user, loading } = useAuth();
   const nav = useNavigate();
   const loc = useLocation();
@@ -117,7 +119,7 @@ function AppLayout() {
             )}
           >
             <item.icon className="h-4 w-4" />
-            {item.label}
+            {t(item.label)}
           </Link>
         );
       })}
@@ -132,7 +134,7 @@ function AppLayout() {
               : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
           )}
         >
-          <ShieldCheck className="h-4 w-4" /> Admin
+          <ShieldCheck className="h-4 w-4" /> {t("Admin")}
         </Link>
       )}
     </>
@@ -151,7 +153,7 @@ function AppLayout() {
             <div className="truncate font-medium text-foreground">{user.email}</div>
           </div>
           <button onClick={() => signOut()} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors">
-            <LogOut className="h-4 w-4" /> Salir
+            <LogOut className="h-4 w-4" /> {t("Salir")}
           </button>
         </div>
       </aside>
@@ -164,7 +166,7 @@ function AppLayout() {
                 data-tour="help-button"
                 className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
               >
-                <HelpCircle className="h-4 w-4" /> Ayuda / Recorrido guiado
+                <HelpCircle className="h-4 w-4" /> {t("Ayuda / Recorrido guiado")}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64">
@@ -175,10 +177,10 @@ function AppLayout() {
                   onSelect={() => { setManualFlow(f); tour.start(); }}
                 >
                   <div>
-                    <div>{TOUR_LABEL[f]}</div>
+                    <div>{t(TOUR_LABEL[f])}</div>
                     {f !== "general" && f !== tourFlow && !(f === "scheduling" && tourFlow === "vacancy") && (
                       <div className="text-[11px] text-muted-foreground">
-                        {f === "vacancy" ? "Entrá a una vacante para verlo" : "Entrá a una postulación para verlo"}
+                        {f === "vacancy" ? t("Entrá a una vacante para verlo") : t("Entrá a una postulación para verlo")}
                       </div>
                     )}
                   </div>
@@ -191,13 +193,13 @@ function AppLayout() {
         <header className="flex items-center gap-3 bg-primary px-4 py-3 md:hidden">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
-              <button aria-label="Menú" className="flex items-center gap-2 rounded-lg border border-primary-foreground/30 bg-primary-foreground/10 px-3 py-2 text-primary-foreground hover:bg-primary-foreground/20 transition-colors">
+              <button aria-label={t("Menú")} className="flex items-center gap-2 rounded-lg border border-primary-foreground/30 bg-primary-foreground/10 px-3 py-2 text-primary-foreground hover:bg-primary-foreground/20 transition-colors">
                 <Menu className="h-5 w-5" />
-                <span className="text-xs font-medium">Menú</span>
+                <span className="text-xs font-medium">{t("Menú")}</span>
               </button>
             </SheetTrigger>
             <SheetContent side="left" className="w-[260px] bg-sidebar p-0">
-              <SheetTitle className="sr-only">Menú</SheetTitle>
+              <SheetTitle className="sr-only">{t("Menú")}</SheetTitle>
               <div className="flex items-center gap-2 px-6 py-5 font-semibold text-sidebar-foreground">
                 <FluxLogo size={28} />
                 <span className="text-base tracking-tight">FLUX <span className="text-muted-foreground font-normal">Talent</span></span>
@@ -208,7 +210,7 @@ function AppLayout() {
                   <div className="truncate font-medium text-foreground">{user.email}</div>
                 </div>
                 <button onClick={() => signOut()} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent">
-                  <LogOut className="h-4 w-4" /> Salir
+                  <LogOut className="h-4 w-4" /> {t("Salir")}
                 </button>
               </div>
             </SheetContent>
@@ -221,10 +223,10 @@ function AppLayout() {
           </Link>
           <button
             onClick={tour.start}
-            aria-label="Ayuda"
+            aria-label={t("Ayuda")}
             className="ml-auto inline-flex items-center gap-1 rounded-full border border-primary-foreground/30 bg-primary-foreground/10 px-3 py-1.5 text-xs font-medium text-primary-foreground"
           >
-            <HelpCircle className="h-4 w-4" /> Ayuda
+            <HelpCircle className="h-4 w-4" /> {t("Ayuda")}
           </button>
         </header>
         <SubscriptionBanner />
@@ -232,7 +234,7 @@ function AppLayout() {
         <ProductTour open={tour.open} onClose={tour.close} flow={activeFlow} />
         <div className="flex-1"><Outlet /></div>
         <footer className="border-t border-border px-6 py-4 text-center text-xs text-muted-foreground">
-          © 2026 FLUX Automatizaciones. Todos los derechos reservados.
+          {t("© 2026 FLUX Automatizaciones. Todos los derechos reservados.")}
         </footer>
       </main>
     </div>

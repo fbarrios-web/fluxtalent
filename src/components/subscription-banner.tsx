@@ -3,8 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMySubscription } from "@/lib/subscription.functions";
 import { AlertCircle, Clock, Lock } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 export function SubscriptionBanner() {
+  const t = useT();
   const fn = useServerFn(getMySubscription);
   const { data } = useQuery({ queryKey: ["my-subscription"], queryFn: () => fn(), refetchOnWindowFocus: false });
   if (!data) return null;
@@ -13,8 +15,8 @@ export function SubscriptionBanner() {
     if (data.daysLeft > 5) return null;
     return (
       <Bar tone="warning" icon={Clock}>
-        Te quedan <b>{data.daysLeft} días</b> de prueba gratis.
-        <Link to="/app/subscription" className="ml-2 underline font-medium">Suscribirme ahora →</Link>
+        {t("Te quedan {n} días de prueba gratis.", { n: data.daysLeft })}
+        <Link to="/app/subscription" className="ml-2 underline font-medium">{t("Suscribirme ahora →")}</Link>
       </Bar>
     );
   }
@@ -25,13 +27,12 @@ export function SubscriptionBanner() {
       <Bar tone="danger" icon={AlertCircle}>
         {graceMs > 0 ? (
           <>
-            No pudimos confirmar tu pago. Te damos <b>{graceDays} {graceDays === 1 ? "día" : "días"}</b> de gracia
-            para regularizarlo sin perder el acceso.
+            {t("No pudimos confirmar tu pago. Te damos {n} {dayLabel} de gracia para regularizarlo sin perder el acceso.", { n: graceDays, dayLabel: graceDays === 1 ? t("día") : t("días") })}
           </>
         ) : (
-          <>Tu suscripción está <b>pendiente de pago</b> y la cuenta quedó en modo solo-lectura.</>
+          <>{t("Tu suscripción está pendiente de pago y la cuenta quedó en modo solo-lectura.")}</>
         )}
-        <Link to="/app/subscription" className="ml-2 underline font-medium">Completar pago →</Link>
+        <Link to="/app/subscription" className="ml-2 underline font-medium">{t("Completar pago →")}</Link>
       </Bar>
     );
   }
@@ -39,14 +40,14 @@ export function SubscriptionBanner() {
     const st = (data as any).effective_status;
     const msg =
       st === "trial_expired"
-        ? "Tu período de prueba terminó."
+        ? t("Tu período de prueba terminó.")
         : st === "subscription_expired" || st === "canceled_expired"
-          ? "Tu suscripción venció."
-          : "Tu cuenta no tiene una suscripción activa.";
+          ? t("Tu suscripción venció.")
+          : t("Tu cuenta no tiene una suscripción activa.");
     return (
       <Bar tone="danger" icon={Lock}>
-        {msg} Estás en <b>modo solo-lectura</b>.
-        <Link to="/app/subscription" className="ml-2 underline font-medium">Activar suscripción →</Link>
+        {msg} {t("Estás en {mode}.", { mode: t("modo solo-lectura") })}
+        <Link to="/app/subscription" className="ml-2 underline font-medium">{t("Activar suscripción →")}</Link>
       </Bar>
     );
   }

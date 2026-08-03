@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MatchPill } from "./app.dashboard";
+import { useT } from "@/lib/i18n";
 
 const STAGES = ["received", "interview_1", "interview_2", "interview_3", "hired", "rejected"];
 
@@ -25,20 +26,20 @@ const EMAIL_KIND_LABEL: Record<string, string> = {
   rejection: "no avanza", interview_invite: "invitación a entrevista",
   offer: "oferta", followup: "seguimiento", custom: "personalizado",
 };
-function eventLabel(e: any): string {
+function eventLabel(e: any, tr: (s: string, vars?: any) => string): string {
   const t = e?.type ?? "";
   const p = e?.payload ?? {};
-  if (t === "stage_change") return `Movido a ${STAGE_LABEL[p.stage] ?? p.stage}`;
-  if (t === "email_sent") return `Email enviado${p.kind ? ` (${EMAIL_KIND_LABEL[p.kind] ?? p.kind})` : ""}`;
-  if (t === "rejection_email_sent") return "Email de \"No avanza\" enviado";
-  if (t === "auto_reject") return `Movido a No avanza automáticamente${p.reason ? ` (${p.reason})` : ""}`;
+  if (t === "stage_change") return tr("Movido a {stage}", { stage: tr(STAGE_LABEL[p.stage] ?? p.stage) });
+  if (t === "email_sent") return p.kind ? tr("Email enviado ({kind})", { kind: tr(EMAIL_KIND_LABEL[p.kind] ?? p.kind) }) : tr("Email enviado");
+  if (t === "rejection_email_sent") return tr('Email de "No avanza" enviado');
+  if (t === "auto_reject") return p.reason ? tr("Movido a No avanza automáticamente ({reason})", { reason: p.reason }) : tr("Movido a No avanza automáticamente");
 
-  if (t === "offer_email_sent") return "Email de oferta enviado";
-  if (t === "interview_invite_sent") return "Invitación a entrevista enviada";
-  if (t === "interview_scheduled") return "Entrevista agendada";
-  if (t === "manual_created") return "Candidato cargado manualmente";
-  if (t === "ai_analyzed" || t === "ai_analysis") return "Análisis con IA completado";
-  return t || "Evento";
+  if (t === "offer_email_sent") return tr("Email de oferta enviado");
+  if (t === "interview_invite_sent") return tr("Invitación a entrevista enviada");
+  if (t === "interview_scheduled") return tr("Entrevista agendada");
+  if (t === "manual_created") return tr("Candidato cargado manualmente");
+  if (t === "ai_analyzed" || t === "ai_analysis") return tr("Análisis con IA completado");
+  return t || tr("Evento");
 }
 function eventColor(t: string): string {
   if (t === "email_sent" || t === "interview_invite_sent" || t === "rejection_email_sent" || t === "offer_email_sent") return "bg-sky-500";
@@ -54,6 +55,7 @@ export const Route = createFileRoute("/app/candidates/$id")({
 });
 
 function CandidateDetail() {
+  const t = useT();
   const { id } = Route.useParams();
   const qc = useQueryClient();
   const analyze = useServerFn(analyzeApplication);
@@ -93,13 +95,13 @@ function CandidateDetail() {
 
   async function runAi() {
     setAnalyzing(true);
-    try { await analyze({ data: { applicationId: id } }); toast.success("Análisis completado"); qc.invalidateQueries({ queryKey: ["candidate", id] }); }
+    try { await analyze({ data: { applicationId: id } }); toast.success(t("Análisis completado")); qc.invalidateQueries({ queryKey: ["candidate", id] }); }
     catch (e: any) { toast.error(e.message); } finally { setAnalyzing(false); }
   }
   async function setStage(stage: string) {
     const res: any = await move({ data: { id, stage: stage as any } });
     qc.invalidateQueries({ queryKey: ["candidate", id] });
-    toast.success("Etapa actualizada");
+    toast.success(t("Etapa actualizada"));
     if (res?.inviteWarning) toast.warning(res.inviteWarning);
   }
 
@@ -119,15 +121,15 @@ function CandidateDetail() {
     catch (e: any) { toast.error(e.message); } finally { setGenQ(false); }
   }
   async function runTranscriptAnalysis(): Promise<any | null> {
-    const t = transcript.trim();
-    if (t.length < 20) { toast.error("Pegá una transcripción más completa (mín. 20 caracteres)"); return null; }
+    const trimmed = transcript.trim();
+    if (trimmed.length < 20) { toast.error(t("Pegá una transcripción más completa (mín. 20 caracteres)")); return null; }
     setAnalyzingTr(true);
     try {
-      const r: any = await analyzeInterview({ data: { applicationId: id, transcript: t } });
+      const r: any = await analyzeInterview({ data: { applicationId: id, transcript: trimmed } });
       setAnalysis(r);
-      toast.success("Transcripción analizada");
+      toast.success(t("Transcripción analizada"));
       return r;
-    } catch (e: any) { toast.error(e.message ?? "Error al analizar"); return null; }
+    } catch (e: any) { toast.error(e.message ?? t("Error al analizar")); return null; }
     finally { setAnalyzingTr(false); }
   }
 
@@ -135,7 +137,7 @@ function CandidateDetail() {
     setGenDoc(true);
     try {
       const { data: prof } = await supabase.from("profiles").select("org_id").maybeSingle();
-      if (!prof?.org_id) throw new Error("Organización no encontrada");
+      if (!prof?.org_id) throw new Error(t("Organización no encontrada"));
       const { data: org } = await supabase.from("organizations").select("name, consultancy_name, logo_url, brand_color").eq("id", prof.org_id).single();
       let useAnalysis = analysis;
       if (!useAnalysis && transcript.trim().length >= 20) {
@@ -147,15 +149,15 @@ function CandidateDetail() {
         vacancy: { title: a.vacancy?.title },
         analysis: useAnalysis,
       });
-      toast.success("Informe generado");
-    } catch (e: any) { toast.error(e.message ?? "Error al generar el informe"); }
+      toast.success(t("Informe generado"));
+    } catch (e: any) { toast.error(e.message ?? t("Error al generar el informe")); }
     finally { setGenDoc(false); }
   }
 
   return (
     <div className="p-6 md:p-10">
       <Link to="/app/vacancies/$vacancyId" params={{ vacancyId: app.vacancy.id }} className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> Volver a {app.vacancy.title}
+        <ArrowLeft className="h-4 w-4" /> {t("Volver a {title}", { title: app.vacancy.title })}
       </Link>
 
       <div className="grid gap-6 md:grid-cols-[1fr_320px]">
@@ -166,7 +168,7 @@ function CandidateDetail() {
               <p className="text-muted-foreground">{app.email}{app.phone ? ` · ${app.phone}` : ""}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 {app.linkedin && normalizeLinkedin(app.linkedin) && <a href={normalizeLinkedin(app.linkedin)!} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">LinkedIn</a>}
-                {app.cv_url && <button onClick={openCv} className="inline-flex items-center gap-1 text-xs text-primary hover:underline"><FileText className="h-3 w-3" /> Ver CV</button>}
+                {app.cv_url && <button onClick={openCv} className="inline-flex items-center gap-1 text-xs text-primary hover:underline"><FileText className="h-3 w-3" /> {t("Ver CV")}</button>}
               </div>
             </div>
             <MatchPill score={app.match_score} />
@@ -174,14 +176,14 @@ function CandidateDetail() {
 
           <div data-tour="cand-ai" className="rounded-2xl border border-border bg-card p-5">
             <div className="mb-2 flex items-center justify-between">
-              <h3 className="flex items-center gap-2 font-semibold"><Sparkles className="h-4 w-4 text-primary" /> Análisis con IA</h3>
+              <h3 className="flex items-center gap-2 font-semibold"><Sparkles className="h-4 w-4 text-primary" /> {t("Análisis con IA")}</h3>
               {(app.ai_status === "pending" || app.ai_status === "error" || !app.match_score) && (
                 <Button size="sm" onClick={runAi} disabled={analyzing}>
                   {analyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                  {app.match_score ? "Re-analizar" : "Analizar ahora"}
+                  {app.match_score ? t("Re-analizar") : t("Analizar ahora")}
                 </Button>
               )}
-              {app.ai_status === "running" && <span className="inline-flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> analizando…</span>}
+              {app.ai_status === "running" && <span className="inline-flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> {t("analizando…")}</span>}
             </div>
 
             {app.ai_summary ? (
@@ -196,27 +198,27 @@ function CandidateDetail() {
                   ))}
                 </div>
                 <div className="mt-4 grid gap-4 md:grid-cols-3">
-                  <Insight icon={CheckCircle2} title="Fortalezas" items={app.strengths} color="text-success" />
-                  <Insight icon={AlertTriangle} title="Gaps" items={app.gaps} color="text-warning" />
-                  <Insight icon={AlertTriangle} title="Red flags" items={app.red_flags} color="text-destructive" />
+                  <Insight icon={CheckCircle2} title={t("Fortalezas")} items={app.strengths} color="text-success" />
+                  <Insight icon={AlertTriangle} title={t("Gaps")} items={app.gaps} color="text-warning" />
+                  <Insight icon={AlertTriangle} title={t("Red flags")} items={app.red_flags} color="text-destructive" />
                 </div>
               </>
             ) : (
-              <p className="text-sm text-muted-foreground">Todavía sin análisis. Hacé clic en "Analizar ahora".</p>
+              <p className="text-sm text-muted-foreground">{t('Todavía sin análisis. Hacé clic en "Analizar ahora".')}</p>
             )}
           </div>
 
           <Tabs defaultValue="screening">
             <TabsList>
-              <TabsTrigger data-tour="cand-tab-screening" value="screening">Filtro</TabsTrigger>
-              <TabsTrigger data-tour="cand-tab-profile" value="profile">Resumen del perfil</TabsTrigger>
-              <TabsTrigger data-tour="cand-tab-email" value="email"><Mail className="mr-1 h-3 w-3" /> Email</TabsTrigger>
-              <TabsTrigger data-tour="cand-tab-interview" value="interview"><MessageSquare className="mr-1 h-3 w-3" /> Entrevista</TabsTrigger>
-              <TabsTrigger data-tour="cand-tab-report" value="report"><FileDown className="mr-1 h-3 w-3" /> Informe</TabsTrigger>
+              <TabsTrigger data-tour="cand-tab-screening" value="screening">{t("Filtro")}</TabsTrigger>
+              <TabsTrigger data-tour="cand-tab-profile" value="profile">{t("Resumen del perfil")}</TabsTrigger>
+              <TabsTrigger data-tour="cand-tab-email" value="email"><Mail className="mr-1 h-3 w-3" /> {t("Email")}</TabsTrigger>
+              <TabsTrigger data-tour="cand-tab-interview" value="interview"><MessageSquare className="mr-1 h-3 w-3" /> {t("Entrevista")}</TabsTrigger>
+              <TabsTrigger data-tour="cand-tab-report" value="report"><FileDown className="mr-1 h-3 w-3" /> {t("Informe")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="screening" className="mt-4 rounded-xl border border-border bg-card p-5">
-              {Object.entries(app.screening_answers ?? {}).length === 0 && <p className="text-sm text-muted-foreground">Sin respuestas.</p>}
+              {Object.entries(app.screening_answers ?? {}).length === 0 && <p className="text-sm text-muted-foreground">{t("Sin respuestas.")}</p>}
               <ul className="space-y-3">
                 {Object.entries(app.screening_answers ?? {}).map(([q, a]: any) => (
                   <li key={q}>
@@ -243,24 +245,24 @@ function CandidateDetail() {
                 <Select value={emailKind} onValueChange={(v: any) => setEmailKind(v)}>
                   <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="interview_invite">Invitar a entrevista</SelectItem>
-                    <SelectItem value="rejection">No avanza (amable)</SelectItem>
-                    <SelectItem value="followup">Seguimiento</SelectItem>
+                    <SelectItem value="interview_invite">{t("Invitar a entrevista")}</SelectItem>
+                    <SelectItem value="rejection">{t("No avanza (amable)")}</SelectItem>
+                    <SelectItem value="followup">{t("Seguimiento")}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button onClick={genEmailNow} disabled={genEmail} variant="outline">
-                  {genEmail ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />} Redactar con IA
+                  {genEmail ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />} {t("Redactar con IA")}
                 </Button>
               </div>
-              <Textarea rows={10} value={emailBody} onChange={e => setEmailBody(e.target.value)} placeholder="Tu email aparecerá acá…" />
+              <Textarea rows={10} value={emailBody} onChange={e => setEmailBody(e.target.value)} placeholder={t("Tu email aparecerá acá…")} />
               <Button asChild disabled={!emailBody}>
-                <a href={`mailto:${app.email}?subject=${encodeURIComponent("Sobre tu postulación a " + app.vacancy.title)}&body=${encodeURIComponent(emailBody)}`}>Abrir en email</a>
+                <a href={`mailto:${app.email}?subject=${encodeURIComponent(t("Sobre tu postulación a {title}", { title: app.vacancy.title }))}&body=${encodeURIComponent(emailBody)}`}>{t("Abrir en email")}</a>
               </Button>
             </TabsContent>
 
             <TabsContent value="interview" className="mt-4 space-y-3 rounded-xl border border-border bg-card p-5">
               <Button onClick={genQuestions} disabled={genQ} variant="outline">
-                {genQ ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />} Generar preguntas
+                {genQ ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />} {t("Generar preguntas")}
               </Button>
               <ol className="mt-2 space-y-3">
                 {questions.map((q, i) => (
@@ -275,32 +277,32 @@ function CandidateDetail() {
 
             <TabsContent value="report" className="mt-4 space-y-3 rounded-xl border border-border bg-card p-5">
               <div>
-                <h4 className="text-sm font-semibold">Informe del candidato (Word)</h4>
-                <p className="text-xs text-muted-foreground">Pegá la transcripción y la IA la cruza con el perfil y la vacante. El informe NO incluye la transcripción cruda: se exporta el análisis estructurado.</p>
+                <h4 className="text-sm font-semibold">{t("Informe del candidato (Word)")}</h4>
+                <p className="text-xs text-muted-foreground">{t("Pegá la transcripción y la IA la cruza con el perfil y la vacante. El informe NO incluye la transcripción cruda: se exporta el análisis estructurado.")}</p>
               </div>
-              <Textarea rows={10} placeholder="Pegá acá la transcripción o resumen de la entrevista…" value={transcript} onChange={e => { setTranscript(e.target.value); setAnalysis(null); }} />
+              <Textarea rows={10} placeholder={t("Pegá acá la transcripción o resumen de la entrevista…")} value={transcript} onChange={e => { setTranscript(e.target.value); setAnalysis(null); }} />
               <div className="flex flex-wrap gap-2">
                 <Button onClick={runTranscriptAnalysis} disabled={analyzingTr || !transcript.trim()} variant="outline">
                   {analyzingTr ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                  Analizar transcripción
+                  {t("Analizar transcripción")}
                 </Button>
                 <Button onClick={downloadReport} disabled={genDoc || analyzingTr}>
                   {genDoc ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
-                  Generar y descargar Word
+                  {t("Generar y descargar Word")}
                 </Button>
               </div>
               {analysis && (
                 <div className="mt-3 space-y-3 rounded-lg border border-border bg-muted/30 p-4 text-sm">
                   <div className="flex flex-wrap items-center gap-3">
-                    <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">Alineación: {analysis.alignment_score}%</span>
+                    <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">{t("Alineación: {n}%", { n: analysis.alignment_score })}</span>
                     <span className="rounded-full bg-foreground/10 px-2.5 py-0.5 text-xs font-medium uppercase">{analysis.recommendation}</span>
                   </div>
                   <p>{analysis.summary}</p>
                   {!!analysis.strengths?.length && (
-                    <div><div className="text-xs font-semibold text-success">A favor</div><ul className="list-disc pl-5 text-xs">{analysis.strengths.map((s: string, i: number) => <li key={i}>{s}</li>)}</ul></div>
+                    <div><div className="text-xs font-semibold text-success">{t("A favor")}</div><ul className="list-disc pl-5 text-xs">{analysis.strengths.map((s: string, i: number) => <li key={i}>{s}</li>)}</ul></div>
                   )}
                   {!!analysis.concerns?.length && (
-                    <div><div className="text-xs font-semibold text-warning">Atención</div><ul className="list-disc pl-5 text-xs">{analysis.concerns.map((s: string, i: number) => <li key={i}>{s}</li>)}</ul></div>
+                    <div><div className="text-xs font-semibold text-warning">{t("Atención")}</div><ul className="list-disc pl-5 text-xs">{analysis.concerns.map((s: string, i: number) => <li key={i}>{s}</li>)}</ul></div>
                   )}
                 </div>
               )}
@@ -311,17 +313,17 @@ function CandidateDetail() {
 
         <aside className="space-y-4">
           <div className="rounded-2xl border border-border bg-card p-4">
-            <h4 data-tour="cand-stage" className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Etapa</h4>
+            <h4 data-tour="cand-stage" className="mb-2 text-xs font-semibold uppercase text-muted-foreground">{t("Etapa")}</h4>
             <Select value={app.stage} onValueChange={setStage}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{STAGES.map(s => <SelectItem key={s} value={s}>{STAGE_LABEL[s]}</SelectItem>)}</SelectContent>
+              <SelectContent>{STAGES.map(s => <SelectItem key={s} value={s}>{t(STAGE_LABEL[s])}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="rounded-2xl border border-border bg-card p-4">
-            <h4 data-tour="cand-history" className="mb-3 text-xs font-semibold uppercase text-muted-foreground">Historial</h4>
+            <h4 data-tour="cand-history" className="mb-3 text-xs font-semibold uppercase text-muted-foreground">{t("Historial")}</h4>
             <ul className="space-y-2 text-xs">
               {(app.application_events ?? []).slice().sort((a: any, b: any) => +new Date(b.created_at) - +new Date(a.created_at)).map((e: any) => {
-                const label = eventLabel(e);
+                const label = eventLabel(e, t);
                 return (
                   <li key={e.id} className="flex gap-2 text-muted-foreground">
                     <div className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${eventColor(e.type)}`} />
@@ -331,7 +333,7 @@ function CandidateDetail() {
               })}
               <li className="flex gap-2 text-muted-foreground">
                 <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground" />
-                <div><span className="font-medium text-foreground">Postulación recibida</span><br />{new Date(app.created_at).toLocaleString("es-AR")}</div>
+                <div><span className="font-medium text-foreground">{t("Postulación recibida")}</span><br />{new Date(app.created_at).toLocaleString("es-AR")}</div>
               </li>
             </ul>
           </div>

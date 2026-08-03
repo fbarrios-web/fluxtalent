@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n";
 import { X, ArrowRight, ArrowLeft } from "lucide-react";
 
 type Step = {
@@ -282,6 +283,7 @@ export function useProductTour(flow: TourFlow) {
 }
 
 export function ProductTour({ open, onClose, flow = "general" }: { open: boolean; onClose: () => void; flow?: TourFlow }) {
+  const t = useT();
   const [index, setIndex] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const nav = useNavigate();
@@ -341,22 +343,22 @@ export function ProductTour({ open, onClose, flow = "general" }: { open: boolean
             : { top: "50%", left: "50%", transform: "translate(-50%, -50%)" }
         }
       >
-        <button onClick={onClose} aria-label="Cerrar recorrido" className="absolute right-3 top-3 text-muted-foreground hover:text-foreground">
+        <button onClick={onClose} aria-label={t("Cerrar recorrido")} className="absolute right-3 top-3 text-muted-foreground hover:text-foreground">
           <X className="h-4 w-4" />
         </button>
-        <div className="text-xs font-medium text-primary">{TOUR_LABEL[flow]} · Paso {index + 1} de {steps.length}</div>
-        <h3 className="mt-1 text-base font-semibold">{step.title}</h3>
-        <p className="mt-2 text-sm text-muted-foreground">{step.body}</p>
+        <div className="text-xs font-medium text-primary">{t(TOUR_LABEL[flow])} · {t("Paso {n} de {total}", { n: index + 1, total: steps.length })}</div>
+        <h3 className="mt-1 text-base font-semibold">{t(step.title)}</h3>
+        <p className="mt-2 text-sm text-muted-foreground">{t(step.body)}</p>
         <div className="mt-4 flex items-center justify-between gap-2">
-          <button onClick={onClose} className="text-xs text-muted-foreground hover:underline">Saltar</button>
+          <button onClick={onClose} className="text-xs text-muted-foreground hover:underline">{t("Saltar")}</button>
           <div className="flex gap-2">
             {index > 0 && (
               <Button variant="outline" size="sm" onClick={() => setIndex(i => i - 1)}>
-                <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Atrás
+                <ArrowLeft className="mr-1 h-3.5 w-3.5" /> {t("Atrás")}
               </Button>
             )}
             <Button size="sm" onClick={() => (last ? onClose() : setIndex(i => i + 1))}>
-              {last ? "Entendido" : <>Siguiente <ArrowRight className="ml-1 h-3.5 w-3.5" /></>}
+              {last ? t("Entendido") : <>{t("Siguiente")} <ArrowRight className="ml-1 h-3.5 w-3.5" /></>}
             </Button>
           </div>
         </div>

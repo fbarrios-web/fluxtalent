@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { getGoogleStatus, googleStartUrl, googleDisconnect } from "@/lib/scheduling.functions";
 import { getMicrosoftStatus, microsoftStartUrl, microsoftDisconnect } from "@/lib/microsoft.functions";
 import { GoogleSetupGuide } from "@/components/google-setup-guide";
+import { useT } from "@/lib/i18n";
 
 const MICROSOFT_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/microsoft/callback";
 
@@ -23,32 +24,33 @@ export const Route = createFileRoute("/app/integrations")({
 });
 
 function IntegrationsPage() {
+  const t = useT();
   const qc = useQueryClient();
   const router = useRouter();
   const search = Route.useSearch();
 
   useEffect(() => {
     if (search.ok === "1") {
-      toast.success("Google Calendar conectado");
+      toast.success(t("Google Calendar conectado"));
       router.navigate({ to: "/app/integrations", replace: true });
       qc.invalidateQueries({ queryKey: ["google-status"] });
       qc.invalidateQueries({ queryKey: ["microsoft-status"] });
     } else if (search.ok_ms === "1") {
-      toast.success("Microsoft (Outlook + Teams) conectado");
+      toast.success(t("Microsoft (Outlook + Teams) conectado"));
       router.navigate({ to: "/app/integrations", replace: true });
       qc.invalidateQueries({ queryKey: ["google-status"] });
       qc.invalidateQueries({ queryKey: ["microsoft-status"] });
     } else if (search.error) {
       const messages: Record<string, string> = {
-        invalid_microsoft_secret: "Microsoft rechazó el secreto configurado. Ya lo actualicé; probá conectar de nuevo.",
-        microsoft_token_exchange_failed: "Microsoft no pudo completar la conexión. Probá conectar de nuevo.",
-        microsoft_profile_failed: "Microsoft conectó, pero no pudimos leer el perfil. Revisá permisos y reconectá.",
-        no_refresh: "Microsoft no devolvió acceso permanente. Reconectá aceptando todos los permisos.",
-        invalid_state: "La conexión expiró. Iniciá Microsoft nuevamente.",
-        missing_code: "Microsoft canceló la conexión antes de terminar.",
-        store_failed: "No pudimos guardar la conexión. Probá nuevamente.",
+        invalid_microsoft_secret: t("Microsoft rechazó el secreto configurado. Ya lo actualicé; probá conectar de nuevo."),
+        microsoft_token_exchange_failed: t("Microsoft no pudo completar la conexión. Probá conectar de nuevo."),
+        microsoft_profile_failed: t("Microsoft conectó, pero no pudimos leer el perfil. Revisá permisos y reconectá."),
+        no_refresh: t("Microsoft no devolvió acceso permanente. Reconectá aceptando todos los permisos."),
+        invalid_state: t("La conexión expiró. Iniciá Microsoft nuevamente."),
+        missing_code: t("Microsoft canceló la conexión antes de terminar."),
+        store_failed: t("No pudimos guardar la conexión. Probá nuevamente."),
       };
-      toast.error(messages[search.error] ?? `No se pudo conectar: ${search.error}`);
+      toast.error(messages[search.error] ?? t("No se pudo conectar: {error}", { error: search.error }));
       router.navigate({ to: "/app/integrations", replace: true });
     }
   }, [search.ok, search.ok_ms, search.error, qc, router]);
@@ -56,10 +58,10 @@ function IntegrationsPage() {
   return (
     <div className="p-6 md:p-10 max-w-3xl space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold mb-2">Integraciones</h1>
-        <p className="text-muted-foreground">Conectá tu cuenta para automatizar entrevistas y enviar invitaciones desde tu mail. Solo podés tener un proveedor activo a la vez.</p>
+        <h1 className="text-2xl font-semibold mb-2">{t("Integraciones")}</h1>
+        <p className="text-muted-foreground">{t("Conectá tu cuenta para automatizar entrevistas y enviar invitaciones desde tu mail. Solo podés tener un proveedor activo a la vez.")}</p>
         <p className="text-sm text-muted-foreground mt-2">
-          ¿Preferís no integrar? Podés seguir usando el sistema, pero <strong>no se envían las comunicaciones automáticas</strong> ni se crean los eventos con link de videollamada.
+          {t("¿Preferís no integrar? Podés seguir usando el sistema, pero")} <strong>{t("no se envían las comunicaciones automáticas")}</strong> {t("ni se crean los eventos con link de videollamada.")}
         </p>
       </div>
       <GoogleSetupGuide defaultOpen />
@@ -70,6 +72,7 @@ function IntegrationsPage() {
 }
 
 export function MicrosoftPanel({ callbackUrl: _callbackUrl }: { callbackUrl?: string }) {
+  const t = useT();
   const qc = useQueryClient();
   const getStatus = useServerFn(getMicrosoftStatus);
   const startUrl = useServerFn(microsoftStartUrl);
@@ -84,18 +87,18 @@ export function MicrosoftPanel({ callbackUrl: _callbackUrl }: { callbackUrl?: st
     try {
       const result = await startUrl({ data: { origin: window.location.origin } });
       if (!result.ok) {
-        toast.error("Microsoft OAuth no está configurado o el redirect no coincide.");
+        toast.error(t("Microsoft OAuth no está configurado o el redirect no coincide."));
         return;
       }
       window.location.href = result.url;
     } catch (e: any) {
-      toast.error(e?.message ?? "Error al iniciar conexión");
+      toast.error(e?.message ?? t("Error al iniciar conexión"));
     }
   }
 
   async function onDisconnect() {
     await disconnect();
-    toast.success("Microsoft desconectado");
+    toast.success(t("Microsoft desconectado"));
     qc.invalidateQueries({ queryKey: ["google-status"] });
     qc.invalidateQueries({ queryKey: ["microsoft-status"] });
   }
@@ -108,22 +111,21 @@ export function MicrosoftPanel({ callbackUrl: _callbackUrl }: { callbackUrl?: st
         </div>
         <div className="flex-1">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="font-semibold">Microsoft 365 — Outlook + Teams</h2>
+            <h2 className="font-semibold">{t("Microsoft 365 — Outlook + Teams")}</h2>
             {!isLoading && (
               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${data?.connected ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>
-                {data?.connected ? "Conectado" : "Desconectado"}
+                {data?.connected ? t("Conectado") : t("Desconectado")}
               </span>
             )}
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            Enviá mails desde tu Outlook y creá reuniones de Teams automáticamente cuando agendes una entrevista.
+            {t("Enviá mails desde tu Outlook y creá reuniones de Teams automáticamente cuando agendes una entrevista.")}
           </p>
           <div className="mt-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 flex items-start gap-2">
             <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
             <span>
-              <strong>Solo cuentas empresariales o educativas</strong> (Microsoft 365 Business / Education con buzón Exchange Online activo).
-              Las cuentas personales (@outlook.com, @hotmail.com, @live.com) no pueden crear reuniones de Teams ni enviar mails vía Graph API —
-              es una limitación de Microsoft, no de FLUX Talent. Si tenés una cuenta personal, usá la integración con Google.
+              <strong>{t("Solo cuentas empresariales o educativas")}</strong> {t("(Microsoft 365 Business / Education con buzón Exchange Online activo).")}
+              {t("Las cuentas personales (@outlook.com, @hotmail.com, @live.com) no pueden crear reuniones de Teams ni enviar mails vía Graph API — es una limitación de Microsoft, no de FLUX Talent. Si tenés una cuenta personal, usá la integración con Google.")}
             </span>
           </div>
 
@@ -133,30 +135,30 @@ export function MicrosoftPanel({ callbackUrl: _callbackUrl }: { callbackUrl?: st
             <div className="mt-4 space-y-3">
               <div className="flex items-center gap-2 text-sm">
                 <Check className="h-4 w-4 text-green-600" />
-                Conectado como <strong>{data.email}</strong>
+                {t("Conectado como")} <strong>{data.email}</strong>
               </div>
               {(!data.hasMailScope || !data.hasCalendarScope || !data.hasTeamsScope) && (
                 <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive space-y-2">
                   <div className="flex items-center gap-2 font-medium">
                     <AlertCircle className="h-3 w-3" />
-                    Permisos incompletos. Reconectá Microsoft para autorizar:
+                    {t("Permisos incompletos. Reconectá Microsoft para autorizar:")}
                   </div>
                   <ul className="list-disc pl-5">
-                    {!data.hasMailScope && <li>Enviar mails desde Outlook</li>}
-                    {!data.hasCalendarScope && <li>Crear eventos en Calendario</li>}
-                    {!data.hasTeamsScope && <li>Crear reuniones de Teams</li>}
+                    {!data.hasMailScope && <li>{t("Enviar mails desde Outlook")}</li>}
+                    {!data.hasCalendarScope && <li>{t("Crear eventos en Calendario")}</li>}
+                    {!data.hasTeamsScope && <li>{t("Crear reuniones de Teams")}</li>}
                   </ul>
-                  <Button size="sm" onClick={connect}>Reconectar Microsoft</Button>
+                  <Button size="sm" onClick={connect}>{t("Reconectar Microsoft")}</Button>
                 </div>
               )}
-              <Button variant="outline" size="sm" onClick={onDisconnect}>Desconectar</Button>
+              <Button variant="outline" size="sm" onClick={onDisconnect}>{t("Desconectar")}</Button>
             </div>
           ) : (
             <div className="mt-4">
-              <Button onClick={connect}>Conectar Microsoft</Button>
+              <Button onClick={connect}>{t("Conectar Microsoft")}</Button>
               <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
                 <AlertCircle className="h-3 w-3" />
-                Al conectar Microsoft se desactiva Google para mantener un solo proveedor activo.
+                {t("Al conectar Microsoft se desactiva Google para mantener un solo proveedor activo.")}
               </p>
             </div>
           )}
@@ -168,6 +170,7 @@ export function MicrosoftPanel({ callbackUrl: _callbackUrl }: { callbackUrl?: st
 
 /** Embeddable panel — used both at /app/integrations and inside /app/settings as a tab. */
 export function IntegrationsPanel() {
+  const t = useT();
   const qc = useQueryClient();
   const getStatus = useServerFn(getGoogleStatus);
   const startUrl = useServerFn(googleStartUrl);
@@ -182,18 +185,18 @@ export function IntegrationsPanel() {
     try {
       const result = await startUrl({ data: { origin: window.location.origin } });
       if (!result.ok) {
-        toast.error("Google rechazó el callback configurado. Contactá soporte.");
+        toast.error(t("Google rechazó el callback configurado. Contactá soporte."));
         return;
       }
       window.location.href = result.url;
     } catch (e: any) {
-      toast.error(e?.message ?? "Error al iniciar conexión");
+      toast.error(e?.message ?? t("Error al iniciar conexión"));
     }
   }
 
   async function onDisconnect() {
     await disconnect();
-    toast.success("Cuenta desconectada");
+    toast.success(t("Cuenta desconectada"));
     qc.invalidateQueries({ queryKey: ["google-status"] });
     qc.invalidateQueries({ queryKey: ["microsoft-status"] });
   }
@@ -206,15 +209,15 @@ export function IntegrationsPanel() {
         </div>
         <div className="flex-1">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="font-semibold">Google Calendar + Gmail</h2>
+            <h2 className="font-semibold">{t("Google Calendar + Gmail")}</h2>
             {!isLoading && (
               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${data?.connected ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>
-                {data?.connected ? "Conectado" : "Desconectado"}
+                {data?.connected ? t("Conectado") : t("Desconectado")}
               </span>
             )}
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            Cada entrevista agenda un evento en tu Calendar, genera el link de Meet automáticamente y envía la invitación desde tu mail.
+            {t("Cada entrevista agenda un evento en tu Calendar, genera el link de Meet automáticamente y envía la invitación desde tu mail.")}
           </p>
 
           {isLoading ? (
@@ -223,29 +226,29 @@ export function IntegrationsPanel() {
             <div className="mt-4 space-y-3">
               <div className="flex items-center gap-2 text-sm">
                 <Check className="h-4 w-4 text-green-600" />
-                Conectado como <strong>{data.email}</strong>
+                {t("Conectado como")} <strong>{data.email}</strong>
               </div>
               {(!data.hasGmailScope || !data.hasCalendarScope) && (
                 <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive space-y-2">
                   <div className="flex items-center gap-2 font-medium">
                     <AlertCircle className="h-3 w-3" />
-                    Permisos incompletos. Reconectá Google para autorizar:
+                    {t("Permisos incompletos. Reconectá Google para autorizar:")}
                   </div>
                   <ul className="list-disc pl-5">
-                    {!data.hasCalendarScope && <li>Crear eventos en Calendar</li>}
-                    {!data.hasGmailScope && <li>Enviar mails desde tu cuenta (gmail.send)</li>}
+                    {!data.hasCalendarScope && <li>{t("Crear eventos en Calendar")}</li>}
+                    {!data.hasGmailScope && <li>{t("Enviar mails desde tu cuenta (gmail.send)")}</li>}
                   </ul>
-                  <Button size="sm" onClick={connect}>Reconectar Google</Button>
+                  <Button size="sm" onClick={connect}>{t("Reconectar Google")}</Button>
                 </div>
               )}
-              <Button variant="outline" size="sm" onClick={onDisconnect}>Desconectar</Button>
+              <Button variant="outline" size="sm" onClick={onDisconnect}>{t("Desconectar")}</Button>
             </div>
           ) : (
             <div className="mt-4">
-              <Button onClick={connect}>Conectar Google</Button>
+              <Button onClick={connect}>{t("Conectar Google")}</Button>
               <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
                 <AlertCircle className="h-3 w-3" />
-                Al conectar Google se desactiva Microsoft para mantener un solo proveedor activo.
+                {t("Al conectar Google se desactiva Microsoft para mantener un solo proveedor activo.")}
               </p>
             </div>
           )}

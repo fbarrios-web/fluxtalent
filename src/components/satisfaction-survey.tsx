@@ -8,8 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n";
 
 export function SatisfactionSurvey() {
+  const t = useT();
   const getDue = useServerFn(getDueSurvey);
   const submit = useServerFn(submitSurvey);
   const qc = useQueryClient();
@@ -47,11 +49,11 @@ export function SatisfactionSurvey() {
     setSaving(true);
     try {
       await submit({ data: { bucket, nps, comments: comments.trim() || null } });
-      toast.success("¡Gracias por tu feedback!");
+      toast.success(t("¡Gracias por tu feedback!"));
       await qc.invalidateQueries({ queryKey: ["due-survey"] });
       setOpen(false);
     } catch (e: any) {
-      toast.error(e?.message ?? "Error al enviar");
+      toast.error(e?.message ?? t("Error al enviar"));
     } finally {
       setSaving(false);
     }
@@ -62,16 +64,16 @@ export function SatisfactionSurvey() {
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-display text-2xl">
-            <Sparkles className="h-5 w-5 text-primary" /> ¿Cómo va tu experiencia?
+            <Sparkles className="h-5 w-5 text-primary" /> {t("¿Cómo va tu experiencia?")}
           </DialogTitle>
           <DialogDescription>
-            Llevás {bucket} días con FLUX Talent. Tu opinión nos ayuda a mejorar el producto.
+            {t("Llevás {n} días con FLUX Talent. Tu opinión nos ayuda a mejorar el producto.", { n: bucket })}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>
             <p className="mb-2 text-sm font-medium">
-              ¿Qué tan probable es que recomiendes FLUX Talent a un colega? (0 = nada · 10 = lo recomendaría seguro)
+              {t("¿Qué tan probable es que recomiendes FLUX Talent a un colega? (0 = nada · 10 = lo recomendaría seguro)")}
             </p>
             <div className="grid grid-cols-11 gap-1">
               {Array.from({ length: 11 }, (_, i) => i).map(i => (
@@ -92,20 +94,20 @@ export function SatisfactionSurvey() {
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium">¿Algo que quieras contarnos? (opcional)</label>
+            <label className="mb-1 block text-sm font-medium">{t("¿Algo que quieras contarnos? (opcional)")}</label>
             <Textarea
               rows={3}
               value={comments}
               onChange={e => setComments(e.target.value)}
-              placeholder="Lo que más te gusta, lo que mejorarías, problemas que encontraste…"
+              placeholder={t("Lo que más te gusta, lo que mejorarías, problemas que encontraste…")}
               maxLength={2000}
             />
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => handleClose(false)}>Más tarde</Button>
+            <Button variant="ghost" onClick={() => handleClose(false)}>{t("Más tarde")}</Button>
             <Button onClick={send} disabled={nps == null || saving}>
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Enviar
+              {t("Enviar")}
             </Button>
           </div>
         </div>

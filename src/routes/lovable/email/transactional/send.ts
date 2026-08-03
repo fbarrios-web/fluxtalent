@@ -74,6 +74,8 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
           if (body.templateData && typeof body.templateData === 'object') {
             templateData = body.templateData
           }
+          const locale = body.locale === 'en' ? 'en' : (body.templateData?.locale === 'en' ? 'en' : undefined)
+          if (locale) templateData = { ...templateData, locale }
         } catch {
           return Response.json(
             { error: 'Invalid JSON in request body' },

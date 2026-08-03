@@ -3,12 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { adminMetrics } from "@/lib/admin.functions";
 import { Building2, Users, Briefcase, FileText, TrendingUp, DollarSign, Loader2 } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/app/admin/")({
   component: AdminMetrics,
 });
 
 function AdminMetrics() {
+  const t = useT();
   const fn = useServerFn(adminMetrics);
   const { data, isLoading } = useQuery({ queryKey: ["admin-metrics"], queryFn: () => fn() });
 
@@ -19,17 +21,17 @@ function AdminMetrics() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <KPI icon={Building2} label="Organizaciones" value={data.orgs} />
-        <KPI icon={Users} label="Usuarios" value={data.users} />
-        <KPI icon={Briefcase} label="Vacantes" value={data.vacancies} />
-        <KPI icon={FileText} label="Postulaciones" value={data.applications} />
-        <KPI icon={TrendingUp} label="MRR estimado" value={`ARS ${data.mrr.toLocaleString("es-AR")}`} accent />
-        <KPI icon={DollarSign} label="Cobrado 30d" value={`ARS ${data.revenue30.toLocaleString("es-AR")}`} accent />
+        <KPI icon={Building2} label={t("Organizaciones")} value={data.orgs} />
+        <KPI icon={Users} label={t("Usuarios")} value={data.users} />
+        <KPI icon={Briefcase} label={t("Vacantes")} value={data.vacancies} />
+        <KPI icon={FileText} label={t("Postulaciones")} value={data.applications} />
+        <KPI icon={TrendingUp} label={t("MRR estimado")} value={`ARS ${data.mrr.toLocaleString("es-AR")}`} accent />
+        <KPI icon={DollarSign} label={t("Cobrado 30d")} value={`ARS ${data.revenue30.toLocaleString("es-AR")}`} accent />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="rounded-2xl border border-border bg-card p-5">
-          <h3 className="font-semibold">Distribución por estado</h3>
+          <h3 className="font-semibold">{t("Distribución por estado")}</h3>
           <div className="mt-4 space-y-3">
             {(["trialing", "active", "past_due", "canceled"] as const).map(k => {
               const v = data.byStatus[k] ?? 0;
@@ -48,7 +50,7 @@ function AdminMetrics() {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-5">
-          <h3 className="font-semibold">Nuevas organizaciones · últimos 14 días</h3>
+          <h3 className="font-semibold">{t("Nuevas organizaciones · últimos 14 días")}</h3>
           <div className="mt-4 flex h-40 items-end gap-1">
             {data.signupsByDay.map(d => (
               <div key={d.date} className="flex flex-1 flex-col items-center gap-1">
@@ -61,9 +63,9 @@ function AdminMetrics() {
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-5">
-        <h3 className="font-semibold">Actividad · top eventos últimos 7 días</h3>
+        <h3 className="font-semibold">{t("Actividad · top eventos últimos 7 días")}</h3>
         {!data.topEvents.length ? (
-          <p className="mt-3 text-sm text-muted-foreground">Todavía no hay eventos registrados.</p>
+          <p className="mt-3 text-sm text-muted-foreground">{t("Todavía no hay eventos registrados.")}</p>
         ) : (
           <ul className="mt-3 divide-y divide-border">
             {data.topEvents.map(e => (

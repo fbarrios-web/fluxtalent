@@ -6,48 +6,50 @@ import img3 from "@/assets/google-guide-12.png.asset.json";
 import img4 from "@/assets/google-guide-13.png.asset.json";
 import img5 from "@/assets/google-guide-14.png.asset.json";
 import img6 from "@/assets/google-guide-15.png.asset.json";
-
-const STEPS = [
-  {
-    title: "1. Elegí tu cuenta de Google",
-    text: "Al tocar “Conectar Google” se abre esta pantalla. Elegí la cuenta de mail desde la que querés enviar las invitaciones a los postulantes.",
-    img: img1.url,
-    alt: "Pantalla de Google para elegir la cuenta con la que acceder",
-  },
-  {
-    title: "2. Tocá “Configuración avanzada”",
-    text: "Google puede mostrar el aviso “Google no verificó esta app”. Es normal mientras la verificación está en trámite: hacé clic en “Configuración avanzada”.",
-    img: img2.url,
-    alt: "Aviso de Google no verificó esta app con el enlace Configuración avanzada resaltado",
-  },
-  {
-    title: "3. Entrá al enlace “Ir a fluxtalent…”",
-    text: "Se despliega un texto abajo. Hacé clic en “Ir a fluxtalent.lovable.app (no seguro)” para continuar.",
-    img: img3.url,
-    alt: "Enlace Ir a fluxtalent resaltado dentro de la configuración avanzada",
-  },
-  {
-    title: "4. Confirmá el acceso",
-    text: "Google te pide confirmar la cuenta. Tocá “Continuar”.",
-    img: img4.url,
-    alt: "Pantalla de confirmación de acceso con el botón Continuar resaltado",
-  },
-  {
-    title: "5. Aceptá todos los permisos",
-    text: "Importante: dejá tildados todos los permisos (Calendar y envío de mails) y tocá “Continuar”. Si desmarcás alguno, no vamos a poder agendar entrevistas ni enviar las comunicaciones.",
-    img: img5.url,
-    alt: "Pantalla de permisos de Google con el botón Continuar resaltado",
-  },
-  {
-    title: "6. Listo: integración conectada",
-    text: "Volvés a FLUX Talent y la tarjeta muestra “Conectado” con tu mail. Desde ese momento cada entrevista genera el evento en Calendar, el link de Meet y el mail al postulante.",
-    img: img6.url,
-    alt: "Tarjeta de integraciones de FLUX Talent mostrando el estado Conectado",
-  },
-];
+import { useT } from "@/lib/i18n";
 
 export function GoogleSetupGuide({ defaultOpen = false }: { defaultOpen?: boolean }) {
+  const t = useT();
   const [open, setOpen] = useState(defaultOpen);
+
+  const STEPS = [
+    {
+      title: t("1. Elegí tu cuenta de Google"),
+      text: t("Al tocar “Conectar Google” se abre esta pantalla. Elegí la cuenta de mail desde la que querés enviar las invitaciones a los postulantes."),
+      img: img1.url,
+      alt: t("Pantalla de Google para elegir la cuenta con la que acceder"),
+    },
+    {
+      title: t("2. Tocá “Configuración avanzada”"),
+      text: t("Google puede mostrar el aviso “Google no verificó esta app”. Es normal mientras la verificación está en trámite: hacé clic en “Configuración avanzada”."),
+      img: img2.url,
+      alt: t("Aviso de Google no verificó esta app con el enlace Configuración avanzada resaltado"),
+    },
+    {
+      title: t("3. Entrá al enlace “Ir a fluxtalent…”"),
+      text: t("Se despliega un texto abajo. Hacé clic en “Ir a fluxtalent.lovable.app (no seguro)” para continuar."),
+      img: img3.url,
+      alt: t("Enlace Ir a fluxtalent resaltado dentro de la configuración avanzada"),
+    },
+    {
+      title: t("4. Confirmá el acceso"),
+      text: t("Google te pide confirmar la cuenta. Tocá “Continuar”."),
+      img: img4.url,
+      alt: t("Pantalla de confirmación de acceso con el botón Continuar resaltado"),
+    },
+    {
+      title: t("5. Aceptá todos los permisos"),
+      text: t("Importante: dejá tildados todos los permisos (Calendar y envío de mails) y tocá “Continuar”. Si desmarcás alguno, no vamos a poder agendar entrevistas ni enviar las comunicaciones."),
+      img: img5.url,
+      alt: t("Pantalla de permisos de Google con el botón Continuar resaltado"),
+    },
+    {
+      title: t("6. Listo: integración conectada"),
+      text: t("Volvés a FLUX Talent y la tarjeta muestra “Conectado” con tu mail. Desde ese momento cada entrevista genera el evento en Calendar, el link de Meet y el mail al postulante."),
+      img: img6.url,
+      alt: t("Tarjeta de integraciones de FLUX Talent mostrando el estado Conectado"),
+    },
+  ];
 
   return (
     <div className="rounded-2xl border border-border bg-muted/30">
@@ -58,7 +60,7 @@ export function GoogleSetupGuide({ defaultOpen = false }: { defaultOpen?: boolea
       >
         <span className="flex items-center gap-2 text-sm font-semibold">
           <HelpCircle className="h-4 w-4 text-primary" />
-          Paso a paso: cómo conectar Google (con imágenes)
+          {t("Paso a paso: cómo conectar Google (con imágenes)")}
         </span>
         {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
       </button>
@@ -78,8 +80,8 @@ export function GoogleSetupGuide({ defaultOpen = false }: { defaultOpen?: boolea
             </div>
           ))}
           <p className="text-xs text-muted-foreground">
-            ¿Se te complica? Escribinos a{" "}
-            <a href="mailto:soporte@fluxtalent.com.ar" className="text-primary underline">soporte@fluxtalent.com.ar</a> y lo configuramos con vos.
+            {t("¿Se te complica? Escribinos a")}{" "}
+            <a href="mailto:soporte@fluxtalent.com.ar" className="text-primary underline">soporte@fluxtalent.com.ar</a> {t("y lo configuramos con vos.")}
           </p>
         </div>
       )}
