@@ -33,6 +33,7 @@ function AppLayout() {
   const loc = useLocation();
   const amI = useServerFn(adminAmI);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const tour = useProductTour();
   const { data: roleData } = useQuery({
     queryKey: ["am-i-admin"],
     queryFn: () => amI(),
