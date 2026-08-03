@@ -177,6 +177,7 @@ function VacancyDetail() {
         </div>
 
         <TabsContent value="pipeline" className="mt-6">
+          <IntegrationAlert context="kanban" />
           <div className="flex gap-3 overflow-x-auto overflow-y-hidden pb-4 max-h-[calc(100vh-220px)]">
 
             {STAGES.map(s => {
