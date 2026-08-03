@@ -115,13 +115,38 @@ const VACANCY_STEPS: Step[] = [
   },
   {
     target: '[data-tour="vacancy-scheduling"]',
-    title: "Agenda de entrevistas",
-    body: "En esta pestaña definís los horarios disponibles por etapa: podés crear franjas por regla (días y horarios que se repiten) o slots manuales. El postulante recibe un link para elegir turno y se crea el evento en tu calendario con la videollamada.",
+    title: "Agenda: lo más importante",
+    body: "Entrá a la pestaña “Agenda” para configurar las entrevistas. La agenda se configura por etapa: elegí primero la etapa (por ejemplo, Entrevista) y todo lo que cargues abajo aplica a esa etapa.",
   },
   {
-    title: "Importante sobre la agenda",
-    body: "Si no tenés Google o Microsoft conectado vas a ver una alerta amarilla: sin integración no se envían las invitaciones ni se crean los eventos. Si detectamos superposición de horarios con otra búsqueda, te avisamos antes de guardar.",
+    title: "Agenda · Configuración general",
+    body: "Definís la duración de cada turno en minutos (30, 45, 60…), el email del entrevistador —se suma como invitado al evento del calendario— y podés agregar invitados extra. También hay un campo de instrucciones para el postulante que viaja en la invitación.",
   },
+  {
+    title: "Agenda · Disponibilidad semanal recurrente",
+    body: "Es la forma más rápida: elegís uno o varios días de la semana (ej. lunes/miércoles), la hora de inicio y de fin, y opcionalmente desde/hasta cuándo se aplica esa franja. El sistema parte ese rango en turnos según la duración configurada.",
+  },
+  {
+    title: "Agenda · Guardar y regenerar",
+    body: "Después de cargar las franjas tocá “Guardar”. Con “Regenerar 30 días” se recrean los turnos del próximo mes a partir de tus reglas. Si borrás una franja, se eliminan sus turnos futuros que nadie haya reservado.",
+  },
+  {
+    title: "Agenda · Horarios puntuales",
+    body: "Si necesitás un turno suelto fuera de la rutina, usá “Agregar horario puntual”: cargás fecha y hora y queda disponible sólo esa vez.",
+  },
+  {
+    title: "Agenda · Calendario y bloqueos",
+    body: "Abajo ves todos los turnos generados. Podés bloquear o liberar cada uno con un clic (bloqueado = el postulante no lo ve). Los turnos ya reservados quedan marcados con el candidato.",
+  },
+  {
+    title: "Agenda · Cómo reserva el postulante",
+    body: "Al mover a alguien a la etapa con agenda, recibe un mail con tu logo y un link para elegir el horario que le sirva. Cuando reserva, se crea el evento en tu calendario, se genera el link de videollamada y se le envía la invitación automáticamente.",
+  },
+  {
+    title: "Agenda · Avisos importantes",
+    body: "Sin Google o Microsoft conectado vas a ver una alerta amarilla: no se envían invitaciones ni se crean eventos. Y si un horario se superpone con otra búsqueda tuya, te avisamos antes de guardar para que elijas continuar o cambiarlo.",
+  },
+
   {
     target: '[data-tour="help-button"]',
     title: "Volvé cuando quieras",
