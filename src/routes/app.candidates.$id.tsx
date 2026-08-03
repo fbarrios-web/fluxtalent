@@ -160,7 +160,7 @@ function CandidateDetail() {
 
       <div className="grid gap-6 md:grid-cols-[1fr_320px]">
         <div className="space-y-6">
-          <header className="flex items-start justify-between gap-4">
+          <header data-tour="cand-header" className="flex items-start justify-between gap-4">
             <div>
               <h1 className="font-display text-4xl">{app.first_name} {app.last_name}</h1>
               <p className="text-muted-foreground">{app.email}{app.phone ? ` · ${app.phone}` : ""}</p>
@@ -172,7 +172,7 @@ function CandidateDetail() {
             <MatchPill score={app.match_score} />
           </header>
 
-          <div className="rounded-2xl border border-border bg-card p-5">
+          <div data-tour="cand-ai" className="rounded-2xl border border-border bg-card p-5">
             <div className="mb-2 flex items-center justify-between">
               <h3 className="flex items-center gap-2 font-semibold"><Sparkles className="h-4 w-4 text-primary" /> Análisis con IA</h3>
               {(app.ai_status === "pending" || app.ai_status === "error" || !app.match_score) && (
@@ -208,11 +208,11 @@ function CandidateDetail() {
 
           <Tabs defaultValue="screening">
             <TabsList>
-              <TabsTrigger value="screening">Filtro</TabsTrigger>
-              <TabsTrigger value="profile">Perfil parseado</TabsTrigger>
-              <TabsTrigger value="email"><Mail className="mr-1 h-3 w-3" /> Email</TabsTrigger>
-              <TabsTrigger value="interview"><MessageSquare className="mr-1 h-3 w-3" /> Entrevista</TabsTrigger>
-              <TabsTrigger value="report"><FileDown className="mr-1 h-3 w-3" /> Informe</TabsTrigger>
+              <TabsTrigger data-tour="cand-tab-screening" value="screening">Filtro</TabsTrigger>
+              <TabsTrigger data-tour="cand-tab-profile" value="profile">Resumen del perfil</TabsTrigger>
+              <TabsTrigger data-tour="cand-tab-email" value="email"><Mail className="mr-1 h-3 w-3" /> Email</TabsTrigger>
+              <TabsTrigger data-tour="cand-tab-interview" value="interview"><MessageSquare className="mr-1 h-3 w-3" /> Entrevista</TabsTrigger>
+              <TabsTrigger data-tour="cand-tab-report" value="report"><FileDown className="mr-1 h-3 w-3" /> Informe</TabsTrigger>
             </TabsList>
 
             <TabsContent value="screening" className="mt-4 rounded-xl border border-border bg-card p-5">
@@ -311,14 +311,14 @@ function CandidateDetail() {
 
         <aside className="space-y-4">
           <div className="rounded-2xl border border-border bg-card p-4">
-            <h4 className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Etapa</h4>
+            <h4 data-tour="cand-stage" className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Etapa</h4>
             <Select value={app.stage} onValueChange={setStage}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{STAGES.map(s => <SelectItem key={s} value={s}>{STAGE_LABEL[s]}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="rounded-2xl border border-border bg-card p-4">
-            <h4 className="mb-3 text-xs font-semibold uppercase text-muted-foreground">Historial</h4>
+            <h4 data-tour="cand-history" className="mb-3 text-xs font-semibold uppercase text-muted-foreground">Historial</h4>
             <ul className="space-y-2 text-xs">
               {(app.application_events ?? []).slice().sort((a: any, b: any) => +new Date(b.created_at) - +new Date(a.created_at)).map((e: any) => {
                 const label = eventLabel(e);

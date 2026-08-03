@@ -121,15 +121,15 @@ function VacancyDetail() {
         </div>
         <div className="flex items-center gap-2">
           {v.status === "active" ? (
-            <Button variant="outline" onClick={() => setStatus("paused")}>Desactivar</Button>
+            <Button data-tour="vacancy-status" variant="outline" onClick={() => setStatus("paused")}>Desactivar</Button>
           ) : (
-            <Button variant="outline" onClick={() => setStatus("active")}>Activar</Button>
+            <Button data-tour="vacancy-status" variant="outline" onClick={() => setStatus("active")}>Activar</Button>
           )}
           <EditVacancyDialog vacancy={v} onSaved={() => qc.invalidateQueries({ queryKey: ["vacancy", vacancyId] })} />
           <VacancyImageDialog vacancy={v} applyUrl={applyUrl} />
           
           <BulkUploadDialog vacancyId={v.id} onDone={() => qc.invalidateQueries({ queryKey: ["vacancy-apps", vacancyId] })} />
-          <Button variant="outline" onClick={copyLink}><Copy className="mr-2 h-3.5 w-3.5" /> Copiar link</Button>
+          <Button data-tour="vacancy-link" variant="outline" onClick={copyLink}><Copy className="mr-2 h-3.5 w-3.5" /> Copiar link</Button>
           <Button
             variant="outline"
             disabled={!apps?.length}
@@ -159,13 +159,13 @@ function VacancyDetail() {
 
       <Tabs defaultValue="pipeline">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <TabsList>
+          <TabsList data-tour="vacancy-tabs">
             <TabsTrigger value="pipeline">Etapas</TabsTrigger>
             <TabsTrigger value="table">Tabla</TabsTrigger>
             <TabsTrigger value="brief">Detalle de vacante</TabsTrigger>
-            <TabsTrigger value="scheduling">Agenda</TabsTrigger>
+            <TabsTrigger data-tour="vacancy-scheduling" value="scheduling">Agenda</TabsTrigger>
           </TabsList>
-          <div className="relative w-72 max-w-full">
+          <div data-tour="vacancy-search" className="relative w-72 max-w-full">
             <input
               type="search"
               value={search}
@@ -223,6 +223,7 @@ function VacancyDetail() {
                       <button
                         type="button"
                         onClick={() => toggleCollapsed(s.id)}
+                        data-tour="kanban-collapse"
                         title="Minimizar"
                         className="rounded p-0.5 text-muted-foreground hover:bg-background hover:text-foreground"
                       >
@@ -351,7 +352,7 @@ function EditVacancyDialog({ vacancy, onSaved }: { vacancy: any; onSaved: () => 
 
   return (
     <>
-      <Button variant="outline" onClick={() => setOpen(true)}><Pencil className="mr-2 h-3.5 w-3.5" /> Editar</Button>
+      <Button data-tour="vacancy-edit" variant="outline" onClick={() => setOpen(true)}><Pencil className="mr-2 h-3.5 w-3.5" /> Editar</Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
           <DialogHeader><DialogTitle>Editar vacante</DialogTitle></DialogHeader>
@@ -602,7 +603,7 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
 
   return (
     <>
-      <Button variant="outline" onClick={() => setOpen(true)}><ImageIcon className="mr-2 h-3.5 w-3.5" /> Imagen</Button>
+      <Button data-tour="vacancy-image" variant="outline" onClick={() => setOpen(true)}><ImageIcon className="mr-2 h-3.5 w-3.5" /> Imagen</Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
           <DialogHeader><DialogTitle>{hasExisting ? "Imagen de la vacante" : "Generar imagen para publicar"}</DialogTitle></DialogHeader>
@@ -749,7 +750,7 @@ function BulkUploadDialog({ vacancyId, onDone }: { vacancyId: string; onDone: ()
 
   return (
     <>
-      <Button variant="outline" onClick={() => setOpen(true)}><Upload className="mr-2 h-3.5 w-3.5" /> Cargar CV/s</Button>
+      <Button data-tour="vacancy-upload" variant="outline" onClick={() => setOpen(true)}><Upload className="mr-2 h-3.5 w-3.5" /> Cargar CV/s</Button>
       <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
         <DialogContent className="max-h-[85vh] max-w-xl overflow-y-auto">
           <DialogHeader><DialogTitle>Cargar CV/s</DialogTitle></DialogHeader>

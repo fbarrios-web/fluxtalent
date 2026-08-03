@@ -8,7 +8,8 @@ import { cn } from "@/lib/utils";
 import { FluxLogo } from "@/components/flux-logo";
 import { SubscriptionBanner } from "@/components/subscription-banner";
 import { SatisfactionSurvey } from "@/components/satisfaction-survey";
-import { ProductTour, useProductTour } from "@/components/product-tour";
+import { ProductTour, useProductTour, TOUR_LABEL, type TourFlow } from "@/components/product-tour";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { adminAmI } from "@/lib/admin.functions";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,7 +34,15 @@ function AppLayout() {
   const loc = useLocation();
   const amI = useServerFn(adminAmI);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const tour = useProductTour();
+  const tourFlow: TourFlow = /^\/app\/vacancies\/[^/]+$/.test(loc.pathname) && !/\/app\/vacancies\/new$/.test(loc.pathname)
+    ? "vacancy"
+    : /^\/app\/candidates\/[^/]+$/.test(loc.pathname)
+      ? "candidate"
+      : "general";
+  const tour = useProductTour(tourFlow);
+  const [manualFlow, setManualFlow] = useState<TourFlow | null>(null);
+  useEffect(() => { setManualFlow(null); }, [tourFlow]);
+  const activeFlow = manualFlow ?? tourFlow;
   const { data: roleData } = useQuery({
     queryKey: ["am-i-admin"],
     queryFn: () => amI(),
@@ -149,14 +158,36 @@ function AppLayout() {
 
       <main className="min-w-0 flex flex-col">
         <div className="hidden justify-end border-b border-border bg-background px-6 py-2 md:flex">
-          <button
-            data-tour="help-button"
-            onClick={tour.start}
-            className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
-          >
-            <HelpCircle className="h-4 w-4" /> Ayuda / Recorrido guiado
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                data-tour="help-button"
+                className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+              >
+                <HelpCircle className="h-4 w-4" /> Ayuda / Recorrido guiado
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              {(["general", "vacancy", "candidate"] as TourFlow[]).map(f => (
+                <DropdownMenuItem
+                  key={f}
+                  disabled={f !== "general" && f !== tourFlow}
+                  onSelect={() => { setManualFlow(f); tour.start(); }}
+                >
+                  <div>
+                    <div>{TOUR_LABEL[f]}</div>
+                    {f !== "general" && f !== tourFlow && (
+                      <div className="text-[11px] text-muted-foreground">
+                        {f === "vacancy" ? "Entrá a una vacante para verlo" : "Entrá a una postulación para verlo"}
+                      </div>
+                    )}
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
+
         <header className="flex items-center gap-3 bg-primary px-4 py-3 md:hidden">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
@@ -198,7 +229,7 @@ function AppLayout() {
         </header>
         <SubscriptionBanner />
         <SatisfactionSurvey />
-        <ProductTour open={tour.open} onClose={tour.close} />
+        <ProductTour open={tour.open} onClose={tour.close} flow={activeFlow} />
         <div className="flex-1"><Outlet /></div>
         <footer className="border-t border-border px-6 py-4 text-center text-xs text-muted-foreground">
           © 2026 FLUX Automatizaciones. Todos los derechos reservados.
