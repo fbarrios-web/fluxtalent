@@ -552,8 +552,10 @@ export async function inviteForInterview(
     throw new Error("El reclutador debe conectar Google o Microsoft en Integraciones antes de invitar.");
   }
 
+  // booking_token is a public access credential: only the service role can read it.
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: existing } = await supabase.from("interview_bookings")
-    .select("id, booking_token, status, scheduled_at").eq("application_id", app.id).eq("stage", stage).maybeSingle();
+    .select("id, status, scheduled_at").eq("application_id", app.id).eq("stage", stage).maybeSingle();
   let booking = existing;
   if (!booking) {
     const { data: created, error } = await supabase.from("interview_bookings").insert({
@@ -562,7 +564,7 @@ export async function inviteForInterview(
       org_id: vac.org_id,
       stage,
       recruiter_id: recruiterId,
-    }).select("id, booking_token, status").single();
+    }).select("id, status").single();
     if (error) throw error;
     booking = created;
   } else if (booking.status === "scheduled") {
@@ -574,7 +576,7 @@ export async function inviteForInterview(
         scheduled_at: null,
         meet_link: null,
         google_event_id: null,
-      }).eq("id", booking.id).select("id, booking_token, status, scheduled_at").single();
+      }).eq("id", booking.id).select("id, status, scheduled_at").single();
       if (error) throw error;
       booking = reopened;
     } else {
@@ -582,8 +584,13 @@ export async function inviteForInterview(
     }
   }
 
+  const { data: tokenRow } = await supabaseAdmin.from("interview_bookings")
+    .select("booking_token").eq("id", booking.id).maybeSingle();
+  const bookingToken = (tokenRow as { booking_token: string } | null)?.booking_token;
+  if (!bookingToken) throw new Error("No se pudo generar el link de reserva.");
+
   const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
-  const scheduleUrl = `${origin}/schedule/${booking.booking_token}`;
+  const scheduleUrl = `${origin}/schedule/${bookingToken}`;
 
   const { interviewInviteHtml } = await import("@/lib/email-templates");
   let access_token: string;
@@ -637,7 +644,7 @@ export async function inviteForInterview(
     payload: { stage, booking_id: booking.id },
   });
 
-  return { ok: true, bookingToken: booking.booking_token };
+  return { ok: true, bookingToken };
 }
 
 export const sendInterviewInvite = createServerFn({ method: "POST" })

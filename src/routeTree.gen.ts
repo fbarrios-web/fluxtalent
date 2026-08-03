@@ -9,80 +9,55 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TrustRouteImport } from './routes/trust'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as RefundsRouteImport } from './routes/refunds'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRouteImport } from './routes/app'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RefundsRouteImport } from './routes/refunds'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as TrustRouteImport } from './routes/trust'
 import { Route as AppIndexRouteImport } from './routes/app.index'
-import { Route as ScheduleTokenRouteImport } from './routes/schedule.$token'
-import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
-import { Route as ApplySlugRouteImport } from './routes/apply.$slug'
-import { Route as AppSubscriptionRouteImport } from './routes/app.subscription'
-import { Route as AppSetupRouteImport } from './routes/app.setup'
-import { Route as AppSettingsRouteImport } from './routes/app.settings'
-import { Route as AppIntegrationsRouteImport } from './routes/app.integrations'
-import { Route as AppEnterpriseRouteImport } from './routes/app.enterprise'
-import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppAdminRouteImport } from './routes/app.admin'
-import { Route as AppVacanciesIndexRouteImport } from './routes/app.vacancies.index'
-import { Route as AppAdminIndexRouteImport } from './routes/app.admin.index'
-import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
-import { Route as AppVacanciesNewRouteImport } from './routes/app.vacancies.new'
-import { Route as AppVacanciesVacancyIdRouteImport } from './routes/app.vacancies.$vacancyId'
-import { Route as AppCandidatesIdRouteImport } from './routes/app.candidates.$id'
-import { Route as AppAdminUsersRouteImport } from './routes/app.admin.users'
-import { Route as AppAdminUsageRouteImport } from './routes/app.admin.usage'
-import { Route as AppAdminSurveysRouteImport } from './routes/app.admin.surveys'
-import { Route as AppAdminPricingRouteImport } from './routes/app.admin.pricing'
-import { Route as AppAdminPaymentsRouteImport } from './routes/app.admin.payments'
-import { Route as AppAdminOrgsRouteImport } from './routes/app.admin.orgs'
-import { Route as ApiPublicApplyRouteImport } from './routes/api.public.apply'
+import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
+import { Route as AppEnterpriseRouteImport } from './routes/app.enterprise'
+import { Route as AppIntegrationsRouteImport } from './routes/app.integrations'
+import { Route as AppSettingsRouteImport } from './routes/app.settings'
+import { Route as AppSetupRouteImport } from './routes/app.setup'
+import { Route as AppSubscriptionRouteImport } from './routes/app.subscription'
+import { Route as ApplySlugRouteImport } from './routes/apply.$slug'
+import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as ScheduleTokenRouteImport } from './routes/schedule.$token'
 import { Route as ApiPublicAnalyzeRouteImport } from './routes/api.public.analyze'
-import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
-import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
-import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
-import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
-import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
-import { Route as ApiPublicScheduleLogoRouteImport } from './routes/api.public.schedule.logo'
-import { Route as ApiPublicScheduleBookRouteImport } from './routes/api.public.schedule.book'
-import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
-import { Route as ApiPublicMpWebhookRouteImport } from './routes/api.public.mp.webhook'
-import { Route as ApiPublicMicrosoftCallbackRouteImport } from './routes/api.public.microsoft.callback'
-import { Route as ApiPublicHooksProcessCvQueueRouteImport } from './routes/api.public.hooks.process-cv-queue'
+import { Route as ApiPublicApplyRouteImport } from './routes/api.public.apply'
+import { Route as AppAdminIndexRouteImport } from './routes/app.admin.index'
+import { Route as AppAdminOrgsRouteImport } from './routes/app.admin.orgs'
+import { Route as AppAdminPaymentsRouteImport } from './routes/app.admin.payments'
+import { Route as AppAdminPricingRouteImport } from './routes/app.admin.pricing'
+import { Route as AppAdminSurveysRouteImport } from './routes/app.admin.surveys'
+import { Route as AppAdminUsageRouteImport } from './routes/app.admin.usage'
+import { Route as AppAdminUsersRouteImport } from './routes/app.admin.users'
+import { Route as AppCandidatesIdRouteImport } from './routes/app.candidates.$id'
+import { Route as AppVacanciesIndexRouteImport } from './routes/app.vacancies.index'
+import { Route as AppVacanciesVacancyIdRouteImport } from './routes/app.vacancies.$vacancyId'
+import { Route as AppVacanciesNewRouteImport } from './routes/app.vacancies.new'
+import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicGoogleCallbackRouteImport } from './routes/api.public.google.callback'
+import { Route as ApiPublicHooksProcessCvQueueRouteImport } from './routes/api.public.hooks.process-cv-queue'
+import { Route as ApiPublicMicrosoftCallbackRouteImport } from './routes/api.public.microsoft.callback'
+import { Route as ApiPublicMpWebhookRouteImport } from './routes/api.public.mp.webhook'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicScheduleBookRouteImport } from './routes/api.public.schedule.book'
+import { Route as ApiPublicScheduleLogoRouteImport } from './routes/api.public.schedule.logo'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
+import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 
-const TrustRoute = TrustRouteImport.update({
-  id: '/trust',
-  path: '/trust',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RefundsRoute = RefundsRouteImport.update({
-  id: '/refunds',
-  path: '/refunds',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRoute = AppRouteImport.update({
@@ -90,9 +65,34 @@ const AppRoute = AppRouteImport.update({
   path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RefundsRoute = RefundsRouteImport.update({
+  id: '/refunds',
+  path: '/refunds',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrustRoute = TrustRouteImport.update({
+  id: '/trust',
+  path: '/trust',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -100,44 +100,9 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
-const ScheduleTokenRoute = ScheduleTokenRouteImport.update({
-  id: '/schedule/$token',
-  path: '/schedule/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
-  id: '/email/unsubscribe',
-  path: '/email/unsubscribe',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApplySlugRoute = ApplySlugRouteImport.update({
-  id: '/apply/$slug',
-  path: '/apply/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppSubscriptionRoute = AppSubscriptionRouteImport.update({
-  id: '/subscription',
-  path: '/subscription',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppSetupRoute = AppSetupRouteImport.update({
-  id: '/setup',
-  path: '/setup',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppSettingsRoute = AppSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppIntegrationsRoute = AppIntegrationsRouteImport.update({
-  id: '/integrations',
-  path: '/integrations',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppEnterpriseRoute = AppEnterpriseRouteImport.update({
-  id: '/enterprise',
-  path: '/enterprise',
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -145,74 +110,44 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAdminRoute = AppAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const AppEnterpriseRoute = AppEnterpriseRouteImport.update({
+  id: '/enterprise',
+  path: '/enterprise',
   getParentRoute: () => AppRoute,
 } as any)
-const AppVacanciesIndexRoute = AppVacanciesIndexRouteImport.update({
-  id: '/vacancies/',
-  path: '/vacancies/',
+const AppIntegrationsRoute = AppIntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppAdminRoute,
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
 } as any)
-const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
-  id: '/lovable/email/suppression',
-  path: '/lovable/email/suppression',
+const AppSetupRoute = AppSetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSubscriptionRoute = AppSubscriptionRouteImport.update({
+  id: '/subscription',
+  path: '/subscription',
+  getParentRoute: () => AppRoute,
+} as any)
+const ApplySlugRoute = ApplySlugRouteImport.update({
+  id: '/apply/$slug',
+  path: '/apply/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppVacanciesNewRoute = AppVacanciesNewRouteImport.update({
-  id: '/vacancies/new',
-  path: '/vacancies/new',
-  getParentRoute: () => AppRoute,
+const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
+  id: '/email/unsubscribe',
+  path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AppVacanciesVacancyIdRoute = AppVacanciesVacancyIdRouteImport.update({
-  id: '/vacancies/$vacancyId',
-  path: '/vacancies/$vacancyId',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppCandidatesIdRoute = AppCandidatesIdRouteImport.update({
-  id: '/candidates/$id',
-  path: '/candidates/$id',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAdminUsersRoute = AppAdminUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => AppAdminRoute,
-} as any)
-const AppAdminUsageRoute = AppAdminUsageRouteImport.update({
-  id: '/usage',
-  path: '/usage',
-  getParentRoute: () => AppAdminRoute,
-} as any)
-const AppAdminSurveysRoute = AppAdminSurveysRouteImport.update({
-  id: '/surveys',
-  path: '/surveys',
-  getParentRoute: () => AppAdminRoute,
-} as any)
-const AppAdminPricingRoute = AppAdminPricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
-  getParentRoute: () => AppAdminRoute,
-} as any)
-const AppAdminPaymentsRoute = AppAdminPaymentsRouteImport.update({
-  id: '/payments',
-  path: '/payments',
-  getParentRoute: () => AppAdminRoute,
-} as any)
-const AppAdminOrgsRoute = AppAdminOrgsRouteImport.update({
-  id: '/orgs',
-  path: '/orgs',
-  getParentRoute: () => AppAdminRoute,
-} as any)
-const ApiPublicApplyRoute = ApiPublicApplyRouteImport.update({
-  id: '/api/public/apply',
-  path: '/api/public/apply',
+const ScheduleTokenRoute = ScheduleTokenRouteImport.update({
+  id: '/schedule/$token',
+  path: '/schedule/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicAnalyzeRoute = ApiPublicAnalyzeRouteImport.update({
@@ -220,42 +155,91 @@ const ApiPublicAnalyzeRoute = ApiPublicAnalyzeRouteImport.update({
   path: '/api/public/analyze',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LovableEmailTransactionalSendRoute =
-  LovableEmailTransactionalSendRouteImport.update({
-    id: '/lovable/email/transactional/send',
-    path: '/lovable/email/transactional/send',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const LovableEmailTransactionalPreviewRoute =
-  LovableEmailTransactionalPreviewRouteImport.update({
-    id: '/lovable/email/transactional/preview',
-    path: '/lovable/email/transactional/preview',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const LovableEmailQueueProcessRoute =
-  LovableEmailQueueProcessRouteImport.update({
-    id: '/lovable/email/queue/process',
-    path: '/lovable/email/queue/process',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
-  id: '/lovable/email/auth/webhook',
-  path: '/lovable/email/auth/webhook',
+const ApiPublicApplyRoute = ApiPublicApplyRouteImport.update({
+  id: '/api/public/apply',
+  path: '/api/public/apply',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
-  id: '/lovable/email/auth/preview',
-  path: '/lovable/email/auth/preview',
+const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminOrgsRoute = AppAdminOrgsRouteImport.update({
+  id: '/orgs',
+  path: '/orgs',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminPaymentsRoute = AppAdminPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminPricingRoute = AppAdminPricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminSurveysRoute = AppAdminSurveysRouteImport.update({
+  id: '/surveys',
+  path: '/surveys',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminUsageRoute = AppAdminUsageRouteImport.update({
+  id: '/usage',
+  path: '/usage',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminUsersRoute = AppAdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppCandidatesIdRoute = AppCandidatesIdRouteImport.update({
+  id: '/candidates/$id',
+  path: '/candidates/$id',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVacanciesIndexRoute = AppVacanciesIndexRouteImport.update({
+  id: '/vacancies/',
+  path: '/vacancies/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVacanciesVacancyIdRoute = AppVacanciesVacancyIdRouteImport.update({
+  id: '/vacancies/$vacancyId',
+  path: '/vacancies/$vacancyId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVacanciesNewRoute = AppVacanciesNewRouteImport.update({
+  id: '/vacancies/new',
+  path: '/vacancies/new',
+  getParentRoute: () => AppRoute,
+} as any)
+const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
+  id: '/lovable/email/suppression',
+  path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicScheduleLogoRoute = ApiPublicScheduleLogoRouteImport.update({
-  id: '/api/public/schedule/logo',
-  path: '/api/public/schedule/logo',
+const ApiPublicGoogleCallbackRoute = ApiPublicGoogleCallbackRouteImport.update({
+  id: '/api/public/google/callback',
+  path: '/api/public/google/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicScheduleBookRoute = ApiPublicScheduleBookRouteImport.update({
-  id: '/api/public/schedule/book',
-  path: '/api/public/schedule/book',
+const ApiPublicHooksProcessCvQueueRoute =
+  ApiPublicHooksProcessCvQueueRouteImport.update({
+    id: '/api/public/hooks/process-cv-queue',
+    path: '/api/public/hooks/process-cv-queue',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicMicrosoftCallbackRoute =
+  ApiPublicMicrosoftCallbackRouteImport.update({
+    id: '/api/public/microsoft/callback',
+    path: '/api/public/microsoft/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicMpWebhookRoute = ApiPublicMpWebhookRouteImport.update({
+  id: '/api/public/mp/webhook',
+  path: '/api/public/mp/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicPaymentsWebhookRoute =
@@ -264,28 +248,44 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicMpWebhookRoute = ApiPublicMpWebhookRouteImport.update({
-  id: '/api/public/mp/webhook',
-  path: '/api/public/mp/webhook',
+const ApiPublicScheduleBookRoute = ApiPublicScheduleBookRouteImport.update({
+  id: '/api/public/schedule/book',
+  path: '/api/public/schedule/book',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicMicrosoftCallbackRoute =
-  ApiPublicMicrosoftCallbackRouteImport.update({
-    id: '/api/public/microsoft/callback',
-    path: '/api/public/microsoft/callback',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksProcessCvQueueRoute =
-  ApiPublicHooksProcessCvQueueRouteImport.update({
-    id: '/api/public/hooks/process-cv-queue',
-    path: '/api/public/hooks/process-cv-queue',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicGoogleCallbackRoute = ApiPublicGoogleCallbackRouteImport.update({
-  id: '/api/public/google/callback',
-  path: '/api/public/google/callback',
+const ApiPublicScheduleLogoRoute = ApiPublicScheduleLogoRouteImport.update({
+  id: '/api/public/schedule/logo',
+  path: '/api/public/schedule/logo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalSendRoute =
+  LovableEmailTransactionalSendRouteImport.update({
+    id: '/lovable/email/transactional/send',
+    path: '/lovable/email/transactional/send',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -600,46 +600,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/trust': {
-      id: '/trust'
-      path: '/trust'
-      fullPath: '/trust'
-      preLoaderRoute: typeof TrustRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/refunds': {
-      id: '/refunds'
-      path: '/refunds'
-      fullPath: '/refunds'
-      preLoaderRoute: typeof RefundsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app': {
@@ -649,11 +614,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refunds': {
+      id: '/refunds'
+      path: '/refunds'
+      fullPath: '/refunds'
+      preLoaderRoute: typeof RefundsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trust': {
+      id: '/trust'
+      path: '/trust'
+      fullPath: '/trust'
+      preLoaderRoute: typeof TrustRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/': {
@@ -663,60 +663,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/schedule/$token': {
-      id: '/schedule/$token'
-      path: '/schedule/$token'
-      fullPath: '/schedule/$token'
-      preLoaderRoute: typeof ScheduleTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/email/unsubscribe': {
-      id: '/email/unsubscribe'
-      path: '/email/unsubscribe'
-      fullPath: '/email/unsubscribe'
-      preLoaderRoute: typeof EmailUnsubscribeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/apply/$slug': {
-      id: '/apply/$slug'
-      path: '/apply/$slug'
-      fullPath: '/apply/$slug'
-      preLoaderRoute: typeof ApplySlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app/subscription': {
-      id: '/app/subscription'
-      path: '/subscription'
-      fullPath: '/app/subscription'
-      preLoaderRoute: typeof AppSubscriptionRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/setup': {
-      id: '/app/setup'
-      path: '/setup'
-      fullPath: '/app/setup'
-      preLoaderRoute: typeof AppSetupRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/settings': {
-      id: '/app/settings'
-      path: '/settings'
-      fullPath: '/app/settings'
-      preLoaderRoute: typeof AppSettingsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/integrations': {
-      id: '/app/integrations'
-      path: '/integrations'
-      fullPath: '/app/integrations'
-      preLoaderRoute: typeof AppIntegrationsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/enterprise': {
-      id: '/app/enterprise'
-      path: '/enterprise'
-      fullPath: '/app/enterprise'
-      preLoaderRoute: typeof AppEnterpriseRouteImport
+    '/app/admin': {
+      id: '/app/admin'
+      path: '/admin'
+      fullPath: '/app/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/dashboard': {
@@ -726,102 +677,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/admin': {
-      id: '/app/admin'
-      path: '/admin'
-      fullPath: '/app/admin'
-      preLoaderRoute: typeof AppAdminRouteImport
+    '/app/enterprise': {
+      id: '/app/enterprise'
+      path: '/enterprise'
+      fullPath: '/app/enterprise'
+      preLoaderRoute: typeof AppEnterpriseRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/vacancies/': {
-      id: '/app/vacancies/'
-      path: '/vacancies'
-      fullPath: '/app/vacancies/'
-      preLoaderRoute: typeof AppVacanciesIndexRouteImport
+    '/app/integrations': {
+      id: '/app/integrations'
+      path: '/integrations'
+      fullPath: '/app/integrations'
+      preLoaderRoute: typeof AppIntegrationsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/admin/': {
-      id: '/app/admin/'
-      path: '/'
-      fullPath: '/app/admin/'
-      preLoaderRoute: typeof AppAdminIndexRouteImport
-      parentRoute: typeof AppAdminRoute
+    '/app/settings': {
+      id: '/app/settings'
+      path: '/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/lovable/email/suppression': {
-      id: '/lovable/email/suppression'
-      path: '/lovable/email/suppression'
-      fullPath: '/lovable/email/suppression'
-      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+    '/app/setup': {
+      id: '/app/setup'
+      path: '/setup'
+      fullPath: '/app/setup'
+      preLoaderRoute: typeof AppSetupRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/subscription': {
+      id: '/app/subscription'
+      path: '/subscription'
+      fullPath: '/app/subscription'
+      preLoaderRoute: typeof AppSubscriptionRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/apply/$slug': {
+      id: '/apply/$slug'
+      path: '/apply/$slug'
+      fullPath: '/apply/$slug'
+      preLoaderRoute: typeof ApplySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/app/vacancies/new': {
-      id: '/app/vacancies/new'
-      path: '/vacancies/new'
-      fullPath: '/app/vacancies/new'
-      preLoaderRoute: typeof AppVacanciesNewRouteImport
-      parentRoute: typeof AppRoute
+    '/email/unsubscribe': {
+      id: '/email/unsubscribe'
+      path: '/email/unsubscribe'
+      fullPath: '/email/unsubscribe'
+      preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/app/vacancies/$vacancyId': {
-      id: '/app/vacancies/$vacancyId'
-      path: '/vacancies/$vacancyId'
-      fullPath: '/app/vacancies/$vacancyId'
-      preLoaderRoute: typeof AppVacanciesVacancyIdRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/candidates/$id': {
-      id: '/app/candidates/$id'
-      path: '/candidates/$id'
-      fullPath: '/app/candidates/$id'
-      preLoaderRoute: typeof AppCandidatesIdRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/admin/users': {
-      id: '/app/admin/users'
-      path: '/users'
-      fullPath: '/app/admin/users'
-      preLoaderRoute: typeof AppAdminUsersRouteImport
-      parentRoute: typeof AppAdminRoute
-    }
-    '/app/admin/usage': {
-      id: '/app/admin/usage'
-      path: '/usage'
-      fullPath: '/app/admin/usage'
-      preLoaderRoute: typeof AppAdminUsageRouteImport
-      parentRoute: typeof AppAdminRoute
-    }
-    '/app/admin/surveys': {
-      id: '/app/admin/surveys'
-      path: '/surveys'
-      fullPath: '/app/admin/surveys'
-      preLoaderRoute: typeof AppAdminSurveysRouteImport
-      parentRoute: typeof AppAdminRoute
-    }
-    '/app/admin/pricing': {
-      id: '/app/admin/pricing'
-      path: '/pricing'
-      fullPath: '/app/admin/pricing'
-      preLoaderRoute: typeof AppAdminPricingRouteImport
-      parentRoute: typeof AppAdminRoute
-    }
-    '/app/admin/payments': {
-      id: '/app/admin/payments'
-      path: '/payments'
-      fullPath: '/app/admin/payments'
-      preLoaderRoute: typeof AppAdminPaymentsRouteImport
-      parentRoute: typeof AppAdminRoute
-    }
-    '/app/admin/orgs': {
-      id: '/app/admin/orgs'
-      path: '/orgs'
-      fullPath: '/app/admin/orgs'
-      preLoaderRoute: typeof AppAdminOrgsRouteImport
-      parentRoute: typeof AppAdminRoute
-    }
-    '/api/public/apply': {
-      id: '/api/public/apply'
-      path: '/api/public/apply'
-      fullPath: '/api/public/apply'
-      preLoaderRoute: typeof ApiPublicApplyRouteImport
+    '/schedule/$token': {
+      id: '/schedule/$token'
+      path: '/schedule/$token'
+      fullPath: '/schedule/$token'
+      preLoaderRoute: typeof ScheduleTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/analyze': {
@@ -831,74 +740,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAnalyzeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/transactional/send': {
-      id: '/lovable/email/transactional/send'
-      path: '/lovable/email/transactional/send'
-      fullPath: '/lovable/email/transactional/send'
-      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
+    '/api/public/apply': {
+      id: '/api/public/apply'
+      path: '/api/public/apply'
+      fullPath: '/api/public/apply'
+      preLoaderRoute: typeof ApiPublicApplyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/transactional/preview': {
-      id: '/lovable/email/transactional/preview'
-      path: '/lovable/email/transactional/preview'
-      fullPath: '/lovable/email/transactional/preview'
-      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+    '/app/admin/': {
+      id: '/app/admin/'
+      path: '/'
+      fullPath: '/app/admin/'
+      preLoaderRoute: typeof AppAdminIndexRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/orgs': {
+      id: '/app/admin/orgs'
+      path: '/orgs'
+      fullPath: '/app/admin/orgs'
+      preLoaderRoute: typeof AppAdminOrgsRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/payments': {
+      id: '/app/admin/payments'
+      path: '/payments'
+      fullPath: '/app/admin/payments'
+      preLoaderRoute: typeof AppAdminPaymentsRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/pricing': {
+      id: '/app/admin/pricing'
+      path: '/pricing'
+      fullPath: '/app/admin/pricing'
+      preLoaderRoute: typeof AppAdminPricingRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/surveys': {
+      id: '/app/admin/surveys'
+      path: '/surveys'
+      fullPath: '/app/admin/surveys'
+      preLoaderRoute: typeof AppAdminSurveysRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/usage': {
+      id: '/app/admin/usage'
+      path: '/usage'
+      fullPath: '/app/admin/usage'
+      preLoaderRoute: typeof AppAdminUsageRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/users': {
+      id: '/app/admin/users'
+      path: '/users'
+      fullPath: '/app/admin/users'
+      preLoaderRoute: typeof AppAdminUsersRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/candidates/$id': {
+      id: '/app/candidates/$id'
+      path: '/candidates/$id'
+      fullPath: '/app/candidates/$id'
+      preLoaderRoute: typeof AppCandidatesIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/vacancies/': {
+      id: '/app/vacancies/'
+      path: '/vacancies'
+      fullPath: '/app/vacancies/'
+      preLoaderRoute: typeof AppVacanciesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/vacancies/$vacancyId': {
+      id: '/app/vacancies/$vacancyId'
+      path: '/vacancies/$vacancyId'
+      fullPath: '/app/vacancies/$vacancyId'
+      preLoaderRoute: typeof AppVacanciesVacancyIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/vacancies/new': {
+      id: '/app/vacancies/new'
+      path: '/vacancies/new'
+      fullPath: '/app/vacancies/new'
+      preLoaderRoute: typeof AppVacanciesNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/lovable/email/suppression': {
+      id: '/lovable/email/suppression'
+      path: '/lovable/email/suppression'
+      fullPath: '/lovable/email/suppression'
+      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/queue/process': {
-      id: '/lovable/email/queue/process'
-      path: '/lovable/email/queue/process'
-      fullPath: '/lovable/email/queue/process'
-      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/auth/webhook': {
-      id: '/lovable/email/auth/webhook'
-      path: '/lovable/email/auth/webhook'
-      fullPath: '/lovable/email/auth/webhook'
-      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/auth/preview': {
-      id: '/lovable/email/auth/preview'
-      path: '/lovable/email/auth/preview'
-      fullPath: '/lovable/email/auth/preview'
-      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/schedule/logo': {
-      id: '/api/public/schedule/logo'
-      path: '/api/public/schedule/logo'
-      fullPath: '/api/public/schedule/logo'
-      preLoaderRoute: typeof ApiPublicScheduleLogoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/schedule/book': {
-      id: '/api/public/schedule/book'
-      path: '/api/public/schedule/book'
-      fullPath: '/api/public/schedule/book'
-      preLoaderRoute: typeof ApiPublicScheduleBookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/payments/webhook': {
-      id: '/api/public/payments/webhook'
-      path: '/api/public/payments/webhook'
-      fullPath: '/api/public/payments/webhook'
-      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/mp/webhook': {
-      id: '/api/public/mp/webhook'
-      path: '/api/public/mp/webhook'
-      fullPath: '/api/public/mp/webhook'
-      preLoaderRoute: typeof ApiPublicMpWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/microsoft/callback': {
-      id: '/api/public/microsoft/callback'
-      path: '/api/public/microsoft/callback'
-      fullPath: '/api/public/microsoft/callback'
-      preLoaderRoute: typeof ApiPublicMicrosoftCallbackRouteImport
+    '/api/public/google/callback': {
+      id: '/api/public/google/callback'
+      path: '/api/public/google/callback'
+      fullPath: '/api/public/google/callback'
+      preLoaderRoute: typeof ApiPublicGoogleCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/process-cv-queue': {
@@ -908,11 +845,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksProcessCvQueueRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/google/callback': {
-      id: '/api/public/google/callback'
-      path: '/api/public/google/callback'
-      fullPath: '/api/public/google/callback'
-      preLoaderRoute: typeof ApiPublicGoogleCallbackRouteImport
+    '/api/public/microsoft/callback': {
+      id: '/api/public/microsoft/callback'
+      path: '/api/public/microsoft/callback'
+      fullPath: '/api/public/microsoft/callback'
+      preLoaderRoute: typeof ApiPublicMicrosoftCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/mp/webhook': {
+      id: '/api/public/mp/webhook'
+      path: '/api/public/mp/webhook'
+      fullPath: '/api/public/mp/webhook'
+      preLoaderRoute: typeof ApiPublicMpWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/schedule/book': {
+      id: '/api/public/schedule/book'
+      path: '/api/public/schedule/book'
+      fullPath: '/api/public/schedule/book'
+      preLoaderRoute: typeof ApiPublicScheduleBookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/schedule/logo': {
+      id: '/api/public/schedule/logo'
+      path: '/api/public/schedule/logo'
+      fullPath: '/api/public/schedule/logo'
+      preLoaderRoute: typeof ApiPublicScheduleLogoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/send': {
+      id: '/lovable/email/transactional/send'
+      path: '/lovable/email/transactional/send'
+      fullPath: '/lovable/email/transactional/send'
+      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
       parentRoute: typeof rootRouteImport
     }
   }

@@ -16,7 +16,7 @@ const MICROSOFT_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/micros
 
 export const Route = createFileRoute("/app/settings")({
   component: Settings,
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { tab?: "integraciones" } => ({
     tab: s.tab === "integraciones" ? "integraciones" : undefined,
   }),
   head: () => ({ meta: [{ title: "Configuración — FLUX Talent" }] }),
