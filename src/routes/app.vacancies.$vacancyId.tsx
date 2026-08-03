@@ -283,6 +283,7 @@ function VacancyDetail() {
           </div>
         </TabsContent>
         <TabsContent value="scheduling" className="mt-6">
+          <IntegrationAlert context="agenda" />
           <VacancyScheduling vacancyId={vacancyId} />
         </TabsContent>
       </Tabs>
