@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { AlertTriangle, ArrowRight } from "lucide-react";
 import { getGoogleStatus, getVacancyScheduling } from "@/lib/scheduling.functions";
 import { getMicrosoftStatus } from "@/lib/microsoft.functions";
+import { useT } from "@/lib/i18n";
 
 /** Yellow warning shown in Kanban and Agenda when no mail/calendar provider is connected. */
 export function IntegrationAlert({ context, vacancyId, onGoToAgenda }: {
@@ -11,6 +12,7 @@ export function IntegrationAlert({ context, vacancyId, onGoToAgenda }: {
   vacancyId?: string;
   onGoToAgenda?: () => void;
 }) {
+  const t = useT();
   const google = useServerFn(getGoogleStatus);
   const microsoft = useServerFn(getMicrosoftStatus);
   const sched = useServerFn(getVacancyScheduling);
@@ -37,8 +39,8 @@ export function IntegrationAlert({ context, vacancyId, onGoToAgenda }: {
         <div className="flex items-start gap-2 text-sm">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <span>
-            <strong>Todavía no configuraste la agenda de esta búsqueda.</strong>{" "}
-            Ya tenés el calendario conectado, pero hasta que cargues horarios disponibles los postulantes no van a poder reservar entrevista.
+            <strong>{t("Todavía no configuraste la agenda de esta búsqueda.")}</strong>{" "}
+            {t("Ya tenés el calendario conectado, pero hasta que cargues horarios disponibles los postulantes no van a poder reservar entrevista.")}
           </span>
         </div>
         {context === "kanban" && onGoToAgenda && (
@@ -46,7 +48,7 @@ export function IntegrationAlert({ context, vacancyId, onGoToAgenda }: {
             onClick={onGoToAgenda}
             className="inline-flex shrink-0 items-center gap-1 rounded-md bg-amber-500 px-3 py-2 text-xs font-medium text-white hover:bg-amber-600"
           >
-            Configurar agenda <ArrowRight className="h-3.5 w-3.5" />
+            {t("Configurar agenda")} <ArrowRight className="h-3.5 w-3.5" />
           </button>
         )}
       </div>
@@ -58,10 +60,10 @@ export function IntegrationAlert({ context, vacancyId, onGoToAgenda }: {
       <div className="flex items-start gap-2 text-sm">
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
         <span>
-          <strong>No tenés configurada la integración.</strong>{" "}
+          <strong>{t("No tenés configurada la integración.")}</strong>{" "}
           {context === "agenda"
-            ? "Sin conectar Google o Microsoft no se envían las invitaciones ni se crean los eventos con link de videollamada."
-            : "Sin conectar Google o Microsoft no se disparan las comunicaciones automáticas a los postulantes al mover de etapa."}
+            ? t("Sin conectar Google o Microsoft no se envían las invitaciones ni se crean los eventos con link de videollamada.")
+            : t("Sin conectar Google o Microsoft no se disparan las comunicaciones automáticas a los postulantes al mover de etapa.")}
         </span>
       </div>
       <Link
@@ -69,7 +71,7 @@ export function IntegrationAlert({ context, vacancyId, onGoToAgenda }: {
         search={{ tab: "integraciones" } as never}
         className="inline-flex shrink-0 items-center gap-1 rounded-md bg-amber-500 px-3 py-2 text-xs font-medium text-white hover:bg-amber-600"
       >
-        Ir a configurar <ArrowRight className="h-3.5 w-3.5" />
+        {t("Ir a configurar")} <ArrowRight className="h-3.5 w-3.5" />
       </Link>
     </div>
   );

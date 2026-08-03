@@ -8,12 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, UserPlus } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/app/admin/users")({
   component: AdminUsers,
 });
 
 function AdminUsers() {
+  const t = useT();
   const qc = useQueryClient();
   const list = useServerFn(adminListUsers);
   const create = useServerFn(adminCreateUser);
@@ -26,13 +28,13 @@ function AdminUsers() {
   const mut = useMutation({
     mutationFn: () => create({ data: form }),
     onSuccess: () => {
-      toast.success("Usuario creado");
+      toast.success(t("Usuario creado"));
       setForm({ email: "", password: "", display_name: "", org_name: "", grant_license: "trial_15" });
       qc.invalidateQueries({ queryKey: ["admin-users"] });
       qc.invalidateQueries({ queryKey: ["admin-orgs"] });
       qc.invalidateQueries({ queryKey: ["admin-metrics"] });
     },
-    onError: (e: any) => toast.error(e.message ?? "No pudimos crear el usuario. Revisá los datos e intentá de nuevo."),
+    onError: (e: any) => toast.error(e.message ?? t("No pudimos crear el usuario. Revisá los datos e intentá de nuevo.")),
   });
 
   const delMut = useMutation({
@@ -41,42 +43,42 @@ function AdminUsers() {
       qc.invalidateQueries({ queryKey: ["admin-users"] });
       qc.invalidateQueries({ queryKey: ["admin-orgs"] });
       qc.invalidateQueries({ queryKey: ["admin-metrics"] });
-      toast.success(r?.deleted_org ? "Usuario y organización eliminados" : "Usuario eliminado");
+      toast.success(r?.deleted_org ? t("Usuario y organización eliminados") : t("Usuario eliminado"));
     },
-    onError: (e: any) => toast.error(e.message ?? "No pudimos eliminar el usuario."),
+    onError: (e: any) => toast.error(e.message ?? t("No pudimos eliminar el usuario.")),
   });
 
   return (
     <div className="grid gap-6 md:grid-cols-[400px_1fr]">
       <div className="rounded-2xl border border-border bg-card p-5">
-        <h3 className="flex items-center gap-2 font-semibold"><UserPlus className="h-4 w-4" /> Crear usuario</h3>
+        <h3 className="flex items-center gap-2 font-semibold"><UserPlus className="h-4 w-4" /> {t("Crear usuario")}</h3>
         <form className="mt-4 space-y-3" onSubmit={(e) => { e.preventDefault(); mut.mutate(); }}>
-          <div><Label>Email *</Label><Input required type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></div>
-          <div><Label>Contraseña inicial *</Label><Input required type="text" minLength={8} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} /></div>
-          <div><Label>Nombre del usuario *</Label><Input required value={form.display_name} onChange={e => setForm(f => ({ ...f, display_name: e.target.value }))} /></div>
-          <div><Label>Nombre de la organización *</Label><Input required value={form.org_name} onChange={e => setForm(f => ({ ...f, org_name: e.target.value }))} /></div>
+          <div><Label>{t("Email *")}</Label><Input required type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></div>
+          <div><Label>{t("Contraseña inicial *")}</Label><Input required type="text" minLength={8} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} /></div>
+          <div><Label>{t("Nombre del usuario *")}</Label><Input required value={form.display_name} onChange={e => setForm(f => ({ ...f, display_name: e.target.value }))} /></div>
+          <div><Label>{t("Nombre de la organización *")}</Label><Input required value={form.org_name} onChange={e => setForm(f => ({ ...f, org_name: e.target.value }))} /></div>
           <div>
-            <Label>Licencia inicial</Label>
+            <Label>{t("Licencia inicial")}</Label>
             <select value={form.grant_license} onChange={e => setForm(f => ({ ...f, grant_license: e.target.value as any }))} className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-              <option value="trial_15">Trial 15 días</option>
-              <option value="active_30">Activa · 30 días</option>
-              <option value="active_365">Activa · 1 año</option>
-              <option value="none">Sin licencia</option>
+              <option value="trial_15">{t("Trial 15 días")}</option>
+              <option value="active_30">{t("Activa · 30 días")}</option>
+              <option value="active_365">{t("Activa · 1 año")}</option>
+              <option value="none">{t("Sin licencia")}</option>
             </select>
           </div>
           <Button type="submit" className="w-full" disabled={mut.isPending}>
-            {mut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Crear usuario y org
+            {mut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} {t("Crear usuario y org")}
           </Button>
         </form>
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-5">
-        <h3 className="font-semibold">Usuarios registrados</h3>
+        <h3 className="font-semibold">{t("Usuarios registrados")}</h3>
         {isLoading ? <Loader2 className="mt-4 h-5 w-5 animate-spin" /> : (
           <div className="mt-3 max-h-[600px] overflow-y-auto">
             <table className="w-full text-sm">
               <thead className="text-left text-xs uppercase text-muted-foreground">
-                <tr><th className="py-2">Nombre</th><th>Organización</th><th>Estado</th><th className="text-right">Acciones</th></tr>
+                <tr><th className="py-2">{t("Nombre")}</th><th>{t("Organización")}</th><th>{t("Estado")}</th><th className="text-right">{t("Acciones")}</th></tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {(users ?? []).map((u: any) => (
@@ -91,12 +93,12 @@ function AdminUsers() {
                         className="text-destructive hover:bg-destructive/10"
                         disabled={delMut.isPending}
                         onClick={() => {
-                          if (confirm(`¿Eliminar al usuario "${u.display_name}"?\n\nSi es el único de su organización, también se borran sus vacantes, postulaciones y datos. Esta acción no se puede deshacer.`)) {
+                          if (confirm(t('¿Eliminar al usuario "{name}"?\n\nSi es el único de su organización, también se borran sus vacantes, postulaciones y datos. Esta acción no se puede deshacer.', { name: u.display_name }))) {
                             delMut.mutate(u.id);
                           }
                         }}
                       >
-                        Eliminar
+                        {t("Eliminar")}
                       </Button>
                     </td>
                   </tr>

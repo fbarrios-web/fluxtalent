@@ -9,12 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/app/admin/pricing")({
   component: AdminPricing,
 });
 
 function AdminPricing() {
+  const t = useT();
   const qc = useQueryClient();
   const getFn = useServerFn(getPlanPricing);
   const updFn = useServerFn(adminUpdatePlanPricing);
@@ -34,8 +36,8 @@ function AdminPricing() {
 
   const mut = useMutation({
     mutationFn: (v: { plan_id: string; base_price_ars: number; discount_pct: number }) => updFn({ data: v }),
-    onSuccess: () => { toast.success("Precio actualizado"); qc.invalidateQueries({ queryKey: ["plan-pricing"] }); },
-    onError: (e: any) => toast.error(e?.message ?? "Error"),
+    onSuccess: () => { toast.success(t("Precio actualizado")); qc.invalidateQueries({ queryKey: ["plan-pricing"] }); },
+    onError: (e: any) => toast.error(e?.message ?? t("Error")),
   });
 
   if (isLoading) return <div className="grid h-64 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></div>;
@@ -43,18 +45,18 @@ function AdminPricing() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-display text-2xl">Precios y descuentos</h2>
-        <p className="text-sm text-muted-foreground">Definí el precio base y un porcentaje de descuento por plan. Se aplica en la landing, en suscripción y al asignar planes.</p>
+        <h2 className="font-display text-2xl">{t("Precios y descuentos")}</h2>
+        <p className="text-sm text-muted-foreground">{t("Definí el precio base y un porcentaje de descuento por plan. Se aplica en la landing, en suscripción y al asignar planes.")}</p>
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
             <tr>
-              <th className="px-4 py-3">Plan</th>
-              <th className="px-4 py-3">Precio base (ARS)</th>
-              <th className="px-4 py-3">Descuento (%)</th>
-              <th className="px-4 py-3">Precio final</th>
+              <th className="px-4 py-3">{t("Plan")}</th>
+              <th className="px-4 py-3">{t("Precio base (ARS)")}</th>
+              <th className="px-4 py-3">{t("Descuento (%)")}</th>
+              <th className="px-4 py-3">{t("Precio final")}</th>
               <th className="px-4 py-3"></th>
             </tr>
           </thead>
@@ -77,7 +79,7 @@ function AdminPricing() {
                       value={r.base}
                       onChange={e => setRows(s => ({ ...s, [p.id]: { ...s[p.id], base: e.target.value } }))}
                     />
-                    {p.id === "custom" && <p className="mt-1 text-xs text-muted-foreground">Usá -1 para "A medida".</p>}
+                    {p.id === "custom" && <p className="mt-1 text-xs text-muted-foreground">{t('Usá -1 para "A medida".')}</p>}
                   </td>
                   <td className="px-4 py-3">
                     <Input
@@ -90,7 +92,7 @@ function AdminPricing() {
                     />
                   </td>
                   <td className="px-4 py-3">
-                    {final === -1 ? <span>A medida</span> : final === 0 ? <span>Gratis</span> : <span>ARS {final.toLocaleString("es-AR")}</span>}
+                    {final === -1 ? <span>{t("A medida")}</span> : final === 0 ? <span>{t("Gratis")}</span> : <span>ARS {final.toLocaleString("es-AR")}</span>}
                     {disc > 0 && base > 0 && (
                       <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
                         -{disc}%
@@ -100,7 +102,7 @@ function AdminPricing() {
                   <td className="px-4 py-3 text-right">
                     <Button size="sm" onClick={() => mut.mutate({ plan_id: p.id, base_price_ars: base, discount_pct: disc })} disabled={mut.isPending}>
                       {mut.isPending ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Save className="mr-2 h-3 w-3" />}
-                      Guardar
+                      {t("Guardar")}
                     </Button>
                   </td>
                 </tr>

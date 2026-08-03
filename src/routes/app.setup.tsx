@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { chooseFreePlan, startPlanCheckout } from "@/lib/subscription.functions";
 import { PLANS, formatArs, formatUsd, type PlanId } from "@/lib/plans";
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/app/setup")({
   component: SetupPage,
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/app/setup")({
 });
 
 function SetupPage() {
+  const t = useT();
   const nav = useNavigate();
   const qc = useQueryClient();
   const chooseFree = useServerFn(chooseFreePlan);
@@ -84,10 +86,10 @@ function SetupPage() {
         province: province.trim(),
       } as any).eq("id", me.user.id);
       if (error) throw error;
-      toast.success("Datos guardados");
+      toast.success(t("Datos guardados"));
       await qc.invalidateQueries({ queryKey: ["profile-setup-check"] });
       setPersonalDone(true);
-    } catch (e: any) { toast.error(e.message ?? "Error al guardar"); }
+    } catch (e: any) { toast.error(e.message ?? t("Error al guardar")); }
     finally { setSaving(false); }
   }
 
@@ -96,13 +98,13 @@ function SetupPage() {
     try {
       if (planId === "free") {
         await chooseFree();
-        toast.success("Plan Free activado · 15 días de prueba");
+        toast.success(t("Plan Free activado · 15 días de prueba"));
         await qc.invalidateQueries({ queryKey: ["my-subscription"] });
         setPlanDone(true);
       } else if (currency === "usd") {
         const plan = PLANS.find(x => x.id === planId);
         const { data: u } = await supabase.auth.getUser();
-        if (!plan?.paddlePriceId || !u?.user) throw new Error("No pudimos abrir el checkout en USD");
+        if (!plan?.paddlePriceId || !u?.user) throw new Error(t("No pudimos abrir el checkout en USD"));
         await openCheckout({
           priceId: plan.paddlePriceId,
           customerEmail: u.user.email ?? undefined,
@@ -120,9 +122,9 @@ function SetupPage() {
     } catch (e: any) {
       const msg = String(e?.message ?? "");
       if (msg.includes("FREE_NOT_AVAILABLE")) {
-        toast.error("La prueba Free solo está disponible para cuentas nuevas. Elegí un plan pago para continuar.", { duration: 6000 });
+        toast.error(t("La prueba Free solo está disponible para cuentas nuevas. Elegí un plan pago para continuar."), { duration: 6000 });
       } else {
-        toast.error(msg || "No pudimos activar el plan");
+        toast.error(msg || t("No pudimos activar el plan"));
       }
       setActivating(null);
     }
@@ -135,16 +137,16 @@ function SetupPage() {
   return (
     <div className="mx-auto max-w-3xl p-6 md:p-10">
       <div className="mb-8">
-        <p className="text-xs uppercase tracking-wide text-primary">Bienvenid@</p>
-        <h1 className="font-display text-4xl">Configurá tu cuenta</h1>
-        <p className="mt-2 text-muted-foreground">Necesitamos un par de datos para personalizar tu workspace. Toma menos de 1 minuto.</p>
+        <p className="text-xs uppercase tracking-wide text-primary">{t("Bienvenid@")}</p>
+        <h1 className="font-display text-4xl">{t("Configurá tu cuenta")}</h1>
+        <p className="mt-2 text-muted-foreground">{t("Necesitamos un par de datos para personalizar tu workspace. Toma menos de 1 minuto.")}</p>
       </div>
 
       {missing.length > 0 && (
         <div className="mb-6 rounded-xl border border-warning/40 bg-warning/10 p-4 text-sm">
-          <p className="font-semibold text-foreground">Te falta completar el setup ({missing.length} {missing.length === 1 ? "punto" : "puntos"}):</p>
+          <p className="font-semibold text-foreground">{t("Te falta completar el setup ({n} {pointLabel}):", { n: missing.length, pointLabel: missing.length === 1 ? t("punto") : t("puntos") })}</p>
           <ul className="mt-2 list-disc pl-5 text-muted-foreground">
-            {missing.map(m => <li key={m}>{m}</li>)}
+            {missing.map(m => <li key={m}>{t(m)}</li>)}
           </ul>
         </div>
       )}
@@ -154,56 +156,56 @@ function SetupPage() {
       <ol className="mb-8 space-y-2 text-sm">
         <li className="flex items-center gap-2">
           <span className={`grid h-6 w-6 place-items-center rounded-full text-xs font-semibold ${personalDone ? "bg-success text-white" : "bg-primary text-primary-foreground"}`}>{personalDone ? <CheckCircle2 className="h-3.5 w-3.5" /> : "1"}</span>
-          Tus datos personales
+          {t("Tus datos personales")}
         </li>
         <li className="flex items-center gap-2">
           <span className={`grid h-6 w-6 place-items-center rounded-full text-xs font-semibold ${planDone ? "bg-success text-white" : personalDone ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{planDone ? <CheckCircle2 className="h-3.5 w-3.5" /> : "2"}</span>
-          Elegí tu plan
+          {t("Elegí tu plan")}
         </li>
         <li className="flex items-center gap-2">
           <span className={`grid h-6 w-6 place-items-center rounded-full text-xs font-semibold ${planDone ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>3</span>
-          Datos de tu empresa
+          {t("Datos de tu empresa")}
         </li>
       </ol>
 
       {!personalDone ? (
         <form onSubmit={save} className="space-y-4 rounded-2xl border border-border bg-card p-6">
-          <h3 className="font-semibold">Tus datos</h3>
+          <h3 className="font-semibold">{t("Tus datos")}</h3>
           <div>
-            <Label htmlFor="fn">Nombre y apellido completo</Label>
+            <Label htmlFor="fn">{t("Nombre y apellido completo")}</Label>
             <Input id="fn" value={fullName} onChange={e => setFullName(e.target.value)} required minLength={3} placeholder="María Pérez González" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="dni">DNI</Label>
+              <Label htmlFor="dni">{t("DNI")}</Label>
               <Input id="dni" value={dni} onChange={e => setDni(e.target.value)} required minLength={6} placeholder="30123456" />
             </div>
             <div>
-              <Label htmlFor="bd">Fecha de nacimiento</Label>
+              <Label htmlFor="bd">{t("Fecha de nacimiento")}</Label>
               <Input id="bd" type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} required />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="country">País</Label>
+              <Label htmlFor="country">{t("País")}</Label>
               <Input id="country" value={country} onChange={e => setCountry(e.target.value)} required placeholder="Argentina" />
             </div>
             <div>
-              <Label htmlFor="province">Provincia / Estado</Label>
+              <Label htmlFor="province">{t("Provincia / Estado")}</Label>
               <Input id="province" value={province} onChange={e => setProvince(e.target.value)} required placeholder="Buenos Aires" />
             </div>
           </div>
           <Button type="submit" disabled={saving} className="w-full">
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Guardar y continuar
+            {t("Guardar y continuar")}
           </Button>
         </form>
       ) : !planDone ? (
         <div className="space-y-4">
           <div className="rounded-2xl border border-border bg-card p-6">
-            <h3 className="font-semibold">Elegí el plan con el que querés empezar</h3>
+            <h3 className="font-semibold">{t("Elegí el plan con el que querés empezar")}</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              El plan <b>Free</b> incluye 15 días de prueba (1 vacante y 20 CVs). Los planes pagos no incluyen período de prueba: te derivamos al pago seguro.
+              {t("El plan {b} incluye 15 días de prueba (1 vacante y 20 CVs). Los planes pagos no incluyen período de prueba: te derivamos al pago seguro.", { b: "Free" })}
             </p>
             <div className="mt-4 inline-flex rounded-full border border-border p-1 text-sm">
               <button
@@ -211,23 +213,23 @@ function SetupPage() {
                 onClick={() => setCurrency("ars")}
                 className={`rounded-full px-4 py-1 ${currency === "ars" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
               >
-                Pesos (ARS)
+                {t("Pesos (ARS)")}
               </button>
               <button
                 type="button"
                 onClick={() => setCurrency("usd")}
                 className={`flex items-center gap-2 rounded-full px-4 py-1 ${currency === "usd" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
               >
-                Dólares (USD)
+                {t("Dólares (USD)")}
                 <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
-                  Próximamente
+                  {t("Próximamente")}
                 </span>
               </button>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
               {currency === "ars"
-                ? "Débito automático mensual con Mercado Pago."
-                : "El pago en dólares está en etapa final de habilitación. Escribinos a soporte@fluxtalent.com.ar si necesitás pagar en USD."}
+                ? t("Débito automático mensual con Mercado Pago.")
+                : t("El pago en dólares está en etapa final de habilitación. Escribinos a soporte@fluxtalent.com.ar si necesitás pagar en USD.")}
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
@@ -241,7 +243,7 @@ function SetupPage() {
                       <h4 className="font-display text-xl">{p.name}</h4>
                       <p className="mt-1 text-xs text-muted-foreground">{p.tagline}</p>
                     </div>
-                    {p.highlighted && <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">RECOMENDADO</span>}
+                    {p.highlighted && <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">{t("RECOMENDADO")}</span>}
                   </div>
                   <div className="mt-3 flex items-baseline gap-2">
                     {currency === "ars" ? (
@@ -271,7 +273,7 @@ function SetupPage() {
                     className="mt-5 w-full"
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isFree ? "Empezar gratis (15 días)" : `Suscribirme a ${p.name}${currency === "usd" ? " (USD)" : ""}`}
+                    {isFree ? t("Empezar gratis (15 días)") : t("Suscribirme a {name}{usdSuffix}", { name: p.name, usdSuffix: currency === "usd" ? " (USD)" : "" })}
                   </Button>
                 </div>
               );
@@ -282,17 +284,17 @@ function SetupPage() {
         <div className="space-y-4 rounded-2xl border border-border bg-card p-6">
           <div className="flex items-center gap-2 text-success">
             <CheckCircle2 className="h-5 w-5" />
-            <h3 className="font-semibold">¡Listo! Plan Free activado por 15 días.</h3>
+            <h3 className="font-semibold">{t("¡Listo! Plan Free activado por 15 días.")}</h3>
           </div>
           <p className="text-sm text-muted-foreground">
-            Ahora cargá los datos de tu empresa: nombre, logo, color de marca y firma de emails. Aparecen en cada comunicación que reciba el postulante.
+            {t("Ahora cargá los datos de tu empresa: nombre, logo, color de marca y firma de emails. Aparecen en cada comunicación que reciba el postulante.")}
           </p>
           <div className="flex flex-wrap gap-2">
             <Link to="/app/settings" className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-              <Building2 className="h-4 w-4" /> Configurar mi empresa
+              <Building2 className="h-4 w-4" /> {t("Configurar mi empresa")}
             </Link>
             <button type="button" onClick={() => nav({ to: "/app/dashboard" })} className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm hover:bg-muted">
-              Ir al dashboard <ArrowRight className="h-4 w-4" />
+              {t("Ir al dashboard")} <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>

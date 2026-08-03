@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2, Plus, X, RefreshCw, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { useT } from "@/lib/i18n";
 import {
   getVacancyScheduling, saveVacancyScheduling, regenerateSlots,
   setSlotStatus, addManualSlot, checkSchedulingOverlaps,
@@ -42,11 +43,12 @@ type Rule = {
 };
 
 export function VacancyScheduling({ vacancyId }: { vacancyId: string }) {
+  const t = useT();
   const [stage, setStage] = useState<StageId>("interview_1");
   return (
     <Tabs value={stage} onValueChange={(v) => setStage(v as StageId)}>
       <TabsList data-tour="sched-stages">
-        {STAGES.map(s => <TabsTrigger key={s.id} value={s.id}>{s.label}</TabsTrigger>)}
+        {STAGES.map(s => <TabsTrigger key={s.id} value={s.id}>{t(s.label)}</TabsTrigger>)}
       </TabsList>
       {STAGES.map(s => (
         <TabsContent key={s.id} value={s.id} className="mt-4">
@@ -66,6 +68,7 @@ const STAGE_LABELS: Record<string, string> = {
 type Overlap = { start: string; vacancyTitle: string; stage: string; sameVacancy: boolean };
 
 function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: StageId }) {
+  const t = useT();
   const qc = useQueryClient();
   const get = useServerFn(getVacancyScheduling);
   const save = useServerFn(saveVacancyScheduling);
@@ -130,7 +133,7 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
   function addInvitee() {
     const e = newInvitee.trim().toLowerCase();
     if (!e) return;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) { toast.error("Email inválido"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) { toast.error(t("Email inválido")); return; }
     if (extraInvitees.includes(e)) { setNewInvitee(""); return; }
     setExtraInvitees([...extraInvitees, e]);
     setNewInvitee("");
@@ -167,10 +170,10 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
       if (payload.length > 0) {
         try {
           const res = await regen({ data: { vacancyId, stage, days: 30 } });
-          createdMsg = ` · ${res.created} slots generados`;
+          createdMsg = ` · ${t("{n} slots generados", { n: res.created })}`;
         } catch { /* noop */ }
       }
-      toast.success("Configuración guardada" + createdMsg);
+      toast.success(t("Configuración guardada") + createdMsg);
       qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId, stage] });
     } catch (e: any) { toast.error(e.message); }
   }
@@ -202,14 +205,14 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
       let createdMsg = "";
       if (payload.length > 0) {
         const res = await regen({ data: { vacancyId, stage, days: 30 } });
-        createdMsg = ` ${res.created} slots vigentes fueron recalculados.`;
+        createdMsg = ` ${t("{n} slots vigentes fueron recalculados.", { n: res.created })}`;
       }
       setRules(nextRules);
       setRuleToDelete(null);
-      toast.success(`Franja eliminada. Los slots asociados fueron eliminados.${createdMsg}`);
+      toast.success(t("Franja eliminada. Los slots asociados fueron eliminados.") + createdMsg);
       qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId, stage] });
     } catch (e: any) {
-      toast.error(e.message || "No se pudo eliminar la franja");
+      toast.error(e.message || t("No se pudo eliminar la franja"));
     } finally {
       setDeletingRule(false);
     }
@@ -218,7 +221,7 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
   async function onRegenerate() {
     try {
       const res = await regen({ data: { vacancyId, stage, days: 30 } });
-      toast.success(`${res.created} slots creados para los próximos 30 días`);
+      toast.success(t("{n} slots creados para los próximos 30 días", { n: res.created }));
       qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId, stage] });
     } catch (e: any) { toast.error(e.message); }
   }
@@ -227,7 +230,7 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
     try {
       await addManual({ data: { vacancyId, stage, startISO: iso, durationMinutes: duration } });
       setManualTime("");
-      toast.success("Slot agregado");
+      toast.success(t("Slot agregado"));
       qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId, stage] });
     } catch (e: any) { toast.error(e.message); }
   }
@@ -266,28 +269,28 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
   return (
     <div className="space-y-6 p-1">
       <div data-tour="sched-general" className="rounded-xl border bg-card p-5 space-y-4">
-        <h3 className="font-semibold">Configuración general</h3>
+        <h3 className="font-semibold">{t("Configuración general")}</h3>
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <Label>Duración del slot (minutos)</Label>
+            <Label>{t("Duración del slot (minutos)")}</Label>
             <Input type="number" min={15} max={240} value={duration} onChange={e => setDuration(Number(e.target.value))} />
           </div>
           <div className="flex items-end gap-2">
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={enabled} onChange={e => setEnabled(e.target.checked)} />
-              Habilitar esta agenda
+              {t("Habilitar esta agenda")}
             </label>
           </div>
           <div className="sm:col-span-2">
-            <Label>Email del entrevistador (opcional)</Label>
-            <Input type="email" placeholder="entrevistador@empresa.com"
+            <Label>{t("Email del entrevistador (opcional)")}</Label>
+            <Input type="email" placeholder={t("entrevistador@empresa.com")}
               value={interviewerEmail} onChange={e => setInterviewerEmail(e.target.value)} />
-            <p className="mt-1 text-xs text-muted-foreground">Se agrega como invitado al evento de Calendar de esta etapa.</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t("Se agrega como invitado al evento de Calendar de esta etapa.")}</p>
           </div>
           <div className="sm:col-span-2">
-            <Label>Invitados extra</Label>
+            <Label>{t("Invitados extra")}</Label>
             <div className="flex gap-2">
-              <Input type="email" placeholder="invitado@empresa.com"
+              <Input type="email" placeholder={t("invitado@empresa.com")}
                 value={newInvitee} onChange={e => setNewInvitee(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addInvitee(); } }} />
               <Button type="button" variant="outline" onClick={addInvitee}><Plus className="h-4 w-4" /></Button>
@@ -307,26 +310,26 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
           </div>
         </div>
         <div>
-          <Label>Instrucciones para el postulante (opcional)</Label>
+          <Label>{t("Instrucciones para el postulante (opcional)")}</Label>
           <Textarea value={instructions} onChange={e => setInstructions(e.target.value)} rows={2} />
         </div>
       </div>
 
       <div data-tour="sched-weekly" className="rounded-xl border bg-card p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold">Disponibilidad semanal recurrente</h3>
+          <h3 className="font-semibold">{t("Disponibilidad semanal recurrente")}</h3>
           <Button size="sm" variant="outline" onClick={() => setRules([...rules, { weekdays: [1], startTime: "09:00", endTime: "12:00", effectiveFrom: "", effectiveUntil: "" }])}>
-            <Plus className="h-4 w-4 mr-1" /> Agregar franja
+            <Plus className="h-4 w-4 mr-1" /> {t("Agregar franja")}
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground">Elegí uno o varios días de la semana, el horario, y opcionalmente desde / hasta cuándo se aplica esta franja.</p>
-        {rules.length === 0 && <p className="text-sm text-muted-foreground">No hay franjas. Agregá una arriba.</p>}
+        <p className="text-xs text-muted-foreground">{t("Elegí uno o varios días de la semana, el horario, y opcionalmente desde / hasta cuándo se aplica esta franja.")}</p>
+        {rules.length === 0 && <p className="text-sm text-muted-foreground">{t("No hay franjas. Agregá una arriba.")}</p>}
         <div className="space-y-4">
           {rules.map((r, i) => (
             <div key={i} className="rounded-lg border bg-background/40 p-3 space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1">
-                  <Label className="text-xs">Días de la semana</Label>
+                  <Label className="text-xs">{t("Días de la semana")}</Label>
                   <div className="mt-1 flex flex-wrap gap-1">
                     {WEEKDAYS.map((d, idx) => {
                       const active = r.weekdays.includes(idx);
@@ -341,28 +344,28 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
                     })}
                   </div>
                 </div>
-                <Button size="icon" variant="ghost" aria-label="Eliminar franja" onClick={() => setRuleToDelete({ index: i, rule: r })}>
+                <Button size="icon" variant="ghost" aria-label={t("Eliminar franja")} onClick={() => setRuleToDelete({ index: i, rule: r })}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
                 <div>
-                  <Label className="text-xs">Hora inicio</Label>
+                  <Label className="text-xs">{t("Hora inicio")}</Label>
                   <Input type="time" value={r.startTime}
                     onChange={e => setRules(rules.map((x, j) => j === i ? { ...x, startTime: e.target.value } : x))} />
                 </div>
                 <div>
-                  <Label className="text-xs">Hora fin</Label>
+                  <Label className="text-xs">{t("Hora fin")}</Label>
                   <Input type="time" value={r.endTime}
                     onChange={e => setRules(rules.map((x, j) => j === i ? { ...x, endTime: e.target.value } : x))} />
                 </div>
                 <div>
-                  <Label className="text-xs">Desde (opcional)</Label>
+                  <Label className="text-xs">{t("Desde (opcional)")}</Label>
                   <Input type="date" value={r.effectiveFrom}
                     onChange={e => setRules(rules.map((x, j) => j === i ? { ...x, effectiveFrom: e.target.value } : x))} />
                 </div>
                 <div>
-                  <Label className="text-xs">Hasta (opcional)</Label>
+                  <Label className="text-xs">{t("Hasta (opcional)")}</Label>
                   <Input type="date" value={r.effectiveUntil}
                     onChange={e => setRules(rules.map((x, j) => j === i ? { ...x, effectiveUntil: e.target.value } : x))} />
                 </div>
@@ -372,24 +375,24 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
         </div>
         <div data-tour="sched-save" className="flex gap-2 pt-2 border-t">
           <Button onClick={onSave} disabled={checkingOverlaps}>
-            {checkingOverlaps ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" />Verificando…</> : "Guardar"}
+            {checkingOverlaps ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" />{t("Verificando…")}</> : t("Guardar")}
           </Button>
-          <Button variant="outline" onClick={onRegenerate}><RefreshCw className="h-4 w-4 mr-1" />Regenerar 30 días</Button>
+          <Button variant="outline" onClick={onRegenerate}><RefreshCw className="h-4 w-4 mr-1" />{t("Regenerar 30 días")}</Button>
         </div>
       </div>
 
       <div data-tour="sched-manual" className="rounded-xl border bg-card p-5 space-y-4">
-        <h3 className="font-semibold">Agregar horario puntual</h3>
+        <h3 className="font-semibold">{t("Agregar horario puntual")}</h3>
         <div className="flex flex-wrap items-end gap-2">
           <div>
-            <Label>Fecha</Label>
+            <Label>{t("Fecha")}</Label>
             <Input type="date" value={manualDate} onChange={e => setManualDate(e.target.value)} />
           </div>
           <div>
-            <Label>Hora</Label>
+            <Label>{t("Hora")}</Label>
             <Input type="time" value={manualTime} onChange={e => setManualTime(e.target.value)} />
           </div>
-          <Button onClick={onAddManual} disabled={!manualDate || !manualTime || checkingOverlaps}>Agregar</Button>
+          <Button onClick={onAddManual} disabled={!manualDate || !manualTime || checkingOverlaps}>{t("Agregar")}</Button>
         </div>
       </div>
 
@@ -400,11 +403,10 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
               <AlertTriangle className="h-8 w-8 text-destructive" />
             </div>
             <AlertDialogTitle className="text-center text-xl">
-              Se detectaron {overlapWarning?.count} horarios superpuestos
+              {t("Se detectaron {n} horarios superpuestos", { n: overlapWarning?.count ?? 0 })}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-center">
-              Estos horarios se pisan con agendas de otras vacantes o de otras etapas de esta misma búsqueda.
-              Si continuás, ambos horarios quedarán disponibles y podrías recibir dos entrevistas a la misma hora.
+              {t("Estos horarios se pisan con agendas de otras vacantes o de otras etapas de esta misma búsqueda. Si continuás, ambos horarios quedarán disponibles y podrías recibir dos entrevistas a la misma hora.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="max-h-64 overflow-y-auto rounded-lg border divide-y text-sm">
@@ -414,20 +416,20 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
                   {new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short" }).format(new Date(o.start))}
                 </span>
                 <span className="text-right text-muted-foreground">
-                  {o.sameVacancy ? "Esta vacante" : o.vacancyTitle} · {STAGE_LABELS[o.stage] ?? o.stage}
+                  {o.sameVacancy ? t("Esta vacante") : o.vacancyTitle} · {t(STAGE_LABELS[o.stage] ?? o.stage)}
                 </span>
               </div>
             ))}
             {overlapWarning && overlapWarning.count > overlapWarning.overlaps.length && (
               <div className="px-3 py-2 text-xs text-muted-foreground">
-                y {overlapWarning.count - overlapWarning.overlaps.length} más…
+                {t("y {n} más…", { n: overlapWarning.count - overlapWarning.overlaps.length })}
               </div>
             )}
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar y elegir otro horario</AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancelar y elegir otro horario")}</AlertDialogCancel>
             <AlertDialogAction onClick={() => { const fn = overlapWarning?.onConfirm; setOverlapWarning(null); fn?.(); }}>
-              Continuar igual
+              {t("Continuar igual")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -437,28 +439,28 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
       <AlertDialog open={!!ruleToDelete} onOpenChange={(open) => { if (!open && !deletingRule) setRuleToDelete(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar esta franja horaria?</AlertDialogTitle>
+            <AlertDialogTitle>{t("¿Eliminar esta franja horaria?")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Se eliminará la franja de {ruleToDelete?.rule.startTime} a {ruleToDelete?.rule.endTime} y sus slots futuros libres o bloqueados. Las entrevistas ya reservadas y los horarios manuales no se eliminan.
+              {t("Se eliminará la franja de {from} a {to} y sus slots futuros libres o bloqueados. Las entrevistas ya reservadas y los horarios manuales no se eliminan.", { from: ruleToDelete?.rule.startTime ?? "", to: ruleToDelete?.rule.endTime ?? "" })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deletingRule}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={deletingRule}>{t("Cancelar")}</AlertDialogCancel>
             <AlertDialogAction
               disabled={deletingRule}
               onClick={(event) => { event.preventDefault(); confirmDeleteRule(); }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deletingRule ? <Loader2 className="h-4 w-4 animate-spin" /> : "Eliminar franja y slots"}
+              {deletingRule ? <Loader2 className="h-4 w-4 animate-spin" /> : t("Eliminar franja y slots")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       <div data-tour="sched-calendar" className="rounded-xl border bg-card p-5">
-        <h3 className="font-semibold mb-3">Calendario ({data?.slots?.length ?? 0})</h3>
+        <h3 className="font-semibold mb-3">{t("Calendario ({n})", { n: data?.slots?.length ?? 0 })}</h3>
         {(!data?.slots || data.slots.length === 0) ? (
-          <p className="text-sm text-muted-foreground">Sin slots cargados. Configurá la disponibilidad y tocá "Regenerar".</p>
+          <p className="text-sm text-muted-foreground">{t('Sin slots cargados. Configurá la disponibilidad y tocá "Regenerar".')}</p>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-96 overflow-y-auto">
             {data.slots.map((s: any) => {
@@ -474,7 +476,7 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
                     "bg-background hover:bg-accent"
                   }`}>
                   <div className="font-medium">{label}</div>
-                  <div className="opacity-60">{isBooked ? "Reservado" : isBlocked ? "Bloqueado" : "Libre"}</div>
+                  <div className="opacity-60">{isBooked ? t("Reservado") : isBlocked ? t("Bloqueado") : t("Libre")}</div>
                 </button>
               );
             })}

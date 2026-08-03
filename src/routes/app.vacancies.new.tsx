@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sparkles, Loader2, ArrowLeft, X, Plus, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/app/vacancies/new")({
   component: NewVacancy,
@@ -27,6 +28,7 @@ type SQ = {
 };
 
 function NewVacancy() {
+  const t = useT();
   const nav = useNavigate();
   const create = useServerFn(createVacancy);
   const draft = useServerFn(aiDraftVacancy);
@@ -61,12 +63,12 @@ function NewVacancy() {
   function set<K extends keyof typeof form>(k: K, v: any) { setForm(f => ({ ...f, [k]: v })); }
 
   async function aiDraft() {
-    if (!form.title) return toast.error("Poné un título primero");
+    if (!form.title) return toast.error(t("Poné un título primero"));
     setDrafting(true);
     try {
       const r = await draft({ data: { title: form.title, seniority: form.seniority, area: form.area, modality: form.modality } });
       setForm(f => ({ ...f, ...r }));
-      toast.success("Borrador generado");
+      toast.success(t("Borrador generado"));
     } catch (e: any) { toast.error(e.message); } finally { setDrafting(false); }
   }
 
@@ -74,7 +76,7 @@ function NewVacancy() {
     setSaving(true);
     try {
       const v = await create({ data: { ...form, screening } as any });
-      toast.success("Vacante creada");
+      toast.success(t("Vacante creada"));
       nav({ to: "/app/vacancies/$vacancyId", params: { vacancyId: v.id } });
     } catch (e: any) { toast.error(e.message); setSaving(false); }
   }
@@ -88,28 +90,28 @@ function NewVacancy() {
   return (
     <div className="mx-auto max-w-3xl p-6 md:p-10">
       <Link to="/app/vacancies" className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> Volver
+        <ArrowLeft className="h-4 w-4" /> {t("Volver")}
       </Link>
-      <h1 className="font-display text-4xl">Nueva vacante</h1>
-      <p className="mt-1 text-muted-foreground">La IA puede armar el borrador por vos.</p>
+      <h1 className="font-display text-4xl">{t("Nueva vacante")}</h1>
+      <p className="mt-1 text-muted-foreground">{t("La IA puede armar el borrador por vos.")}</p>
 
       {blocked && (
         <div className="mt-6 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5">
           <div className="flex items-start gap-3">
             <AlertTriangle className="mt-0.5 h-5 w-5 text-amber-600" />
             <div className="flex-1">
-              <h3 className="font-semibold">Antes de crear vacantes necesitás configurar lo siguiente:</h3>
+              <h3 className="font-semibold">{t("Antes de crear vacantes necesitás configurar lo siguiente:")}</h3>
               <ul className="mt-2 list-disc pl-5 text-sm">
                 {!gate?.gmailOk && (
                   <li>
-                    Conectar tu cuenta de <b>Google</b> o <b>Microsoft</b>{" "}
-                    <Link to="/app/integrations" className="text-primary underline">Ir a Integraciones</Link>
+                    {t("Conectar tu cuenta de")} <b>Google</b> {t("o")} <b>Microsoft</b>{" "}
+                    <Link to="/app/integrations" className="text-primary underline">{t("Ir a Integraciones")}</Link>
                   </li>
                 )}
                 {!gate?.orgOk && (
                   <li>
-                    Completar <b>nombre de la empresa</b> y <b>email remitente</b>{" "}
-                    <Link to="/app/settings" className="text-primary underline">Ir a Configuración</Link>
+                    {t("Completar")} <b>{t("nombre de la empresa")}</b> {t("y")} <b>{t("email remitente")}</b>{" "}
+                    <Link to="/app/settings" className="text-primary underline">{t("Ir a Configuración")}</Link>
                   </li>
                 )}
               </ul>
@@ -120,49 +122,49 @@ function NewVacancy() {
 
       <fieldset disabled={!!blocked} className={blocked ? "pointer-events-none opacity-50" : ""}>
       <div className="mt-8 space-y-6">
-        <Section title="Lo básico">
+        <Section title={t("Lo básico")}>
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Título *"><Input value={form.title} onChange={e => set("title", e.target.value)} placeholder="Senior Product Designer" /></Field>
-            <Field label="Área"><Input value={form.area} onChange={e => set("area", e.target.value)} placeholder="Diseño" /></Field>
-            <Field label="Seniority">
+            <Field label={t("Título *")}><Input value={form.title} onChange={e => set("title", e.target.value)} placeholder={t("Senior Product Designer")} /></Field>
+            <Field label={t("Área")}><Input value={form.area} onChange={e => set("area", e.target.value)} placeholder={t("Diseño")} /></Field>
+            <Field label={t("Seniority")}>
               <Select value={form.seniority} onValueChange={v => set("seniority", v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="junior">Junior</SelectItem>
-                  <SelectItem value="mid">Semi Senior</SelectItem>
-                  <SelectItem value="senior">Senior</SelectItem>
+                  <SelectItem value="junior">{t("Junior")}</SelectItem>
+                  <SelectItem value="mid">{t("Semi Senior")}</SelectItem>
+                  <SelectItem value="senior">{t("Senior")}</SelectItem>
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Modalidad">
+            <Field label={t("Modalidad")}>
               <Select value={form.modality} onValueChange={v => set("modality", v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="remote">Remoto</SelectItem>
-                  <SelectItem value="hybrid">Híbrido</SelectItem>
-                  <SelectItem value="onsite">Presencial</SelectItem>
+                  <SelectItem value="remote">{t("Remoto")}</SelectItem>
+                  <SelectItem value="hybrid">{t("Híbrido")}</SelectItem>
+                  <SelectItem value="onsite">{t("Presencial")}</SelectItem>
                 </SelectContent>
               </Select>
             </Field>
             {(form.modality === "hybrid" || form.modality === "onsite") && (
               <>
-                <Field label="Ubicación"><Input value={form.location} onChange={e => set("location", e.target.value)} placeholder="CABA, Argentina" /></Field>
-                <Field label="Días y horario laboral"><Input value={form.work_schedule} onChange={e => set("work_schedule", e.target.value)} placeholder="Lun a Vie 9 a 18hs" /></Field>
+                <Field label={t("Ubicación")}><Input value={form.location} onChange={e => set("location", e.target.value)} placeholder={t("CABA, Argentina")} /></Field>
+                <Field label={t("Días y horario laboral")}><Input value={form.work_schedule} onChange={e => set("work_schedule", e.target.value)} placeholder={t("Lun a Vie 9 a 18hs")} /></Field>
               </>
             )}
           </div>
           <Button variant="outline" onClick={aiDraft} disabled={drafting} className="mt-2">
             {drafting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4 text-primary" />}
-            Generar descripción con IA
+            {t("Generar descripción con IA")}
           </Button>
         </Section>
 
-        <Section title="Descripción del puesto">
-          <Field label="Descripción"><Textarea rows={4} value={form.description} onChange={e => set("description", e.target.value)} /></Field>
-          <Field label="Responsabilidades"><Textarea rows={5} value={form.responsibilities} onChange={e => set("responsibilities", e.target.value)} /></Field>
-          <Field label="Requisitos excluyentes"><Textarea rows={4} value={form.requirements} onChange={e => set("requirements", e.target.value)} /></Field>
-          <Field label="Deseables"><Textarea rows={3} value={form.nice_to_have} onChange={e => set("nice_to_have", e.target.value)} /></Field>
-          <Field label="Competencias">
+        <Section title={t("Descripción del puesto")}>
+          <Field label={t("Descripción")}><Textarea rows={4} value={form.description} onChange={e => set("description", e.target.value)} /></Field>
+          <Field label={t("Responsabilidades")}><Textarea rows={5} value={form.responsibilities} onChange={e => set("responsibilities", e.target.value)} /></Field>
+          <Field label={t("Requisitos excluyentes")}><Textarea rows={4} value={form.requirements} onChange={e => set("requirements", e.target.value)} /></Field>
+          <Field label={t("Deseables")}><Textarea rows={3} value={form.nice_to_have} onChange={e => set("nice_to_have", e.target.value)} /></Field>
+          <Field label={t("Competencias")}>
             <div className="flex flex-wrap gap-2">
               {form.competencies.map((c, i) => (
                 <span key={i} className="inline-flex items-center gap-1 rounded-full bg-accent px-3 py-1 text-xs text-accent-foreground">
@@ -179,32 +181,31 @@ function NewVacancy() {
                     setCompInput("");
                   }
                 }}
-                placeholder="Agregar y Enter"
+                placeholder={t("Agregar y Enter")}
                 className="rounded-full border border-input bg-background px-3 py-1 text-xs outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </Field>
         </Section>
 
-        <Section title="Matching">
-          <Field label={`% mínimo de match: ${form.min_match}%`}>
+        <Section title={t("Matching")}>
+          <Field label={t("% mínimo de match: {n}%", { n: form.min_match })}>
             <input type="range" min={0} max={100} step={5} value={form.min_match} onChange={e => set("min_match", Number(e.target.value))} className="w-full accent-primary" />
-            <p className="text-xs text-muted-foreground">Postulaciones por debajo se descartan automáticamente.</p>
+            <p className="text-xs text-muted-foreground">{t("Postulaciones por debajo se descartan automáticamente.")}</p>
           </Field>
         </Section>
 
-        <Section title="Preguntas de filtro (hasta 10)">
+        <Section title={t("Preguntas de filtro (hasta 10)")}>
           <p className="text-xs text-muted-foreground">
-            Texto libre, opción única u opción múltiple. En las opciones podés marcar una respuesta como excluyente:
-            si el postulante la elige, se <b>descarta automáticamente</b>.
+            {t("Texto libre, opción única u opción múltiple. En las opciones podés marcar una respuesta como excluyente: si el postulante la elige, se")} <b>{t("descarta automáticamente")}</b>.
           </p>
           <ScreeningEditor screening={screening} setScreening={setScreening} />
         </Section>
 
         <div className="flex items-center justify-end gap-2 pt-4">
-          <Button variant="ghost" onClick={() => set("status", "draft")}>Guardar borrador</Button>
+          <Button variant="ghost" onClick={() => set("status", "draft")}>{t("Guardar borrador")}</Button>
           <Button onClick={save} disabled={saving || !form.title}>
-            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Publicar vacante
+            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} {t("Publicar vacante")}
           </Button>
         </div>
       </div>
@@ -214,6 +215,7 @@ function NewVacancy() {
 }
 
 export function ScreeningEditor({ screening, setScreening }: { screening: SQ[]; setScreening: (fn: any) => void }) {
+  const t = useT();
   function update(i: number, patch: Partial<SQ>) {
     setScreening((s: SQ[]) => s.map((x, j) => j === i ? { ...x, ...patch } : x));
   }
@@ -223,40 +225,40 @@ export function ScreeningEditor({ screening, setScreening }: { screening: SQ[]; 
       {screening.map((q, i) => (
         <div key={i} className="rounded-xl border border-border bg-background p-3 space-y-3">
           <div className="flex gap-2">
-            <Input value={q.question} placeholder="¿Tenés disponibilidad full-time?" onChange={e => update(i, { question: e.target.value })} />
+            <Input value={q.question} placeholder={t("¿Tenés disponibilidad full-time?")} onChange={e => update(i, { question: e.target.value })} />
             <Select value={q.qtype} onValueChange={(v: any) => update(i, { qtype: v, options: v === "text" ? [] : q.options })}>
               <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="text">Texto corto</SelectItem>
-                <SelectItem value="single">Opción única</SelectItem>
-                <SelectItem value="multi">Opción múltiple</SelectItem>
+                <SelectItem value="text">{t("Texto corto")}</SelectItem>
+                <SelectItem value="single">{t("Opción única")}</SelectItem>
+                <SelectItem value="multi">{t("Opción múltiple")}</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="ghost" size="icon" onClick={() => remove(i)}><X className="h-4 w-4" /></Button>
           </div>
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             <Checkbox checked={q.required} onCheckedChange={(v) => update(i, { required: !!v })} />
-            Obligatoria
+            {t("Obligatoria")}
           </label>
           {q.qtype !== "text" && (
             <div className="space-y-2">
-              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Opciones</div>
+              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("Opciones")}</div>
               {q.options.map((o, oi) => (
                 <div key={oi} className="flex items-center gap-2">
-                  <Input value={o.value} placeholder={`Opción ${oi + 1}`} onChange={e => update(i, {
+                  <Input value={o.value} placeholder={t("Opción {n}", { n: oi + 1 })} onChange={e => update(i, {
                     options: q.options.map((x, j) => j === oi ? { ...x, value: e.target.value } : x)
                   })} />
                   <label className="flex items-center gap-1.5 whitespace-nowrap rounded-md border border-border px-2 py-1.5 text-xs">
                     <Checkbox checked={o.discard} onCheckedChange={(v) => update(i, {
                       options: q.options.map((x, j) => j === oi ? { ...x, discard: !!v } : x)
                     })} />
-                    Descartar si elige esta
+                    {t("Descartar si elige esta")}
                   </label>
                   <Button variant="ghost" size="icon" onClick={() => update(i, { options: q.options.filter((_, j) => j !== oi) })}><X className="h-3 w-3" /></Button>
                 </div>
               ))}
               <Button type="button" variant="outline" size="sm" onClick={() => update(i, { options: [...q.options, { value: "", discard: false }] })}>
-                <Plus className="mr-2 h-3 w-3" /> Agregar opción
+                <Plus className="mr-2 h-3 w-3" /> {t("Agregar opción")}
               </Button>
             </div>
           )}
@@ -264,7 +266,7 @@ export function ScreeningEditor({ screening, setScreening }: { screening: SQ[]; 
       ))}
       {screening.length < 10 && (
         <Button type="button" variant="outline" size="sm" onClick={() => setScreening((s: SQ[]) => [...s, { question: "", required: false, qtype: "text", options: [] }])}>
-          <Plus className="mr-2 h-3 w-3" /> Agregar pregunta
+          <Plus className="mr-2 h-3 w-3" /> {t("Agregar pregunta")}
         </Button>
       )}
     </div>

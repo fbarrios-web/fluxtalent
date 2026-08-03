@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PLANS, planByPrice } from "@/lib/plans";
 import * as XLSX from "xlsx";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/app/admin/orgs")({
   component: AdminOrgs,
@@ -48,6 +49,7 @@ const COLUMNS: { key: ColKey; label: string; sticky?: boolean }[] = [
 ];
 
 function AdminOrgs() {
+  const t = useT();
   const qc = useQueryClient();
   const list = useServerFn(adminListOrgs);
   const grant = useServerFn(adminGrantLicense);
@@ -85,9 +87,9 @@ function AdminOrgs() {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Clientes");
       XLSX.writeFile(wb, `clientes-flux-talent-${new Date().toISOString().slice(0, 10)}.xlsx`);
-      toast.success(`${rows.length} clientes exportados`);
+      toast.success(t("{n} clientes exportados", { n: rows.length }));
     } catch (e: any) {
-      toast.error(e?.message ?? "No se pudo exportar");
+      toast.error(e?.message ?? t("No se pudo exportar"));
     } finally {
       setExporting(false);
     }
@@ -95,14 +97,14 @@ function AdminOrgs() {
 
   const mut = useMutation({
     mutationFn: (vars: { org_id: string; action: any; plan_price_ars?: number; days?: number }) => grant({ data: vars }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-orgs"] }); qc.invalidateQueries({ queryKey: ["admin-metrics"] }); toast.success("Actualizado"); },
-    onError: (e: any) => toast.error(e.message ?? "Error"),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-orgs"] }); qc.invalidateQueries({ queryKey: ["admin-metrics"] }); toast.success(t("Actualizado")); },
+    onError: (e: any) => toast.error(e.message ?? t("Error")),
   });
 
   const delMut = useMutation({
     mutationFn: (org_id: string) => delFn({ data: { org_id } }),
-    onSuccess: (r: any) => { qc.invalidateQueries({ queryKey: ["admin-orgs"] }); qc.invalidateQueries({ queryKey: ["admin-metrics"] }); qc.invalidateQueries({ queryKey: ["admin-users"] }); toast.success(`Cuenta eliminada (${r?.deleted_users ?? 0} usuario/s)`); },
-    onError: (e: any) => toast.error(e.message ?? "Error al eliminar"),
+    onSuccess: (r: any) => { qc.invalidateQueries({ queryKey: ["admin-orgs"] }); qc.invalidateQueries({ queryKey: ["admin-metrics"] }); qc.invalidateQueries({ queryKey: ["admin-users"] }); toast.success(t("Cuenta eliminada ({n} usuario/s)", { n: r?.deleted_users ?? 0 })); },
+    onError: (e: any) => toast.error(e.message ?? t("Error al eliminar")),
   });
 
   const archiveMut = useMutation({
@@ -110,9 +112,9 @@ function AdminOrgs() {
     onSuccess: (_r, vars) => {
       qc.invalidateQueries({ queryKey: ["admin-orgs"] });
       qc.invalidateQueries({ queryKey: ["admin-metrics"] });
-      toast.success(vars.archived ? "Organización archivada" : "Organización restaurada");
+      toast.success(vars.archived ? t("Organización archivada") : t("Organización restaurada"));
     },
-    onError: (e: any) => toast.error(e.message ?? "Error"),
+    onError: (e: any) => toast.error(e.message ?? t("Error")),
   });
 
   const [planDialog, setPlanDialog] = useState<{ orgId: string; orgName: string } | null>(null);
@@ -196,55 +198,55 @@ function AdminOrgs() {
             <button
               onClick={() => setView("active")}
               className={`rounded-md px-3 py-1.5 text-sm ${view === "active" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            >Activas</button>
+            >{t("Activas")}</button>
             <button
               onClick={() => setView("archived")}
               className={`rounded-md px-3 py-1.5 text-sm ${view === "archived" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            >Archivadas</button>
+            >{t("Archivadas")}</button>
           </div>
           <input
             value={filter}
             onChange={e => setFilter(e.target.value)}
-            placeholder="Buscar organización…"
+            placeholder={t("Buscar organización…")}
             className="w-56 rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
           <input
             value={emailFilter}
             onChange={e => setEmailFilter(e.target.value)}
-            placeholder="Filtrar por email…"
+            placeholder={t("Filtrar por email…")}
             className="w-56 rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-40 h-9"><SelectValue placeholder="Estado" /></SelectTrigger>
+            <SelectTrigger className="w-40 h-9"><SelectValue placeholder={t("Estado")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos los estados</SelectItem>
-              <SelectItem value="trialing">Trial</SelectItem>
-              <SelectItem value="active">Activo</SelectItem>
-              <SelectItem value="past_due">Vencido</SelectItem>
-              <SelectItem value="canceled">Cancelado</SelectItem>
-              <SelectItem value="trial_expired">Prueba vencida</SelectItem>
-              <SelectItem value="subscription_expired">Suscripción vencida</SelectItem>
+              <SelectItem value="all">{t("Todos los estados")}</SelectItem>
+              <SelectItem value="trialing">{t("Trial")}</SelectItem>
+              <SelectItem value="active">{t("Activo")}</SelectItem>
+              <SelectItem value="past_due">{t("Vencido")}</SelectItem>
+              <SelectItem value="canceled">{t("Cancelado")}</SelectItem>
+              <SelectItem value="trial_expired">{t("Prueba vencida")}</SelectItem>
+              <SelectItem value="subscription_expired">{t("Suscripción vencida")}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={planFilter} onValueChange={setPlanFilter}>
-            <SelectTrigger className="w-40 h-9"><SelectValue placeholder="Plan" /></SelectTrigger>
+            <SelectTrigger className="w-40 h-9"><SelectValue placeholder={t("Plan")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos los planes</SelectItem>
-              <SelectItem value="unlimited">★ Admin ilimitado</SelectItem>
+              <SelectItem value="all">{t("Todos los planes")}</SelectItem>
+              <SelectItem value="unlimited">★ {t("Admin ilimitado")}</SelectItem>
               {PLANS.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
             </SelectContent>
           </Select>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9"><Columns3 className="mr-2 h-4 w-4" />Columnas</Button>
+              <Button variant="outline" size="sm" className="h-9"><Columns3 className="mr-2 h-4 w-4" />{t("Columnas")}</Button>
             </PopoverTrigger>
             <PopoverContent align="start" className="w-56">
               <div className="space-y-2">
-                <div className="text-xs font-medium text-muted-foreground">Mostrar columnas</div>
+                <div className="text-xs font-medium text-muted-foreground">{t("Mostrar columnas")}</div>
                 {COLUMNS.map(c => (
                   <label key={c.key} className="flex items-center gap-2 text-sm cursor-pointer">
                     <Checkbox checked={isVisible(c.key)} onCheckedChange={() => toggleCol(c.key)} />
-                    <span>{c.label}</span>
+                    <span>{t(c.label)}</span>
                   </label>
                 ))}
               </div>
@@ -253,7 +255,7 @@ function AdminOrgs() {
         </div>
         <Button variant="outline" size="sm" onClick={handleExport} disabled={exporting}>
           {exporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-          Exportar clientes (Excel)
+          {t("Exportar clientes (Excel)")}
         </Button>
       </div>
 
@@ -267,31 +269,31 @@ function AdminOrgs() {
             <thead className="text-left text-xs uppercase text-muted-foreground">
               <tr>
                 {isVisible("org") && (
-                  <th className={`sticky top-0 ${stickyLeft.org} z-30 bg-muted px-4 py-3 min-w-[220px] border-b border-border shadow-[1px_0_0_0_hsl(var(--border))]`}>Organización</th>
+                  <th className={`sticky top-0 ${stickyLeft.org} z-30 bg-muted px-4 py-3 min-w-[220px] border-b border-border shadow-[1px_0_0_0_hsl(var(--border))]`}>{t("Organización")}</th>
                 )}
                 {isVisible("email") && (
-                  <th className={`sticky top-0 ${stickyLeft.email} z-30 bg-muted px-4 py-3 min-w-[220px] border-b border-border shadow-[1px_0_0_0_hsl(var(--border))]`}>Email</th>
+                  <th className={`sticky top-0 ${stickyLeft.email} z-30 bg-muted px-4 py-3 min-w-[220px] border-b border-border shadow-[1px_0_0_0_hsl(var(--border))]`}>{t("Email")}</th>
                 )}
-                {isVisible("users") && <SortableTh label="Usuarios" active={sortKey === "users"} dir={sortDir} onClick={() => toggleSort("users")} />}
+                {isVisible("users") && <SortableTh label={t("Usuarios")} active={sortKey === "users"} dir={sortDir} onClick={() => toggleSort("users")} />}
                 {isVisible("vacancies") && (
                   <th className="sticky top-0 z-20 bg-muted px-4 py-3 border-b border-border whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       <button className="inline-flex items-center gap-1 hover:text-foreground" onClick={() => toggleSort("vac_total")}>
-                        Vacantes {sortIcon(sortKey === "vac_total", sortDir)}
+                        {t("Vacantes")} {sortIcon(sortKey === "vac_total", sortDir)}
                       </button>
                       <span className="text-muted-foreground/50">·</span>
                       <button className="inline-flex items-center gap-1 hover:text-foreground" onClick={() => toggleSort("vac_active")}>
-                        activas {sortIcon(sortKey === "vac_active", sortDir)}
+                        {t("activas")} {sortIcon(sortKey === "vac_active", sortDir)}
                       </button>
                     </div>
                   </th>
                 )}
-                {isVisible("cvs") && <SortableTh label="CVs procesados" active={sortKey === "cvs"} dir={sortDir} onClick={() => toggleSort("cvs")} />}
-                {isVisible("status") && <PlainTh>Estado</PlainTh>}
-                {isVisible("expiry") && <SortableTh label="Vence" active={sortKey === "expiry"} dir={sortDir} onClick={() => toggleSort("expiry")} />}
-                {isVisible("plan") && <PlainTh>Plan</PlainTh>}
-                {isVisible("last_payment") && <PlainTh>Último pago</PlainTh>}
-                {isVisible("actions") && <PlainTh>Acciones</PlainTh>}
+                {isVisible("cvs") && <SortableTh label={t("CVs procesados")} active={sortKey === "cvs"} dir={sortDir} onClick={() => toggleSort("cvs")} />}
+                {isVisible("status") && <PlainTh>{t("Estado")}</PlainTh>}
+                {isVisible("expiry") && <SortableTh label={t("Vence")} active={sortKey === "expiry"} dir={sortDir} onClick={() => toggleSort("expiry")} />}
+                {isVisible("plan") && <PlainTh>{t("Plan")}</PlainTh>}
+                {isVisible("last_payment") && <PlainTh>{t("Último pago")}</PlainTh>}
+                {isVisible("actions") && <PlainTh>{t("Acciones")}</PlainTh>}
               </tr>
             </thead>
             <tbody>
@@ -303,7 +305,7 @@ function AdminOrgs() {
                     {isVisible("org") && (
                       <td className={`sticky ${stickyLeft.org} z-10 bg-card group-hover:bg-muted/30 px-4 py-3 border-b border-border shadow-[1px_0_0_0_hsl(var(--border))]`}>
                         <div className="font-medium">{o.name}</div>
-                        <div className="text-xs text-muted-foreground">creada {new Date(o.created_at).toLocaleDateString("es-AR")}{(o as any).parent_org_id ? " · sub-org" : ""}</div>
+                        <div className="text-xs text-muted-foreground">{t("creada {date}", { date: new Date(o.created_at).toLocaleDateString("es-AR") })}{(o as any).parent_org_id ? ` · ${t("sub-org")}` : ""}</div>
                       </td>
                     )}
                     {isVisible("email") && (
@@ -315,8 +317,8 @@ function AdminOrgs() {
                     {isVisible("users") && <td className="px-4 py-3 text-sm border-b border-border">{(o as any).users_count ?? 0}</td>}
                     {isVisible("vacancies") && (
                       <td className="px-4 py-3 text-sm border-b border-border">
-                        <div>{(o as any).vacancies_total ?? 0} <span className="text-xs text-muted-foreground">totales</span></div>
-                        <div className="text-xs text-muted-foreground">{(o as any).vacancies_active ?? 0} activas</div>
+                        <div>{(o as any).vacancies_total ?? 0} <span className="text-xs text-muted-foreground">{t("totales")}</span></div>
+                        <div className="text-xs text-muted-foreground">{t("{n} activas", { n: (o as any).vacancies_active ?? 0 })}</div>
                       </td>
                     )}
                     {isVisible("cvs") && <td className="px-4 py-3 text-sm border-b border-border">{(o as any).cvs_processed ?? 0}</td>}
@@ -327,7 +329,7 @@ function AdminOrgs() {
                           <div>
                             <div>{new Date(expiry).toLocaleDateString("es-AR")}</div>
                             <div className={`text-xs ${days != null && days < 5 ? "text-destructive" : "text-muted-foreground"}`}>
-                              {days != null ? (days >= 0 ? `${days} días` : `vencido hace ${-days}d`) : "—"}
+                              {days != null ? (days >= 0 ? t("{n} días", { n: days }) : t("vencido hace {n}d", { n: -days })) : "—"}
                             </div>
                           </div>
                         ) : "—"}
@@ -337,11 +339,11 @@ function AdminOrgs() {
                       <td className="px-4 py-3 border-b border-border">
                         <div className="font-medium">
                           {(o as any).is_unlimited
-                            ? "★ Admin ilimitado"
-                            : (o.subscription_status === "trialing" ? "Free (trial)" : planByPrice(o.plan_price_ars).name)}
+                            ? `★ ${t("Admin ilimitado")}`
+                            : (o.subscription_status === "trialing" ? t("Free (trial)") : planByPrice(o.plan_price_ars).name)}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {(o as any).is_unlimited ? "Sin costo · no cuenta en ganancias" : `ARS ${Number(o.plan_price_ars).toLocaleString("es-AR")}/mes`}
+                          {(o as any).is_unlimited ? t("Sin costo · no cuenta en ganancias") : t("ARS {amount}/mes", { amount: Number(o.plan_price_ars).toLocaleString("es-AR") })}
                         </div>
                       </td>
                     )}
@@ -350,7 +352,7 @@ function AdminOrgs() {
                       <td className="px-4 py-3 border-b border-border">
                         <div className="flex items-center gap-2">
                           <Button variant="outline" size="sm" onClick={() => setPlanDialog({ orgId: o.id, orgName: o.name })} disabled={mut.isPending}>
-                            Asignar plan
+                            {t("Asignar plan")}
                           </Button>
                           <ActionMenu orgId={o.id} onPick={(action) => mut.mutate({ org_id: o.id, action })} disabled={mut.isPending} />
                           <Button
@@ -359,7 +361,7 @@ function AdminOrgs() {
                             disabled={archiveMut.isPending}
                             onClick={() => archiveMut.mutate({ org_id: o.id, archived: view === "active" })}
                           >
-                            {view === "active" ? "Archivar" : "Restaurar"}
+                            {view === "active" ? t("Archivar") : t("Restaurar")}
                           </Button>
                           <Button
                             variant="outline"
@@ -367,12 +369,12 @@ function AdminOrgs() {
                             className="text-destructive hover:bg-destructive/10"
                             disabled={delMut.isPending}
                             onClick={() => {
-                              if (confirm(`¿Eliminar definitivamente "${o.name}"?\n\nSe borran los usuarios, vacantes, postulaciones y toda la información de esta cuenta. Esta acción no se puede deshacer.`)) {
+                              if (confirm(t('¿Eliminar definitivamente "{name}"?\n\nSe borran los usuarios, vacantes, postulaciones y toda la información de esta cuenta. Esta acción no se puede deshacer.', { name: o.name }))) {
                                 delMut.mutate(o.id);
                               }
                             }}
                           >
-                            Eliminar
+                            {t("Eliminar")}
                           </Button>
                         </div>
                       </td>
@@ -381,7 +383,7 @@ function AdminOrgs() {
                 );
               })}
               {!rows.length && (
-                <tr><td colSpan={COLUMNS.length - hidden.size} className="px-4 py-10 text-center text-sm text-muted-foreground">Sin resultados</td></tr>
+                <tr><td colSpan={COLUMNS.length - hidden.size} className="px-4 py-10 text-center text-sm text-muted-foreground">{t("Sin resultados")}</td></tr>
               )}
             </tbody>
           </table>
@@ -443,6 +445,7 @@ function AssignPlanDialog({ open, org, onClose, onAssign, pending }: {
   onAssign: (plan_price_ars: number, days: number) => void;
   pending: boolean;
 }) {
+  const t = useT();
   const assignable = PLANS.filter(p => !p.contactOnly && p.priceArs >= 0);
   const [planId, setPlanId] = useState<string>(assignable[1]?.id ?? assignable[0].id);
   const [days, setDays] = useState<string>("30");
@@ -451,42 +454,42 @@ function AssignPlanDialog({ open, org, onClose, onAssign, pending }: {
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Asignar plan {org ? `· ${org.orgName}` : ""}</DialogTitle>
+          <DialogTitle>{t("Asignar plan")} {org ? `· ${org.orgName}` : ""}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label>Plan</Label>
+            <Label>{t("Plan")}</Label>
             <Select value={planId} onValueChange={setPlanId}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {assignable.map(p => (
                   <SelectItem key={p.id} value={p.id}>
-                    {p.name} — {p.priceArs === 0 ? "Gratis" : `ARS ${p.priceArs.toLocaleString("es-AR")} / 15 días.`}
+                    {p.name} — {p.priceArs === 0 ? t("Gratis") : t("ARS {amount} / 15 días.", { amount: p.priceArs.toLocaleString("es-AR") })}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label>Duración</Label>
+            <Label>{t("Duración")}</Label>
             <Select value={days} onValueChange={setDays}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="15">15 días</SelectItem>
-                <SelectItem value="30">30 días</SelectItem>
-                <SelectItem value="90">90 días</SelectItem>
-                <SelectItem value="180">180 días</SelectItem>
-                <SelectItem value="365">1 año</SelectItem>
+                <SelectItem value="15">{t("15 días")}</SelectItem>
+                <SelectItem value="30">{t("30 días")}</SelectItem>
+                <SelectItem value="90">{t("90 días")}</SelectItem>
+                <SelectItem value="180">{t("180 días")}</SelectItem>
+                <SelectItem value="365">{t("1 año")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <p className="text-xs text-muted-foreground">Esta acción marca la suscripción como activa, fija el precio del plan y registra un pago manual.</p>
+          <p className="text-xs text-muted-foreground">{t("Esta acción marca la suscripción como activa, fija el precio del plan y registra un pago manual.")}</p>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button variant="outline" onClick={onClose}>{t("Cancelar")}</Button>
           <Button onClick={() => onAssign(plan.priceArs, Number(days))} disabled={pending}>
             {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Activar {plan.name}
+            {t("Activar {plan}", { plan: plan.name })}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -503,6 +506,7 @@ function effectiveStatus(o: any): string {
 }
 
 function StatusBadge({ s }: { s: string }) {
+  const t = useT();
   const labels: Record<string, string> = {
     trialing: "Trial",
     active: "Activa",
@@ -519,19 +523,20 @@ function StatusBadge({ s }: { s: string }) {
     trial_expired: "bg-destructive/10 text-destructive",
     subscription_expired: "bg-destructive/10 text-destructive",
   };
-  return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${m[s] ?? "bg-muted"}`}>{labels[s] ?? s}</span>;
+  return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${m[s] ?? "bg-muted"}`}>{labels[s] ? t(labels[s]) : s}</span>;
 }
 
 function ActionMenu({ onPick, disabled }: { orgId: string; onPick: (a: any) => void; disabled: boolean }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   return (
     <div className="relative">
-      <Button variant="outline" size="sm" onClick={() => setOpen(o => !o)} disabled={disabled}>Asignar licencia ▾</Button>
+      <Button variant="outline" size="sm" onClick={() => setOpen(o => !o)} disabled={disabled}>{t("Asignar licencia ▾")}</Button>
       {open && (
         <div className="absolute right-0 z-10 mt-1 w-48 rounded-lg border border-border bg-popover p-1 shadow-lg">
           {actions.map(a => (
             <button key={a.v} onClick={() => { setOpen(false); onPick(a.v); }} className="block w-full rounded px-3 py-1.5 text-left text-sm hover:bg-accent">
-              {a.l}
+              {t(a.l)}
             </button>
           ))}
         </div>

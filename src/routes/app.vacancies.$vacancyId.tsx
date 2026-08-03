@@ -21,6 +21,7 @@ import { VacancyScheduling } from "@/components/vacancy-scheduling";
 import { SchedulingTour } from "@/components/product-tour";
 import { downloadCSV } from "@/lib/export-csv";
 import { ScreeningEditor } from "./app.vacancies.new";
+import { useT } from "@/lib/i18n";
 
 const STAGES = [
   { id: "received",    label: "Recibidos",     color: "bg-slate-200 text-slate-700 dark:bg-slate-500/20 dark:text-slate-200" },
@@ -30,12 +31,14 @@ const STAGES = [
   { id: "hired",       label: "Contratado",    color: "bg-emerald-200 text-emerald-900 dark:bg-emerald-500/20 dark:text-emerald-200" },
   { id: "rejected",    label: "No avanza",      color: "bg-red-200 text-red-800 dark:bg-red-500/20 dark:text-red-200" },
 ] as const;
+// NOTE: labels above are Spanish source keys; translate at render with t(s.label)
 
 export const Route = createFileRoute("/app/vacancies/$vacancyId")({
   component: VacancyDetail,
 });
 
 function VacancyDetail() {
+  const t = useT();
   const { vacancyId } = Route.useParams();
   const qc = useQueryClient();
   const nav = useNavigate();
@@ -86,27 +89,27 @@ function VacancyDetail() {
   const applyUrl = `${window.location.origin}/apply/${v.public_slug}`;
   function copyLink() {
     navigator.clipboard.writeText(applyUrl);
-    toast.success("Link copiado");
+    toast.success(t("Link copiado"));
   }
 
   async function setStatus(status: "active" | "paused" | "closed" | "draft") {
     await update({ data: { id: v.id, patch: { status } } });
     qc.invalidateQueries({ queryKey: ["vacancy", vacancyId] });
-    toast.success(status === "active" ? "Vacante activada" : status === "paused" ? "Vacante desactivada" : `Vacante ${status}`);
+    toast.success(status === "active" ? t("Vacante activada") : status === "paused" ? t("Vacante desactivada") : t("Vacante {status}", { status }));
   }
 
   async function onDrop(appId: string, stage: string) {
     const res = await move({ data: { id: appId, stage: stage as any } });
     qc.invalidateQueries({ queryKey: ["vacancy-apps", vacancyId] });
     if ((res as any)?.inviteWarning) toast.warning((res as any).inviteWarning);
-    else if (stage.startsWith("interview_")) toast.success("Invitación enviada al postulante");
-    else if (stage === "rejected") toast.success("Email de \"No avanza\" enviado");
+    else if (stage.startsWith("interview_")) toast.success(t("Invitación enviada al postulante"));
+    else if (stage === "rejected") toast.success(t('Email de "No avanza" enviado'));
   }
 
   return (
     <div className="p-6 md:p-10">
       <Link to="/app/vacancies" className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> Volver
+        <ArrowLeft className="h-4 w-4" /> {t("Volver")}
       </Link>
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
@@ -116,22 +119,22 @@ function VacancyDetail() {
             <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase ${
               v.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
             }`}>
-              {v.status === "active" ? "Activa" : "Desactivada"}
+              {v.status === "active" ? t("Activa") : t("Desactivada")}
             </span>
           </div>
-          <p className="text-muted-foreground">{v.area ?? "—"} · {v.seniority ?? "—"} · {v.modality ?? "—"} · match mínimo {v.min_match}%</p>
+          <p className="text-muted-foreground">{v.area ?? "—"} · {v.seniority ?? "—"} · {v.modality ?? "—"} · {t("match mínimo {n}%", { n: v.min_match })}</p>
         </div>
         <div className="flex items-center gap-2">
           {v.status === "active" ? (
-            <Button data-tour="vacancy-status" variant="outline" onClick={() => setStatus("paused")}>Desactivar</Button>
+            <Button data-tour="vacancy-status" variant="outline" onClick={() => setStatus("paused")}>{t("Desactivar")}</Button>
           ) : (
-            <Button data-tour="vacancy-status" variant="outline" onClick={() => setStatus("active")}>Activar</Button>
+            <Button data-tour="vacancy-status" variant="outline" onClick={() => setStatus("active")}>{t("Activar")}</Button>
           )}
           <EditVacancyDialog vacancy={v} onSaved={() => qc.invalidateQueries({ queryKey: ["vacancy", vacancyId] })} />
           <VacancyImageDialog vacancy={v} applyUrl={applyUrl} />
           
           <BulkUploadDialog vacancyId={v.id} onDone={() => qc.invalidateQueries({ queryKey: ["vacancy-apps", vacancyId] })} />
-          <Button data-tour="vacancy-link" variant="outline" onClick={copyLink}><Copy className="mr-2 h-3.5 w-3.5" /> Copiar link</Button>
+          <Button data-tour="vacancy-link" variant="outline" onClick={copyLink}><Copy className="mr-2 h-3.5 w-3.5" /> {t("Copiar link")}</Button>
           <Button
             variant="outline"
             disabled={!apps?.length}
@@ -146,15 +149,15 @@ function VacancyDetail() {
               ]);
               downloadCSV(
                 `postulantes-${v.public_slug ?? v.id}`,
-                ["Postulante", "Email", "Teléfono", "CV", "Estado", "Match %"],
+                [t("Postulante"), t("Email"), t("Teléfono"), t("CV"), t("Estado"), t("Match %")],
                 rows,
               );
             }}
           >
-            <Download className="mr-2 h-3.5 w-3.5" /> Exportar Excel
+            <Download className="mr-2 h-3.5 w-3.5" /> {t("Exportar Excel")}
           </Button>
           <a href={applyUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm hover:bg-accent">
-            <ExternalLink className="h-3.5 w-3.5" /> Ver form
+            <ExternalLink className="h-3.5 w-3.5" /> {t("Ver form")}
           </a>
         </div>
       </div>
@@ -162,17 +165,17 @@ function VacancyDetail() {
       <Tabs value={tab} onValueChange={setTab}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <TabsList data-tour="vacancy-tabs">
-            <TabsTrigger value="pipeline">Etapas</TabsTrigger>
-            <TabsTrigger value="table">Tabla</TabsTrigger>
-            <TabsTrigger value="brief">Detalle de vacante</TabsTrigger>
-            <TabsTrigger data-tour="vacancy-scheduling" value="scheduling">Agenda</TabsTrigger>
+            <TabsTrigger value="pipeline">{t("Etapas")}</TabsTrigger>
+            <TabsTrigger value="table">{t("Tabla")}</TabsTrigger>
+            <TabsTrigger value="brief">{t("Detalle de vacante")}</TabsTrigger>
+            <TabsTrigger data-tour="vacancy-scheduling" value="scheduling">{t("Agenda")}</TabsTrigger>
           </TabsList>
           <div data-tour="vacancy-search" className="relative w-72 max-w-full">
             <input
               type="search"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Buscar postulante por nombre o email…"
+              placeholder={t("Buscar postulante por nombre o email…")}
               className="w-full rounded-full border border-border bg-card px-4 py-2 text-sm outline-none focus:border-primary"
             />
           </div>
@@ -196,7 +199,7 @@ function VacancyDetail() {
                       const id = e.dataTransfer.getData("text/plain");
                       if (id) onDrop(id, s.id);
                     }}
-                    title={`Expandir ${s.label}`}
+                    title={t("Expandir {label}", { label: t(s.label) })}
                     className="flex w-10 shrink-0 flex-col items-center gap-2 rounded-2xl bg-muted/40 p-2 hover:bg-muted/70"
                   >
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -205,7 +208,7 @@ function VacancyDetail() {
                       className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
                       style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
                     >
-                      {s.label}
+                      {t(s.label)}
                     </span>
                   </button>
                 );
@@ -226,12 +229,12 @@ function VacancyDetail() {
                         type="button"
                         onClick={() => toggleCollapsed(s.id)}
                         data-tour="kanban-collapse"
-                        title="Minimizar"
+                        title={t("Minimizar")}
                         className="rounded p-0.5 text-muted-foreground hover:bg-background hover:text-foreground"
                       >
                         <ChevronLeft className="h-3.5 w-3.5" />
                       </button>
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${s.color}`}>{s.label}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${s.color}`}>{t(s.label)}</span>
                     </div>
                     <span className="rounded-full bg-background px-2 text-xs">{items.length}</span>
                   </div>
@@ -253,10 +256,10 @@ function VacancyDetail() {
             <table className="w-full text-sm">
               <thead className="border-b border-border bg-muted/30 text-left text-xs uppercase text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-2">Candidato</th>
-                  <th className="px-4 py-2">Email</th>
-                  <th className="px-4 py-2">Etapa</th>
-                  <th className="px-4 py-2">Match</th>
+                  <th className="px-4 py-2">{t("Candidato")}</th>
+                  <th className="px-4 py-2">{t("Email")}</th>
+                  <th className="px-4 py-2">{t("Etapa")}</th>
+                  <th className="px-4 py-2">{t("Match")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -275,12 +278,12 @@ function VacancyDetail() {
 
         <TabsContent value="brief" className="mt-6">
           <div className="space-y-4 rounded-2xl border border-border bg-card p-6">
-            <BriefSection title="Descripción" body={v.description} />
-            <BriefSection title="Responsabilidades" body={v.responsibilities} />
-            <BriefSection title="Requisitos excluyentes" body={v.requirements} />
-            <BriefSection title="Deseables" body={v.nice_to_have} />
+            <BriefSection title={t("Descripción")} body={v.description} />
+            <BriefSection title={t("Responsabilidades")} body={v.responsibilities} />
+            <BriefSection title={t("Requisitos excluyentes")} body={v.requirements} />
+            <BriefSection title={t("Deseables")} body={v.nice_to_have} />
             <div>
-              <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Competencias</h4>
+              <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">{t("Competencias")}</h4>
               <div className="flex flex-wrap gap-2">
                 {(v.competencies ?? []).map((c: string) => <span key={c} className="rounded-full bg-accent px-3 py-1 text-xs text-accent-foreground">{c}</span>)}
               </div>
@@ -308,6 +311,7 @@ function BriefSection({ title, body }: { title: string; body: string | null }) {
 }
 
 function EditVacancyDialog({ vacancy, onSaved }: { vacancy: any; onSaved: () => void }) {
+  const t = useT();
   const update = useServerFn(updateVacancy);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -347,7 +351,7 @@ function EditVacancyDialog({ vacancy, onSaved }: { vacancy: any; onSaved: () => 
     setSaving(true);
     try {
       await update({ data: { id: vacancy.id, patch, screening } as any });
-      toast.success("Vacante actualizada");
+      toast.success(t("Vacante actualizada"));
       onSaved();
       setOpen(false);
     } catch (e: any) { toast.error(e.message); } finally { setSaving(false); }
@@ -355,61 +359,61 @@ function EditVacancyDialog({ vacancy, onSaved }: { vacancy: any; onSaved: () => 
 
   return (
     <>
-      <Button data-tour="vacancy-edit" variant="outline" onClick={() => setOpen(true)}><Pencil className="mr-2 h-3.5 w-3.5" /> Editar</Button>
+      <Button data-tour="vacancy-edit" variant="outline" onClick={() => setOpen(true)}><Pencil className="mr-2 h-3.5 w-3.5" /> {t("Editar")}</Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
-          <DialogHeader><DialogTitle>Editar vacante</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("Editar vacante")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="grid gap-3 md:grid-cols-2">
-              <div><Label>Título</Label><Input value={patch.title} onChange={e => setPatch(p => ({ ...p, title: e.target.value }))} /></div>
-              <div><Label>Área</Label><Input value={patch.area} onChange={e => setPatch(p => ({ ...p, area: e.target.value }))} /></div>
+              <div><Label>{t("Título")}</Label><Input value={patch.title} onChange={e => setPatch(p => ({ ...p, title: e.target.value }))} /></div>
+              <div><Label>{t("Área")}</Label><Input value={patch.area} onChange={e => setPatch(p => ({ ...p, area: e.target.value }))} /></div>
               <div>
-                <Label>Seniority</Label>
+                <Label>{t("Seniority")}</Label>
                 <Select value={patch.seniority} onValueChange={v => setPatch(p => ({ ...p, seniority: v as any }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="junior">Junior</SelectItem>
-                    <SelectItem value="mid">Semi Senior</SelectItem>
-                    <SelectItem value="senior">Senior</SelectItem>
+                    <SelectItem value="junior">{t("Junior")}</SelectItem>
+                    <SelectItem value="mid">{t("Semi Senior")}</SelectItem>
+                    <SelectItem value="senior">{t("Senior")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>Modalidad</Label>
+                <Label>{t("Modalidad")}</Label>
                 <Select value={patch.modality} onValueChange={v => setPatch(p => ({ ...p, modality: v as any }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="remote">Remoto</SelectItem>
-                    <SelectItem value="hybrid">Híbrido</SelectItem>
-                    <SelectItem value="onsite">Presencial</SelectItem>
+                    <SelectItem value="remote">{t("Remoto")}</SelectItem>
+                    <SelectItem value="hybrid">{t("Híbrido")}</SelectItem>
+                    <SelectItem value="onsite">{t("Presencial")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               {(patch.modality === "hybrid" || patch.modality === "onsite") && (
                 <>
-                  <div><Label>Ubicación</Label><Input value={patch.location} onChange={e => setPatch(p => ({ ...p, location: e.target.value }))} placeholder="CABA, Argentina" /></div>
-                  <div><Label>Días y horario</Label><Input value={patch.work_schedule} onChange={e => setPatch(p => ({ ...p, work_schedule: e.target.value }))} placeholder="Lun a Vie 9 a 18hs" /></div>
+                  <div><Label>{t("Ubicación")}</Label><Input value={patch.location} onChange={e => setPatch(p => ({ ...p, location: e.target.value }))} placeholder={t("CABA, Argentina")} /></div>
+                  <div><Label>{t("Días y horario")}</Label><Input value={patch.work_schedule} onChange={e => setPatch(p => ({ ...p, work_schedule: e.target.value }))} placeholder={t("Lun a Vie 9 a 18hs")} /></div>
                 </>
               )}
             </div>
-            <div><Label>Descripción</Label><Textarea rows={3} value={patch.description} onChange={e => setPatch(p => ({ ...p, description: e.target.value }))} /></div>
-            <div><Label>Responsabilidades</Label><Textarea rows={4} value={patch.responsibilities} onChange={e => setPatch(p => ({ ...p, responsibilities: e.target.value }))} /></div>
-            <div><Label>Requisitos excluyentes</Label><Textarea rows={3} value={patch.requirements} onChange={e => setPatch(p => ({ ...p, requirements: e.target.value }))} /></div>
-            <div><Label>Deseables</Label><Textarea rows={2} value={patch.nice_to_have} onChange={e => setPatch(p => ({ ...p, nice_to_have: e.target.value }))} /></div>
+            <div><Label>{t("Descripción")}</Label><Textarea rows={3} value={patch.description} onChange={e => setPatch(p => ({ ...p, description: e.target.value }))} /></div>
+            <div><Label>{t("Responsabilidades")}</Label><Textarea rows={4} value={patch.responsibilities} onChange={e => setPatch(p => ({ ...p, responsibilities: e.target.value }))} /></div>
+            <div><Label>{t("Requisitos excluyentes")}</Label><Textarea rows={3} value={patch.requirements} onChange={e => setPatch(p => ({ ...p, requirements: e.target.value }))} /></div>
+            <div><Label>{t("Deseables")}</Label><Textarea rows={2} value={patch.nice_to_have} onChange={e => setPatch(p => ({ ...p, nice_to_have: e.target.value }))} /></div>
             <div>
-              <Label>% mínimo de match: {patch.min_match}%</Label>
+              <Label>{t("% mínimo de match: {n}%", { n: patch.min_match })}</Label>
               <input type="range" min={0} max={100} step={5} value={patch.min_match}
                 onChange={e => setPatch(p => ({ ...p, min_match: Number(e.target.value) }))}
                 className="w-full accent-primary" />
             </div>
             <div>
-              <Label className="mb-2 block">Preguntas de filtro</Label>
+              <Label className="mb-2 block">{t("Preguntas de filtro")}</Label>
               {loadedQs ? <ScreeningEditor screening={screening} setScreening={setScreening} /> : <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button onClick={save} disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Guardar</Button>
+            <Button variant="ghost" onClick={() => setOpen(false)}>{t("Cancelar")}</Button>
+            <Button onClick={save} disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{t("Guardar")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -419,6 +423,7 @@ function EditVacancyDialog({ vacancy, onSaved }: { vacancy: any; onSaved: () => 
 
 
 function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: string }) {
+  const t = useT();
   const gen = useServerFn(aiVacancyImage);
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -468,11 +473,11 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
 
   async function generate() {
     if (hasExisting) {
-      toast.error("Esta vacante ya tiene una imagen generada");
+      toast.error(t("Esta vacante ya tiene una imagen generada"));
       return;
     }
     if (includeLogo && !org?.logo_url) {
-      toast.error("Cargá el logo en Configuración o desactivá la opción de logo.");
+      toast.error(t("Cargá el logo en Configuración o desactivá la opción de logo."));
       return;
     }
     setLoading(true);
@@ -493,9 +498,9 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
       const { data: s } = await supabase.storage.from("org-assets").createSignedUrl(path, 60 * 60);
       if (s?.signedUrl) setExistingUrl(s.signedUrl);
       qc.invalidateQueries({ queryKey: ["vacancy", vacancy.id] });
-      toast.success("Imagen creada y guardada");
+      toast.success(t("Imagen creada y guardada"));
     } catch (e: any) {
-      toast.error(e.message ?? "No se pudo generar la imagen");
+      toast.error(e.message ?? t("No se pudo generar la imagen"));
     } finally { setLoading(false); }
   }
 
@@ -530,7 +535,7 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
 
     ctx.fillStyle = brand;
     ctx.font = "700 22px system-ui, -apple-system, Segoe UI, Arial";
-    ctx.fillText("ESTAMOS BUSCANDO", textX, textY); textY += 44;
+    ctx.fillText(t("ESTAMOS BUSCANDO"), textX, textY); textY += 44;
 
     ctx.fillStyle = ink;
     ctx.font = `800 ${isStory ? 56 : 52}px system-ui, -apple-system, Segoe UI, Arial`;
@@ -539,7 +544,7 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
 
     ctx.font = "500 22px system-ui, -apple-system, Segoe UI, Arial";
     ctx.fillStyle = subInk;
-    const metaParts = [labelModality(m?.modality ?? vacancy.modality), m?.location ?? vacancy.location, m?.work_schedule ?? vacancy.work_schedule].filter(Boolean);
+    const metaParts = [labelModality(m?.modality ?? vacancy.modality, t), m?.location ?? vacancy.location, m?.work_schedule ?? vacancy.work_schedule].filter(Boolean);
     if (metaParts.length) { textY = wrapText(ctx, metaParts.join("  ·  "), textX, textY, maxW, 30); textY += 18; }
 
     const drawSection = (title: string, items: string[]) => {
@@ -558,8 +563,8 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
       textY += 14;
     };
 
-    drawSection("Requisitos", m?.requirements ?? []);
-    drawSection("Responsabilidades", m?.responsibilities ?? []);
+    drawSection(t("Requisitos"), m?.requirements ?? []);
+    drawSection(t("Responsabilidades"), m?.responsibilities ?? []);
 
     // Bottom area: logo (big, no legal name) + CTA below
     const bottomPad = 50;
@@ -606,31 +611,31 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
 
   return (
     <>
-      <Button data-tour="vacancy-image" variant="outline" onClick={() => setOpen(true)}><ImageIcon className="mr-2 h-3.5 w-3.5" /> Imagen</Button>
+      <Button data-tour="vacancy-image" variant="outline" onClick={() => setOpen(true)}><ImageIcon className="mr-2 h-3.5 w-3.5" /> {t("Imagen")}</Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
-          <DialogHeader><DialogTitle>{hasExisting ? "Imagen de la vacante" : "Generar imagen para publicar"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{hasExisting ? t("Imagen de la vacante") : t("Generar imagen para publicar")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             {hasExisting ? (
-              <p className="text-xs text-muted-foreground">Esta vacante ya tiene su imagen generada. Solo se puede crear una vez por vacante.</p>
+              <p className="text-xs text-muted-foreground">{t("Esta vacante ya tiene su imagen generada. Solo se puede crear una vez por vacante.")}</p>
             ) : (
-              <p className="text-xs text-muted-foreground">Diseño con fondo claro, detalles en tu color de marca y tu logo. Se puede generar <strong>una sola vez</strong> por vacante.</p>
+              <p className="text-xs text-muted-foreground">{t("Diseño con fondo claro, detalles en tu color de marca y tu logo. Se puede generar")} <strong>{t("una sola vez")}</strong> {t("por vacante.")}</p>
             )}
             {!hasExisting && (
               <div className="grid gap-3 md:grid-cols-2">
                 <div>
-                  <Label>Formato</Label>
+                  <Label>{t("Formato")}</Label>
                   <Select value={aspect} onValueChange={v => setAspect(v as any)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="square">Cuadrado (1:1) — feed</SelectItem>
-                      <SelectItem value="wide">Horizontal (3:2) — LinkedIn</SelectItem>
-                      <SelectItem value="story">Vertical (2:3) — story</SelectItem>
+                      <SelectItem value="square">{t("Cuadrado (1:1) — feed")}</SelectItem>
+                      <SelectItem value="wide">{t("Horizontal (3:2) — LinkedIn")}</SelectItem>
+                      <SelectItem value="story">{t("Vertical (2:3) — story")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label>Texto del CTA</Label>
+                  <Label>{t("Texto del CTA")}</Label>
                   <Input value={cta} onChange={e => setCta(e.target.value)} />
                 </div>
               </div>
@@ -643,32 +648,32 @@ function VacancyImageDialog({ vacancy, applyUrl }: { vacancy: any; applyUrl: str
                   onChange={e => setIncludeLogo(e.target.checked)}
                   className="h-4 w-4 accent-primary"
                 />
-                Incluir logo de la organización
+                {t("Incluir logo de la organización")}
                 {includeLogo && !org?.logo_url && (
-                  <span className="text-xs text-amber-600">(cargá uno en Configuración)</span>
+                  <span className="text-xs text-amber-600">{t("(cargá uno en Configuración)")}</span>
                 )}
               </label>
             )}
             <div className="rounded-md border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-              <div>Link de postulación: <code className="break-all text-foreground">{applyUrl}</code></div>
+              <div>{t("Link de postulación:")} <code className="break-all text-foreground">{applyUrl}</code></div>
             </div>
             {previewSrc ? (
-              <img src={previewSrc} alt="Vista previa" className="w-full rounded-lg border border-border" />
+              <img src={previewSrc} alt={t("Vista previa")} className="w-full rounded-lg border border-border" />
             ) : (
               <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-                Sin imagen aún. Hacé click en "Generar".
+                {t('Sin imagen aún. Hacé click en "Generar".')}
               </div>
             )}
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpen(false)}>Cerrar</Button>
+            <Button variant="ghost" onClick={() => setOpen(false)}>{t("Cerrar")}</Button>
             {!hasExisting && (
               <Button variant="outline" onClick={generate} disabled={loading || (includeLogo && !org?.logo_url)}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                Generar
+                {t("Generar")}
               </Button>
             )}
-            <Button onClick={download} disabled={!previewSrc}><Download className="mr-2 h-4 w-4" /> Descargar PNG</Button>
+            <Button onClick={download} disabled={!previewSrc}><Download className="mr-2 h-4 w-4" /> {t("Descargar PNG")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -696,10 +701,11 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
   if (line) { ctx.fillText(line, x, y); y += lineH; }
   return y;
 }
-function labelSeniority(s?: string) { return s === "junior" ? "Junior" : s === "mid" ? "Semi Senior" : s === "senior" ? "Senior" : s ?? ""; }
-function labelModality(m?: string) { return m === "remote" ? "Remoto" : m === "hybrid" ? "Híbrido" : m === "onsite" ? "Presencial" : m ?? ""; }
+function labelSeniority(s?: string, t?: (x: string) => string) { const tt = t ?? ((x: string) => x); return s === "junior" ? tt("Junior") : s === "mid" ? tt("Semi Senior") : s === "senior" ? tt("Senior") : s ?? ""; }
+function labelModality(m?: string, t?: (x: string) => string) { const tt = t ?? ((x: string) => x); return m === "remote" ? tt("Remoto") : m === "hybrid" ? tt("Híbrido") : m === "onsite" ? tt("Presencial") : m ?? ""; }
 
 function BulkUploadDialog({ vacancyId, onDone }: { vacancyId: string; onDone: () => void }) {
+  const t = useT();
   const bulk = useServerFn(bulkCreateApplicationFromCv);
   const [open, setOpen] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
@@ -720,7 +726,7 @@ function BulkUploadDialog({ vacancyId, onDone }: { vacancyId: string; onDone: ()
     const collected: Array<{ name: string; ok: boolean; message: string }> = [];
     for (const f of files) {
       try {
-        if (f.size > 10 * 1024 * 1024) throw new Error("CV mayor a 10MB");
+        if (f.size > 10 * 1024 * 1024) throw new Error(t("CV mayor a 10MB"));
         const b64 = await fileToBase64(f);
         const r: any = await bulk({ data: {
           vacancy_id: vacancyId, cv_base64: b64,
@@ -728,7 +734,7 @@ function BulkUploadDialog({ vacancyId, onDone }: { vacancyId: string; onDone: ()
         }});
         collected.push({ name: f.name, ok: true, message: `${r.first_name} ${r.last_name} · ${r.email}` });
       } catch (e: any) {
-        collected.push({ name: f.name, ok: false, message: e?.message ?? "Error" });
+        collected.push({ name: f.name, ok: false, message: e?.message ?? t("Error") });
       }
       setResults([...collected]);
     }
@@ -737,11 +743,11 @@ function BulkUploadDialog({ vacancyId, onDone }: { vacancyId: string; onDone: ()
     const okCount = collected.filter(r => r.ok).length;
     const failCount = collected.length - okCount;
     if (failCount === 0) {
-      toast.success(`${okCount} CV(s) procesados correctamente. La IA está analizando en segundo plano.`);
+      toast.success(t("{n} CV(s) procesados correctamente. La IA está analizando en segundo plano.", { n: okCount }));
       setOpen(false);
       reset();
     } else {
-      toast.warning(`${okCount} procesados, ${failCount} con errores. Revisá el detalle.`);
+      toast.warning(t("{ok} procesados, {fail} con errores. Revisá el detalle.", { ok: okCount, fail: failCount }));
     }
   }
 
@@ -753,20 +759,20 @@ function BulkUploadDialog({ vacancyId, onDone }: { vacancyId: string; onDone: ()
 
   return (
     <>
-      <Button data-tour="vacancy-upload" variant="outline" onClick={() => setOpen(true)}><Upload className="mr-2 h-3.5 w-3.5" /> Cargar CV/s</Button>
+      <Button data-tour="vacancy-upload" variant="outline" onClick={() => setOpen(true)}><Upload className="mr-2 h-3.5 w-3.5" /> {t("Cargar CV/s")}</Button>
       <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
         <DialogContent className="max-h-[85vh] max-w-xl overflow-y-auto">
-          <DialogHeader><DialogTitle>Cargar CV/s</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("Cargar CV/s")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Adjuntá uno o varios CVs (PDF). La IA va a leer automáticamente nombre y email de cada archivo y crear el candidato en la vacante.
+              {t("Adjuntá uno o varios CVs (PDF). La IA va a leer automáticamente nombre y email de cada archivo y crear el candidato en la vacante.")}
             </p>
             <div>
-              <Label>Archivos (PDF, máx 10MB cada uno)</Label>
+              <Label>{t("Archivos (PDF, máx 10MB cada uno)")}</Label>
               <Input type="file" accept=".pdf,.doc,.docx" multiple
                 onChange={e => setFiles(Array.from(e.target.files ?? []))} disabled={running} />
               {files.length > 0 && (
-                <div className="mt-2 text-xs text-muted-foreground">{files.length} archivo(s) seleccionado(s)</div>
+                <div className="mt-2 text-xs text-muted-foreground">{t("{n} archivo(s) seleccionado(s)", { n: files.length })}</div>
               )}
             </div>
             {results.length > 0 && (
@@ -786,15 +792,15 @@ function BulkUploadDialog({ vacancyId, onDone }: { vacancyId: string; onDone: ()
             )}
             {running && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> Procesando {results.length + 1} de {files.length}…
+                <Loader2 className="h-4 w-4 animate-spin" /> {t("Procesando {a} de {b}…", { a: results.length + 1, b: files.length })}
               </div>
             )}
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpen(false)} disabled={running}>Cerrar</Button>
+            <Button variant="ghost" onClick={() => setOpen(false)} disabled={running}>{t("Cerrar")}</Button>
             <Button onClick={process} disabled={running || !files.length}>
               {running && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Procesar {files.length || ""}
+              {t("Procesar {n}", { n: files.length || "" })}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,5 +1,6 @@
 import React from 'react'
 import { Container, Img, Section, Text, Hr } from '@react-email/components'
+import { translate, type Lang } from '@/lib/i18n'
 
 // FLUX Talent brand tokens (extracted from logo)
 export const brand = {
@@ -47,11 +48,11 @@ export const Header = () => (
   </Section>
 )
 
-export const Footer = () => (
+export const Footer = ({ locale = 'es' as Lang }: { locale?: Lang }) => (
   <>
     <Hr style={styles.hr} />
     <Section style={styles.footer}>
-      <Text style={styles.small}>El equipo de FLUX Talent</Text>
+      <Text style={styles.small}>{translate(locale, 'El equipo de FLUX Talent')}</Text>
       <Text style={styles.small}>soporte@fluxtalent.com.ar · fluxtalent.com.ar</Text>
     </Section>
   </>

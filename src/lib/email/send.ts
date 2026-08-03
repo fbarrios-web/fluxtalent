@@ -5,6 +5,7 @@ export interface SendTransactionalEmailParams {
   recipientEmail: string
   templateData?: Record<string, any>
   idempotencyKey?: string
+  locale?: 'es' | 'en'
 }
 
 /** Client-side helper: sends an app email via the authenticated Lovable transactional route. */

@@ -11,6 +11,8 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { IntegrationsPanel, MicrosoftPanel } from "@/routes/app.integrations";
 import { GoogleSetupGuide } from "@/components/google-setup-guide";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useI18n } from "@/lib/i18n";
 
 const MICROSOFT_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/microsoft/callback";
 
@@ -25,6 +27,7 @@ export const Route = createFileRoute("/app/settings")({
 function Settings() {
   const qc = useQueryClient();
   const search = Route.useSearch();
+  const { t, lang, preference, setPreference } = useI18n();
 
 
   const { data: account } = useQuery({
@@ -192,88 +195,106 @@ function Settings() {
 
   return (
     <div className="mx-auto max-w-3xl p-6 md:p-10">
-      <h1 className="font-display text-4xl">Empresa</h1>
-      <p className="mt-1 text-muted-foreground">Personalizá tu workspace y la comunicación con candidatos.</p>
+      <h1 className="font-display text-4xl">{t("Empresa")}</h1>
+      <p className="mt-1 text-muted-foreground">{t("Personalizá tu workspace y la comunicación con candidatos.")}</p>
 
       <Tabs defaultValue={search.tab === "integraciones" ? "integraciones" : "cuenta"} className="mt-8">
         <TabsList>
-          <TabsTrigger value="cuenta">Cuenta y empresa</TabsTrigger>
-          <TabsTrigger value="integraciones">Integraciones</TabsTrigger>
+          <TabsTrigger value="cuenta">{t("Cuenta y empresa")}</TabsTrigger>
+          <TabsTrigger value="integraciones">{t("Integraciones")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="cuenta" className="mt-6 space-y-8">
           <section className="space-y-4 rounded-2xl border border-border bg-card p-6">
-            <h3 className="font-semibold">Mi cuenta</h3>
-            <p className="text-sm text-muted-foreground">Datos personales asociados a tu usuario.</p>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div><Label>Email</Label><Input value={account?.email ?? ""} disabled /></div>
-              <div><Label>Nombre completo</Label><Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Nombre y apellido" /></div>
-              <div><Label>DNI</Label><Input value={dni} onChange={e => setDni(e.target.value)} placeholder="12345678" /></div>
-              <div><Label>Fecha de nacimiento</Label><Input type="date" value={birthDate ?? ""} onChange={e => setBirthDate(e.target.value)} /></div>
-              <div><Label>Miembro desde</Label><Input value={account?.createdAt ? new Date(account.createdAt).toLocaleDateString("es-AR") : "—"} disabled /></div>
+            <h3 className="font-semibold">{t("Idioma")}</h3>
+            <p className="text-sm text-muted-foreground">{t("Elegí el idioma de la interfaz.")}</p>
+            <div className="max-w-xs">
+              <Select
+                value={preference ?? "auto"}
+                onValueChange={(v) => setPreference(v === "auto" ? null : (v as "es" | "en"))}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">{t("Automático (según tu país)")}</SelectItem>
+                  <SelectItem value="es">{t("Español")}</SelectItem>
+                  <SelectItem value="en">{t("Inglés")}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Button onClick={saveProfile} disabled={savingProfile || !account}>{savingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Guardar perfil</Button>
           </section>
 
           <section className="space-y-4 rounded-2xl border border-border bg-card p-6">
-            <h3 className="font-semibold">Empresa & marca</h3>
-            <p className="text-sm text-muted-foreground">Estos datos aparecen en los mails que recibe el postulante.</p>
+            <h3 className="font-semibold">{t("Mi cuenta")}</h3>
+            <p className="text-sm text-muted-foreground">{t("Datos personales asociados a tu usuario.")}</p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div><Label>{t("Email")}</Label><Input value={account?.email ?? ""} disabled /></div>
+              <div><Label>{t("Nombre completo")}</Label><Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder={t("Nombre y apellido")} /></div>
+              <div><Label>{t("DNI")}</Label><Input value={dni} onChange={e => setDni(e.target.value)} placeholder="12345678" /></div>
+              <div><Label>{t("Fecha de nacimiento")}</Label><Input type="date" value={birthDate ?? ""} onChange={e => setBirthDate(e.target.value)} /></div>
+              <div><Label>{t("Miembro desde")}</Label><Input value={account?.createdAt ? new Date(account.createdAt).toLocaleDateString(lang === "en" ? "en-US" : "es-AR") : "—"} disabled /></div>
+            </div>
+            <Button onClick={saveProfile} disabled={savingProfile || !account}>{savingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{t("Guardar perfil")}</Button>
+          </section>
+
+          <section className="space-y-4 rounded-2xl border border-border bg-card p-6">
+            <h3 className="font-semibold">{t("Empresa & marca")}</h3>
+            <p className="text-sm text-muted-foreground">{t("Estos datos aparecen en los mails que recibe el postulante.")}</p>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-1">
-                <Label>Nombre comercial / consultora <span className="text-destructive">*</span></Label>
-                <Input value={consultancyName} onChange={e => { setConsultancyName(e.target.value); setErrors(p => ({ ...p, consultancyName: "" })); }} placeholder="Aparece en el remitente del mail" className={errors.consultancyName ? "border-destructive ring-1 ring-destructive" : ""} />
-                {errors.consultancyName && <p className="text-xs text-destructive">{errors.consultancyName}</p>}
+                <Label>{t("Nombre comercial / consultora")} <span className="text-destructive">*</span></Label>
+                <Input value={consultancyName} onChange={e => { setConsultancyName(e.target.value); setErrors(p => ({ ...p, consultancyName: "" })); }} placeholder={t("Aparece en el remitente del mail")} className={errors.consultancyName ? "border-destructive ring-1 ring-destructive" : ""} />
+                {errors.consultancyName && <p className="text-xs text-destructive">{t(errors.consultancyName)}</p>}
               </div>
               <div className="space-y-1">
-                <Label>Mail de contacto (para postulantes) <span className="text-destructive">*</span></Label>
+                <Label>{t("Mail de contacto (para postulantes)")} <span className="text-destructive">*</span></Label>
                 <Input type="email" value={contactEmail} onChange={e => { setContactEmail(e.target.value); setErrors(p => ({ ...p, contactEmail: "" })); }} placeholder="hola@empresa.com" className={errors.contactEmail ? "border-destructive ring-1 ring-destructive" : ""} />
-                {errors.contactEmail && <p className="text-xs text-destructive">{errors.contactEmail}</p>}
+                {errors.contactEmail && <p className="text-xs text-destructive">{t(errors.contactEmail)}</p>}
               </div>
               <div className="space-y-1">
-                <Label>Color de marca <span className="text-destructive">*</span></Label>
+                <Label>{t("Color de marca")} <span className="text-destructive">*</span></Label>
                 <div className="flex items-center gap-2">
                   <input type="color" value={brandColor} onChange={e => { setBrandColor(e.target.value); setErrors(p => ({ ...p, brandColor: "" })); }} className="h-10 w-14 rounded border border-input" />
                   <Input value={brandColor} onChange={e => { setBrandColor(e.target.value); setErrors(p => ({ ...p, brandColor: "" })); }} className={errors.brandColor ? "border-destructive ring-1 ring-destructive" : ""} />
                 </div>
-                {errors.brandColor && <p className="text-xs text-destructive">{errors.brandColor}</p>}
+                {errors.brandColor && <p className="text-xs text-destructive">{t(errors.brandColor)}</p>}
               </div>
               <div>
-                <Label>Logo de la empresa <span className="text-muted-foreground text-xs font-normal">(opcional)</span></Label>
+                <Label>{t("Logo de la empresa")} <span className="text-muted-foreground text-xs font-normal">({t("opcional")})</span></Label>
                 <div className="flex items-center gap-3 mt-1">
                   {logoPreview && <img src={logoPreview} alt="logo" className="h-12 w-12 rounded border border-border object-contain bg-white" />}
                   <Input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) uploadAsset(f, "logo"); }} disabled={uploadingLogo} />
-                  {logoUrl && <Button variant="ghost" size="sm" onClick={() => { setLogoUrl(""); setLogoPreview(""); }}>Quitar</Button>}
+                  {logoUrl && <Button variant="ghost" size="sm" onClick={() => { setLogoUrl(""); setLogoPreview(""); }}>{t("Quitar")}</Button>}
                 </div>
               </div>
               <div className="space-y-1">
-                <Label>Zona horaria <span className="text-destructive">*</span></Label>
+                <Label>{t("Zona horaria")} <span className="text-destructive">*</span></Label>
                 <Input value={timezone} onChange={e => { setTimezone(e.target.value); setErrors(p => ({ ...p, timezone: "" })); }} placeholder="America/Argentina/Buenos_Aires" className={errors.timezone ? "border-destructive ring-1 ring-destructive" : ""} />
-                {errors.timezone && <p className="text-xs text-destructive">{errors.timezone}</p>}
+                {errors.timezone && <p className="text-xs text-destructive">{t(errors.timezone)}</p>}
               </div>
             </div>
             <div className="space-y-1">
-              <Label>Firma — texto <span className="text-muted-foreground text-xs font-normal">(opcional)</span></Label>
+              <Label>{t("Firma — texto")} <span className="text-muted-foreground text-xs font-normal">({t("opcional")})</span></Label>
               <Textarea rows={4} value={signature} onChange={e => setSignature(e.target.value)} />
-              <p className="text-xs text-muted-foreground">Solo texto. Aparece debajo del cuerpo en cada email.</p>
+              <p className="text-xs text-muted-foreground">{t("Solo texto. Aparece debajo del cuerpo en cada email.")}</p>
             </div>
             <div>
-              <Label>Firma — imagen <span className="text-muted-foreground text-xs font-normal">(opcional)</span></Label>
+              <Label>{t("Firma — imagen")} <span className="text-muted-foreground text-xs font-normal">({t("opcional")})</span></Label>
               <div className="flex items-center gap-3 mt-1">
                 {signaturePreview && <img src={signaturePreview} alt="firma" className="h-16 rounded border border-border object-contain bg-white" />}
                 <Input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) uploadAsset(f, "signature"); }} disabled={uploadingSig} />
-                {signatureImageUrl && <Button variant="ghost" size="sm" onClick={() => { setSignatureImageUrl(""); setSignaturePreview(""); }}>Quitar</Button>}
+                {signatureImageUrl && <Button variant="ghost" size="sm" onClick={() => { setSignatureImageUrl(""); setSignaturePreview(""); }}>{t("Quitar")}</Button>}
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">Se mostrará debajo del texto de la firma en los emails.</p>
+              <p className="mt-1 text-xs text-muted-foreground">{t("Se mostrará debajo del texto de la firma en los emails.")}</p>
             </div>
-            <Button onClick={save} disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Guardar</Button>
+            <Button onClick={save} disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{t("Guardar")}</Button>
           </section>
 
           <section className="space-y-3 rounded-2xl border border-border bg-card p-6">
-            <h3 className="font-semibold">Soporte</h3>
+            <h3 className="font-semibold">{t("Soporte")}</h3>
             <p className="text-sm text-muted-foreground">
-              ¿Necesitás ayuda, una integración personalizada o reportar un problema? Escribinos a{" "}
+              {t("¿Necesitás ayuda, una integración personalizada o reportar un problema? Escribinos a")}{" "}
               <a href="mailto:soporte@fluxtalent.com.ar" className="text-primary underline">soporte@fluxtalent.com.ar</a>{" "}
-              o por WhatsApp al{" "}
+              {t("o por WhatsApp al")}{" "}
               <a href="https://wa.me/543519090777?text=Hola%21%20Me%20comunico%20por%20una%20duda%20de%20FLUX%20Talent" target="_blank" rel="noopener noreferrer" className="text-primary underline">+54 351 909-0777</a>.
             </p>
           </section>
@@ -281,10 +302,10 @@ function Settings() {
 
         <TabsContent value="integraciones" className="mt-6 space-y-6">
           <div className="rounded-2xl border border-border bg-card p-6">
-            <h3 className="font-semibold">Integraciones</h3>
-            <p className="text-sm text-muted-foreground">Conectá tu calendario y mail para automatizar entrevistas e invitaciones. Solo podés tener un proveedor activo a la vez.</p>
+            <h3 className="font-semibold">{t("Integraciones")}</h3>
+            <p className="text-sm text-muted-foreground">{t("Conectá tu calendario y mail para automatizar entrevistas e invitaciones. Solo podés tener un proveedor activo a la vez.")}</p>
             <p className="mt-2 text-sm text-muted-foreground">
-              ¿Preferís no integrar? Podés usar el sistema igual, pero <strong>no se van a enviar las comunicaciones automáticas</strong> (invitaciones a entrevista, avisos de etapa) ni se van a crear los eventos con link de videollamada.
+              {t("¿Preferís no integrar? Podés usar el sistema igual, pero no se van a enviar las comunicaciones automáticas (invitaciones a entrevista, avisos de etapa) ni se van a crear los eventos con link de videollamada.")}
             </p>
             <div className="mt-4 space-y-4">
               <GoogleSetupGuide defaultOpen={search.tab === "integraciones"} />

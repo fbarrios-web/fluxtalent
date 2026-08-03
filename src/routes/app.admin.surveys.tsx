@@ -3,12 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { adminListSurveys } from "@/lib/surveys.functions";
 import { Loader2, Smile, TrendingUp, ThumbsUp, ThumbsDown, Minus } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/app/admin/surveys")({
   component: SurveysPage,
 });
 
 function SurveysPage() {
+  const t = useT();
   const fn = useServerFn(adminListSurveys);
   const { data, isLoading } = useQuery({ queryKey: ["admin-surveys"], queryFn: () => fn() });
 
@@ -18,10 +20,10 @@ function SurveysPage() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-4">
-        <Card label="Respuestas totales" value={String(data.total)} icon={<Smile className="h-5 w-5 text-primary" />} />
-        <Card label="NPS global" value={`${data.npsScore}`} icon={<TrendingUp className="h-5 w-5 text-primary" />} />
-        <Card label="Promotores (9-10)" value={String(data.rows.filter(r => r.nps >= 9).length)} icon={<ThumbsUp className="h-5 w-5 text-emerald-600" />} />
-        <Card label="Detractores (0-6)" value={String(data.rows.filter(r => r.nps <= 6).length)} icon={<ThumbsDown className="h-5 w-5 text-rose-600" />} />
+        <Card label={t("Respuestas totales")} value={String(data.total)} icon={<Smile className="h-5 w-5 text-primary" />} />
+        <Card label={t("NPS global")} value={`${data.npsScore}`} icon={<TrendingUp className="h-5 w-5 text-primary" />} />
+        <Card label={t("Promotores (9-10)")} value={String(data.rows.filter(r => r.nps >= 9).length)} icon={<ThumbsUp className="h-5 w-5 text-emerald-600" />} />
+        <Card label={t("Detractores (0-6)")} value={String(data.rows.filter(r => r.nps <= 6).length)} icon={<ThumbsDown className="h-5 w-5 text-rose-600" />} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -29,9 +31,9 @@ function SurveysPage() {
           const s = data.byBucket[b];
           return (
             <div key={b} className="rounded-2xl border border-border bg-card p-5">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">Día {b}</p>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">{t("Día {n}", { n: b })}</p>
               <p className="font-display text-3xl">{s.avg.toFixed(1)} <span className="text-base text-muted-foreground">/10</span></p>
-              <p className="mt-1 text-sm text-muted-foreground">{s.count} respuestas</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t("{n} respuestas", { n: s.count })}</p>
               <div className="mt-3 flex gap-2 text-xs">
                 <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">P: {s.promoters}</span>
                 <span className="rounded-full bg-amber-50 px-2 py-0.5 text-amber-700">N: {s.passives}</span>
@@ -44,23 +46,23 @@ function SurveysPage() {
 
       <div className="rounded-2xl border border-border bg-card">
         <div className="border-b border-border px-5 py-4">
-          <h2 className="font-display text-xl">Últimas respuestas</h2>
+          <h2 className="font-display text-xl">{t("Últimas respuestas")}</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-left text-xs uppercase text-muted-foreground">
               <tr>
-                <th className="px-4 py-3">Fecha</th>
-                <th className="px-4 py-3">Usuario</th>
-                <th className="px-4 py-3">Organización</th>
-                <th className="px-4 py-3">Día</th>
-                <th className="px-4 py-3">NPS</th>
-                <th className="px-4 py-3">Comentario</th>
+                <th className="px-4 py-3">{t("Fecha")}</th>
+                <th className="px-4 py-3">{t("Usuario")}</th>
+                <th className="px-4 py-3">{t("Organización")}</th>
+                <th className="px-4 py-3">{t("Día")}</th>
+                <th className="px-4 py-3">{t("NPS")}</th>
+                <th className="px-4 py-3">{t("Comentario")}</th>
               </tr>
             </thead>
             <tbody>
               {data.rows.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">Sin respuestas aún.</td></tr>
+                <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">{t("Sin respuestas aún.")}</td></tr>
               )}
               {data.rows.map(r => (
                 <tr key={r.id} className="border-t border-border align-top">

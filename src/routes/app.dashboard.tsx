@@ -6,6 +6,7 @@ import { Briefcase, Users, Sparkles, TrendingUp, Plus, Clock, FileText, Loader2,
 import { getMySubscription } from "@/lib/subscription.functions";
 import { planByPrice, formatLimit } from "@/lib/plans";
 import { UsageCard } from "@/components/usage-card";
+import { useT } from "@/lib/i18n";
 
 
 export const Route = createFileRoute("/app/dashboard")({
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/app/dashboard")({
 });
 
 function Dashboard() {
+  const t = useT();
   const { data: me } = useQuery({
     queryKey: ["me-greeting"],
     queryFn: async () => {
@@ -85,11 +87,11 @@ function Dashboard() {
     <div className="mx-auto max-w-6xl p-6 md:p-10">
       <header className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="font-display text-4xl">Bienvenid@! 👋</h1>
-          <p className="text-muted-foreground">Esto es lo que pasa en tu pipeline.</p>
+          <h1 className="font-display text-4xl">{t("Bienvenid@! 👋")}</h1>
+          <p className="text-muted-foreground">{t("Esto es lo que pasa en tu pipeline.")}</p>
         </div>
         <Link to="/app/vacancies/new" className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-          <Plus className="h-4 w-4" /> Nueva vacante
+          <Plus className="h-4 w-4" /> {t("Nueva vacante")}
         </Link>
       </header>
 
@@ -99,16 +101,16 @@ function Dashboard() {
         <div className="mb-8 rounded-2xl border border-border bg-card p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Plan {sub.subscription_status === "trialing" ? "en prueba" : "activo"}</p>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("Plan {status}", { status: sub.subscription_status === "trialing" ? t("en prueba") : t("activo") })}</p>
               <p className="font-display text-xl">FLUX Talent — {plan.name}</p>
             </div>
-            <Link to="/app/subscription" className="text-sm text-primary hover:underline">Ver suscripción →</Link>
+            <Link to="/app/subscription" className="text-sm text-primary hover:underline">{t("Ver suscripción →")}</Link>
           </div>
           <div className="mt-3">
             <MiniStat
               icon={Clock}
-              label={sub.subscription_status === "trialing" ? "Días de prueba restantes" : "Próximo cobro en"}
-              value={`${sub.daysLeft} días`}
+              label={sub.subscription_status === "trialing" ? t("Días de prueba restantes") : t("Próximo cobro en")}
+              value={t("{n} días", { n: sub.daysLeft })}
             />
           </div>
         </div>
@@ -117,15 +119,15 @@ function Dashboard() {
 
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Stat icon={Users} label="Candidatos totales" value={stats?.total ?? 0} />
-        <Stat icon={Sparkles} label="Match promedio" value={`${stats?.avg ?? 0}%`} />
-        <Stat icon={TrendingUp} label="Contratados" value={stats?.hired ?? 0} accent />
-        <Stat icon={Briefcase} label="Descartados" value={stats?.rejected ?? 0} muted />
+        <Stat icon={Users} label={t("Candidatos totales")} value={stats?.total ?? 0} />
+        <Stat icon={Sparkles} label={t("Match promedio")} value={`${stats?.avg ?? 0}%`} />
+        <Stat icon={TrendingUp} label={t("Contratados")} value={stats?.hired ?? 0} accent />
+        <Stat icon={Briefcase} label={t("Descartados")} value={stats?.rejected ?? 0} muted />
       </div>
 
       <div className="mt-8 grid gap-6 md:grid-cols-2">
-        <Card title="Vacantes recientes" action={<Link to="/app/vacancies" className="text-sm text-primary hover:underline">Ver todas →</Link>}>
-          {!vacancies?.length && <Empty label="No tenés vacantes todavía." cta={<Link to="/app/vacancies/new" className="text-primary hover:underline">Crear la primera</Link>} />}
+        <Card title={t("Vacantes recientes")} action={<Link to="/app/vacancies" className="text-sm text-primary hover:underline">{t("Ver todas →")}</Link>}>
+          {!vacancies?.length && <Empty label={t("No tenés vacantes todavía.")} cta={<Link to="/app/vacancies/new" className="text-primary hover:underline">{t("Crear la primera")}</Link>} />}
           <ul className="divide-y divide-border">
             {vacancies?.map(v => (
               <li key={v.id}>
@@ -138,8 +140,8 @@ function Dashboard() {
           </ul>
         </Card>
 
-        <Card title="Postulaciones recientes">
-          {!recent?.length && <Empty label="Cuando llegue una postulación, aparece acá." />}
+        <Card title={t("Postulaciones recientes")}>
+          {!recent?.length && <Empty label={t("Cuando llegue una postulación, aparece acá.")} />}
           <ul className="divide-y divide-border">
             {recent?.map((a: any) => (
               <li key={a.id}>
@@ -203,10 +205,11 @@ function StatusPill({ status }: { status: string }) {
   return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${cls[status] ?? "bg-muted"}`}>{status}</span>;
 }
 export function MatchPill({ score, minMatch, aiStatus }: { score: number | null; minMatch?: number | null; aiStatus?: string | null }) {
+  const t = useT();
   if (score == null) {
-    if (aiStatus === "error") return <span className="text-xs text-destructive">error de análisis</span>;
-    if (aiStatus === "skipped") return <span className="text-xs text-muted-foreground">sin CV</span>;
-    return <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> analizando…</span>;
+    if (aiStatus === "error") return <span className="text-xs text-destructive">{t("error de análisis")}</span>;
+    if (aiStatus === "skipped") return <span className="text-xs text-muted-foreground">{t("sin CV")}</span>;
+    return <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> {t("analizando…")}</span>;
   }
   const min = minMatch ?? 60;
   const high = Math.min(95, Math.max(min + 20, 80));

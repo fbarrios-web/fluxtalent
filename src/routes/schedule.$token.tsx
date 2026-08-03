@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Loader2, Calendar, Check } from "lucide-react";
 import { toast } from "sonner";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/schedule/$token")({
   component: SchedulePage,
@@ -31,6 +32,7 @@ type Booking = {
 };
 
 function SchedulePage() {
+  const t = useT();
   const { token } = Route.useParams();
   const [data, setData] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
@@ -73,7 +75,7 @@ function SchedulePage() {
         body: JSON.stringify({ token, slotId: selected }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Error");
+      if (!res.ok) throw new Error(json.error || t("Error"));
       const slot = data.slots.find(s => s.id === selected)!;
       const when = new Intl.DateTimeFormat("es-AR", {
         timeZone: data.timezone, dateStyle: "full", timeStyle: "short",
@@ -82,7 +84,7 @@ function SchedulePage() {
       setConfirmed({ meetLink: json.meetLink, when });
 
     } catch (e: any) {
-      toast.error(e.message || "No se pudo reservar");
+      toast.error(e.message || t("No se pudo reservar"));
       await load();
       setSelected(null);
     } finally { setSubmitting(false); }
@@ -94,8 +96,8 @@ function SchedulePage() {
   if (!data) {
     return <div className="grid min-h-screen place-items-center p-6 text-center">
       <div>
-        <h1 className="text-2xl font-semibold mb-2">Link inválido</h1>
-        <p className="text-muted-foreground">Este link de agenda no existe o expiró. Contactá al reclutador.</p>
+        <h1 className="text-2xl font-semibold mb-2">{t("Link inválido")}</h1>
+        <p className="text-muted-foreground">{t("Este link de agenda no existe o expiró. Contactá al reclutador.")}</p>
       </div>
     </div>;
   }
@@ -109,11 +111,11 @@ function SchedulePage() {
         <div className="mx-auto w-12 h-12 rounded-full grid place-items-center mb-4" style={{ background: `${brand}15`, color: brand }}>
           <Check className="h-6 w-6" />
         </div>
-        <h1 className="text-2xl font-semibold mb-2">¡Listo!</h1>
-        <p className="text-muted-foreground mb-6">Tu entrevista quedó agendada para <strong className="text-foreground">{confirmed.when}</strong>. Te enviamos la invitación por mail.</p>
+        <h1 className="text-2xl font-semibold mb-2">{t("¡Listo!")}</h1>
+        <p className="text-muted-foreground mb-6">{t("Tu entrevista quedó agendada para")} <strong className="text-foreground">{confirmed.when}</strong>. {t("Te enviamos la invitación por mail.")}</p>
         {confirmed.meetLink && (
           <a href={confirmed.meetLink} target="_blank" rel="noreferrer">
-            <Button style={{ background: brand }}>Abrir videollamada</Button>
+            <Button style={{ background: brand }}>{t("Abrir videollamada")}</Button>
           </a>
         )}
       </div>
@@ -126,9 +128,9 @@ function SchedulePage() {
     }).format(new Date(data.scheduled_at));
     return <div className="grid min-h-screen place-items-center p-6">
       <div className="max-w-md w-full bg-card border rounded-xl p-8 text-center">
-        <h1 className="text-2xl font-semibold mb-2">Entrevista agendada</h1>
+        <h1 className="text-2xl font-semibold mb-2">{t("Entrevista agendada")}</h1>
         <p className="text-muted-foreground mb-4">{when}</p>
-        {data.meet_link && <a href={data.meet_link} target="_blank" rel="noreferrer"><Button style={{ background: brand }}>Abrir videollamada</Button></a>}
+        {data.meet_link && <a href={data.meet_link} target="_blank" rel="noreferrer"><Button style={{ background: brand }}>{t("Abrir videollamada")}</Button></a>}
       </div>
     </div>;
   }
@@ -148,15 +150,15 @@ function SchedulePage() {
           {logoSrc
             ? <img src={logoSrc} alt={company} className="h-12 mx-auto mb-4" />
             : <div className="text-lg font-bold mb-4" style={{ color: brand }}>{company}</div>}
-          <h1 className="text-2xl md:text-3xl font-semibold">Hola {data.first_name || ""} 👋</h1>
+          <h1 className="text-2xl md:text-3xl font-semibold">{t("Hola {name}", { name: data.first_name || "" })} 👋</h1>
           <p className="text-muted-foreground mt-2">
-            Elegí el horario para tu entrevista de <strong className="text-foreground">{data.vacancy_title}</strong> ({data.duration_minutes} min).
+            {t("Elegí el horario para tu entrevista de")} <strong className="text-foreground">{data.vacancy_title}</strong> {t("({n} min).", { n: data.duration_minutes })}
           </p>
         </header>
 
         {dateKeys.length === 0 && (
           <div className="bg-card border rounded-xl p-8 text-center text-muted-foreground">
-            No hay horarios disponibles por el momento. El reclutador cargará nuevos pronto.
+            {t("No hay horarios disponibles por el momento. El reclutador cargará nuevos pronto.")}
           </div>
         )}
 
@@ -188,13 +190,13 @@ function SchedulePage() {
           <div className="sticky bottom-4 mt-6">
             <div className="bg-card border rounded-xl p-4 flex items-center justify-between shadow-lg">
               <div className="text-sm">
-                <div className="font-medium">Confirmar horario</div>
+                <div className="font-medium">{t("Confirmar horario")}</div>
                 <div className="text-muted-foreground text-xs">
                   {new Intl.DateTimeFormat("es-AR", { timeZone: data.timezone, dateStyle: "full", timeStyle: "short" }).format(new Date(data.slots.find(s => s.id === selected)!.start_at))}
                 </div>
               </div>
               <Button disabled={submitting} onClick={book} style={{ background: brand }}>
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Reservar"}
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t("Reservar")}
               </Button>
             </div>
           </div>

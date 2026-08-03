@@ -20,10 +20,11 @@ export interface DispatchParams {
   recipientEmail: string
   templateData?: Record<string, any>
   idempotencyKey?: string
+  locale?: 'es' | 'en'
 }
 
 export async function dispatchTransactionalEmail(params: DispatchParams): Promise<{ ok: boolean; error?: string }> {
-  const { templateName, recipientEmail, templateData = {}, idempotencyKey } = params
+  const { templateName, recipientEmail, templateData = {}, idempotencyKey, locale } = params
   const entry = TEMPLATES[templateName]
   if (!entry) return { ok: false, error: `Unknown template ${templateName}` }
   try {
@@ -49,8 +50,9 @@ export async function dispatchTransactionalEmail(params: DispatchParams): Promis
     } catch {}
 
     const Comp = entry.component as any
-    const html = await render(React.createElement(Comp, templateData))
-    const subject = typeof entry.subject === 'function' ? entry.subject(templateData) : entry.subject
+    const mergedData = locale ? { ...templateData, locale } : templateData
+    const html = await render(React.createElement(Comp, mergedData))
+    const subject = typeof entry.subject === 'function' ? entry.subject(mergedData) : entry.subject
     const messageId = crypto.randomUUID()
     const finalKey = idempotencyKey || messageId
 

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useT } from "@/lib/i18n";
 import {
   ArrowRight, Sparkles, Workflow, Calendar, Mail, BarChart3, ShieldCheck, CheckCircle2,
   Brain, FileText, MessageSquareText, Mic, PenTool, Zap, TrendingUp,
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  const t = useT();
   const getPricing = useServerFn(getPlanPricing);
   const { data: overrides } = useQuery({ queryKey: ["plan-pricing"], queryFn: () => getPricing() });
   const plans = mergePlanOverrides(overrides);
@@ -38,13 +40,13 @@ function Landing() {
           </Link>
 
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-            <a href="#features" className="hover:text-foreground">Producto</a>
-            <a href="#workflow" className="hover:text-foreground">Workflow</a>
-            <a href="#planes" className="hover:text-foreground">Planes</a>
-            <a href="#ai" className="hover:text-foreground">IA</a>
+            <a href="#features" className="hover:text-foreground">{t("Producto")}</a>
+            <a href="#workflow" className="hover:text-foreground">{t("Workflow")}</a>
+            <a href="#planes" className="hover:text-foreground">{t("Planes")}</a>
+            <a href="#ai" className="hover:text-foreground">{t("IA")}</a>
           </nav>
           <Link to="/auth" className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-            Entrar <ArrowRight className="h-3.5 w-3.5" />
+            {t("Entrar")} <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       </header>
@@ -52,26 +54,26 @@ function Landing() {
       <section className="mx-auto max-w-6xl px-6 pb-16 pt-20 md:pt-28">
         <div className="mx-auto max-w-3xl text-center">
           <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5 text-primary" /> Matching, parsing y emails con IA
+            <Sparkles className="h-3.5 w-3.5 text-primary" /> {t("Matching, parsing y emails con IA")}
           </div>
           <h1 className="font-display text-5xl leading-[1.05] tracking-tight md:text-7xl">
-            Reclutá <em className="text-primary">10×</em> más rápido,<br/> sin tareas manuales.
+            {t("Reclutá")} <em className="text-primary">10×</em> {t("más rápido, sin tareas manuales.")}
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-balance text-base text-muted-foreground md:text-lg">
-            FLUX Talent es el ATS donde la IA lee los CVs, calcula el match, redacta los emails y coordina las entrevistas — vos sólo decidís.
+            {t("FLUX Talent es el ATS donde la IA lee los CVs, calcula el match, redacta los emails y coordina las entrevistas — vos sólo decidís.")}
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link to="/auth" className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-              Empezar gratis <ArrowRight className="h-4 w-4" />
+              {t("Empezar gratis")} <ArrowRight className="h-4 w-4" />
             </Link>
             <a href="#workflow" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground hover:bg-accent">
-              Ver cómo funciona
+              {t("Ver cómo funciona")}
             </a>
           </div>
         </div>
 
         <div className="relative mt-16 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-          <div className="border-b border-border bg-muted/40 px-4 py-2 text-xs text-muted-foreground">Seguimiento de vacantes</div>
+          <div className="border-b border-border bg-muted/40 px-4 py-2 text-xs text-muted-foreground">{t("Seguimiento de vacantes")}</div>
           <div className="grid gap-4 p-6 md:grid-cols-4">
             {[
               { stage: "Recibidos", count: 142, color: "bg-muted", scores: [92, 89, 86] },
@@ -80,12 +82,12 @@ function Landing() {
               { stage: "Descartado", count: 3, color: "bg-destructive/10", scores: [34, 28, 22] },
             ].map((c) => (
               <div key={c.stage} className={`rounded-xl border border-border p-4 ${c.color}`}>
-                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{c.stage}</div>
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t(c.stage)}</div>
                 <div className="mt-1 font-display text-3xl">{c.count}</div>
                 <div className="mt-3 space-y-2">
                   {[0,1,2].map(i => (
                     <div key={i} className="flex items-center justify-between rounded-md bg-background/80 p-2 text-xs">
-                      <span className="truncate">Candidato {i+1}</span>
+                      <span className="truncate">{t("Candidato {n}", { n: i+1 })}</span>
                       <span className={`rounded-full px-1.5 py-0.5 font-medium ${c.scores[i] < 40 ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'}`}>{c.scores[i]}%</span>
                     </div>
                   ))}
@@ -108,8 +110,8 @@ function Landing() {
           ].map(f => (
             <div key={f.title} className="rounded-2xl border border-border bg-card p-6">
               <f.icon className="h-5 w-5 text-primary" />
-              <h3 className="mt-3 text-base font-semibold">{f.title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{f.desc}</p>
+              <h3 className="mt-3 text-base font-semibold">{t(f.title)}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{t(f.desc)}</p>
             </div>
           ))}
         </div>
@@ -117,7 +119,7 @@ function Landing() {
 
       <section id="workflow" className="border-t border-border bg-muted/30 py-20">
         <div className="mx-auto max-w-4xl px-6">
-          <h2 className="font-display text-4xl">Proceso end-to-end, en una sola pantalla.</h2>
+          <h2 className="font-display text-4xl">{t("Proceso end-to-end, en una sola pantalla.")}</h2>
           <ol className="mt-10 space-y-6">
             {[
               ["01", "Creás la vacante", "Definí puesto, seniority, modalidad y % de match mínimo. La IA te ayuda a redactar."],
@@ -126,12 +128,12 @@ function Landing() {
               ["04", "Avanzás o descartás", "Kanban, emails con tu marca, descartes automáticos según umbral."],
               ["05", "Coordinás la entrevista", "El candidato elige horario. Se genera Meet/Zoom automáticamente."],
               
-            ].map(([n, t, d]) => (
+            ].map(([n, title, d]) => (
               <li key={n} className="flex gap-6">
                 <div className="font-display text-3xl text-primary">{n}</div>
                 <div>
-                  <div className="text-lg font-semibold">{t}</div>
-                  <div className="text-muted-foreground">{d}</div>
+                  <div className="text-lg font-semibold">{t(title)}</div>
+                  <div className="text-muted-foreground">{t(d)}</div>
                 </div>
               </li>
             ))}
@@ -143,11 +145,11 @@ function Landing() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="mx-auto max-w-2xl text-center">
             <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground">
-              <Brain className="h-3.5 w-3.5 text-primary" /> Inteligencia Artificial integrada
+              <Brain className="h-3.5 w-3.5 text-primary" /> {t("Inteligencia Artificial integrada")}
             </div>
-            <h2 className="font-display text-4xl md:text-5xl">La IA que trabaja por vos,<br/>desde el primer CV hasta la decisión.</h2>
+            <h2 className="font-display text-4xl md:text-5xl">{t("La IA que trabaja por vos,")}<br/>{t("desde el primer CV hasta la decisión.")}</h2>
             <p className="mt-4 text-muted-foreground">
-              No es un chatbot. Es un motor de decisión que lee, evalúa, pregunta y recomienda — para que vos solo cierres el mejor talento.
+              {t("No es un chatbot. Es un motor de decisión que lee, evalúa, pregunta y recomienda — para que vos solo cierres el mejor talento.")}
             </p>
           </div>
 
@@ -201,12 +203,12 @@ function Landing() {
                   <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
                     <card.icon className="h-5 w-5 text-primary" />
                   </div>
-                  <h3 className="text-base font-semibold">{card.title}</h3>
+                  <h3 className="text-base font-semibold">{t(card.title)}</h3>
                 </div>
-                <p className="mt-3 text-lg font-semibold text-foreground">{card.headline}</p>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{card.desc}</p>
+                <p className="mt-3 text-lg font-semibold text-foreground">{t(card.headline)}</p>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t(card.desc)}</p>
                 <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                  <TrendingUp className="h-3 w-3" /> {card.highlight}
+                  <TrendingUp className="h-3 w-3" /> {t(card.highlight)}
                 </div>
               </div>
             ))}
@@ -217,9 +219,9 @@ function Landing() {
       <section id="planes" className="border-t border-border py-20">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="font-display text-4xl">Planes y precios</h2>
+            <h2 className="font-display text-4xl">{t("Planes y precios")}</h2>
             <p className="mt-3 text-muted-foreground">
-              El plan <strong>Free</strong> incluye <strong>{TRIAL_DAYS} días gratis</strong>, sin tarjeta. Los planes pagos no tienen período de prueba.
+              {t("El plan")} <strong>Free</strong> {t("incluye")} <strong>{t("{n} días gratis", { n: TRIAL_DAYS })}</strong>, {t("sin tarjeta. Los planes pagos no tienen período de prueba.")}
             </p>
             <div className="mt-6 inline-flex rounded-full border border-border bg-card p-1 text-sm">
               {(["ars", "usd"] as const).map(c => (
@@ -231,10 +233,10 @@ function Landing() {
                     currency === c ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {c === "ars" ? "Pesos (ARS)" : "Dólares (USD)"}
+                  {c === "ars" ? t("Pesos (ARS)") : t("Dólares (USD)")}
                   {c === "usd" && (
                     <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
-                      Próximamente
+                      {t("Próximamente")}
                     </span>
                   )}
                 </button>
@@ -242,7 +244,7 @@ function Landing() {
             </div>
             {currency === "usd" && (
               <p className="mt-3 text-xs text-muted-foreground">
-                El pago en dólares está en etapa final de habilitación.
+                {t("El pago en dólares está en etapa final de habilitación.")}
               </p>
             )}
           </div>
@@ -255,7 +257,7 @@ function Landing() {
               >
                 {p.highlighted && (
                   <span className="absolute -top-3 left-6 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
-                    <Sparkles className="h-3 w-3" /> Recomendado
+                    <Sparkles className="h-3 w-3" /> {t("Recomendado")}
                   </span>
                 )}
                 <h3 className="font-display text-2xl">{p.name}</h3>
@@ -270,9 +272,9 @@ function Landing() {
                       )}
                       <span className="font-display text-4xl">{formatArs(p.priceArs)}</span>
                       {p.priceArs === 0 ? (
-                        <span className="text-sm text-muted-foreground"> / {TRIAL_DAYS} días</span>
+                        <span className="text-sm text-muted-foreground"> / {t("{n} días", { n: TRIAL_DAYS })}</span>
                       ) : p.priceArs === -1 ? null : (
-                        <span className="text-sm text-muted-foreground"> / mes</span>
+                        <span className="text-sm text-muted-foreground"> / {t("mes")}</span>
                       )}
                       {p.originalPriceArs != null && p.originalPriceArs > p.priceArs && p.priceArs > 0 && (
                         <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
@@ -283,12 +285,12 @@ function Landing() {
                   ) : (
                     <>
                       <span className="font-display text-4xl">
-                        {p.priceArs === 0 ? "Gratis" : p.priceArs === -1 ? "A medida" : formatUsd(p.priceUsd)}
+                        {p.priceArs === 0 ? t("Gratis") : p.priceArs === -1 ? t("A medida") : formatUsd(p.priceUsd)}
                       </span>
                       {p.priceArs === 0 ? (
-                        <span className="text-sm text-muted-foreground"> / {TRIAL_DAYS} días</span>
+                        <span className="text-sm text-muted-foreground"> / {t("{n} días", { n: TRIAL_DAYS })}</span>
                       ) : p.priceArs === -1 || p.priceUsd == null ? null : (
-                        <span className="text-sm text-muted-foreground"> / mes</span>
+                        <span className="text-sm text-muted-foreground"> / {t("mes")}</span>
                       )}
                     </>
                   )}
@@ -311,7 +313,7 @@ function Landing() {
                         : "border border-border bg-background hover:bg-accent"
                     }`}
                   >
-                    Contactar <ArrowRight className="h-4 w-4" />
+                    {t("Contactar")} <ArrowRight className="h-4 w-4" />
                   </a>
                 ) : (
                   <Link
@@ -322,7 +324,7 @@ function Landing() {
                         : "border border-border bg-background hover:bg-accent"
                     }`}
                   >
-                    {p.id === "free" ? "Empezar prueba" : "Empezar"} <ArrowRight className="h-4 w-4" />
+                    {p.id === "free" ? t("Empezar prueba") : t("Empezar")} <ArrowRight className="h-4 w-4" />
                   </Link>
                 )}
               </div>
@@ -330,22 +332,22 @@ function Landing() {
           </div>
 
           <p className="mt-8 text-center text-xs text-muted-foreground">
-            Precios en pesos argentinos (ARS), facturados mensualmente vía Mercado Pago. IVA incluido.
+            {t("Precios en pesos argentinos (ARS), facturados mensualmente vía Mercado Pago. IVA incluido.")}
           </p>
         </div>
       </section>
 
       <footer className="border-t border-border py-10 text-center text-sm text-muted-foreground space-y-2">
-        <p>© 2026 FLUX Talent. Todos los derechos reservados.</p>
+        <p>{t("© 2026 FLUX Talent. Todos los derechos reservados.")}</p>
         <p>
-          Soporte: <a href="mailto:soporte@fluxtalent.com.ar" className="underline">soporte@fluxtalent.com.ar</a> ·{" "}
-          <a href="https://wa.me/543519090777?text=Hola%21%20Me%20comunico%20por%20una%20duda%20de%20FLUX%20Talent" target="_blank" rel="noopener noreferrer" className="underline">WhatsApp +54 351 909-0777</a>
+          {t("Soporte:")} <a href="mailto:soporte@fluxtalent.com.ar" className="underline">soporte@fluxtalent.com.ar</a> ·{" "}
+          <a href="https://wa.me/543519090777?text=Hola%21%20Me%20comunico%20por%20una%20duda%20de%20FLUX%20Talent" target="_blank" rel="noopener noreferrer" className="underline">{t("WhatsApp +54 351 909-0777")}</a>
         </p>
         <p className="flex flex-wrap justify-center gap-x-4 gap-y-1">
-          <Link to="/terms" className="underline hover:text-foreground">Términos y Condiciones</Link>
-          <Link to="/privacy" className="underline hover:text-foreground">Política de Privacidad</Link>
-          <Link to="/refunds" className="underline hover:text-foreground">Política de Reembolsos</Link>
-          <Link to="/trust" className="underline hover:text-foreground">Política de Seguridad</Link>
+          <Link to="/terms" className="underline hover:text-foreground">{t("Términos y Condiciones")}</Link>
+          <Link to="/privacy" className="underline hover:text-foreground">{t("Política de Privacidad")}</Link>
+          <Link to="/refunds" className="underline hover:text-foreground">{t("Política de Reembolsos")}</Link>
+          <Link to="/trust" className="underline hover:text-foreground">{t("Política de Seguridad")}</Link>
         </p>
       </footer>
 
