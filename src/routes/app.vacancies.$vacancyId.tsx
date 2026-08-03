@@ -52,6 +52,7 @@ function VacancyDetail() {
   }, [collapsed, storageKey]);
   const toggleCollapsed = (id: string) => setCollapsed(c => ({ ...c, [id]: !c[id] }));
   const [search, setSearch] = useState("");
+  const [tab, setTab] = useState("pipeline");
 
 
   const { data: v } = useQuery<any>({
