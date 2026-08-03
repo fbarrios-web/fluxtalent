@@ -40,6 +40,9 @@ function AppLayout() {
       ? "candidate"
       : "general";
   const tour = useProductTour(tourFlow);
+  const [manualFlow, setManualFlow] = useState<TourFlow | null>(null);
+  useEffect(() => { setManualFlow(null); }, [tourFlow]);
+  const activeFlow = manualFlow ?? tourFlow;
   const { data: roleData } = useQuery({
     queryKey: ["am-i-admin"],
     queryFn: () => amI(),
