@@ -45,7 +45,7 @@ export function VacancyScheduling({ vacancyId }: { vacancyId: string }) {
   const [stage, setStage] = useState<StageId>("interview_1");
   return (
     <Tabs value={stage} onValueChange={(v) => setStage(v as StageId)}>
-      <TabsList>
+      <TabsList data-tour="sched-stages">
         {STAGES.map(s => <TabsTrigger key={s.id} value={s.id}>{s.label}</TabsTrigger>)}
       </TabsList>
       {STAGES.map(s => (
