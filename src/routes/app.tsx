@@ -188,9 +188,17 @@ function AppLayout() {
             </div>
             <span className="text-base tracking-tight">FLUX <span className="opacity-70 font-normal">Talent</span></span>
           </Link>
+          <button
+            onClick={tour.start}
+            aria-label="Ayuda"
+            className="ml-auto inline-flex items-center gap-1 rounded-full border border-primary-foreground/30 bg-primary-foreground/10 px-3 py-1.5 text-xs font-medium text-primary-foreground"
+          >
+            <HelpCircle className="h-4 w-4" /> Ayuda
+          </button>
         </header>
         <SubscriptionBanner />
         <SatisfactionSurvey />
+        <ProductTour open={tour.open} onClose={tour.close} />
         <div className="flex-1"><Outlet /></div>
         <footer className="border-t border-border px-6 py-4 text-center text-xs text-muted-foreground">
           © 2026 FLUX Automatizaciones. Todos los derechos reservados.
