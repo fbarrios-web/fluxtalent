@@ -24,6 +24,8 @@ export const Route = createFileRoute("/app/settings")({
 
 function Settings() {
   const qc = useQueryClient();
+  const search = Route.useSearch();
+
 
   const { data: account } = useQuery({
     queryKey: ["my-account"],
