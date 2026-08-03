@@ -288,18 +288,43 @@ export const cancelSubscription = createServerFn({ method: "POST" })
       .eq("id", orgId)
       .maybeSingle();
 
-    // Cancel Mercado Pago preapproval (ARS)
-    if (org?.mp_preapproval_id && token) {
+    // Cancel Mercado Pago preapproval (ARS). Si no tenemos el id guardado,
+    // lo buscamos en Mercado Pago por external_reference antes de rendirnos:
+    // sin esto la suscripción seguía cobrándose todos los meses.
+    let mpCanceled = false;
+    let mpError: string | null = null;
+    if (token) {
       try {
-        await fetch(`https://api.mercadopago.com/preapproval/${org.mp_preapproval_id}`, {
-          method: "PUT",
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "cancelled" }),
-        });
-      } catch (e) {
+        let preapprovalId = org?.mp_preapproval_id as string | null;
+        if (!preapprovalId) {
+          const search = await fetch(
+            `https://api.mercadopago.com/preapproval/search?external_reference=${encodeURIComponent(orgId)}&limit=10`,
+            { headers: { Authorization: `Bearer ${token}` } },
+          );
+          const json: any = search.ok ? await search.json() : null;
+          const found = (json?.results ?? []).find((r: any) => r.status === "authorized" || r.status === "pending");
+          preapprovalId = found?.id ?? null;
+        }
+        if (preapprovalId) {
+          const res = await fetch(`https://api.mercadopago.com/preapproval/${preapprovalId}`, {
+            method: "PUT",
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "cancelled" }),
+          });
+          if (res.ok) {
+            mpCanceled = true;
+            await supabaseAdmin.from("organizations").update({ mp_preapproval_id: null } as any).eq("id", orgId);
+          } else {
+            mpError = `${res.status}: ${await res.text().catch(() => "")}`;
+            console.error("[cancelSubscription] MP cancel rejected", mpError);
+          }
+        }
+      } catch (e: any) {
+        mpError = e?.message ?? "unknown";
         console.error("[cancelSubscription] MP cancel failed", e);
       }
     }
+
 
     // Cancel Paddle subscription at end of period (USD)
     if (org?.paddle_subscription_id) {
