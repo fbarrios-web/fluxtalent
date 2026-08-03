@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { aiVacancyImage } from "@/lib/ai.functions";
 import { MatchPill } from "./app.dashboard";
 import { VacancyScheduling } from "@/components/vacancy-scheduling";
+import { SchedulingTour } from "@/components/product-tour";
 import { downloadCSV } from "@/lib/export-csv";
 import { ScreeningEditor } from "./app.vacancies.new";
 
@@ -51,6 +52,7 @@ function VacancyDetail() {
   }, [collapsed, storageKey]);
   const toggleCollapsed = (id: string) => setCollapsed(c => ({ ...c, [id]: !c[id] }));
   const [search, setSearch] = useState("");
+  const [tab, setTab] = useState("pipeline");
 
 
   const { data: v } = useQuery<any>({
@@ -157,7 +159,7 @@ function VacancyDetail() {
         </div>
       </div>
 
-      <Tabs defaultValue="pipeline">
+      <Tabs value={tab} onValueChange={setTab}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <TabsList data-tour="vacancy-tabs">
             <TabsTrigger value="pipeline">Etapas</TabsTrigger>
@@ -177,7 +179,7 @@ function VacancyDetail() {
         </div>
 
         <TabsContent value="pipeline" className="mt-6">
-          <IntegrationAlert context="kanban" />
+          <IntegrationAlert context="kanban" vacancyId={vacancyId} onGoToAgenda={() => setTab("scheduling")} />
           <div className="flex gap-3 overflow-x-auto overflow-y-hidden pb-4 max-h-[calc(100vh-220px)]">
 
             {STAGES.map(s => {
@@ -286,8 +288,9 @@ function VacancyDetail() {
           </div>
         </TabsContent>
         <TabsContent value="scheduling" className="mt-6">
-          <IntegrationAlert context="agenda" />
+          <IntegrationAlert context="agenda" vacancyId={vacancyId} />
           <VacancyScheduling vacancyId={vacancyId} />
+          {tab === "scheduling" && <SchedulingTour />}
         </TabsContent>
       </Tabs>
     </div>

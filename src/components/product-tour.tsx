@@ -10,7 +10,7 @@ type Step = {
   body: string;
 };
 
-export type TourFlow = "general" | "vacancy" | "candidate";
+export type TourFlow = "general" | "vacancy" | "scheduling" | "candidate";
 
 const GENERAL_STEPS: Step[] = [
   {
@@ -115,8 +115,24 @@ const VACANCY_STEPS: Step[] = [
   },
   {
     target: '[data-tour="vacancy-scheduling"]',
-    title: "Agenda: lo más importante",
-    body: "Entrá a la pestaña “Agenda” para configurar las entrevistas. La agenda se configura por etapa: elegí primero la etapa (por ejemplo, Entrevista) y todo lo que cargues abajo aplica a esa etapa.",
+    title: "Agenda de entrevistas",
+    body: "Acá configurás los horarios de entrevista. Cuando entres a la pestaña “Agenda” te muestro un recorrido dedicado, paso a paso.",
+  },
+  {
+    target: '[data-tour="help-button"]',
+    title: "Volvé cuando quieras",
+    body: "Desde “Ayuda” arriba a la derecha podés reactivar este recorrido en cualquier momento.",
+  },
+];
+
+const SCHEDULING_STEPS: Step[] = [
+  {
+    title: "Recorrido de la Agenda",
+    body: "Te muestro cómo dejar lista la agenda de entrevistas: duración de los turnos, disponibilidad, horarios puntuales y cómo reserva el postulante.",
+  },
+  {
+    title: "La agenda se configura por etapa",
+    body: "Arriba elegís la etapa (Entrevista 1, 2 o 3): la duración, la disponibilidad y los turnos que cargues aplican sólo a esa etapa. Si usás más de una instancia de entrevista, configurá cada una.",
   },
   {
     title: "Agenda · Configuración general",
@@ -150,7 +166,7 @@ const VACANCY_STEPS: Step[] = [
   {
     target: '[data-tour="help-button"]',
     title: "Volvé cuando quieras",
-    body: "Desde “Ayuda” arriba a la derecha podés reactivar este recorrido en cualquier momento.",
+    body: "Desde “Ayuda” arriba a la derecha podés reactivar el recorrido de la agenda en cualquier momento.",
   },
 ];
 
@@ -214,12 +230,14 @@ const CANDIDATE_STEPS: Step[] = [
 export const TOUR_STEPS: Record<TourFlow, Step[]> = {
   general: GENERAL_STEPS,
   vacancy: VACANCY_STEPS,
+  scheduling: SCHEDULING_STEPS,
   candidate: CANDIDATE_STEPS,
 };
 
 export const TOUR_LABEL: Record<TourFlow, string> = {
   general: "Recorrido general",
   vacancy: "Recorrido de la vacante",
+  scheduling: "Recorrido de la agenda",
   candidate: "Recorrido de la postulación",
 };
 
@@ -331,4 +349,10 @@ export function ProductTour({ open, onClose, flow = "general" }: { open: boolean
       </div>
     </div>
   );
+}
+
+/** Mounts the Agenda tour: auto-opens the first time the user opens the Agenda tab. */
+export function SchedulingTour() {
+  const tour = useProductTour("scheduling");
+  return <ProductTour open={tour.open} onClose={tour.close} flow="scheduling" />;
 }

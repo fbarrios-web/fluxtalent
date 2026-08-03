@@ -168,15 +168,15 @@ function AppLayout() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64">
-              {(["general", "vacancy", "candidate"] as TourFlow[]).map(f => (
+              {(["general", "vacancy", "scheduling", "candidate"] as TourFlow[]).map(f => (
                 <DropdownMenuItem
                   key={f}
-                  disabled={f !== "general" && f !== tourFlow}
+                  disabled={f !== "general" && f !== tourFlow && !(f === "scheduling" && tourFlow === "vacancy")}
                   onSelect={() => { setManualFlow(f); tour.start(); }}
                 >
                   <div>
                     <div>{TOUR_LABEL[f]}</div>
-                    {f !== "general" && f !== tourFlow && (
+                    {f !== "general" && f !== tourFlow && !(f === "scheduling" && tourFlow === "vacancy") && (
                       <div className="text-[11px] text-muted-foreground">
                         {f === "vacancy" ? "Entrá a una vacante para verlo" : "Entrá a una postulación para verlo"}
                       </div>
