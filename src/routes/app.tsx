@@ -99,6 +99,7 @@ function AppLayout() {
           <Link
             key={item.to}
             to={item.to}
+            data-tour={item.tour}
             onClick={onNavigate}
             className={cn(
               "mb-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
