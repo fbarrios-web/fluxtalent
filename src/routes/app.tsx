@@ -147,6 +147,15 @@ function AppLayout() {
       </aside>
 
       <main className="min-w-0 flex flex-col">
+        <div className="hidden justify-end border-b border-border bg-background px-6 py-2 md:flex">
+          <button
+            data-tour="help-button"
+            onClick={tour.start}
+            className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            <HelpCircle className="h-4 w-4" /> Ayuda / Recorrido guiado
+          </button>
+        </div>
         <header className="flex items-center gap-3 bg-primary px-4 py-3 md:hidden">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
