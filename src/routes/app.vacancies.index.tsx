@@ -16,16 +16,20 @@ export const Route = createFileRoute("/app/vacancies/")({
 function VacanciesList() {
   const t = useT();
   const [q, setQ] = useState("");
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["vacancies-list"],
+    retry: 1,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("vacancies")
         .select("id, title, area, seniority, status, public_slug, created_at, applications:applications(count)")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .abortSignal(AbortSignal.timeout(15000));
+      if (error) throw new Error(error.message);
       return data ?? [];
     },
   });
+
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
