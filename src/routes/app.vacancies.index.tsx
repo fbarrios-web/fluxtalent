@@ -16,16 +16,20 @@ export const Route = createFileRoute("/app/vacancies/")({
 function VacanciesList() {
   const t = useT();
   const [q, setQ] = useState("");
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["vacancies-list"],
+    retry: 1,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("vacancies")
         .select("id, title, area, seniority, status, public_slug, created_at, applications:applications(count)")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .abortSignal(AbortSignal.timeout(15000));
+      if (error) throw new Error(error.message);
       return data ?? [];
     },
   });
+
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -76,7 +80,22 @@ function VacanciesList() {
 
       <div className="rounded-2xl border border-border bg-card">
         {isLoading && <div className="p-10 text-center text-muted-foreground">{t("Cargando…")}</div>}
-        {!isLoading && !data?.length && (
+        {isError && (
+          <div className="p-10 text-center">
+            <p className="text-sm text-destructive">{t("No pudimos cargar tus vacantes.")}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{(error as Error)?.message}</p>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="mt-4 inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
+            >
+              {isFetching ? t("Cargando…") : t("Reintentar")}
+            </button>
+          </div>
+        )}
+        {!isLoading && !isError && !data?.length && (
+
           <div className="p-12 text-center">
             <p className="text-muted-foreground">{t("No tenés vacantes todavía.")}</p>
             <Link to="/app/vacancies/new" className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
