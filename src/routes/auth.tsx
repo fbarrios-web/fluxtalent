@@ -18,6 +18,9 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthPage() {
+  const location = useLocation();
+  if (location.pathname === "/auth/impersonate") return <Outlet />;
+
   const nav = useNavigate();
   const saveId = useServerFn(saveIdentity);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
