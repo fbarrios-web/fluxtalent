@@ -18,7 +18,7 @@ export type ImpersonationState = ImpersonationPendingState;
 export function readImpersonation(): ImpersonationState | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(IMPERSONATION_KEY);
+    const raw = sessionStorage.getItem(IMPERSONATION_KEY);
     return raw ? (JSON.parse(raw) as ImpersonationState) : null;
   } catch {
     return null;
