@@ -558,3 +558,38 @@ export const adminSetOrgArchived = createServerFn({ method: "POST" })
   });
 
 
+/** Generate a one-time token to sign in as the owner of an organization ("ingresar como"). */
+export const adminImpersonateOrg = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ org_id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: profs } = await supabaseAdmin
+      .from("profiles").select("id, display_name, created_at")
+      .eq("org_id", data.org_id)
+      .order("created_at", { ascending: true }).limit(1);
+    const target = (profs ?? [])[0] as any;
+    if (!target) throw new Error("Esta organización no tiene usuarios para ingresar.");
+
+    const { data: userRes, error: userErr } = await supabaseAdmin.auth.admin.getUserById(target.id);
+    if (userErr || !userRes?.user?.email) throw new Error("No pudimos obtener el email del usuario.");
+    const email = userRes.user.email;
+
+    const { data: link, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+      type: "magiclink",
+      email,
+    });
+    if (linkErr || !link?.properties?.hashed_token) {
+      throw new Error("No pudimos generar el acceso: " + (linkErr?.message ?? "token vacío"));
+    }
+
+    const { data: org } = await supabaseAdmin.from("organizations").select("name").eq("id", data.org_id).maybeSingle();
+
+    return {
+      email,
+      token_hash: link.properties.hashed_token,
+      label: (org as any)?.name || email,
+    };
+  });
