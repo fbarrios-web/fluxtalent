@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { adminListOrgs, adminGrantLicense, adminExportClients, adminDeleteOrg, adminSetOrgArchived, adminImpersonateOrg } from "@/lib/admin.functions";
 import { IMPERSONATION_PENDING_KEY, type ImpersonationPendingState } from "@/components/impersonation-banner";
+import { supabase } from "@/integrations/supabase/client";
 import { Download, Loader2, ArrowUpDown, ArrowUp, ArrowDown, Columns3, UserCog } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
