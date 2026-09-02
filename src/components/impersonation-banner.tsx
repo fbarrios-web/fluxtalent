@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { UserCog, Loader2, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 
 export const IMPERSONATION_KEY = "flux_impersonation";
+export const IMPERSONATION_PENDING_KEY = "flux_impersonation_pending";
 
-export type ImpersonationState = {
+export type ImpersonationPendingState = {
   label: string;
   admin_access_token: string;
   admin_refresh_token: string;
 };
+
+export type ImpersonationState = ImpersonationPendingState;
 
 export function readImpersonation(): ImpersonationState | null {
   if (typeof window === "undefined") return null;
@@ -53,19 +57,20 @@ export function ImpersonationBanner() {
   return (
     <>
     <div className="h-14" aria-hidden />
-    <div className="fixed inset-x-0 bottom-0 z-[100] flex flex-wrap items-center justify-center gap-3 border-t border-amber-500/40 bg-amber-500 px-4 py-2.5 text-amber-950 shadow-lg">
+    <div className="fixed inset-x-0 bottom-0 z-[100] flex flex-wrap items-center justify-center gap-3 border-t border-warning/40 bg-warning px-4 py-2.5 text-foreground shadow-lg">
       <span className="flex items-center gap-2 text-sm font-medium">
         <UserCog className="h-4 w-4" />
         {t("Estás en modo {name}", { name: state.label })}
       </span>
-      <button
+      <Button
         onClick={back}
         disabled={busy}
-        className="inline-flex items-center gap-2 rounded-full bg-amber-950 px-3 py-1.5 text-xs font-semibold text-amber-50 hover:bg-amber-900 disabled:opacity-60"
+        size="sm"
+        className="rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background hover:bg-foreground/90"
       >
         {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogOut className="h-3.5 w-3.5" />}
         {t("Volver al usuario admin")}
-      </button>
+      </Button>
     </div>
     </>
   );
