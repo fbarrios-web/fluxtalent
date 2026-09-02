@@ -14,6 +14,7 @@ import { adminAmI } from "@/lib/admin.functions";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/lib/i18n";
+import { ImpersonationBanner } from "@/components/impersonation-banner";
 
 
 export const Route = createFileRoute("/app")({
@@ -233,6 +234,7 @@ function AppLayout() {
         <SatisfactionSurvey />
         <ProductTour open={tour.open} onClose={tour.close} flow={activeFlow} />
         <div className="flex-1"><Outlet /></div>
+        <ImpersonationBanner />
         <footer className="border-t border-border px-6 py-4 text-center text-xs text-muted-foreground">
           {t("© 2026 FLUX Automatizaciones. Todos los derechos reservados.")}
         </footer>

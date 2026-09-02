@@ -51,6 +51,8 @@ export function ImpersonationBanner() {
   };
 
   return (
+    <>
+    <div className="h-14" aria-hidden />
     <div className="fixed inset-x-0 bottom-0 z-[100] flex flex-wrap items-center justify-center gap-3 border-t border-amber-500/40 bg-amber-500 px-4 py-2.5 text-amber-950 shadow-lg">
       <span className="flex items-center gap-2 text-sm font-medium">
         <UserCog className="h-4 w-4" />
@@ -65,5 +67,6 @@ export function ImpersonationBanner() {
         {t("Volver al usuario admin")}
       </button>
     </div>
+    </>
   );
 }
