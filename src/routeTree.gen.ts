@@ -26,6 +26,7 @@ import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppSetupRouteImport } from './routes/app.setup'
 import { Route as AppSubscriptionRouteImport } from './routes/app.subscription'
 import { Route as ApplySlugRouteImport } from './routes/apply.$slug'
+import { Route as AuthImpersonateRouteImport } from './routes/auth.impersonate'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as ScheduleTokenRouteImport } from './routes/schedule.$token'
 import { Route as ApiPublicAnalyzeRouteImport } from './routes/api.public.analyze'
@@ -140,6 +141,11 @@ const ApplySlugRoute = ApplySlugRouteImport.update({
   id: '/apply/$slug',
   path: '/apply/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthImpersonateRoute = AuthImpersonateRouteImport.update({
+  id: '/impersonate',
+  path: '/impersonate',
+  getParentRoute: () => AuthRoute,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
@@ -296,7 +302,7 @@ const LovableEmailTransactionalSendRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/refunds': typeof RefundsRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -310,6 +316,7 @@ export interface FileRoutesByFullPath {
   '/app/setup': typeof AppSetupRoute
   '/app/subscription': typeof AppSubscriptionRoute
   '/apply/$slug': typeof ApplySlugRoute
+  '/auth/impersonate': typeof AuthImpersonateRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/schedule/$token': typeof ScheduleTokenRoute
   '/app/': typeof AppIndexRoute
@@ -343,7 +350,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/refunds': typeof RefundsRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -356,6 +363,7 @@ export interface FileRoutesByTo {
   '/app/setup': typeof AppSetupRoute
   '/app/subscription': typeof AppSubscriptionRoute
   '/apply/$slug': typeof ApplySlugRoute
+  '/auth/impersonate': typeof AuthImpersonateRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/schedule/$token': typeof ScheduleTokenRoute
   '/app': typeof AppIndexRoute
@@ -391,7 +399,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/refunds': typeof RefundsRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -405,6 +413,7 @@ export interface FileRoutesById {
   '/app/setup': typeof AppSetupRoute
   '/app/subscription': typeof AppSubscriptionRoute
   '/apply/$slug': typeof ApplySlugRoute
+  '/auth/impersonate': typeof AuthImpersonateRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/schedule/$token': typeof ScheduleTokenRoute
   '/app/': typeof AppIndexRoute
@@ -455,6 +464,7 @@ export interface FileRouteTypes {
     | '/app/setup'
     | '/app/subscription'
     | '/apply/$slug'
+    | '/auth/impersonate'
     | '/email/unsubscribe'
     | '/schedule/$token'
     | '/app/'
@@ -501,6 +511,7 @@ export interface FileRouteTypes {
     | '/app/setup'
     | '/app/subscription'
     | '/apply/$slug'
+    | '/auth/impersonate'
     | '/email/unsubscribe'
     | '/schedule/$token'
     | '/app'
@@ -549,6 +560,7 @@ export interface FileRouteTypes {
     | '/app/setup'
     | '/app/subscription'
     | '/apply/$slug'
+    | '/auth/impersonate'
     | '/email/unsubscribe'
     | '/schedule/$token'
     | '/app/'
@@ -584,7 +596,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
   PrivacyRoute: typeof PrivacyRoute
   RefundsRoute: typeof RefundsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -731,6 +743,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/apply/$slug'
       preLoaderRoute: typeof ApplySlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/auth/impersonate': {
+      id: '/auth/impersonate'
+      path: '/impersonate'
+      fullPath: '/auth/impersonate'
+      preLoaderRoute: typeof AuthImpersonateRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/email/unsubscribe': {
       id: '/email/unsubscribe'
@@ -994,10 +1013,20 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface AuthRouteChildren {
+  AuthImpersonateRoute: typeof AuthImpersonateRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthImpersonateRoute: AuthImpersonateRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
   PrivacyRoute: PrivacyRoute,
   RefundsRoute: RefundsRoute,
   ResetPasswordRoute: ResetPasswordRoute,

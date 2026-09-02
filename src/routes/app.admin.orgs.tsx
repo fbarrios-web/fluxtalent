@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { adminListOrgs, adminGrantLicense, adminExportClients, adminDeleteOrg, adminSetOrgArchived, adminImpersonateOrg } from "@/lib/admin.functions";
+import { IMPERSONATION_PENDING_KEY, type ImpersonationPendingState } from "@/components/impersonation-banner";
 import { Download, Loader2, ArrowUpDown, ArrowUp, ArrowDown, Columns3, UserCog } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -50,8 +51,10 @@ const COLUMNS: { key: ColKey; label: string; sticky?: boolean }[] = [
 
 function AdminOrgs() {
   const t = useT();
+  const nav = useNavigate();
   const qc = useQueryClient();
   const list = useServerFn(adminListOrgs);
+  const impersonate = useServerFn(adminImpersonateOrg);
   const grant = useServerFn(adminGrantLicense);
   const exportFn = useServerFn(adminExportClients);
   const delFn = useServerFn(adminDeleteOrg);
@@ -105,6 +108,23 @@ function AdminOrgs() {
     mutationFn: (org_id: string) => delFn({ data: { org_id } }),
     onSuccess: (r: any) => { qc.invalidateQueries({ queryKey: ["admin-orgs"] }); qc.invalidateQueries({ queryKey: ["admin-metrics"] }); qc.invalidateQueries({ queryKey: ["admin-users"] }); toast.success(t("Cuenta eliminada ({n} usuario/s)", { n: r?.deleted_users ?? 0 })); },
     onError: (e: any) => toast.error(e.message ?? t("Error al eliminar")),
+  });
+
+  const impersonateMut = useMutation({
+    mutationFn: async ({ orgId, label }: { orgId: string; label: string }) => {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session) throw new Error(t("No se encontró la sesión de administrador."));
+      const result = await impersonate({ data: { org_id: orgId } });
+      const pending: ImpersonationPendingState = {
+        label,
+        admin_access_token: sessionData.session.access_token,
+        admin_refresh_token: sessionData.session.refresh_token,
+      };
+      sessionStorage.setItem(IMPERSONATION_PENDING_KEY, JSON.stringify(pending));
+      return result;
+    },
+    onSuccess: (result) => nav({ to: "/auth/impersonate", search: { token_hash: result.token_hash } }),
+    onError: (e: any) => toast.error(e.message ?? t("No se pudo ingresar a la cuenta")),
   });
 
   const archiveMut = useMutation({
@@ -351,6 +371,14 @@ function AdminOrgs() {
                     {isVisible("actions") && (
                       <td className="px-4 py-3 border-b border-border">
                         <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => impersonateMut.mutate({ orgId: o.id, label: o.name })}
+                            disabled={impersonateMut.isPending}
+                          >
+                            <UserCog className="h-3.5 w-3.5" /> {t("Ingresar como")}
+                          </Button>
                           <Button variant="outline" size="sm" onClick={() => setPlanDialog({ orgId: o.id, orgName: o.name })} disabled={mut.isPending}>
                             {t("Asignar plan")}
                           </Button>
