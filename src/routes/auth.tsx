@@ -13,14 +13,16 @@ import { FluxLogo } from "@/components/flux-logo";
 
 
 export const Route = createFileRoute("/auth")({
-  component: AuthPage,
+  component: AuthLayout,
   head: () => ({ meta: [{ title: "Ingresar — FLUX Talent" }] }),
 });
 
-function AuthPage() {
+function AuthLayout() {
   const location = useLocation();
-  if (location.pathname === "/auth/impersonate") return <Outlet />;
+  return location.pathname === "/auth/impersonate" ? <Outlet /> : <AuthForm />;
+}
 
+function AuthForm() {
   const nav = useNavigate();
   const saveId = useServerFn(saveIdentity);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
