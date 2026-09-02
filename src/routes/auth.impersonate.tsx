@@ -42,7 +42,7 @@ function ImpersonateCallback() {
         if (verifyError) throw verifyError;
         if (!data.session) throw new Error("No se pudo iniciar la sesión temporal.");
 
-        localStorage.setItem(IMPERSONATION_KEY, JSON.stringify({
+        sessionStorage.setItem(IMPERSONATION_KEY, JSON.stringify({
           label: pending.label,
           admin_access_token: pending.admin_access_token,
           admin_refresh_token: pending.admin_refresh_token,

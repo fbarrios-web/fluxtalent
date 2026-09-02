@@ -42,7 +42,7 @@ export function ImpersonationBanner() {
   const back = async () => {
     setBusy(true);
     try {
-      localStorage.removeItem(IMPERSONATION_KEY);
+      sessionStorage.removeItem(IMPERSONATION_KEY);
       await supabase.auth.setSession({
         access_token: state.admin_access_token,
         refresh_token: state.admin_refresh_token,
