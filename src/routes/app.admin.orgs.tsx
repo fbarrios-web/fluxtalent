@@ -124,7 +124,10 @@ function AdminOrgs() {
       sessionStorage.setItem(IMPERSONATION_PENDING_KEY, JSON.stringify(pending));
       return result;
     },
-    onSuccess: (result) => nav({ to: "/auth/impersonate", search: { token_hash: result.token_hash } }),
+    onSuccess: (result) => {
+      qc.clear();
+      nav({ to: "/auth/impersonate", search: { token_hash: result.token_hash } });
+    },
     onError: (e: any) => toast.error(e.message ?? t("No se pudo ingresar a la cuenta")),
   });
 

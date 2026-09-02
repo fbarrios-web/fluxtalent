@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { UserCog, Loader2, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ export function readImpersonation(): ImpersonationState | null {
 
 export function ImpersonationBanner() {
   const t = useT();
+  const queryClient = useQueryClient();
   const [state, setState] = useState<ImpersonationState | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -42,6 +44,8 @@ export function ImpersonationBanner() {
   const back = async () => {
     setBusy(true);
     try {
+      await queryClient.cancelQueries();
+      queryClient.clear();
       sessionStorage.removeItem(IMPERSONATION_KEY);
       await supabase.auth.setSession({
         access_token: state.admin_access_token,
