@@ -213,5 +213,19 @@ export const EN_MISC: Record<string, string> = {
   "ID solicitud:": "Request ID:",
   "Solicitud de Factura C — {orgName}": "Invoice C request — {orgName}",
 
+  "Ingresar como": "Log in as",
+  "Estás en modo {name}": "You are viewing {name}",
+  "Volver al usuario admin": "Return to admin user",
+  "No se encontró la sesión de administrador.": "The administrator session could not be found.",
+  "No se pudo ingresar a la cuenta": "Could not enter the account",
+  "El acceso temporal no es válido o ya venció.": "The temporary access is invalid or has expired.",
+  "No se pudo iniciar la sesión temporal.": "The temporary session could not be started.",
+  "No se pudo ingresar": "Could not enter the account",
+  "Ingresando a la cuenta…": "Entering the account…",
+  "Preparando el panel completo.": "Preparing the full workspace.",
+  "Acceso temporal — FLUX Talent": "Temporary access — FLUX Talent",
+  "Acceso temporal seguro a una cuenta de FLUX Talent.": "Secure temporary access to a FLUX Talent account.",
+  "Volver a Organizaciones": "Back to Organizations",
+
   "El equipo de FLUX Talent": "The FLUX Talent team",
 };
