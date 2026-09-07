@@ -44,7 +44,7 @@ function SetupPage() {
   const [personalDone, setPersonalDone] = useState(false);
   const [planDone, setPlanDone] = useState(false);
   const [activating, setActivating] = useState<PlanId | null>(null);
-  const [currency, setCurrency] = useState<"ars" | "usd">("ars");
+  const [currency, setCurrency] = useDefaultCurrency();
 
   useEffect(() => {
     if (me?.profile) {

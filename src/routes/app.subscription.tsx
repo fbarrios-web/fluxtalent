@@ -28,7 +28,7 @@ function SubscriptionPage() {
   const t = useT();
   const { session, loading: authLoading } = useAuth();
   const [cancelOpen, setCancelOpen] = useState(false);
-  const [currency, setCurrency] = useState<"ars" | "usd">("ars");
+  const [currency, setCurrency] = useDefaultCurrency();
   const qc = useQueryClient();
   const getSub = useServerFn(getMySubscription);
   const createPre = useServerFn(createPreapproval);
