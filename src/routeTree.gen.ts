@@ -49,7 +49,6 @@ import { Route as ApiPublicHooksProcessCvQueueRouteImport } from './routes/api.p
 import { Route as ApiPublicMicrosoftCallbackRouteImport } from './routes/api.public.microsoft.callback'
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api.public.mp.webhook'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
-import { Route as ApiPublicPaypalDiagRouteImport } from './routes/api/public/paypal/diag'
 import { Route as ApiPublicPaypalWebhookRouteImport } from './routes/api/public/paypal/webhook'
 import { Route as ApiPublicScheduleBookRouteImport } from './routes/api.public.schedule.book'
 import { Route as ApiPublicScheduleLogoRouteImport } from './routes/api.public.schedule.logo'
@@ -262,11 +261,6 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicPaypalDiagRoute = ApiPublicPaypalDiagRouteImport.update({
-  id: '/api/public/paypal/diag',
-  path: '/api/public/paypal/diag',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicPaypalWebhookRoute = ApiPublicPaypalWebhookRouteImport.update({
   id: '/api/public/paypal/webhook',
   path: '/api/public/paypal/webhook',
@@ -352,7 +346,6 @@ export interface FileRoutesByFullPath {
   '/api/public/microsoft/callback': typeof ApiPublicMicrosoftCallbackRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
-  '/api/public/paypal/diag': typeof ApiPublicPaypalDiagRoute
   '/api/public/paypal/webhook': typeof ApiPublicPaypalWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
   '/api/public/schedule/logo': typeof ApiPublicScheduleLogoRoute
@@ -401,7 +394,6 @@ export interface FileRoutesByTo {
   '/api/public/microsoft/callback': typeof ApiPublicMicrosoftCallbackRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
-  '/api/public/paypal/diag': typeof ApiPublicPaypalDiagRoute
   '/api/public/paypal/webhook': typeof ApiPublicPaypalWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
   '/api/public/schedule/logo': typeof ApiPublicScheduleLogoRoute
@@ -453,7 +445,6 @@ export interface FileRoutesById {
   '/api/public/microsoft/callback': typeof ApiPublicMicrosoftCallbackRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
-  '/api/public/paypal/diag': typeof ApiPublicPaypalDiagRoute
   '/api/public/paypal/webhook': typeof ApiPublicPaypalWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
   '/api/public/schedule/logo': typeof ApiPublicScheduleLogoRoute
@@ -506,7 +497,6 @@ export interface FileRouteTypes {
     | '/api/public/microsoft/callback'
     | '/api/public/mp/webhook'
     | '/api/public/payments/webhook'
-    | '/api/public/paypal/diag'
     | '/api/public/paypal/webhook'
     | '/api/public/schedule/book'
     | '/api/public/schedule/logo'
@@ -555,7 +545,6 @@ export interface FileRouteTypes {
     | '/api/public/microsoft/callback'
     | '/api/public/mp/webhook'
     | '/api/public/payments/webhook'
-    | '/api/public/paypal/diag'
     | '/api/public/paypal/webhook'
     | '/api/public/schedule/book'
     | '/api/public/schedule/logo'
@@ -606,7 +595,6 @@ export interface FileRouteTypes {
     | '/api/public/microsoft/callback'
     | '/api/public/mp/webhook'
     | '/api/public/payments/webhook'
-    | '/api/public/paypal/diag'
     | '/api/public/paypal/webhook'
     | '/api/public/schedule/book'
     | '/api/public/schedule/logo'
@@ -638,7 +626,6 @@ export interface RootRouteChildren {
   ApiPublicMicrosoftCallbackRoute: typeof ApiPublicMicrosoftCallbackRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
-  ApiPublicPaypalDiagRoute: typeof ApiPublicPaypalDiagRoute
   ApiPublicPaypalWebhookRoute: typeof ApiPublicPaypalWebhookRoute
   ApiPublicScheduleBookRoute: typeof ApiPublicScheduleBookRoute
   ApiPublicScheduleLogoRoute: typeof ApiPublicScheduleLogoRoute
@@ -931,13 +918,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/paypal/diag': {
-      id: '/api/public/paypal/diag'
-      path: '/api/public/paypal/diag'
-      fullPath: '/api/public/paypal/diag'
-      preLoaderRoute: typeof ApiPublicPaypalDiagRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/paypal/webhook': {
       id: '/api/public/paypal/webhook'
       path: '/api/public/paypal/webhook'
@@ -1084,7 +1064,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicMicrosoftCallbackRoute: ApiPublicMicrosoftCallbackRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
-  ApiPublicPaypalDiagRoute: ApiPublicPaypalDiagRoute,
   ApiPublicPaypalWebhookRoute: ApiPublicPaypalWebhookRoute,
   ApiPublicScheduleBookRoute: ApiPublicScheduleBookRoute,
   ApiPublicScheduleLogoRoute: ApiPublicScheduleLogoRoute,
