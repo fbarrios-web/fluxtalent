@@ -12,6 +12,7 @@ import { chooseFreePlan, startPlanCheckout, startUsdPlanCheckout } from "@/lib/s
 import { PLANS, formatArs, formatUsd, type PlanId } from "@/lib/plans";
 import { useT } from "@/lib/i18n";
 import { PaypalSubscribeButton } from "@/components/paypal-subscribe-button";
+import { useDefaultCurrency } from "@/lib/use-default-currency";
 
 export const Route = createFileRoute("/app/setup")({
   component: SetupPage,
@@ -44,7 +45,7 @@ function SetupPage() {
   const [personalDone, setPersonalDone] = useState(false);
   const [planDone, setPlanDone] = useState(false);
   const [activating, setActivating] = useState<PlanId | null>(null);
-  const [currency, setCurrency] = useState<"ars" | "usd">("ars");
+  const [currency, setCurrency] = useDefaultCurrency();
 
   useEffect(() => {
     if (me?.profile) {

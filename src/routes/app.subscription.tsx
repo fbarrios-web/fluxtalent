@@ -18,6 +18,7 @@ import { changePaddlePlan, getPaddlePortalUrl } from "@/utils/payments.functions
 import { useT } from "@/lib/i18n";
 import { PaypalSubscribeButton } from "@/components/paypal-subscribe-button";
 import { useAuth } from "@/lib/auth";
+import { useDefaultCurrency } from "@/lib/use-default-currency";
 
 export const Route = createFileRoute("/app/subscription")({
   component: SubscriptionPage,
@@ -28,7 +29,7 @@ function SubscriptionPage() {
   const t = useT();
   const { session, loading: authLoading } = useAuth();
   const [cancelOpen, setCancelOpen] = useState(false);
-  const [currency, setCurrency] = useState<"ars" | "usd">("ars");
+  const [currency, setCurrency] = useDefaultCurrency();
   const qc = useQueryClient();
   const getSub = useServerFn(getMySubscription);
   const createPre = useServerFn(createPreapproval);

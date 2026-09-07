@@ -11,6 +11,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getPlanPricing } from "@/lib/pricing.functions";
+import { useDefaultCurrency } from "@/lib/use-default-currency";
 
 
 export const Route = createFileRoute("/")({
@@ -28,7 +29,7 @@ function Landing() {
   const getPricing = useServerFn(getPlanPricing);
   const { data: overrides } = useQuery({ queryKey: ["plan-pricing"], queryFn: () => getPricing() });
   const plans = mergePlanOverrides(overrides);
-  const [currency, setCurrency] = useState<"ars" | "usd">("ars");
+  const [currency, setCurrency] = useDefaultCurrency();
 
   return (
     <div className="min-h-screen bg-background">
