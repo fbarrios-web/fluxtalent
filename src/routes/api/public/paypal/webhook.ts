@@ -69,6 +69,11 @@ async function handle(event: any) {
 export const Route = createFileRoute("/api/public/paypal/webhook")({
   server: {
     handlers: {
+      GET: async () =>
+        Response.json(
+          { ok: true, service: "paypal-webhook" },
+          { headers: { "cache-control": "no-store" } },
+        ),
       POST: async ({ request }) => {
         const raw = await request.text();
         try {
