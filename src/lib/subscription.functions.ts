@@ -293,11 +293,37 @@ export const startUsdPlanCheckout = createServerFn({ method: "POST" })
       );
     }
     if (!attempt.ok) {
-      throw new Error(
-        "Mercado Pago no pudo iniciar la suscripción en dólares con esta cuenta. Probá con el pago en pesos o escribinos a soporte@fluxtalent.com.ar.",
-      );
+      // La cuenta de Mercado Pago (Argentina) no admite crear preapprovals por API
+      // en USD ni con este payer. Usamos el link de suscripción no-code del plan,
+      // que cobra el equivalente en pesos y dispara el mismo webhook de activación.
+      const baseUrl = MP_PLAN_LINKS[data.planId as PlanId];
+      if (!baseUrl) {
+        throw new Error(
+          "Mercado Pago no pudo iniciar la suscripción en dólares con esta cuenta. Probá con el pago en pesos o escribinos a soporte@fluxtalent.com.ar.",
+        );
+      }
+      await supabaseAdmin
+        .from("organizations")
+        .update({
+          plan_price_ars: plan.priceArs,
+          plan_currency: "ars",
+          paddle_subscription_id: null as any,
+          grace_until: null as any,
+          subscription_status: "past_due",
+          trial_ends_at: null as any,
+          current_period_end: null as any,
+        } as any)
+        .eq("id", orgId);
+      await supabaseAdmin.from("activity_events").insert({
+        org_id: orgId,
+        user_id: userId,
+        event_type: "checkout.started",
+        metadata: { plan_id: plan.id, plan_name: plan.name, amount: plan.priceArs, currency: "ars", fallback: "plan_link" },
+      });
+      await supabaseAdmin.from("profiles").update({ setup_completed_at: new Date().toISOString() } as any).eq("id", userId);
+      const sep = baseUrl.includes("?") ? "&" : "?";
+      return { url: `${baseUrl}${sep}external_reference=${encodeURIComponent(ref)}`, currency: "ars" as const };
     }
-
 
     await supabaseAdmin
       .from("organizations")
@@ -312,6 +338,7 @@ export const startUsdPlanCheckout = createServerFn({ method: "POST" })
         mp_preapproval_id: attempt.json.id,
       } as any)
       .eq("id", orgId);
+
 
     await supabaseAdmin.from("activity_events").insert({
       org_id: orgId,
