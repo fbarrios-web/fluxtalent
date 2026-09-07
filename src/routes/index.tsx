@@ -11,6 +11,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getPlanPricing } from "@/lib/pricing.functions";
+import { useDefaultCurrency } from "@/lib/use-default-currency";
 
 
 export const Route = createFileRoute("/")({

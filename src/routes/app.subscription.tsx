@@ -18,6 +18,7 @@ import { changePaddlePlan, getPaddlePortalUrl } from "@/utils/payments.functions
 import { useT } from "@/lib/i18n";
 import { PaypalSubscribeButton } from "@/components/paypal-subscribe-button";
 import { useAuth } from "@/lib/auth";
+import { useDefaultCurrency } from "@/lib/use-default-currency";
 
 export const Route = createFileRoute("/app/subscription")({
   component: SubscriptionPage,
