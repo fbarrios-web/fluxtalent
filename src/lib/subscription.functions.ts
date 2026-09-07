@@ -246,36 +246,58 @@ export const startUsdPlanCheckout = createServerFn({ method: "POST" })
     const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
     const ref = `${orgId}:${data.planId}`;
 
-    async function createPreapproval(currency: "USD" | "ARS", amount: number) {
+    async function createPreapproval(currency: "USD" | "ARS", amount: number, withEmail: boolean) {
+      const body: Record<string, unknown> = {
+        reason: `FLUX Talent - Plan ${plan!.name}`,
+        external_reference: ref,
+        back_url: `${origin}/app/subscription?ok=1`,
+        auto_recurring: {
+          frequency: 1,
+          frequency_type: "months",
+          transaction_amount: amount,
+          currency_id: currency,
+        },
+        status: "pending",
+      };
+      // Si el email de la cuenta no coincide con el entorno de Mercado Pago
+      // (real vs. prueba) la API rechaza el preapproval; en ese caso lo omitimos
+      // y el pagador se identifica en el propio checkout.
+      if (withEmail) body.payer_email = email;
       const res = await fetch("https://api.mercadopago.com/preapproval", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          reason: `FLUX Talent - Plan ${plan!.name}`,
-          external_reference: ref,
-          payer_email: email,
-          back_url: `${origin}/app/subscription?ok=1`,
-          auto_recurring: {
-            frequency: 1,
-            frequency_type: "months",
-            transaction_amount: amount,
-            currency_id: currency,
-          },
-          status: "pending",
-        }),
+        body: JSON.stringify(body),
       });
       const json: any = await res.json().catch(() => ({}));
       return { ok: res.ok, json };
     }
 
-    let attempt = await createPreapproval("USD", plan.priceUsd);
+    const combos: Array<{ currency: "USD" | "ARS"; amount: number; withEmail: boolean }> = [
+      { currency: "USD", amount: plan.priceUsd, withEmail: true },
+      { currency: "USD", amount: plan.priceUsd, withEmail: false },
+      { currency: "ARS", amount: plan.priceArs, withEmail: true },
+      { currency: "ARS", amount: plan.priceArs, withEmail: false },
+    ];
+
+    let attempt: { ok: boolean; json: any } = { ok: false, json: {} };
     let currencyUsed: "usd" | "ars" = "usd";
-    if (!attempt.ok) {
-      console.error("[startUsdPlanCheckout] USD rechazado por MP, fallback ARS", attempt.json?.message);
-      attempt = await createPreapproval("ARS", plan.priceArs);
-      currencyUsed = "ars";
+    for (const combo of combos) {
+      attempt = await createPreapproval(combo.currency, combo.amount, combo.withEmail);
+      if (attempt.ok) {
+        currencyUsed = combo.currency === "USD" ? "usd" : "ars";
+        break;
+      }
+      console.error(
+        `[startUsdPlanCheckout] MP rechazó ${combo.currency} (email=${combo.withEmail})`,
+        attempt.json?.message,
+      );
     }
-    if (!attempt.ok) throw new Error(attempt.json?.message ?? "Mercado Pago rechazó el pago en dólares.");
+    if (!attempt.ok) {
+      throw new Error(
+        "Mercado Pago no pudo iniciar la suscripción en dólares con esta cuenta. Probá con el pago en pesos o escribinos a soporte@fluxtalent.com.ar.",
+      );
+    }
+
 
     await supabaseAdmin
       .from("organizations")
