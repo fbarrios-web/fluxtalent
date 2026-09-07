@@ -573,6 +573,7 @@ export type Database = {
           paddle_customer_id: string | null
           paddle_subscription_id: string | null
           parent_org_id: string | null
+          paypal_subscription_id: string | null
           plan_currency: string
           plan_price_ars: number
           sender_email: string | null
@@ -599,6 +600,7 @@ export type Database = {
           paddle_customer_id?: string | null
           paddle_subscription_id?: string | null
           parent_org_id?: string | null
+          paypal_subscription_id?: string | null
           plan_currency?: string
           plan_price_ars?: number
           sender_email?: string | null
@@ -625,6 +627,7 @@ export type Database = {
           paddle_customer_id?: string | null
           paddle_subscription_id?: string | null
           parent_org_id?: string | null
+          paypal_subscription_id?: string | null
           plan_currency?: string
           plan_price_ars?: number
           sender_email?: string | null
