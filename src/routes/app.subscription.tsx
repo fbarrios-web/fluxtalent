@@ -16,6 +16,7 @@ import { getPlanPricing } from "@/lib/pricing.functions";
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
 import { changePaddlePlan, getPaddlePortalUrl } from "@/utils/payments.functions";
 import { useT } from "@/lib/i18n";
+import { PaypalSubscribeButton } from "@/components/paypal-subscribe-button";
 
 export const Route = createFileRoute("/app/subscription")({
   component: SubscriptionPage,
