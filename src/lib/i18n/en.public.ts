@@ -310,4 +310,5 @@ export const EN_PUBLIC: Record<string, string> = {
   "Publicá con diseño propio.": "Publish with your own design.",
   "Generá imágenes premium y minimalistas para cada vacante, listas para LinkedIn, Instagram Stories y posts cuadrados. Fondos claros, espacio para texto y sin marca de agua.": "Generate premium, minimalist images for each vacancy, ready for LinkedIn, Instagram Stories, and square posts. Light backgrounds, space for text, and no watermark.",
   "Formatos cuadrado, horizontal y story.": "Square, horizontal, and story formats.",
+  "Pago con tarjeta internacional. El resumen puede figurar en pesos al tipo de cambio del momento.": "International card payment. Your statement may show the amount in Argentine pesos at the current exchange rate.",
 };

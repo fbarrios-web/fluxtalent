@@ -189,4 +189,6 @@ export const EN_APP: Record<string, string> = {
   "Enviar": "Send",
   "¡Gracias por tu feedback!": "Thanks for your feedback!",
   "Error al enviar": "Error sending",
+  "Pago con tarjeta internacional vía Mercado Pago. El precio se muestra en dólares; el resumen puede figurar en pesos al tipo de cambio del momento.": "International card payment. Prices are shown in US dollars; your statement may show the amount in Argentine pesos at the current exchange rate.",
+  "Débito automático mensual con tarjeta internacional vía Mercado Pago.": "Monthly automatic billing with an international card.",
 };
