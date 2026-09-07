@@ -430,7 +430,7 @@ export const cancelSubscription = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: org } = await supabaseAdmin
       .from("organizations")
-      .select("mp_preapproval_id, paddle_subscription_id, plan_currency")
+      .select("mp_preapproval_id, paddle_subscription_id, paypal_subscription_id, plan_currency")
       .eq("id", orgId)
       .maybeSingle();
 
@@ -471,6 +471,16 @@ export const cancelSubscription = createServerFn({ method: "POST" })
       }
     }
 
+
+    // Cancel PayPal subscription (USD)
+    if ((org as any)?.paypal_subscription_id) {
+      try {
+        const { cancelPaypalSubscription } = await import("@/lib/paypal.server");
+        await cancelPaypalSubscription((org as any).paypal_subscription_id);
+      } catch (e) {
+        console.error("[cancelSubscription] PayPal cancel failed", e);
+      }
+    }
 
     // Cancel Paddle subscription at end of period (USD)
     if (org?.paddle_subscription_id) {

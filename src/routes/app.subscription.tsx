@@ -16,6 +16,7 @@ import { getPlanPricing } from "@/lib/pricing.functions";
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
 import { changePaddlePlan, getPaddlePortalUrl } from "@/utils/payments.functions";
 import { useT } from "@/lib/i18n";
+import { PaypalSubscribeButton } from "@/components/paypal-subscribe-button";
 
 export const Route = createFileRoute("/app/subscription")({
   component: SubscriptionPage,
@@ -243,14 +244,14 @@ function SubscriptionPage() {
               onClick={() => setCurrency("usd")}
               className={`flex items-center gap-2 px-4 py-1.5 ${currency === "usd" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
             >
-              {t("USD · Tarjeta internacional")}
+              {t("USD · PayPal")}
             </button>
           </div>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           {currency === "ars"
             ? t("Cobramos en pesos argentinos vía Mercado Pago.")
-            : t("Pago con tarjeta internacional vía Mercado Pago. El precio se muestra en dólares; el resumen puede figurar en pesos al tipo de cambio del momento.")}
+            : t("Pago mensual en dólares con PayPal: podés usar tu cuenta PayPal o una tarjeta internacional.")}
         </p>
 
 
@@ -320,16 +321,7 @@ function SubscriptionPage() {
                     <a href="mailto:soporte@fluxtalent.com.ar?subject=Plan%20Custom%20FLUX%20Talent">{t("Contactar a ventas")}</a>
                   </Button>
                 ) : hasUsd ? (
-                  <Button
-                    className="mt-4 w-full"
-                    variant={p.highlighted ? "default" : "outline"}
-                    disabled={usdCheckoutMut.isPending}
-                    onClick={() => usdCheckoutMut.mutate(p.id as "starter" | "pro" | "enterprise")}
-                  >
-                    {usdCheckoutMut.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
-                    {t("Suscribirme a {name} (USD)", { name: p.name })}
-                  </Button>
-
+                  <PaypalSubscribeButton planId={p.id as "starter" | "pro" | "enterprise"} />
                 ) : MP_PLAN_LINKS[p.id] ? (
                   <Button
                     className="mt-4 w-full"
@@ -365,7 +357,7 @@ function SubscriptionPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {history.map((p: any) => {
-                const providerLabel = p.provider === "mercadopago" ? "Mercado Pago" : p.provider === "paddle" ? "Paddle (USD)" : p.provider === "manual" ? t("Manual") : p.provider;
+                const providerLabel = p.provider === "mercadopago" ? "Mercado Pago" : p.provider === "paypal" ? "PayPal (USD)" : p.provider === "paddle" ? "Paddle (USD)" : p.provider === "manual" ? t("Manual") : p.provider;
                 const statusMap: Record<string, { label: string; cls: string }> = {
                   approved: { label: t("Aprobado"), cls: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
                   pending: { label: t("Pendiente"), cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },

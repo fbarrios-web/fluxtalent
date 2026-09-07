@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { chooseFreePlan, startPlanCheckout, startUsdPlanCheckout } from "@/lib/subscription.functions";
 import { PLANS, formatArs, formatUsd, type PlanId } from "@/lib/plans";
 import { useT } from "@/lib/i18n";
+import { PaypalSubscribeButton } from "@/components/paypal-subscribe-button";
 
 export const Route = createFileRoute("/app/setup")({
   component: SetupPage,
@@ -214,7 +215,7 @@ function SetupPage() {
             <p className="mt-2 text-xs text-muted-foreground">
               {currency === "ars"
                 ? t("Débito automático mensual con Mercado Pago.")
-                : t("Débito automático mensual con tarjeta internacional vía Mercado Pago.")}
+                : t("Pago mensual con tarjeta internacional o cuenta PayPal.")}
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
@@ -251,6 +252,9 @@ function SetupPage() {
                       <li key={f} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 text-success" /> <span>{f}</span></li>
                     ))}
                   </ul>
+                  {currency === "usd" && !isFree && p.priceUsd ? (
+                    <div className="mt-5"><PaypalSubscribeButton planId={p.id as "starter" | "pro" | "enterprise"} onSuccess={() => setPlanDone(true)} /></div>
+                  ) : (
                   <Button
                     onClick={() => pickPlan(p.id as PlanId)}
                     disabled={!!activating || (currency === "usd" && !isFree && !p.priceUsd)}
@@ -260,6 +264,7 @@ function SetupPage() {
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {isFree ? t("Empezar gratis (15 días)") : t("Suscribirme a {name}{usdSuffix}", { name: p.name, usdSuffix: currency === "usd" ? " (USD)" : "" })}
                   </Button>
+                  )}
                 </div>
               );
             })}

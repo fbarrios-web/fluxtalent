@@ -1,0 +1,2 @@
+ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS paypal_subscription_id text;
+CREATE INDEX IF NOT EXISTS organizations_paypal_subscription_id_idx ON public.organizations (paypal_subscription_id);

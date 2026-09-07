@@ -49,6 +49,7 @@ import { Route as ApiPublicHooksProcessCvQueueRouteImport } from './routes/api.p
 import { Route as ApiPublicMicrosoftCallbackRouteImport } from './routes/api.public.microsoft.callback'
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api.public.mp.webhook'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicPaypalWebhookRouteImport } from './routes/api/public/paypal/webhook'
 import { Route as ApiPublicScheduleBookRouteImport } from './routes/api.public.schedule.book'
 import { Route as ApiPublicScheduleLogoRouteImport } from './routes/api.public.schedule.logo'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -260,6 +261,11 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPaypalWebhookRoute = ApiPublicPaypalWebhookRouteImport.update({
+  id: '/api/public/paypal/webhook',
+  path: '/api/public/paypal/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicScheduleBookRoute = ApiPublicScheduleBookRouteImport.update({
   id: '/api/public/schedule/book',
   path: '/api/public/schedule/book',
@@ -340,6 +346,7 @@ export interface FileRoutesByFullPath {
   '/api/public/microsoft/callback': typeof ApiPublicMicrosoftCallbackRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/paypal/webhook': typeof ApiPublicPaypalWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
   '/api/public/schedule/logo': typeof ApiPublicScheduleLogoRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -387,6 +394,7 @@ export interface FileRoutesByTo {
   '/api/public/microsoft/callback': typeof ApiPublicMicrosoftCallbackRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/paypal/webhook': typeof ApiPublicPaypalWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
   '/api/public/schedule/logo': typeof ApiPublicScheduleLogoRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -437,6 +445,7 @@ export interface FileRoutesById {
   '/api/public/microsoft/callback': typeof ApiPublicMicrosoftCallbackRoute
   '/api/public/mp/webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/paypal/webhook': typeof ApiPublicPaypalWebhookRoute
   '/api/public/schedule/book': typeof ApiPublicScheduleBookRoute
   '/api/public/schedule/logo': typeof ApiPublicScheduleLogoRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -488,6 +497,7 @@ export interface FileRouteTypes {
     | '/api/public/microsoft/callback'
     | '/api/public/mp/webhook'
     | '/api/public/payments/webhook'
+    | '/api/public/paypal/webhook'
     | '/api/public/schedule/book'
     | '/api/public/schedule/logo'
     | '/lovable/email/auth/preview'
@@ -535,6 +545,7 @@ export interface FileRouteTypes {
     | '/api/public/microsoft/callback'
     | '/api/public/mp/webhook'
     | '/api/public/payments/webhook'
+    | '/api/public/paypal/webhook'
     | '/api/public/schedule/book'
     | '/api/public/schedule/logo'
     | '/lovable/email/auth/preview'
@@ -584,6 +595,7 @@ export interface FileRouteTypes {
     | '/api/public/microsoft/callback'
     | '/api/public/mp/webhook'
     | '/api/public/payments/webhook'
+    | '/api/public/paypal/webhook'
     | '/api/public/schedule/book'
     | '/api/public/schedule/logo'
     | '/lovable/email/auth/preview'
@@ -614,6 +626,7 @@ export interface RootRouteChildren {
   ApiPublicMicrosoftCallbackRoute: typeof ApiPublicMicrosoftCallbackRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
+  ApiPublicPaypalWebhookRoute: typeof ApiPublicPaypalWebhookRoute
   ApiPublicScheduleBookRoute: typeof ApiPublicScheduleBookRoute
   ApiPublicScheduleLogoRoute: typeof ApiPublicScheduleLogoRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -905,6 +918,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/paypal/webhook': {
+      id: '/api/public/paypal/webhook'
+      path: '/api/public/paypal/webhook'
+      fullPath: '/api/public/paypal/webhook'
+      preLoaderRoute: typeof ApiPublicPaypalWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/schedule/book': {
       id: '/api/public/schedule/book'
       path: '/api/public/schedule/book'
@@ -1044,6 +1064,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicMicrosoftCallbackRoute: ApiPublicMicrosoftCallbackRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
+  ApiPublicPaypalWebhookRoute: ApiPublicPaypalWebhookRoute,
   ApiPublicScheduleBookRoute: ApiPublicScheduleBookRoute,
   ApiPublicScheduleLogoRoute: ApiPublicScheduleLogoRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
