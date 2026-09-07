@@ -244,14 +244,14 @@ function SubscriptionPage() {
               onClick={() => setCurrency("usd")}
               className={`flex items-center gap-2 px-4 py-1.5 ${currency === "usd" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
             >
-              {t("USD · Tarjeta internacional")}
+              {t("USD · PayPal")}
             </button>
           </div>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           {currency === "ars"
             ? t("Cobramos en pesos argentinos vía Mercado Pago.")
-            : t("Pago con tarjeta internacional vía Mercado Pago. El precio se muestra en dólares; el resumen puede figurar en pesos al tipo de cambio del momento.")}
+            : t("Pago mensual en dólares con PayPal: podés usar tu cuenta PayPal o una tarjeta internacional.")}
         </p>
 
 
@@ -357,7 +357,7 @@ function SubscriptionPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {history.map((p: any) => {
-                const providerLabel = p.provider === "mercadopago" ? "Mercado Pago" : p.provider === "paddle" ? "Paddle (USD)" : p.provider === "manual" ? t("Manual") : p.provider;
+                const providerLabel = p.provider === "mercadopago" ? "Mercado Pago" : p.provider === "paypal" ? "PayPal (USD)" : p.provider === "paddle" ? "Paddle (USD)" : p.provider === "manual" ? t("Manual") : p.provider;
                 const statusMap: Record<string, { label: string; cls: string }> = {
                   approved: { label: t("Aprobado"), cls: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
                   pending: { label: t("Pendiente"), cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
