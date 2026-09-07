@@ -207,6 +207,103 @@ export const startPlanCheckout = createServerFn({ method: "POST" })
     return { url: `${baseUrl}${sep}external_reference=${encodeURIComponent(ref)}` };
   });
 
+/**
+ * Checkout en dólares con Mercado Pago (tarjeta internacional).
+ * Intenta crear la suscripción con `currency_id: "USD"`; si la cuenta de MP no
+ * admite USD (caso típico de cuentas AR), reintenta cobrando el equivalente en
+ * ARS del plan. En ambos casos el webhook activa la org al aprobarse el pago.
+ */
+export const startUsdPlanCheckout = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ planId: z.enum(["starter", "pro", "enterprise"]) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId, claims } = context;
+    const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+    if (!token) throw new Error("Mercado Pago no está configurado todavía.");
+
+    const plan = PLANS.find(p => p.id === data.planId);
+    if (!plan || !plan.priceUsd || plan.priceUsd <= 0) throw new Error("Plan sin precio en dólares.");
+
+    const orgId = await getOrCreateOrgId(supabase, userId);
+    const email = ((claims as any)?.email ?? "").toString().trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new Error("Tu cuenta no tiene un email válido. Actualizá tu email en Configuración antes de suscribirte.");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Una sola suscripción activa por org.
+    try {
+      const { cancelMercadoPagoSubscription, cancelPaddleSubscription } =
+        await import("@/lib/billing-provider.server");
+      await cancelMercadoPagoSubscription(supabaseAdmin, orgId);
+      await cancelPaddleSubscription(supabaseAdmin, orgId);
+    } catch (e) {
+      console.error("[startUsdPlanCheckout] auto-cancel previo falló", e);
+    }
+
+    const origin = process.env.PUBLIC_APP_URL || "https://fluxtalent.lovable.app";
+    const ref = `${orgId}:${data.planId}`;
+
+    async function createPreapproval(currency: "USD" | "ARS", amount: number) {
+      const res = await fetch("https://api.mercadopago.com/preapproval", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reason: `FLUX Talent - Plan ${plan!.name}`,
+          external_reference: ref,
+          payer_email: email,
+          back_url: `${origin}/app/subscription?ok=1`,
+          auto_recurring: {
+            frequency: 1,
+            frequency_type: "months",
+            transaction_amount: amount,
+            currency_id: currency,
+          },
+          status: "pending",
+        }),
+      });
+      const json: any = await res.json().catch(() => ({}));
+      return { ok: res.ok, json };
+    }
+
+    let attempt = await createPreapproval("USD", plan.priceUsd);
+    let currencyUsed: "usd" | "ars" = "usd";
+    if (!attempt.ok) {
+      console.error("[startUsdPlanCheckout] USD rechazado por MP, fallback ARS", attempt.json?.message);
+      attempt = await createPreapproval("ARS", plan.priceArs);
+      currencyUsed = "ars";
+    }
+    if (!attempt.ok) throw new Error(attempt.json?.message ?? "Mercado Pago rechazó el pago en dólares.");
+
+    await supabaseAdmin
+      .from("organizations")
+      .update({
+        plan_price_ars: plan.priceArs,
+        plan_currency: currencyUsed,
+        paddle_subscription_id: null as any,
+        grace_until: null as any,
+        subscription_status: "past_due",
+        trial_ends_at: null as any,
+        current_period_end: null as any,
+        mp_preapproval_id: attempt.json.id,
+      } as any)
+      .eq("id", orgId);
+
+    await supabaseAdmin.from("activity_events").insert({
+      org_id: orgId,
+      user_id: userId,
+      event_type: "checkout.started",
+      metadata: { plan_id: plan.id, plan_name: plan.name, amount: plan.priceUsd, currency: currencyUsed },
+    });
+    await supabaseAdmin.from("profiles").update({ setup_completed_at: new Date().toISOString() } as any).eq("id", userId);
+
+    return { url: attempt.json.init_point as string, currency: currencyUsed };
+  });
+
+
+
 
 /**
  * Verifica si una org puede activar el plan Free (trial de 15 días).

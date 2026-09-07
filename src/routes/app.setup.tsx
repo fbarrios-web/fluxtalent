@@ -8,9 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, ArrowRight, CheckCircle2, Building2, Check } from "lucide-react";
 import { toast } from "sonner";
-import { chooseFreePlan, startPlanCheckout } from "@/lib/subscription.functions";
+import { chooseFreePlan, startPlanCheckout, startUsdPlanCheckout } from "@/lib/subscription.functions";
 import { PLANS, formatArs, formatUsd, type PlanId } from "@/lib/plans";
-import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/app/setup")({
@@ -24,6 +23,7 @@ function SetupPage() {
   const qc = useQueryClient();
   const chooseFree = useServerFn(chooseFreePlan);
   const startCheckout = useServerFn(startPlanCheckout);
+  const startUsd = useServerFn(startUsdPlanCheckout);
   const { data: me, isLoading } = useQuery({
     queryKey: ["setup-me"],
     queryFn: async () => {
@@ -44,7 +44,6 @@ function SetupPage() {
   const [planDone, setPlanDone] = useState(false);
   const [activating, setActivating] = useState<PlanId | null>(null);
   const [currency, setCurrency] = useState<"ars" | "usd">("ars");
-  const { openCheckout, loading: paddleLoading } = usePaddleCheckout();
 
   useEffect(() => {
     if (me?.profile) {
@@ -102,19 +101,8 @@ function SetupPage() {
         await qc.invalidateQueries({ queryKey: ["my-subscription"] });
         setPlanDone(true);
       } else if (currency === "usd") {
-        const plan = PLANS.find(x => x.id === planId);
-        const { data: u } = await supabase.auth.getUser();
-        if (!plan?.paddlePriceId || !u?.user) throw new Error(t("No pudimos abrir el checkout en USD"));
-        await openCheckout({
-          priceId: plan.paddlePriceId,
-          customerEmail: u.user.email ?? undefined,
-          customData: { userId: u.user.id, orgId: String((me?.profile as any)?.org_id ?? "") },
-        });
-        // Igual que el flujo en ARS: dejamos el setup marcado al iniciar el pago.
-        await supabase.from("profiles").update({ setup_completed_at: new Date().toISOString() } as any).eq("id", u.user.id);
-        await qc.invalidateQueries({ queryKey: ["profile-setup-check"] });
-        setPlanDone(true);
-        setActivating(null);
+        const r = await startUsd({ data: { planId: planId as "starter" | "pro" | "enterprise" } });
+        window.location.href = r.url;
       } else {
         const r = await startCheckout({ data: { planId: planId as "starter" | "pro" | "enterprise" } });
         window.location.href = r.url;
@@ -221,15 +209,12 @@ function SetupPage() {
                 className={`flex items-center gap-2 rounded-full px-4 py-1 ${currency === "usd" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
               >
                 {t("Dólares (USD)")}
-                <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
-                  {t("Próximamente")}
-                </span>
               </button>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
               {currency === "ars"
                 ? t("Débito automático mensual con Mercado Pago.")
-                : t("El pago en dólares está en etapa final de habilitación. Escribinos a soporte@fluxtalent.com.ar si necesitás pagar en USD.")}
+                : t("Débito automático mensual con tarjeta internacional vía Mercado Pago.")}
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
@@ -268,7 +253,7 @@ function SetupPage() {
                   </ul>
                   <Button
                     onClick={() => pickPlan(p.id as PlanId)}
-                    disabled={!!activating || paddleLoading || (currency === "usd" && !isFree && !p.paddlePriceId)}
+                    disabled={!!activating || (currency === "usd" && !isFree && !p.priceUsd)}
                     variant={isFree ? "outline" : "default"}
                     className="mt-5 w-full"
                   >
