@@ -320,16 +320,7 @@ function SubscriptionPage() {
                     <a href="mailto:soporte@fluxtalent.com.ar?subject=Plan%20Custom%20FLUX%20Talent">{t("Contactar a ventas")}</a>
                   </Button>
                 ) : hasUsd ? (
-                  <Button
-                    className="mt-4 w-full"
-                    variant={p.highlighted ? "default" : "outline"}
-                    disabled={usdCheckoutMut.isPending}
-                    onClick={() => usdCheckoutMut.mutate(p.id as "starter" | "pro" | "enterprise")}
-                  >
-                    {usdCheckoutMut.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
-                    {t("Suscribirme a {name} (USD)", { name: p.name })}
-                  </Button>
-
+                  <PaypalSubscribeButton planId={p.id as "starter" | "pro" | "enterprise"} />
                 ) : MP_PLAN_LINKS[p.id] ? (
                   <Button
                     className="mt-4 w-full"
