@@ -71,6 +71,12 @@ function SubscriptionPage() {
     onSuccess: (r) => { window.open(r.url, "_blank", "noopener"); },
     onError: (e: any) => toast.error(e.message ?? t("No se pudo iniciar el checkout")),
   });
+  const usdCheckoutMut = useMutation({
+    mutationFn: (planId: "starter" | "pro" | "enterprise") => startUsd({ data: { planId } }),
+    onSuccess: (r) => { window.open(r.url, "_blank", "noopener"); },
+    onError: (e: any) => toast.error(e.message ?? t("No se pudo iniciar el checkout")),
+  });
+
 
   if (isLoading) return <div className="grid h-96 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></div>;
 
