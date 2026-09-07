@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getMySubscription, createPreapproval, cancelSubscription, requestInvoiceC, startPlanCheckout } from "@/lib/subscription.functions";
+import { getMySubscription, createPreapproval, cancelSubscription, requestInvoiceC, startPlanCheckout, startUsdPlanCheckout } from "@/lib/subscription.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,7 @@ function SubscriptionPage() {
   const createPre = useServerFn(createPreapproval);
   const cancel = useServerFn(cancelSubscription);
   const startCheckout = useServerFn(startPlanCheckout);
+  const startUsd = useServerFn(startUsdPlanCheckout);
   const getPricing = useServerFn(getPlanPricing);
   const changePlan = useServerFn(changePaddlePlan);
   const getPortal = useServerFn(getPaddlePortalUrl);
@@ -243,23 +244,20 @@ function SubscriptionPage() {
               className={`flex items-center gap-2 px-4 py-1.5 ${currency === "usd" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
             >
               {t("USD · Tarjeta internacional")}
-              <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
-                {t("Próximamente")}
-              </span>
             </button>
           </div>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           {currency === "ars"
             ? t("Cobramos en pesos argentinos vía Mercado Pago.")
-            : t("El pago en dólares está en etapa final de habilitación. Si necesitás pagar en USD, escribinos a soporte@fluxtalent.com.ar.")}
+            : t("Pago con tarjeta internacional vía Mercado Pago. El precio se muestra en dólares; el resumen puede figurar en pesos al tipo de cambio del momento.")}
         </p>
 
 
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {plans.map(p => {
             const isCurrent = p.id === activePlan.id;
-            const hasUsd = currency === "usd" && !!p.paddlePriceId && p.priceUsd != null && p.priceUsd > 0;
+            const hasUsd = currency === "usd" && p.priceUsd != null && p.priceUsd > 0;
 
             return (
               <div
