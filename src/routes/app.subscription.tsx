@@ -319,35 +319,13 @@ function SubscriptionPage() {
                   <Button
                     className="mt-4 w-full"
                     variant={p.highlighted ? "default" : "outline"}
-                    disabled={paddleLoading}
-                    onClick={async () => {
-                      const { data: userData } = await supabase.auth.getUser();
-                      const user = userData.user;
-                      if (!user) { toast.error(t("Iniciá sesión")); return; }
-                      // If org already has Paddle sub, do plan-change instead of new checkout
-                      if (sub.paddle_subscription_id) {
-                        try {
-                          const r = await changePlan({ data: { newPriceId: p.paddlePriceId! } });
-                          toast.success(r.applied === "immediate"
-                            ? t("Upgrade aplicado. Los cupos se reiniciaron.")
-                            : t("Downgrade agendado para el próximo ciclo."));
-                          qc.invalidateQueries({ queryKey: ["my-subscription"] });
-                        } catch (e: any) {
-                          toast.error(e?.message ?? t("No se pudo cambiar el plan"));
-                        }
-                        return;
-                      }
-                      const orgId = (sub as any).id ?? (sub as any).org_id;
-                      openCheckout({
-                        priceId: p.paddlePriceId!,
-                        customerEmail: user.email ?? undefined,
-                        customData: { userId: user.id, orgId: String(orgId) },
-                      }).catch((e: any) => toast.error(e?.message ?? t("No se pudo abrir el checkout")));
-                    }}
+                    disabled={usdCheckoutMut.isPending}
+                    onClick={() => usdCheckoutMut.mutate(p.id as "starter" | "pro" | "enterprise")}
                   >
-                    {paddleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
+                    {usdCheckoutMut.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
                     {t("Suscribirme a {name} (USD)", { name: p.name })}
                   </Button>
+
                 ) : MP_PLAN_LINKS[p.id] ? (
                   <Button
                     className="mt-4 w-full"
