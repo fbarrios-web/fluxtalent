@@ -17,6 +17,7 @@ import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
 import { changePaddlePlan, getPaddlePortalUrl } from "@/utils/payments.functions";
 import { useT } from "@/lib/i18n";
 import { PaypalSubscribeButton } from "@/components/paypal-subscribe-button";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/app/subscription")({
   component: SubscriptionPage,
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/app/subscription")({
 
 function SubscriptionPage() {
   const t = useT();
+  const { session, loading: authLoading } = useAuth();
   const [cancelOpen, setCancelOpen] = useState(false);
   const [currency, setCurrency] = useState<"ars" | "usd">("ars");
   const qc = useQueryClient();
@@ -43,6 +45,7 @@ function SubscriptionPage() {
   const { data: sub, isLoading, error } = useQuery({
     queryKey: ["my-subscription"],
     queryFn: () => getSub(),
+    enabled: !authLoading && !!session,
     retry: 1,
   });
 
@@ -80,7 +83,7 @@ function SubscriptionPage() {
   });
 
 
-  if (isLoading) return <div className="grid h-96 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></div>;
+  if (authLoading || isLoading) return <div className="grid h-96 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></div>;
 
   if (error) {
     return (
