@@ -234,17 +234,12 @@ function Landing() {
                   }`}
                 >
                   {c === "ars" ? t("Pesos (ARS)") : t("Dólares (USD)")}
-                  {c === "usd" && (
-                    <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
-                      {t("Próximamente")}
-                    </span>
-                  )}
                 </button>
               ))}
             </div>
             {currency === "usd" && (
               <p className="mt-3 text-xs text-muted-foreground">
-                {t("El pago en dólares está en etapa final de habilitación.")}
+                {t("Pago con tarjeta internacional. El resumen puede figurar en pesos al tipo de cambio del momento.")}
               </p>
             )}
           </div>
