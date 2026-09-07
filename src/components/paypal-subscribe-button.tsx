@@ -61,7 +61,10 @@ export function PaypalSubscribeButton({ planId, onSuccess }: { planId: PaypalPla
                 setStatus("ready");
               }
             },
-            onError: () => toast.error(t("PayPal no pudo procesar el pago. Probá de nuevo.")),
+            onError: (err: any) => {
+              console.error("[paypal] checkout error", err);
+              toast.error(t("PayPal no pudo procesar el pago. Probá con otra tarjeta o iniciando sesión en tu cuenta de PayPal."));
+            },
           })
           .render(ref.current)
           .then(() => { if (!cancelled) setStatus("ready"); })
