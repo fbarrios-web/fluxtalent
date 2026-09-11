@@ -104,7 +104,7 @@ export const createVacancy = createServerFn({ method: "POST" })
         }))
       );
     }
-    return vac;
+    return { ...vac, promo_ends_at: promoEndsAt };
   });
 
 export const updateVacancy = createServerFn({ method: "POST" })
