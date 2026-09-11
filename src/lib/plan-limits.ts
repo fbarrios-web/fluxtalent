@@ -18,9 +18,16 @@ export interface CycleInfo {
 export async function getCurrentCycle(supabase: Sb, orgId: string): Promise<CycleInfo> {
   const { data: org } = await supabase
     .from("organizations")
-    .select("subscription_status, trial_ends_at, current_period_end, created_at")
+    .select("subscription_status, trial_ends_at, current_period_end, created_at, promo_plan_id, promo_started_at, promo_ends_at")
     .eq("id", orgId).maybeSingle();
   const now = new Date();
+  // Promo Starter free: el ciclo es el mes de la promo.
+  if (isPromoActive(org)) {
+    return {
+      start: new Date(org.promo_started_at ?? now.toISOString()),
+      end: new Date(org.promo_ends_at),
+    };
+  }
   if (org?.subscription_status === "trialing" && org.trial_ends_at) {
     const end = new Date(org.trial_ends_at);
     const start = new Date(end.getTime() - 15 * 86_400_000);
