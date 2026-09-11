@@ -731,3 +731,16 @@ export const getUsageSummary = createServerFn({ method: "GET" })
       cycleEnd: cycle.end.toISOString(),
     };
   });
+
+/** Marca como visto el cartel de la promo "Starter free 1 mes". */
+export const dismissPromoNotice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const orgId = await getOrCreateOrgId(supabase, userId);
+    await supabase
+      .from("organizations")
+      .update({ promo_ack_at: new Date().toISOString() })
+      .eq("id", orgId);
+    return { ok: true };
+  });
