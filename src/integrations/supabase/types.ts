@@ -576,6 +576,10 @@ export type Database = {
           paypal_subscription_id: string | null
           plan_currency: string
           plan_price_ars: number
+          promo_ack_at: string | null
+          promo_ends_at: string | null
+          promo_plan_id: string | null
+          promo_started_at: string | null
           sender_email: string | null
           signature_html: string | null
           signature_image_url: string | null
@@ -603,6 +607,10 @@ export type Database = {
           paypal_subscription_id?: string | null
           plan_currency?: string
           plan_price_ars?: number
+          promo_ack_at?: string | null
+          promo_ends_at?: string | null
+          promo_plan_id?: string | null
+          promo_started_at?: string | null
           sender_email?: string | null
           signature_html?: string | null
           signature_image_url?: string | null
@@ -630,6 +638,10 @@ export type Database = {
           paypal_subscription_id?: string | null
           plan_currency?: string
           plan_price_ars?: number
+          promo_ack_at?: string | null
+          promo_ends_at?: string | null
+          promo_plan_id?: string | null
+          promo_started_at?: string | null
           sender_email?: string | null
           signature_html?: string | null
           signature_image_url?: string | null
