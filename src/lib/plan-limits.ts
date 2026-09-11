@@ -54,11 +54,16 @@ export async function getCurrentCycle(supabase: Sb, orgId: string): Promise<Cycl
 export async function getOrgPlan(supabase: Sb, orgId: string): Promise<Plan> {
   const { data: org } = await supabase
     .from("organizations")
-    .select("plan_price_ars, subscription_status, trial_ends_at, is_unlimited")
+    .select("plan_price_ars, subscription_status, trial_ends_at, is_unlimited, promo_plan_id, promo_ends_at")
     .eq("id", orgId).maybeSingle();
   if (!org) return PLANS[0];
   if ((org as any).is_unlimited) {
     return { ...PLANS[0], id: "custom", name: "Admin (ilimitado)", maxVacancies: -1, maxNewVacanciesPerCycle: -1, maxCvsPerMonth: -1 };
+  }
+  // Promo vigente: límites del plan Starter sin costo.
+  if (isPromoActive(org)) {
+    const promoPlan = PLANS.find(p => p.id === PROMO_PLAN_ID)!;
+    return { ...promoPlan, name: `${promoPlan.name} (promo)` };
   }
   if (org.subscription_status === "trialing") return PLANS[0];
   return planByPrice(org.plan_price_ars);
