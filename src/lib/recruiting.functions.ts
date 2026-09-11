@@ -135,6 +135,11 @@ export const updateVacancy = createServerFn({ method: "POST" })
     if (data.patch.status && data.patch.status !== "closed") {
       const { data: prev } = await context.supabase
         .from("vacancies").select("status, org_id").eq("id", data.id).maybeSingle();
+      if (data.patch.status === "active" && prev?.org_id) {
+        // Promo "Starter free 1 mes": arranca al activar la vacante.
+        const { grantStarterPromoIfEligible } = await import("@/lib/promo.server");
+        await grantStarterPromoIfEligible(context.supabase, prev.org_id);
+      }
       if (prev && prev.status === "closed" && prev.org_id) {
         const { assertCanActivateVacancy } = await import("@/lib/plan-limits");
         await assertCanActivateVacancy(context.supabase, prev.org_id);
