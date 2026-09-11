@@ -77,6 +77,9 @@ function NewVacancy() {
     try {
       const v = await create({ data: { ...form, screening } as any });
       toast.success(t("Vacante creada"));
+      if ((v as any).promo_ends_at) {
+        toast.success(t("¡Gracias por sumarte! Activamos un mes free del plan Starter para vos"), { duration: 8000 });
+      }
       nav({ to: "/app/vacancies/$vacancyId", params: { vacancyId: v.id } });
     } catch (e: any) { toast.error(e.message); setSaving(false); }
   }

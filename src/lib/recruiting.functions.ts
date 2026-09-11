@@ -67,6 +67,10 @@ export const createVacancy = createServerFn({ method: "POST" })
       throw new Error("Completá el nombre de la empresa en Configuración antes de crear vacantes.");
     }
 
+    // Promo "Starter free 1 mes": se activa con la primera vacante.
+    const { grantStarterPromoIfEligible } = await import("@/lib/promo.server");
+    const promoEndsAt = await grantStarterPromoIfEligible(supabase, profile.org_id!);
+
     // Plan limit: active vacancies + subscription must be active.
     const { assertCanCreateVacancy } = await import("@/lib/plan-limits");
     await assertCanCreateVacancy(supabase, profile.org_id!);
@@ -100,7 +104,7 @@ export const createVacancy = createServerFn({ method: "POST" })
         }))
       );
     }
-    return vac;
+    return { ...vac, promo_ends_at: promoEndsAt };
   });
 
 export const updateVacancy = createServerFn({ method: "POST" })
@@ -131,6 +135,11 @@ export const updateVacancy = createServerFn({ method: "POST" })
     if (data.patch.status && data.patch.status !== "closed") {
       const { data: prev } = await context.supabase
         .from("vacancies").select("status, org_id").eq("id", data.id).maybeSingle();
+      if (data.patch.status === "active" && prev?.org_id) {
+        // Promo "Starter free 1 mes": arranca al activar la vacante.
+        const { grantStarterPromoIfEligible } = await import("@/lib/promo.server");
+        await grantStarterPromoIfEligible(context.supabase, prev.org_id);
+      }
       if (prev && prev.status === "closed" && prev.org_id) {
         const { assertCanActivateVacancy } = await import("@/lib/plan-limits");
         await assertCanActivateVacancy(context.supabase, prev.org_id);

@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Plus, ExternalLink, Download, Search } from "lucide-react";
 import { downloadCSV } from "@/lib/export-csv";
 import { UsageCard } from "@/components/usage-card";
+import { PromoNotice } from "@/components/promo-notice";
 import { useT } from "@/lib/i18n";
 
 
@@ -63,6 +64,8 @@ function VacanciesList() {
           </Link>
         </div>
       </header>
+
+      <div className="mb-4"><PromoNotice /></div>
 
       <div className="mb-4"><UsageCard /></div>
 

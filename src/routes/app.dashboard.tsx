@@ -6,6 +6,7 @@ import { Briefcase, Users, Sparkles, TrendingUp, Plus, Clock, FileText, Loader2,
 import { getMySubscription } from "@/lib/subscription.functions";
 import { planByPrice, formatLimit } from "@/lib/plans";
 import { UsageCard } from "@/components/usage-card";
+import { PromoNotice } from "@/components/promo-notice";
 import { useT } from "@/lib/i18n";
 
 
@@ -94,6 +95,8 @@ function Dashboard() {
           <Plus className="h-4 w-4" /> {t("Nueva vacante")}
         </Link>
       </header>
+
+      <div className="mb-6"><PromoNotice /></div>
 
       <div className="mb-8"><UsageCard /></div>
 

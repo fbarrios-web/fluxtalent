@@ -56,14 +56,14 @@ export const getMySubscription = createServerFn({ method: "GET" })
 
     const { data: org, error } = await supabase
       .from("organizations")
-      .select("id, name, subscription_status, trial_ends_at, plan_price_ars, current_period_end, last_payment_at, mp_preapproval_id, paddle_subscription_id, paddle_customer_id, plan_currency, grace_until, is_unlimited")
+      .select("id, name, subscription_status, trial_ends_at, plan_price_ars, current_period_end, last_payment_at, mp_preapproval_id, paddle_subscription_id, paddle_customer_id, plan_currency, grace_until, is_unlimited, promo_plan_id, promo_started_at, promo_ends_at, promo_ack_at")
       .eq("id", orgId)
       .maybeSingle();
     if (error || !org) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: adminOrg } = await supabaseAdmin
         .from("organizations")
-        .select("id, name, subscription_status, trial_ends_at, plan_price_ars, current_period_end, last_payment_at, mp_preapproval_id, paddle_subscription_id, paddle_customer_id, plan_currency, grace_until, is_unlimited")
+        .select("id, name, subscription_status, trial_ends_at, plan_price_ars, current_period_end, last_payment_at, mp_preapproval_id, paddle_subscription_id, paddle_customer_id, plan_currency, grace_until, is_unlimited, promo_plan_id, promo_started_at, promo_ends_at, promo_ack_at")
         .eq("id", orgId)
         .maybeSingle();
       if (!adminOrg) return null;
@@ -730,4 +730,17 @@ export const getUsageSummary = createServerFn({ method: "GET" })
       cycleStart: cycle.start.toISOString(),
       cycleEnd: cycle.end.toISOString(),
     };
+  });
+
+/** Marca como visto el cartel de la promo "Starter free 1 mes". */
+export const dismissPromoNotice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const orgId = await getOrCreateOrgId(supabase, userId);
+    await supabase
+      .from("organizations")
+      .update({ promo_ack_at: new Date().toISOString() })
+      .eq("id", orgId);
+    return { ok: true };
   });

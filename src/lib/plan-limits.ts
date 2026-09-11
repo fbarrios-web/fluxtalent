@@ -1,5 +1,6 @@
 // Server-only helpers to enforce plan quotas by billing cycle.
 import { PLANS, planByPrice, type Plan } from "@/lib/plans";
+import { isPromoActive, PROMO_PLAN_ID } from "@/lib/promo";
 
 type Sb = any;
 
@@ -17,9 +18,16 @@ export interface CycleInfo {
 export async function getCurrentCycle(supabase: Sb, orgId: string): Promise<CycleInfo> {
   const { data: org } = await supabase
     .from("organizations")
-    .select("subscription_status, trial_ends_at, current_period_end, created_at")
+    .select("subscription_status, trial_ends_at, current_period_end, created_at, promo_plan_id, promo_started_at, promo_ends_at")
     .eq("id", orgId).maybeSingle();
   const now = new Date();
+  // Promo Starter free: el ciclo es el mes de la promo.
+  if (isPromoActive(org)) {
+    return {
+      start: new Date(org.promo_started_at ?? now.toISOString()),
+      end: new Date(org.promo_ends_at),
+    };
+  }
   if (org?.subscription_status === "trialing" && org.trial_ends_at) {
     const end = new Date(org.trial_ends_at);
     const start = new Date(end.getTime() - 15 * 86_400_000);
@@ -46,11 +54,16 @@ export async function getCurrentCycle(supabase: Sb, orgId: string): Promise<Cycl
 export async function getOrgPlan(supabase: Sb, orgId: string): Promise<Plan> {
   const { data: org } = await supabase
     .from("organizations")
-    .select("plan_price_ars, subscription_status, trial_ends_at, is_unlimited")
+    .select("plan_price_ars, subscription_status, trial_ends_at, is_unlimited, promo_plan_id, promo_ends_at")
     .eq("id", orgId).maybeSingle();
   if (!org) return PLANS[0];
   if ((org as any).is_unlimited) {
     return { ...PLANS[0], id: "custom", name: "Admin (ilimitado)", maxVacancies: -1, maxNewVacanciesPerCycle: -1, maxCvsPerMonth: -1 };
+  }
+  // Promo vigente: límites del plan Starter sin costo.
+  if (isPromoActive(org)) {
+    const promoPlan = PLANS.find(p => p.id === PROMO_PLAN_ID)!;
+    return { ...promoPlan, name: `${promoPlan.name} (promo)` };
   }
   if (org.subscription_status === "trialing") return PLANS[0];
   return planByPrice(org.plan_price_ars);
