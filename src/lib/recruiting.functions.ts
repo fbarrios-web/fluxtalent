@@ -67,6 +67,10 @@ export const createVacancy = createServerFn({ method: "POST" })
       throw new Error("Completá el nombre de la empresa en Configuración antes de crear vacantes.");
     }
 
+    // Promo "Starter free 1 mes": se activa con la primera vacante.
+    const { grantStarterPromoIfEligible } = await import("@/lib/promo.server");
+    const promoEndsAt = await grantStarterPromoIfEligible(supabase, profile.org_id!);
+
     // Plan limit: active vacancies + subscription must be active.
     const { assertCanCreateVacancy } = await import("@/lib/plan-limits");
     await assertCanCreateVacancy(supabase, profile.org_id!);
