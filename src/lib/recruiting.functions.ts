@@ -55,14 +55,10 @@ export const createVacancy = createServerFn({ method: "POST" })
       profile = { org_id: newOrg.id };
     }
 
-    // Gate: email provider (Google o Microsoft) + branding must be configured before creating a vacancy.
-    const { data: gateProfile } = await supabase
-      .from("profiles").select("google_refresh_token, microsoft_refresh_token").eq("id", userId).maybeSingle();
+    // Solo pedimos el nombre de la empresa. La conexión con Google/Microsoft
+    // se pide recién cuando se agenda o se envían emails, no para crear la vacante.
     const { data: gateOrg } = await supabase
       .from("organizations").select("name").eq("id", profile.org_id!).maybeSingle();
-    if (!gateProfile?.google_refresh_token && !gateProfile?.microsoft_refresh_token) {
-      throw new Error("Conectá tu cuenta de Google o Microsoft en Integraciones antes de crear vacantes.");
-    }
     if (!gateOrg?.name) {
       throw new Error("Completá el nombre de la empresa en Configuración antes de crear vacantes.");
     }
