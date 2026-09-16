@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { createVacancy } from "@/lib/recruiting.functions";
 import { aiDraftVacancy } from "@/lib/ai.functions";
+import { trackEvent } from "@/lib/track";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -77,6 +78,7 @@ function NewVacancy() {
     try {
       const v = await create({ data: { ...form, screening } as any });
       toast.success(t("Vacante creada"));
+      trackEvent("vacancy_created");
       if ((v as any).promo_ends_at) {
         toast.success(t("¡Gracias por sumarte! Activamos un mes free del plan Starter para vos"), { duration: 8000 });
       }
