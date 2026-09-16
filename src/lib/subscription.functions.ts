@@ -54,6 +54,15 @@ export const getMySubscription = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const orgId = await getOrCreateOrgId(supabase, userId);
 
+    // Promo del mes: Starter free por un mes para toda cuenta nueva elegible.
+    try {
+      const { grantStarterPromoIfEligible } = await import("@/lib/promo.server");
+      await grantStarterPromoIfEligible(supabase, orgId);
+    } catch (e) {
+      console.error("[promo] grant en getMySubscription falló", e);
+    }
+
+
     const { data: org, error } = await supabase
       .from("organizations")
       .select("id, name, subscription_status, trial_ends_at, plan_price_ars, current_period_end, last_payment_at, mp_preapproval_id, paddle_subscription_id, paddle_customer_id, plan_currency, grace_until, is_unlimited, promo_plan_id, promo_started_at, promo_ends_at, promo_ack_at")

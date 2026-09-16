@@ -3,7 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { getMySubscription, dismissPromoNotice } from "@/lib/subscription.functions";
 import { PLANS } from "@/lib/plans";
 import { isPromoActive, promoDaysLeft, PROMO_PLAN_ID } from "@/lib/promo";
-import { Gift, X, Briefcase, FileText, CalendarClock } from "lucide-react";
+import { Gift, X, Briefcase, FileText, CalendarClock, Plus } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { useT } from "@/lib/i18n";
 
 /** Cartel de bienvenida de la promo: mes gratis del plan Starter. */
@@ -56,10 +57,20 @@ export function PromoNotice() {
             <li className="flex items-center gap-1.5"><Briefcase className="h-4 w-4 text-primary" /> {t("Hasta {n} vacantes activas", { n: plan.maxVacancies })}</li>
             <li className="flex items-center gap-1.5"><FileText className="h-4 w-4 text-primary" /> {t("{n} CVs analizados con IA", { n: plan.maxCvsPerMonth })}</li>
           </ul>
+          <p className="text-sm">
+            {t("Creá tu primera vacante y mirá cómo la IA ordena, puntúa y resume los CVs por vos.")}
+          </p>
+          <Link
+            to="/app/vacancies/new"
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            <Plus className="h-4 w-4" /> {t("Crear mi primera vacante")}
+          </Link>
           <p className="text-xs text-muted-foreground">
             {t("Cuando termine el mes, la licencia free finaliza y podés suscribirte para seguir.")}
           </p>
         </div>
+
       </div>
     </div>
   );

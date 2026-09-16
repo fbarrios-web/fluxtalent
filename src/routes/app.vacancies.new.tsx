@@ -88,7 +88,8 @@ function NewVacancy() {
     return <div className="p-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
   }
 
-  const blocked = gate && (!gate.gmailOk || !gate.orgOk);
+  const blocked = gate && !gate.orgOk;
+  const missingMail = gate && !gate.gmailOk;
 
   return (
     <div className="mx-auto max-w-3xl p-6 md:p-10">
@@ -105,25 +106,30 @@ function NewVacancy() {
             <div className="flex-1">
               <h3 className="font-semibold">{t("Antes de crear vacantes necesitás configurar lo siguiente:")}</h3>
               <ul className="mt-2 list-disc pl-5 text-sm">
-                {!gate?.gmailOk && (
-                  <li>
-                    {t("Conectar tu cuenta de")} <b>Google</b> {t("o")} <b>Microsoft</b>{" "}
-                    <Link to="/app/integrations" className="text-primary underline">{t("Ir a Integraciones")}</Link>
-                  </li>
-                )}
-                {!gate?.orgOk && (
-                  <li>
-                    {t("Completar")} <b>{t("nombre de la empresa")}</b> {t("y")} <b>{t("email remitente")}</b>{" "}
-                    <Link to="/app/settings" className="text-primary underline">{t("Ir a Configuración")}</Link>
-                  </li>
-                )}
+                <li>
+                  {t("Completar")} <b>{t("nombre de la empresa")}</b>{" "}
+                  <Link to="/app/settings" className="text-primary underline">{t("Ir a Configuración")}</Link>
+                </li>
               </ul>
             </div>
           </div>
         </div>
       )}
 
+      {!blocked && missingMail && (
+        <div className="mt-6 rounded-2xl border border-border bg-muted/40 p-4 text-sm">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-600" />
+            <p className="text-muted-foreground">
+              {t("Podés crear la vacante igual. Para agendar entrevistas y enviar emails automáticos vas a necesitar conectar tu cuenta de Google o Microsoft.")}{" "}
+              <Link to="/app/integrations" className="text-primary underline">{t("Ir a Integraciones")}</Link>
+            </p>
+          </div>
+        </div>
+      )}
+
       <fieldset disabled={!!blocked} className={blocked ? "pointer-events-none opacity-50" : ""}>
+
       <div className="mt-8 space-y-6">
         <Section title={t("Lo básico")}>
           <div className="grid gap-4 md:grid-cols-2">
