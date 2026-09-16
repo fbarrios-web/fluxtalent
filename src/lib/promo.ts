@@ -9,8 +9,8 @@
 
 export const PROMO_PLAN_ID = "starter" as const;
 
-/** Ventana de alta de cuentas elegibles (11/09 00:00 a 30/09 23:59:59, UTC-3). */
-export const PROMO_SIGNUP_FROM = "2026-09-11T03:00:00.000Z";
+/** Ventana de alta de cuentas elegibles (01/09 00:00 a 30/09 23:59:59, UTC-3). */
+export const PROMO_SIGNUP_FROM = "2026-09-01T03:00:00.000Z";
 export const PROMO_SIGNUP_UNTIL = "2026-10-01T02:59:59.999Z";
 
 export interface PromoFields {
