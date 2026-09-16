@@ -1182,6 +1182,105 @@ export type Database = {
           },
         ]
       }
+      web_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          name: string | null
+          path: string | null
+          session_key: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          name?: string | null
+          path?: string | null
+          session_key: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          name?: string | null
+          path?: string | null
+          session_key?: string
+        }
+        Relationships: []
+      }
+      web_sessions: {
+        Row: {
+          browser: string | null
+          country: string | null
+          device_type: string | null
+          first_seen: string
+          id: string
+          landing_path: string | null
+          language: string | null
+          last_seen: string
+          os: string | null
+          page_views: number
+          referrer: string | null
+          referrer_host: string | null
+          session_key: string
+          signed_up: boolean
+          user_id: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Insert: {
+          browser?: string | null
+          country?: string | null
+          device_type?: string | null
+          first_seen?: string
+          id?: string
+          landing_path?: string | null
+          language?: string | null
+          last_seen?: string
+          os?: string | null
+          page_views?: number
+          referrer?: string | null
+          referrer_host?: string | null
+          session_key: string
+          signed_up?: boolean
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Update: {
+          browser?: string | null
+          country?: string | null
+          device_type?: string | null
+          first_seen?: string
+          id?: string
+          landing_path?: string | null
+          language?: string | null
+          last_seen?: string
+          os?: string | null
+          page_views?: number
+          referrer?: string | null
+          referrer_host?: string | null
+          session_key?: string
+          signed_up?: boolean
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
