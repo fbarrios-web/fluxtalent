@@ -32,11 +32,13 @@ import { Route as ScheduleTokenRouteImport } from './routes/schedule.$token'
 import { Route as ApiPublicAnalyzeRouteImport } from './routes/api.public.analyze'
 import { Route as ApiPublicApplyRouteImport } from './routes/api.public.apply'
 import { Route as ApiPublicGeoRouteImport } from './routes/api.public.geo'
+import { Route as ApiPublicTrackRouteImport } from './routes/api.public.track'
 import { Route as AppAdminIndexRouteImport } from './routes/app.admin.index'
 import { Route as AppAdminOrgsRouteImport } from './routes/app.admin.orgs'
 import { Route as AppAdminPaymentsRouteImport } from './routes/app.admin.payments'
 import { Route as AppAdminPricingRouteImport } from './routes/app.admin.pricing'
 import { Route as AppAdminSurveysRouteImport } from './routes/app.admin.surveys'
+import { Route as AppAdminTrafficRouteImport } from './routes/app.admin.traffic'
 import { Route as AppAdminUsageRouteImport } from './routes/app.admin.usage'
 import { Route as AppAdminUsersRouteImport } from './routes/app.admin.users'
 import { Route as AppCandidatesIdRouteImport } from './routes/app.candidates.$id'
@@ -173,6 +175,11 @@ const ApiPublicGeoRoute = ApiPublicGeoRouteImport.update({
   path: '/api/public/geo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicTrackRoute = ApiPublicTrackRouteImport.update({
+  id: '/api/public/track',
+  path: '/api/public/track',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -196,6 +203,11 @@ const AppAdminPricingRoute = AppAdminPricingRouteImport.update({
 const AppAdminSurveysRoute = AppAdminSurveysRouteImport.update({
   id: '/surveys',
   path: '/surveys',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminTrafficRoute = AppAdminTrafficRouteImport.update({
+  id: '/traffic',
+  path: '/traffic',
   getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAdminUsageRoute = AppAdminUsageRouteImport.update({
@@ -329,10 +341,12 @@ export interface FileRoutesByFullPath {
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
+  '/api/public/track': typeof ApiPublicTrackRoute
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
   '/app/admin/pricing': typeof AppAdminPricingRoute
   '/app/admin/surveys': typeof AppAdminSurveysRoute
+  '/app/admin/traffic': typeof AppAdminTrafficRoute
   '/app/admin/usage': typeof AppAdminUsageRoute
   '/app/admin/users': typeof AppAdminUsersRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
@@ -377,10 +391,12 @@ export interface FileRoutesByTo {
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
+  '/api/public/track': typeof ApiPublicTrackRoute
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
   '/app/admin/pricing': typeof AppAdminPricingRoute
   '/app/admin/surveys': typeof AppAdminSurveysRoute
+  '/app/admin/traffic': typeof AppAdminTrafficRoute
   '/app/admin/usage': typeof AppAdminUsageRoute
   '/app/admin/users': typeof AppAdminUsersRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
@@ -428,10 +444,12 @@ export interface FileRoutesById {
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
+  '/api/public/track': typeof ApiPublicTrackRoute
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
   '/app/admin/pricing': typeof AppAdminPricingRoute
   '/app/admin/surveys': typeof AppAdminSurveysRoute
+  '/app/admin/traffic': typeof AppAdminTrafficRoute
   '/app/admin/usage': typeof AppAdminUsageRoute
   '/app/admin/users': typeof AppAdminUsersRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
@@ -480,10 +498,12 @@ export interface FileRouteTypes {
     | '/api/public/analyze'
     | '/api/public/apply'
     | '/api/public/geo'
+    | '/api/public/track'
     | '/app/admin/orgs'
     | '/app/admin/payments'
     | '/app/admin/pricing'
     | '/app/admin/surveys'
+    | '/app/admin/traffic'
     | '/app/admin/usage'
     | '/app/admin/users'
     | '/app/candidates/$id'
@@ -528,10 +548,12 @@ export interface FileRouteTypes {
     | '/api/public/analyze'
     | '/api/public/apply'
     | '/api/public/geo'
+    | '/api/public/track'
     | '/app/admin/orgs'
     | '/app/admin/payments'
     | '/app/admin/pricing'
     | '/app/admin/surveys'
+    | '/app/admin/traffic'
     | '/app/admin/usage'
     | '/app/admin/users'
     | '/app/candidates/$id'
@@ -578,10 +600,12 @@ export interface FileRouteTypes {
     | '/api/public/analyze'
     | '/api/public/apply'
     | '/api/public/geo'
+    | '/api/public/track'
     | '/app/admin/orgs'
     | '/app/admin/payments'
     | '/app/admin/pricing'
     | '/app/admin/surveys'
+    | '/app/admin/traffic'
     | '/app/admin/usage'
     | '/app/admin/users'
     | '/app/candidates/$id'
@@ -620,6 +644,7 @@ export interface RootRouteChildren {
   ApiPublicAnalyzeRoute: typeof ApiPublicAnalyzeRoute
   ApiPublicApplyRoute: typeof ApiPublicApplyRoute
   ApiPublicGeoRoute: typeof ApiPublicGeoRoute
+  ApiPublicTrackRoute: typeof ApiPublicTrackRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicGoogleCallbackRoute: typeof ApiPublicGoogleCallbackRoute
   ApiPublicHooksProcessCvQueueRoute: typeof ApiPublicHooksProcessCvQueueRoute
@@ -799,6 +824,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicGeoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/track': {
+      id: '/api/public/track'
+      path: '/api/public/track'
+      fullPath: '/api/public/track'
+      preLoaderRoute: typeof ApiPublicTrackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/admin/': {
       id: '/app/admin/'
       path: '/'
@@ -832,6 +864,13 @@ declare module '@tanstack/react-router' {
       path: '/surveys'
       fullPath: '/app/admin/surveys'
       preLoaderRoute: typeof AppAdminSurveysRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
+    '/app/admin/traffic': {
+      id: '/app/admin/traffic'
+      path: '/traffic'
+      fullPath: '/app/admin/traffic'
+      preLoaderRoute: typeof AppAdminTrafficRouteImport
       parentRoute: typeof AppAdminRoute
     }
     '/app/admin/usage': {
@@ -982,6 +1021,7 @@ interface AppAdminRouteChildren {
   AppAdminPaymentsRoute: typeof AppAdminPaymentsRoute
   AppAdminPricingRoute: typeof AppAdminPricingRoute
   AppAdminSurveysRoute: typeof AppAdminSurveysRoute
+  AppAdminTrafficRoute: typeof AppAdminTrafficRoute
   AppAdminUsageRoute: typeof AppAdminUsageRoute
   AppAdminUsersRoute: typeof AppAdminUsersRoute
   AppAdminIndexRoute: typeof AppAdminIndexRoute
@@ -992,6 +1032,7 @@ const AppAdminRouteChildren: AppAdminRouteChildren = {
   AppAdminPaymentsRoute: AppAdminPaymentsRoute,
   AppAdminPricingRoute: AppAdminPricingRoute,
   AppAdminSurveysRoute: AppAdminSurveysRoute,
+  AppAdminTrafficRoute: AppAdminTrafficRoute,
   AppAdminUsageRoute: AppAdminUsageRoute,
   AppAdminUsersRoute: AppAdminUsersRoute,
   AppAdminIndexRoute: AppAdminIndexRoute,
@@ -1058,6 +1099,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAnalyzeRoute: ApiPublicAnalyzeRoute,
   ApiPublicApplyRoute: ApiPublicApplyRoute,
   ApiPublicGeoRoute: ApiPublicGeoRoute,
+  ApiPublicTrackRoute: ApiPublicTrackRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicGoogleCallbackRoute: ApiPublicGoogleCallbackRoute,
   ApiPublicHooksProcessCvQueueRoute: ApiPublicHooksProcessCvQueueRoute,

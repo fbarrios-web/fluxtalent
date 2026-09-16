@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { FluxLogo } from "@/components/flux-logo";
+import { trackEvent } from "@/lib/track";
 
 
 export const Route = createFileRoute("/auth")({
@@ -103,6 +104,7 @@ function AuthForm() {
           throw err;
         }
         toast.success("¡Cuenta creada!");
+        trackEvent("signup_completed");
         // Welcome email (fire and forget)
         try {
           const { sendTransactionalEmail } = await import("@/lib/email/send");

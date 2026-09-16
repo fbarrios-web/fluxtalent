@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, Link, useLocation } from "@tanstack/react-rout
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { adminAmI } from "@/lib/admin.functions";
-import { Loader2, BarChart3, Building2, Users, CreditCard, ShieldAlert, Tag, Activity, Smile } from "lucide-react";
+import { Loader2, BarChart3, Building2, Users, CreditCard, ShieldAlert, Tag, Activity, Smile, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
 
@@ -19,6 +19,7 @@ function AdminLayout() {
     { to: "/app/admin/users", label: t("Usuarios"), icon: Users },
     { to: "/app/admin/payments", label: t("Pagos"), icon: CreditCard },
     { to: "/app/admin/pricing", label: t("Precios"), icon: Tag },
+    { to: "/app/admin/traffic", label: t("Tráfico"), icon: Globe },
     { to: "/app/admin/usage", label: t("Consumo"), icon: Activity },
     { to: "/app/admin/surveys", label: t("Encuestas"), icon: Smile },
   ];
