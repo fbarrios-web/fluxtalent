@@ -79,8 +79,9 @@ export const Route = createFileRoute("/api/public/track")({
             page_views: type === "pageview" ? 1 : 0,
           });
         } else {
-          const patch: { last_seen: string; page_views?: number } = { last_seen: now };
+          const patch: { last_seen: string; page_views?: number; signed_up?: boolean } = { last_seen: now };
           if (type === "pageview") patch.page_views = (existing.page_views ?? 0) + 1;
+          if (type === "action" && payload?.name === "signup_completed") patch.signed_up = true;
           await sb.from("web_sessions").update(patch).eq("id", existing.id);
         }
 
