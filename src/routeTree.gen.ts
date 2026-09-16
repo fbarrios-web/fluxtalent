@@ -32,6 +32,7 @@ import { Route as ScheduleTokenRouteImport } from './routes/schedule.$token'
 import { Route as ApiPublicAnalyzeRouteImport } from './routes/api.public.analyze'
 import { Route as ApiPublicApplyRouteImport } from './routes/api.public.apply'
 import { Route as ApiPublicGeoRouteImport } from './routes/api.public.geo'
+import { Route as ApiPublicTrackRouteImport } from './routes/api.public.track'
 import { Route as AppAdminIndexRouteImport } from './routes/app.admin.index'
 import { Route as AppAdminOrgsRouteImport } from './routes/app.admin.orgs'
 import { Route as AppAdminPaymentsRouteImport } from './routes/app.admin.payments'
@@ -171,6 +172,11 @@ const ApiPublicApplyRoute = ApiPublicApplyRouteImport.update({
 const ApiPublicGeoRoute = ApiPublicGeoRouteImport.update({
   id: '/api/public/geo',
   path: '/api/public/geo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicTrackRoute = ApiPublicTrackRouteImport.update({
+  id: '/api/public/track',
+  path: '/api/public/track',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
@@ -329,6 +335,7 @@ export interface FileRoutesByFullPath {
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
+  '/api/public/track': typeof ApiPublicTrackRoute
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
   '/app/admin/pricing': typeof AppAdminPricingRoute
@@ -377,6 +384,7 @@ export interface FileRoutesByTo {
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
+  '/api/public/track': typeof ApiPublicTrackRoute
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
   '/app/admin/pricing': typeof AppAdminPricingRoute
@@ -428,6 +436,7 @@ export interface FileRoutesById {
   '/api/public/analyze': typeof ApiPublicAnalyzeRoute
   '/api/public/apply': typeof ApiPublicApplyRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
+  '/api/public/track': typeof ApiPublicTrackRoute
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
   '/app/admin/pricing': typeof AppAdminPricingRoute
@@ -480,6 +489,7 @@ export interface FileRouteTypes {
     | '/api/public/analyze'
     | '/api/public/apply'
     | '/api/public/geo'
+    | '/api/public/track'
     | '/app/admin/orgs'
     | '/app/admin/payments'
     | '/app/admin/pricing'
@@ -528,6 +538,7 @@ export interface FileRouteTypes {
     | '/api/public/analyze'
     | '/api/public/apply'
     | '/api/public/geo'
+    | '/api/public/track'
     | '/app/admin/orgs'
     | '/app/admin/payments'
     | '/app/admin/pricing'
@@ -578,6 +589,7 @@ export interface FileRouteTypes {
     | '/api/public/analyze'
     | '/api/public/apply'
     | '/api/public/geo'
+    | '/api/public/track'
     | '/app/admin/orgs'
     | '/app/admin/payments'
     | '/app/admin/pricing'
@@ -620,6 +632,7 @@ export interface RootRouteChildren {
   ApiPublicAnalyzeRoute: typeof ApiPublicAnalyzeRoute
   ApiPublicApplyRoute: typeof ApiPublicApplyRoute
   ApiPublicGeoRoute: typeof ApiPublicGeoRoute
+  ApiPublicTrackRoute: typeof ApiPublicTrackRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicGoogleCallbackRoute: typeof ApiPublicGoogleCallbackRoute
   ApiPublicHooksProcessCvQueueRoute: typeof ApiPublicHooksProcessCvQueueRoute
@@ -797,6 +810,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/geo'
       fullPath: '/api/public/geo'
       preLoaderRoute: typeof ApiPublicGeoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/track': {
+      id: '/api/public/track'
+      path: '/api/public/track'
+      fullPath: '/api/public/track'
+      preLoaderRoute: typeof ApiPublicTrackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/admin/': {
@@ -1058,6 +1078,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAnalyzeRoute: ApiPublicAnalyzeRoute,
   ApiPublicApplyRoute: ApiPublicApplyRoute,
   ApiPublicGeoRoute: ApiPublicGeoRoute,
+  ApiPublicTrackRoute: ApiPublicTrackRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicGoogleCallbackRoute: ApiPublicGoogleCallbackRoute,
   ApiPublicHooksProcessCvQueueRoute: ApiPublicHooksProcessCvQueueRoute,

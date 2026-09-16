@@ -79,7 +79,7 @@ export const Route = createFileRoute("/api/public/track")({
             page_views: type === "pageview" ? 1 : 0,
           });
         } else {
-          const patch: Record<string, unknown> = { last_seen: now };
+          const patch: { last_seen: string; page_views?: number } = { last_seen: now };
           if (type === "pageview") patch.page_views = (existing.page_views ?? 0) + 1;
           await sb.from("web_sessions").update(patch).eq("id", existing.id);
         }
