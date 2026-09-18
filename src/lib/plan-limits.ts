@@ -117,8 +117,9 @@ export async function assertCanCreateVacancy(supabase: Sb, orgId: string) {
   if (plan.maxVacancies !== -1) {
     const active = await getActiveVacancyCount(supabase, orgId);
     if (active >= plan.maxVacancies) {
+      const { end } = await getCurrentCycle(supabase, orgId);
       throw new Error(
-        `Alcanzaste el máximo de ${plan.maxVacancies} vacante${plan.maxVacancies === 1 ? "" : "s"} activa${plan.maxVacancies === 1 ? "" : "s"} del plan ${plan.name}. Cerrá o pausá una vacante antes de crear otra.`
+        `Alcanzaste el máximo de ${plan.maxVacancies} vacante${plan.maxVacancies === 1 ? "" : "s"} activa${plan.maxVacancies === 1 ? "" : "s"} del mes (plan ${plan.name}). El cupo se renueva el ${end.toLocaleDateString("es-AR")}.`
       );
     }
   }
