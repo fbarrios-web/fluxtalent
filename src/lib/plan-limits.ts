@@ -134,14 +134,15 @@ export async function assertCanCreateVacancy(supabase: Sb, orgId: string) {
   }
 }
 
-/** Al REACTIVAR una vacante cerrada: sólo cuenta el cupo de activas simultáneas (no consume cupo mensual). */
+/** Al REACTIVAR una vacante: cuenta el cupo de vacantes activas del mes. */
 export async function assertCanActivateVacancy(supabase: Sb, orgId: string) {
   const plan = await getOrgPlan(supabase, orgId);
   if (plan.maxVacancies === -1) return;
   const active = await getActiveVacancyCount(supabase, orgId);
   if (active >= plan.maxVacancies) {
+    const { end } = await getCurrentCycle(supabase, orgId);
     throw new Error(
-      `No podés reactivar: ya tenés ${active} vacantes activas y tu plan ${plan.name} permite hasta ${plan.maxVacancies}. Cerrá otra antes.`
+      `No podés reactivar: ya tenés ${active} vacante${active === 1 ? "" : "s"} activa${active === 1 ? "" : "s"} este mes y tu plan ${plan.name} permite hasta ${plan.maxVacancies}. El cupo se renueva el ${end.toLocaleDateString("es-AR")}.`
     );
   }
 }
