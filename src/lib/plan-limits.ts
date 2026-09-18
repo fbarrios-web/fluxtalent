@@ -69,13 +69,19 @@ export async function getOrgPlan(supabase: Sb, orgId: string): Promise<Plan> {
   return planByPrice(org.plan_price_ars);
 }
 
-/** Vacantes activas simultáneas (draft/active/paused). */
+/**
+ * Vacantes activas del CICLO ACTUAL (draft/active/paused creadas dentro del ciclo).
+ * El cupo de vacantes activas es mensual: las vacantes de ciclos anteriores
+ * siguen accesibles pero no consumen el cupo del mes en curso.
+ */
 export async function getActiveVacancyCount(supabase: Sb, orgId: string): Promise<number> {
+  const { start } = await getCurrentCycle(supabase, orgId);
   const { count } = await supabase
     .from("vacancies")
     .select("*", { count: "exact", head: true })
     .eq("org_id", orgId)
-    .in("status", ["draft", "active", "paused"]);
+    .in("status", ["draft", "active", "paused"])
+    .gte("created_at", start.toISOString());
   return count ?? 0;
 }
 
@@ -111,8 +117,9 @@ export async function assertCanCreateVacancy(supabase: Sb, orgId: string) {
   if (plan.maxVacancies !== -1) {
     const active = await getActiveVacancyCount(supabase, orgId);
     if (active >= plan.maxVacancies) {
+      const { end } = await getCurrentCycle(supabase, orgId);
       throw new Error(
-        `Alcanzaste el máximo de ${plan.maxVacancies} vacante${plan.maxVacancies === 1 ? "" : "s"} activa${plan.maxVacancies === 1 ? "" : "s"} del plan ${plan.name}. Cerrá o pausá una vacante antes de crear otra.`
+        `Alcanzaste el máximo de ${plan.maxVacancies} vacante${plan.maxVacancies === 1 ? "" : "s"} activa${plan.maxVacancies === 1 ? "" : "s"} del mes (plan ${plan.name}). El cupo se renueva el ${end.toLocaleDateString("es-AR")}.`
       );
     }
   }
@@ -127,14 +134,15 @@ export async function assertCanCreateVacancy(supabase: Sb, orgId: string) {
   }
 }
 
-/** Al REACTIVAR una vacante cerrada: sólo cuenta el cupo de activas simultáneas (no consume cupo mensual). */
+/** Al REACTIVAR una vacante: cuenta el cupo de vacantes activas del mes. */
 export async function assertCanActivateVacancy(supabase: Sb, orgId: string) {
   const plan = await getOrgPlan(supabase, orgId);
   if (plan.maxVacancies === -1) return;
   const active = await getActiveVacancyCount(supabase, orgId);
   if (active >= plan.maxVacancies) {
+    const { end } = await getCurrentCycle(supabase, orgId);
     throw new Error(
-      `No podés reactivar: ya tenés ${active} vacantes activas y tu plan ${plan.name} permite hasta ${plan.maxVacancies}. Cerrá otra antes.`
+      `No podés reactivar: ya tenés ${active} vacante${active === 1 ? "" : "s"} activa${active === 1 ? "" : "s"} este mes y tu plan ${plan.name} permite hasta ${plan.maxVacancies}. El cupo se renueva el ${end.toLocaleDateString("es-AR")}.`
     );
   }
 }
