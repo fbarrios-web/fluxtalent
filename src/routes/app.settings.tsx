@@ -13,6 +13,7 @@ import { IntegrationsPanel, MicrosoftPanel } from "@/routes/app.integrations";
 import { GoogleSetupGuide } from "@/components/google-setup-guide";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useI18n } from "@/lib/i18n";
+import { RejectionEmailEditor } from "@/components/rejection-email-editor";
 
 const MICROSOFT_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/microsoft/callback";
 
@@ -299,6 +300,10 @@ function Settings() {
               <a href="https://wa.me/543519090777?text=Hola%21%20Me%20comunico%20por%20una%20duda%20de%20FLUX%20Talent" target="_blank" rel="noopener noreferrer" className="text-primary underline">+54 351 909-0777</a>.
             </p>
           </section>
+        </TabsContent>
+
+        <TabsContent value="emails" className="mt-6 space-y-6">
+          <RejectionEmailEditor />
         </TabsContent>
 
         <TabsContent value="integraciones" className="mt-6 space-y-6">
