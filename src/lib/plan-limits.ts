@@ -69,13 +69,19 @@ export async function getOrgPlan(supabase: Sb, orgId: string): Promise<Plan> {
   return planByPrice(org.plan_price_ars);
 }
 
-/** Vacantes activas simultáneas (draft/active/paused). */
+/**
+ * Vacantes activas del CICLO ACTUAL (draft/active/paused creadas dentro del ciclo).
+ * El cupo de vacantes activas es mensual: las vacantes de ciclos anteriores
+ * siguen accesibles pero no consumen el cupo del mes en curso.
+ */
 export async function getActiveVacancyCount(supabase: Sb, orgId: string): Promise<number> {
+  const { start } = await getCurrentCycle(supabase, orgId);
   const { count } = await supabase
     .from("vacancies")
     .select("*", { count: "exact", head: true })
     .eq("org_id", orgId)
-    .in("status", ["draft", "active", "paused"]);
+    .in("status", ["draft", "active", "paused"])
+    .gte("created_at", start.toISOString());
   return count ?? 0;
 }
 
