@@ -92,17 +92,6 @@ export function RejectionEmailEditor() {
     );
   }
 
-  function insertVar(key: string) {
-    const token = `{{${key}}}`;
-    const el = bodyRef.current;
-    if (!el) { setBody(b => b + token); return; }
-    const start = el.selectionStart ?? body.length;
-    const end = el.selectionEnd ?? body.length;
-    const next = body.slice(0, start) + token + body.slice(end);
-    setBody(next);
-    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(start + token.length, start + token.length); });
-  }
-
   async function save() {
     if (!subject.trim() || !body.trim()) { toast.error(t("Completá el asunto y el mensaje.")); return; }
     setSaving(true);
@@ -141,26 +130,30 @@ export function RejectionEmailEditor() {
 
       <div className="space-y-1">
         <Label>{t("Asunto")}</Label>
-        <Input value={subject} onChange={e => setSubject(e.target.value)} placeholder={DEFAULT_REJECTION_SUBJECT} />
+        <PlaceholderEditor
+          value={subject}
+          onChange={setSubject}
+          placeholders={PLACEHOLDERS}
+          showInsertButtons
+          singleLine
+          className="min-h-[2.5rem]"
+          placeholder={DEFAULT_REJECTION_SUBJECT}
+          aria-label={t("Asunto del mail")}
+        />
       </div>
 
       <div className="space-y-2">
         <Label>{t("Mensaje")}</Label>
-        <Textarea ref={bodyRef} rows={12} value={body} onChange={e => setBody(e.target.value)} className="font-normal leading-relaxed" />
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs text-muted-foreground">{t("Insertar dato:")}</span>
-          {VARS.map(v => (
-            <button
-              key={v.key}
-              type="button"
-              onClick={() => insertVar(v.key)}
-              className="rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs hover:bg-muted"
-            >
-              {t(v.label)}
-            </button>
-          ))}
-        </div>
-        <p className="text-xs text-muted-foreground">{t("Los datos entre llaves se reemplazan automáticamente por los del postulante.")}</p>
+        <PlaceholderEditor
+          value={body}
+          onChange={setBody}
+          placeholders={PLACEHOLDERS}
+          showInsertButtons
+          className="min-h-[12rem] font-normal leading-relaxed"
+          placeholder={DEFAULT_REJECTION_BODY}
+          aria-label={t("Cuerpo del mail")}
+        />
+        <p className="text-xs text-muted-foreground">{t("Los datos en gris se reemplazan automáticamente por los del postulante.")}</p>
       </div>
 
       {preview && (
