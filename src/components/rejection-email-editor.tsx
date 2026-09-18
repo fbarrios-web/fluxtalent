@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { getUsageSummary } from "@/lib/subscription.functions";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { PlaceholderEditor } from "@/components/placeholder-editor";
 import { Loader2, Lock, Mail, RotateCcw, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
@@ -31,6 +30,11 @@ const VARS: { key: string; label: string }[] = [
   { key: "vacancy_title", label: "Título de la vacante" },
   { key: "signature", label: "Tu firma" },
 ];
+
+const PLACEHOLDERS = VARS.reduce((acc, v) => {
+  acc[v.key] = v.label;
+  return acc;
+}, {} as Record<string, string>);
 
 const SAMPLE = {
   first_name: "Ana",
@@ -61,7 +65,6 @@ export function RejectionEmailEditor() {
   const [body, setBody] = useState("");
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState(false);
-  const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (tpl) {
@@ -87,17 +90,6 @@ export function RejectionEmailEditor() {
         <Button asChild size="sm"><Link to="/app/subscription">{t("Ver planes")}</Link></Button>
       </section>
     );
-  }
-
-  function insertVar(key: string) {
-    const token = `{{${key}}}`;
-    const el = bodyRef.current;
-    if (!el) { setBody(b => b + token); return; }
-    const start = el.selectionStart ?? body.length;
-    const end = el.selectionEnd ?? body.length;
-    const next = body.slice(0, start) + token + body.slice(end);
-    setBody(next);
-    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(start + token.length, start + token.length); });
   }
 
   async function save() {
@@ -138,26 +130,30 @@ export function RejectionEmailEditor() {
 
       <div className="space-y-1">
         <Label>{t("Asunto")}</Label>
-        <Input value={subject} onChange={e => setSubject(e.target.value)} placeholder={DEFAULT_REJECTION_SUBJECT} />
+        <PlaceholderEditor
+          value={subject}
+          onChange={setSubject}
+          placeholders={PLACEHOLDERS}
+          showInsertButtons
+          singleLine
+          className="min-h-[2.5rem]"
+          placeholder={DEFAULT_REJECTION_SUBJECT}
+          aria-label={t("Asunto del mail")}
+        />
       </div>
 
       <div className="space-y-2">
         <Label>{t("Mensaje")}</Label>
-        <Textarea ref={bodyRef} rows={12} value={body} onChange={e => setBody(e.target.value)} className="font-normal leading-relaxed" />
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs text-muted-foreground">{t("Insertar dato:")}</span>
-          {VARS.map(v => (
-            <button
-              key={v.key}
-              type="button"
-              onClick={() => insertVar(v.key)}
-              className="rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs hover:bg-muted"
-            >
-              {t(v.label)}
-            </button>
-          ))}
-        </div>
-        <p className="text-xs text-muted-foreground">{t("Los datos entre llaves se reemplazan automáticamente por los del postulante.")}</p>
+        <PlaceholderEditor
+          value={body}
+          onChange={setBody}
+          placeholders={PLACEHOLDERS}
+          showInsertButtons
+          className="min-h-[12rem] font-normal leading-relaxed"
+          placeholder={DEFAULT_REJECTION_BODY}
+          aria-label={t("Cuerpo del mail")}
+        />
+        <p className="text-xs text-muted-foreground">{t("Los datos en gris se reemplazan automáticamente por los del postulante.")}</p>
       </div>
 
       {preview && (
