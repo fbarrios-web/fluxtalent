@@ -31,6 +31,11 @@ const VARS: { key: string; label: string }[] = [
   { key: "signature", label: "Tu firma" },
 ];
 
+const PLACEHOLDERS = VARS.reduce((acc, v) => {
+  acc[v.key] = v.label;
+  return acc;
+}, {} as Record<string, string>);
+
 const SAMPLE = {
   first_name: "Ana",
   last_name: "Pérez",
@@ -60,7 +65,6 @@ export function RejectionEmailEditor() {
   const [body, setBody] = useState("");
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState(false);
-  const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (tpl) {
