@@ -201,6 +201,7 @@ function Settings() {
       <Tabs defaultValue={search.tab === "integraciones" ? "integraciones" : "cuenta"} className="mt-8">
         <TabsList>
           <TabsTrigger value="cuenta">{t("Cuenta y empresa")}</TabsTrigger>
+          <TabsTrigger value="emails">{t("Emails automáticos")}</TabsTrigger>
           <TabsTrigger value="integraciones">{t("Integraciones")}</TabsTrigger>
         </TabsList>
 

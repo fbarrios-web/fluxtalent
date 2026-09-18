@@ -58,7 +58,7 @@ export function UsageCard() {
         )}
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
-        <Bar used={data.activeVacancies} max={data.maxActiveVacancies} label={t("Vacantes activas")} icon={Briefcase} />
+        <Bar used={data.activeVacancies} max={data.maxActiveVacancies} label={t("Vacantes activas del mes")} icon={Briefcase} />
         <Bar used={data.newVacanciesThisCycle} max={data.maxNewVacanciesPerCycle} label={t("Nuevas del ciclo")} icon={Sparkles} />
         <Bar used={data.cvsThisCycle} max={data.maxCvsPerCycle} label={t("CVs del ciclo")} icon={FileText} />
       </div>
