@@ -14,6 +14,7 @@ import { GoogleSetupGuide } from "@/components/google-setup-guide";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useI18n } from "@/lib/i18n";
 import { RejectionEmailEditor } from "@/components/rejection-email-editor";
+import { SecurityPanel } from "@/components/security-panel";
 
 const MICROSOFT_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/microsoft/callback";
 
