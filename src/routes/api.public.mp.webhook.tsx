@@ -210,7 +210,11 @@ export const Route = createFileRoute("/api/public/mp/webhook")({
             console.error("[mp.webhook] no org for preapproval", dataId, pa.external_reference);
             return new Response("ok");
           }
-          const plan = planIdRaw ? PLANS.find(x => x.id === planIdRaw) : undefined;
+          // Si el link de MP no trae el plan en external_reference, lo deducimos
+          // del monto de la suscripción: así un cambio de plan actualiza cupos solo.
+          const paAmount = Number(pa.auto_recurring?.transaction_amount ?? 0);
+          const plan = (planIdRaw ? PLANS.find(x => x.id === planIdRaw) : undefined)
+            ?? (paAmount > 0 ? planByPrice(paAmount) : undefined);
           if (pa.status === "authorized") {
             // Fijamos el fin de período: sin esto, cancelar dejaba a la org sin
             // acceso al instante en vez de mantener el mes ya pagado.

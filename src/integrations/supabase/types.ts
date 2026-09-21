@@ -563,6 +563,7 @@ export type Database = {
           contact_email: string | null
           created_at: string
           current_period_end: string | null
+          cv_limit_override: number | null
           grace_until: string | null
           id: string
           is_unlimited: boolean
@@ -594,6 +595,7 @@ export type Database = {
           contact_email?: string | null
           created_at?: string
           current_period_end?: string | null
+          cv_limit_override?: number | null
           grace_until?: string | null
           id?: string
           is_unlimited?: boolean
@@ -625,6 +627,7 @@ export type Database = {
           contact_email?: string | null
           created_at?: string
           current_period_end?: string | null
+          cv_limit_override?: number | null
           grace_until?: string | null
           id?: string
           is_unlimited?: boolean
