@@ -587,6 +587,7 @@ export type Database = {
           subscription_status: Database["public"]["Enums"]["subscription_status"]
           timezone: string
           trial_ends_at: string
+          usage_cycle_start: string | null
         }
         Insert: {
           archived_at?: string | null
@@ -619,6 +620,7 @@ export type Database = {
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           timezone?: string
           trial_ends_at?: string
+          usage_cycle_start?: string | null
         }
         Update: {
           archived_at?: string | null
@@ -651,6 +653,7 @@ export type Database = {
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           timezone?: string
           trial_ends_at?: string
+          usage_cycle_start?: string | null
         }
         Relationships: [
           {
