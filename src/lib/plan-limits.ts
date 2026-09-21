@@ -57,7 +57,7 @@ export async function getCurrentCycle(supabase: Sb, orgId: string): Promise<Cycl
   const cycleStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), anchorDay));
   if (cycleStart > now) cycleStart.setUTCMonth(cycleStart.getUTCMonth() - 1);
   const cycleEnd = new Date(cycleStart); cycleEnd.setUTCMonth(cycleEnd.getUTCMonth() + 1);
-  return { start: cycleStart, end: cycleEnd };
+  return withOverrideStart({ start: cycleStart, end: cycleEnd });
 }
 
 export async function getOrgPlan(supabase: Sb, orgId: string): Promise<Plan> {
