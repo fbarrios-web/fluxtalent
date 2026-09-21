@@ -307,6 +307,10 @@ function Settings() {
           <RejectionEmailEditor />
         </TabsContent>
 
+        <TabsContent value="seguridad" className="mt-6 space-y-6">
+          <SecurityPanel />
+        </TabsContent>
+
         <TabsContent value="integraciones" className="mt-6 space-y-6">
           <div className="rounded-2xl border border-border bg-card p-6">
             <h3 className="font-semibold">{t("Integraciones")}</h3>
