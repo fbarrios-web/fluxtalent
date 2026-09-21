@@ -18,9 +18,18 @@ export interface CycleInfo {
 export async function getCurrentCycle(supabase: Sb, orgId: string): Promise<CycleInfo> {
   const { data: org } = await supabase
     .from("organizations")
-    .select("subscription_status, trial_ends_at, current_period_end, created_at, promo_plan_id, promo_started_at, promo_ends_at")
+    .select("subscription_status, trial_ends_at, current_period_end, created_at, promo_plan_id, promo_started_at, promo_ends_at, usage_cycle_start")
     .eq("id", orgId).maybeSingle();
   const now = new Date();
+  // Inicio de ciclo de consumo fijado a mano (ej.: cambio de plan a mitad de mes):
+  // el consumo se cuenta desde esa fecha aunque el período de facturación arranque después.
+  const overrideStart = (org as any)?.usage_cycle_start
+    ? new Date((org as any).usage_cycle_start)
+    : null;
+  const withOverrideStart = (c: CycleInfo): CycleInfo =>
+    overrideStart && overrideStart < c.start && overrideStart <= now
+      ? { start: overrideStart, end: c.end }
+      : c;
   // Promo Starter free: el ciclo es el mes de la promo.
   if (isPromoActive(org)) {
     return {
