@@ -109,8 +109,10 @@ export async function applyApprovedPayment(
     plan_currency: "ars",
     grace_until: null,
   };
+  // Un pago con monto de otro plan es un cambio de plan: se aplica siempre,
+  // así un upgrade (ej. Starter → Pro) actualiza los cupos sin intervención manual.
   if (args.plan && args.plan.priceArs > 0) patch.plan_price_ars = args.plan.priceArs;
-  else if (args.amountArs > 0 && !org?.plan_price_ars) patch.plan_price_ars = args.amountArs;
+  else if (args.amountArs > 0) patch.plan_price_ars = args.amountArs;
   if (args.preapprovalId) patch.mp_preapproval_id = String(args.preapprovalId);
 
   const { error } = await supabaseAdmin.from("organizations").update(patch).eq("id", args.orgId);
