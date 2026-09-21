@@ -32,20 +32,20 @@ export async function getCurrentCycle(supabase: Sb, orgId: string): Promise<Cycl
       : c;
   // Promo Starter free: el ciclo es el mes de la promo.
   if (isPromoActive(org)) {
-    return {
+    return withOverrideStart({
       start: new Date(org.promo_started_at ?? now.toISOString()),
       end: new Date(org.promo_ends_at),
-    };
+    });
   }
   if (org?.subscription_status === "trialing" && org.trial_ends_at) {
     const end = new Date(org.trial_ends_at);
     const start = new Date(end.getTime() - 15 * 86_400_000);
-    return { start, end };
+    return withOverrideStart({ start, end });
   }
   if (org?.current_period_end) {
     const end = new Date(org.current_period_end);
     const start = new Date(end.getTime() - 30 * 86_400_000);
-    return { start, end };
+    return withOverrideStart({ start, end });
   }
   // Fallback: monthly window anchored to org creation
   const anchor = org?.created_at ? new Date(org.created_at) : now;
