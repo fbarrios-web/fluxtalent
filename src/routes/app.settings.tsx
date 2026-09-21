@@ -14,6 +14,7 @@ import { GoogleSetupGuide } from "@/components/google-setup-guide";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useI18n } from "@/lib/i18n";
 import { RejectionEmailEditor } from "@/components/rejection-email-editor";
+import { SecurityPanel } from "@/components/security-panel";
 
 const MICROSOFT_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/microsoft/callback";
 
@@ -203,6 +204,7 @@ function Settings() {
         <TabsList>
           <TabsTrigger value="cuenta">{t("Cuenta y empresa")}</TabsTrigger>
           <TabsTrigger value="emails">{t("Emails automáticos")}</TabsTrigger>
+          <TabsTrigger value="seguridad">{t("Acceso y seguridad")}</TabsTrigger>
           <TabsTrigger value="integraciones">{t("Integraciones")}</TabsTrigger>
         </TabsList>
 
@@ -304,6 +306,10 @@ function Settings() {
 
         <TabsContent value="emails" className="mt-6 space-y-6">
           <RejectionEmailEditor />
+        </TabsContent>
+
+        <TabsContent value="seguridad" className="mt-6 space-y-6">
+          <SecurityPanel />
         </TabsContent>
 
         <TabsContent value="integraciones" className="mt-6 space-y-6">
