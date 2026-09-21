@@ -203,6 +203,7 @@ function Settings() {
         <TabsList>
           <TabsTrigger value="cuenta">{t("Cuenta y empresa")}</TabsTrigger>
           <TabsTrigger value="emails">{t("Emails automáticos")}</TabsTrigger>
+          <TabsTrigger value="seguridad">{t("Acceso y seguridad")}</TabsTrigger>
           <TabsTrigger value="integraciones">{t("Integraciones")}</TabsTrigger>
         </TabsList>
 
