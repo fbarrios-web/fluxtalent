@@ -134,6 +134,14 @@ export const Route = createFileRoute("/api/public/apply")({
             const ans = (answers as any)[(q as any).question];
             const opts: any[] = ((q as any).options ?? []) as any[];
             if (!opts.length || ans == null) continue;
+            if ((q as any).qtype === "range") {
+              const n = Number(String(ans).replace(/[^\d.-]/g, ""));
+              const r = opts[0] ?? {};
+              if (String(ans).trim() !== "" && Number.isFinite(n)) {
+                if ((r.min != null && n < r.min) || (r.max != null && n > r.max)) { autoDiscard = true; break; }
+              }
+              continue;
+            }
             const chosen: string[] = Array.isArray(ans) ? ans : [String(ans)];
             if (opts.some(o => o?.discard && chosen.includes(o.value))) {
               autoDiscard = true; break;
