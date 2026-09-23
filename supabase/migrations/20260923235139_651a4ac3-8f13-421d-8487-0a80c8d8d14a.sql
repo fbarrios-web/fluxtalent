@@ -1,0 +1,2 @@
+ALTER TABLE public.screening_questions DROP CONSTRAINT IF EXISTS screening_questions_qtype_check;
+ALTER TABLE public.screening_questions ADD CONSTRAINT screening_questions_qtype_check CHECK (qtype IN ('text','single','multi','range'));
