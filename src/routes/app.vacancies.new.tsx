@@ -21,11 +21,12 @@ export const Route = createFileRoute("/app/vacancies/new")({
   head: () => ({ meta: [{ title: "Nueva vacante — FLUX Talent" }] }),
 });
 
+type SQOption = { value: string; discard: boolean; min?: number | null; max?: number | null };
 type SQ = {
   question: string;
   required: boolean;
-  qtype: "text" | "single" | "multi";
-  options: { value: string; discard: boolean }[];
+  qtype: "text" | "single" | "multi" | "range";
+  options: SQOption[];
 };
 
 function NewVacancy() {
@@ -237,12 +238,16 @@ export function ScreeningEditor({ screening, setScreening }: { screening: SQ[]; 
         <div key={i} className="rounded-xl border border-border bg-background p-3 space-y-3">
           <div className="flex gap-2">
             <Input value={q.question} placeholder={t("¿Tenés disponibilidad full-time?")} onChange={e => update(i, { question: e.target.value })} />
-            <Select value={q.qtype} onValueChange={(v: any) => update(i, { qtype: v, options: v === "text" ? [] : q.options })}>
-              <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+            <Select value={q.qtype} onValueChange={(v: any) => update(i, {
+              qtype: v,
+              options: v === "text" ? [] : v === "range" ? [{ value: "range", discard: false, min: null, max: null }] : q.qtype === "range" ? [] : q.options,
+            })}>
+              <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="text">{t("Texto corto")}</SelectItem>
                 <SelectItem value="single">{t("Opción única")}</SelectItem>
                 <SelectItem value="multi">{t("Opción múltiple")}</SelectItem>
+                <SelectItem value="range">{t("Rango numérico")}</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="ghost" size="icon" onClick={() => remove(i)}><X className="h-4 w-4" /></Button>
@@ -251,7 +256,30 @@ export function ScreeningEditor({ screening, setScreening }: { screening: SQ[]; 
             <Checkbox checked={q.required} onCheckedChange={(v) => update(i, { required: !!v })} />
             {t("Obligatoria")}
           </label>
-          {q.qtype !== "text" && (
+          {q.qtype === "range" && (() => {
+            const r = q.options[0] ?? { value: "range", discard: false, min: null, max: null };
+            const setR = (patch: Partial<SQOption>) => update(i, { options: [{ ...r, value: "range", discard: false, ...patch }] });
+            const num = (s: string) => (s.trim() === "" ? null : Number(s));
+            return (
+              <div className="space-y-2">
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("Rango aceptado")}</div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div>
+                    <Label className="mb-1 block text-xs text-muted-foreground">{t("Mínimo (descartar si es menor)")}</Label>
+                    <Input type="number" value={r.min ?? ""} placeholder={t("Sin mínimo")} onChange={e => setR({ min: num(e.target.value) })} />
+                  </div>
+                  <div>
+                    <Label className="mb-1 block text-xs text-muted-foreground">{t("Máximo (descartar si es mayor)")}</Label>
+                    <Input type="number" value={r.max ?? ""} placeholder={t("Sin máximo")} onChange={e => setR({ max: num(e.target.value) })} />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t("El postulante responde con un número. Si queda fuera del rango, el CV se descarta automáticamente. Ej: pretensión salarial.")}
+                </p>
+              </div>
+            );
+          })()}
+          {(q.qtype === "single" || q.qtype === "multi") && (
             <div className="space-y-2">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("Opciones")}</div>
               {q.options.map((o, oi) => (
