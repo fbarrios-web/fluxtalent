@@ -5,10 +5,12 @@ import { z } from "zod";
 const screeningQuestionSchema = z.object({
   question: z.string().min(3).max(300),
   required: z.boolean().default(false),
-  qtype: z.enum(["text", "single", "multi"]).default("text"),
+  qtype: z.enum(["text", "single", "multi", "range"]).default("text"),
   options: z.array(z.object({
     value: z.string().min(1).max(120),
     discard: z.boolean().default(false),
+    min: z.number().nullable().optional(),
+    max: z.number().nullable().optional(),
   })).max(20).default([]),
 });
 

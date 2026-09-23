@@ -115,6 +115,16 @@ function ApplyPage() {
               const qtype = q.qtype ?? "text";
               const opts: { value: string }[] = q.options ?? [];
               const val = answers[q.question];
+              if (qtype === "range") {
+                return (
+                  <div key={q.id}>
+                    <Label>{t(q.question)}{q.required && " *"}</Label>
+                    <Input type="number" inputMode="numeric" min={0} required={q.required} className="mt-2"
+                      value={(val as string) ?? ""} placeholder={t("Ingresá un número")}
+                      onChange={e => setAnswers(a => ({ ...a, [q.question]: e.target.value }))} />
+                  </div>
+                );
+              }
               if (qtype === "single") {
                 return (
                   <div key={q.id}>
