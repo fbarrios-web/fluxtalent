@@ -16,6 +16,17 @@ export const Route = createFileRoute("/apply/$slug")({
   head: () => ({ meta: [{ title: "Postularme — FLUX Talent" }] }),
 });
 
+function reportClientError(e: any, vacancyId: string | undefined, file: File | null) {
+  try {
+    const body = JSON.stringify({
+      vacancy_id: vacancyId, error: String(e?.name ?? "") + ": " + String(e?.message ?? e),
+      file_size: file?.size, file_type: file?.type, ua: navigator.userAgent.slice(0, 300),
+      online: navigator.onLine,
+    });
+    navigator.sendBeacon?.("/api/public/apply", new Blob([body], { type: "application/json" }));
+  } catch { /* noop */ }
+}
+
 function ApplyPage() {
   const t = useT();
   const { slug } = Route.useParams();
