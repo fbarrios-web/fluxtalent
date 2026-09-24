@@ -109,15 +109,15 @@ export const Route = createFileRoute("/api/public/apply")({
           ]);
           let cv_url: string | null = null;
           if (cv && cv.size > 0) {
-            if (cv.size > 10 * 1024 * 1024) {
-              return Response.json({ error: "CV mayor a 10MB" }, { status: 400, headers: cors });
+            if (cv.size > 20 * 1024 * 1024) {
+              return Response.json({ error: "Tu CV pesa más de 20MB. Guardalo como PDF para que pese menos y volvé a adjuntarlo." }, { status: 400, headers: cors });
             }
             const ext = (cv.name.split(".").pop() || "pdf").toLowerCase();
             if (!ALLOWED_CV_EXTS.has(ext)) {
-              return Response.json({ error: "Tipo de archivo no soportado. Usá PDF o Word." }, { status: 400, headers: cors });
+              return Response.json({ error: "Ese tipo de archivo no es compatible. Adjuntá tu CV en PDF o Word (.doc, .docx)." }, { status: 400, headers: cors });
             }
             if (cv.type && !ALLOWED_CV_MIMES.has(cv.type)) {
-              return Response.json({ error: "Tipo de archivo no soportado. Usá PDF o Word." }, { status: 400, headers: cors });
+              return Response.json({ error: "Ese tipo de archivo no es compatible. Adjuntá tu CV en PDF o Word (.doc, .docx)." }, { status: 400, headers: cors });
             }
             const path = `${vac.org_id}/${vac.id}/${crypto.randomUUID()}.${ext}`;
             const buf = new Uint8Array(await cv.arrayBuffer());
@@ -127,7 +127,7 @@ export const Route = createFileRoute("/api/public/apply")({
             });
             if (upErr) {
               console.error("[apply] cv upload", upErr);
-              return Response.json({ error: "Error al subir CV" }, { status: 500, headers: cors });
+              return Response.json({ error: "Tuvimos un inconveniente momentáneo al guardar tu CV. Esperá un minuto y volvé a enviar." }, { status: 500, headers: cors });
             }
             cv_url = path;
           }

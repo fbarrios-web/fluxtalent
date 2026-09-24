@@ -65,28 +65,47 @@ function ApplyPage() {
     try {
       for (let attempt = 1; attempt <= 3; attempt++) {
         const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 90_000);
+        const timer = setTimeout(() => ctrl.abort(), 120_000);
         try {
           const res = await fetch("/api/public/apply", { method: "POST", body: fd, signal: ctrl.signal });
           const json = await res.json().catch(() => ({}));
-          if (!res.ok) throw Object.assign(new Error(json.error ?? "Error"), { server: true });
+          if (!res.ok) {
+            // 4xx = dato a corregir (no reintentar). 5xx = reintentar.
+            const err = Object.assign(new Error(json.error ?? "Error"), { server: res.status < 500, status: res.status });
+            throw err;
+          }
           setDone(true);
           return;
         } catch (e: any) {
           lastErr = e;
-          if (e?.server) break; // error de validación: no reintentar
+          if (e?.server) break;
           await new Promise(r => setTimeout(r, 1500 * attempt));
         } finally { clearTimeout(timer); }
       }
-      if (lastErr?.server) { toast.error(lastErr.message); return; }
+      if (lastErr?.server) { toast.error(t(lastErr.message)); return; }
       reportClientError(lastErr, vacancy.id, cv);
-      toast.error(t("No pudimos enviar tu postulación por un problema de conexión. Revisá tu internet y volvé a intentar. Si usás la app de Instagram o Facebook, abrí el link en Chrome o Safari."), { duration: 10000 });
+      const ua = navigator.userAgent;
+      const inApp = /Instagram|FBAN|FBAV|FB_IAB|Line\/|LinkedInApp|TikTok/i.test(ua);
+      let msg: string;
+      if (!navigator.onLine) {
+        msg = "Tu celular o computadora se quedó sin conexión a internet. Conectate a una red Wi‑Fi o a tus datos móviles y tocá \"Enviar\" de nuevo. Tus datos siguen cargados.";
+      } else if (lastErr?.name === "AbortError") {
+        msg = "Tu conexión a internet está muy lenta y el envío tardó demasiado. Probá con otra red (Wi‑Fi o datos) o con un CV más liviano, y volvé a enviar.";
+      } else if (lastErr?.status >= 500) {
+        msg = "Tuvimos un inconveniente momentáneo al recibir tu postulación. Esperá un minuto y volvé a tocar \"Enviar\". Tus datos siguen cargados.";
+      } else if (inApp) {
+        msg = "El navegador interno de Instagram/Facebook bloqueó el envío del archivo. Tocá los tres puntos (⋯) arriba a la derecha y elegí \"Abrir en Chrome\" o \"Abrir en Safari\", y postulate desde ahí.";
+      } else {
+        msg = "Tu navegador no pudo enviar la postulación (suele pasar por una conexión inestable, una VPN o un bloqueador de anuncios). Revisá tu internet, desactivá el bloqueador si tenés uno y volvé a intentar, o probá desde Chrome o Safari.";
+      }
+      toast.error(t(msg), { duration: 15000 });
     } finally { setSubmitting(false); }
   }
 
   async function pickCv(file: File | null) {
     if (!file) { setCv(null); return; }
-    if (file.size > 10 * 1024 * 1024) { toast.error(t("El CV supera los 10MB. Subí un archivo más liviano.")); return; }
+    if (file.size === 0) { toast.error(t("El archivo está vacío. Si está en Google Drive o iCloud, descargalo primero al teléfono y volvé a adjuntarlo.")); return; }
+    if (file.size > 20 * 1024 * 1024) { toast.error(t("Tu CV pesa más de 20MB. Guardalo de nuevo como PDF (por ejemplo desde Word: Archivo → Guardar como → PDF) para que pese menos y volvé a adjuntarlo."), { duration: 12000 }); return; }
     try {
       // Copiamos el archivo a memoria: evita "Failed to fetch" con archivos de Drive/iCloud
       // que el celular no tiene descargados o que cambian después de elegirlos.
