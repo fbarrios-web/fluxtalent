@@ -16,6 +16,14 @@ export const Route = createFileRoute("/api/public/apply")({
         }),
       POST: async ({ request }) => {
         const cors = { "Access-Control-Allow-Origin": "*" };
+        // Reporte de errores del lado del navegador (ej. "Failed to fetch").
+        if ((request.headers.get("content-type") ?? "").includes("application/json")) {
+          try {
+            const j = await request.json();
+            console.error("[apply-client-error]", JSON.stringify(j).slice(0, 1500));
+          } catch { /* noop */ }
+          return Response.json({ ok: true }, { headers: cors });
+        }
         try {
           const form = await request.formData();
           const vacancyId = String(form.get("vacancy_id") ?? "");
