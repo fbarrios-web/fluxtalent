@@ -92,7 +92,8 @@ export const adminListSurveys = createServerFn({ method: "GET" })
 
     // Aggregates
     const byBucket: Record<number, { count: number; avg: number; promoters: number; passives: number; detractors: number }> = {};
-    for (const b of [10, 30, 50]) {
+    const bucketKeys = Array.from(new Set(enriched.map(r => Number(r.bucket)))).sort((a, b) => a - b);
+    for (const b of bucketKeys) {
       const subset = enriched.filter(r => Number(r.bucket) === b);
       const count = subset.length;
       const avg = count ? subset.reduce((s, r) => s + Number(r.nps), 0) / count : 0;
