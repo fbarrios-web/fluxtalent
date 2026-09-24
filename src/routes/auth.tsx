@@ -59,7 +59,12 @@ function AuthForm() {
     }
   }
 
+  const [inApp, setInApp] = useState(false);
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("signup") === "1") setMode("signup");
+    const ua = navigator.userAgent || "";
+    setInApp(/Instagram|FBAN|FBAV|FB_IAB|Line\/|TikTok/i.test(ua));
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) nav({ to: "/app/dashboard" });
     });
@@ -73,48 +78,40 @@ function AuthForm() {
       if (mode === "signup") {
         // Anti-abuse: identity uniqueness is enforced by saveIdentity (DB unique constraint)
         // after the session exists. We avoid pre-checking pre-signup to prevent enumeration.
-        const { error } = await supabase.auth.signUp({
+        const { data: su, error } = await supabase.auth.signUp({
           email, password,
           options: {
-            emailRedirectTo: `${window.location.origin}/app/dashboard`,
-            data: { org_name: orgName || "Mi empresa", display_name: displayName || email.split("@")[0] },
+            emailRedirectTo: `${window.location.origin}/app/vacancies/new`,
+            data: { org_name: orgName.trim() || "Mi empresa", display_name: email.split("@")[0] },
           },
         });
         if (error) {
-          // Supabase devuelve "User already registered" para emails duplicados.
           const m = (error.message ?? "").toLowerCase();
           if (m.includes("already registered") || m.includes("already exists") || m.includes("user already")) {
-            setDniError("Usuario duplicado");
+            setDniError("Ya existe una cuenta con ese email. Ingresá con tu contraseña.");
             setLoading(false);
             return;
           }
           throw error;
         }
-        // Save identity now that the session exists (signup auto-signs-in when auto-confirm is on).
-        try {
-          await saveId({ data: { dni: dni.trim(), full_name: fullName.trim(), birth_date: birthDate } });
-        } catch (err: any) {
-          const msg = err?.message ?? "";
-          if (msg.includes("DUPLICATE_USER") || msg.includes("duplicate key") || msg.includes("profiles_dni_unique") || msg.includes("Usuario duplicado") || msg.includes("Ya se encuentra") || msg.includes("Ya existe una cuenta")) {
-            setDniError("Usuario duplicado");
-            await supabase.auth.signOut();
-            setLoading(false);
-            return;
-          }
-          throw err;
-        }
-        toast.success("¡Cuenta creada!");
         trackEvent("signup_completed");
-        // Welcome email (fire and forget)
         try {
           const { sendTransactionalEmail } = await import("@/lib/email/send");
           void sendTransactionalEmail({
             templateName: "welcome",
             recipientEmail: email,
-            templateData: { fullName: fullName?.trim() || displayName || email.split("@")[0] },
+            templateData: { fullName: email.split("@")[0] },
             idempotencyKey: `welcome-${email.toLowerCase()}`,
           });
         } catch {}
+        if (!su.session) {
+          toast.success("¡Cuenta creada! Revisá tu email para confirmarla y empezar.", { duration: 8000 });
+          setLoading(false);
+          return;
+        }
+        toast.success("¡Cuenta creada! Creemos tu primera vacante.");
+        nav({ to: "/app/vacancies/new" });
+        return;
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
