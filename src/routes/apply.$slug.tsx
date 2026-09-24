@@ -16,6 +16,17 @@ export const Route = createFileRoute("/apply/$slug")({
   head: () => ({ meta: [{ title: "Postularme — FLUX Talent" }] }),
 });
 
+function reportClientError(e: any, vacancyId: string | undefined, file: File | null) {
+  try {
+    const body = JSON.stringify({
+      vacancy_id: vacancyId, error: String(e?.name ?? "") + ": " + String(e?.message ?? e),
+      file_size: file?.size, file_type: file?.type, ua: navigator.userAgent.slice(0, 300),
+      online: navigator.onLine,
+    });
+    navigator.sendBeacon?.("/api/public/apply", new Blob([body], { type: "application/json" }));
+  } catch { /* noop */ }
+}
+
 function ApplyPage() {
   const t = useT();
   const { slug } = Route.useParams();
@@ -49,13 +60,43 @@ function ApplyPage() {
     fd.set("vacancy_id", vacancy.id);
     Object.entries(form).forEach(([k, v]) => fd.set(k, v));
     fd.set("answers", JSON.stringify(answers));
-    if (cv) fd.set("cv", cv);
+    if (cv) fd.set("cv", cv, cv.name);
+    let lastErr: any = null;
     try {
-      const res = await fetch("/api/public/apply", { method: "POST", body: fd });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Error");
-      setDone(true);
-    } catch (e: any) { toast.error(e.message); } finally { setSubmitting(false); }
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 90_000);
+        try {
+          const res = await fetch("/api/public/apply", { method: "POST", body: fd, signal: ctrl.signal });
+          const json = await res.json().catch(() => ({}));
+          if (!res.ok) throw Object.assign(new Error(json.error ?? "Error"), { server: true });
+          setDone(true);
+          return;
+        } catch (e: any) {
+          lastErr = e;
+          if (e?.server) break; // error de validación: no reintentar
+          await new Promise(r => setTimeout(r, 1500 * attempt));
+        } finally { clearTimeout(timer); }
+      }
+      if (lastErr?.server) { toast.error(lastErr.message); return; }
+      reportClientError(lastErr, vacancy.id, cv);
+      toast.error(t("No pudimos enviar tu postulación por un problema de conexión. Revisá tu internet y volvé a intentar. Si usás la app de Instagram o Facebook, abrí el link en Chrome o Safari."), { duration: 10000 });
+    } finally { setSubmitting(false); }
+  }
+
+  async function pickCv(file: File | null) {
+    if (!file) { setCv(null); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error(t("El CV supera los 10MB. Subí un archivo más liviano.")); return; }
+    try {
+      // Copiamos el archivo a memoria: evita "Failed to fetch" con archivos de Drive/iCloud
+      // que el celular no tiene descargados o que cambian después de elegirlos.
+      const buf = await file.arrayBuffer();
+      setCv(new File([buf], file.name, { type: file.type || "application/pdf" }));
+    } catch (e) {
+      reportClientError(e, vacancy?.id, file);
+      toast.error(t("No pudimos leer el archivo. Si está en Google Drive o iCloud, descargalo primero al teléfono y volvé a adjuntarlo."), { duration: 10000 });
+      setCv(null);
+    }
   }
 
   if (isLoading) return <div className="grid min-h-screen place-items-center"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
@@ -104,7 +145,7 @@ function ApplyPage() {
           <label className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border p-6 text-sm text-muted-foreground hover:border-primary hover:text-foreground">
             <Upload className="h-4 w-4" />
             {cv ? cv.name : t("Adjuntar CV (PDF, máx 10MB) — obligatorio")}
-            <input type="file" accept="application/pdf" className="hidden" onChange={e => setCv(e.target.files?.[0] ?? null)} />
+            <input type="file" accept="application/pdf" className="hidden" onChange={e => pickCv(e.target.files?.[0] ?? null)} />
           </label>
         </div>
 
