@@ -86,12 +86,10 @@ function AppLayout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loc.pathname]);
 
-  useEffect(() => {
-    if (!user || !profileCheck) return;
-    if (!profileCheck.complete && !loc.pathname.startsWith("/app/setup")) {
-      nav({ to: "/app/setup" });
-    }
-  }, [user, profileCheck, loc.pathname, nav]);
+  // Ya no forzamos la configuración inicial: el usuario nuevo entra directo
+  // y puede crear su primera vacante. Los datos se completan después
+  // (se piden al elegir/pagar un plan).
+  void profileCheck;
 
 
   if (loading || !user) {
