@@ -65,6 +65,22 @@ export async function sendTemplateEmail(
       ? template.subject(templateData)
       : template.subject
 
+  async function writeLog(status: 'sent' | 'suppressed' | 'failed', errorMessage?: string) {
+    try {
+      const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+      const { error } = await supabaseAdmin.from('email_send_log').insert({
+        message_id: null,
+        template_name: templateName,
+        recipient_email: recipient,
+        status,
+        error_message: errorMessage ?? null,
+      })
+      if (error) console.error('Email send log write failed', { code: error.code, message: error.message })
+    } catch (error) {
+      console.error('Email send log write failed', error)
+    }
+  }
+
   try {
     await sendLovableEmail(
       {
@@ -83,10 +99,13 @@ export async function sendTemplateEmail(
     )
   } catch (error) {
     if (error instanceof EmailAPIError && error.code === 'recipient_suppressed') {
+      await writeLog('suppressed')
       return { sent: false, reason: 'recipient_suppressed' }
     }
+    await writeLog('failed', error instanceof Error ? error.message.slice(0, 1000) : String(error).slice(0, 1000))
     throw error
   }
 
+  await writeLog('sent')
   return { sent: true }
 }

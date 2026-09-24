@@ -5,6 +5,7 @@ import { template as subscriptionConfirmedTemplate } from './subscription-confir
 import { template as subscriptionCanceledTemplate } from './subscription-canceled'
 import { template as invoiceRequestTemplate } from './invoice-request'
 import { template as trialExtendedTemplate } from './trial-extended'
+import { template as paymentAlertTemplate } from './payment-alert'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -22,4 +23,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'subscription-canceled': subscriptionCanceledTemplate,
   'invoice-request': invoiceRequestTemplate,
   'trial-extended': trialExtendedTemplate,
+  'payment-alert': paymentAlertTemplate,
 }

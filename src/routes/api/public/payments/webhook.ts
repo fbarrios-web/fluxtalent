@@ -13,12 +13,12 @@ function getSupabase(): any {
   return _supabase;
 }
 
-async function notifySupport(subject: string, body: string) {
+async function notifySupport(subject: string, body: string, eventId: string) {
   try {
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-    await sendTemplateEmail("invoice-request", "soporte@fluxtalent.com.ar", {
-      templateData: { orgName: subject, notes: body },
-      idempotencyKey: `paddle-support-${subject}-${body}`,
+    await sendTemplateEmail("payment-alert", "soporte@fluxtalent.com.ar", {
+      templateData: { subject, body },
+      idempotencyKey: `paddle-support-${eventId}`,
       replyTo: "soporte@fluxtalent.com.ar",
     });
   } catch (e) {
@@ -124,6 +124,7 @@ async function handleSubscriptionCreated(data: any, env: PaddleEnv) {
   await notifySupport(
     `Nueva suscripción USD — ${mapping?.plan ?? "?"}`,
     `Org: ${orgName} (${orgId})\nUser: ${email ?? userId}\nPlan: ${mapping?.plan}\nSubscription: ${id}\nEnv: ${env}`,
+    `subscription-created-${id}`,
   );
 }
 
@@ -278,7 +279,7 @@ async function handleTransactionPaymentFailed(data: any, env: PaddleEnv) {
     const email = authUser?.user?.email;
     if (email) await sendUserEmail(email, "capacity-warning", { planName: "tu plan", isFree: false, resourceLabel: "el pago de tu suscripción", transactionId: id });
   }
-  await notifySupport("Cobro USD rechazado", `Org: ${orgId}\nTransacción: ${id}\nGracia hasta: ${until}`);
+  await notifySupport("Cobro USD rechazado", `Org: ${orgId}\nTransacción: ${id}\nGracia hasta: ${until}`, `payment-failed-${id}`);
 }
 
 async function handleWebhook(req: Request, env: PaddleEnv) {
