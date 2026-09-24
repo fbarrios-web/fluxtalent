@@ -1,33 +1,17 @@
-import { supabase } from '@/integrations/supabase/client'
+import { createServerFn } from '@tanstack/react-start'
+import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware'
 
-export interface SendTransactionalEmailParams {
-  templateName: 'welcome' | 'capacity-warning' | 'subscription-confirmed' | 'subscription-canceled'
-  recipientEmail: string
-  templateData?: Record<string, any>
-  idempotencyKey?: string
-  locale?: 'es' | 'en'
-}
-
-/** Client-side helper: sends an app email via the authenticated Lovable transactional route. */
-export async function sendTransactionalEmail(params: SendTransactionalEmailParams): Promise<{ ok: boolean; error?: string }> {
-  try {
-    const { data } = await supabase.auth.getSession()
-    const token = data.session?.access_token
-    if (!token) return { ok: false, error: 'No session' }
-    const res = await fetch('/lovable/email/transactional/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(params),
+/** Sends the welcome email to the authenticated account only. */
+export const sendWelcomeEmail = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const email = context.claims.email
+    if (typeof email !== 'string' || !email) return { ok: false, error: 'No email' }
+    const { sendTemplateEmail } = await import('@/lib/email-templates/send-email')
+    const result = await sendTemplateEmail('welcome', email, {
+      templateData: { fullName: email.split('@')[0] },
+      idempotencyKey: `welcome-${context.userId}`,
+      replyTo: 'soporte@fluxtalent.com.ar',
     })
-    if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      return { ok: false, error: `${res.status}: ${text}` }
-    }
-    return { ok: true }
-  } catch (e: any) {
-    return { ok: false, error: e?.message ?? 'unknown' }
-  }
-}
+    return result.sent ? { ok: true } : { ok: false, error: result.reason }
+  })
