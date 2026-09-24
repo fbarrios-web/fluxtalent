@@ -136,8 +136,15 @@ export const Route = createFileRoute("/api/public/apply")({
           let autoDiscard = false;
           const { data: qs } = await supabaseAdmin
             .from("screening_questions")
-            .select("question, qtype, options")
+            .select("question, qtype, options, required")
             .eq("vacancy_id", vac.id);
+          for (const q of qs ?? []) {
+            const a0 = (answers as any)[(q as any).question];
+            const empty = a0 == null || (Array.isArray(a0) ? a0.length === 0 : String(a0).trim() === "");
+            if ((q as any).required && empty) {
+              return Response.json({ error: "Respondé todas las preguntas obligatorias" }, { status: 400, headers: cors });
+            }
+          }
           for (const q of qs ?? []) {
             const ans = (answers as any)[(q as any).question];
             const opts: any[] = ((q as any).options ?? []) as any[];
@@ -146,7 +153,8 @@ export const Route = createFileRoute("/api/public/apply")({
               const n = Number(String(ans).replace(/[^\d.-]/g, ""));
               const r = opts[0] ?? {};
               if (String(ans).trim() !== "" && Number.isFinite(n)) {
-                if ((r.min != null && n < r.min) || (r.max != null && n > r.max)) { autoDiscard = true; break; }
+                const below = r.discard_below !== false, above = r.discard_above !== false;
+                if ((below && r.min != null && n < r.min) || (above && r.max != null && n > r.max)) { autoDiscard = true; break; }
               }
               continue;
             }

@@ -21,7 +21,7 @@ export const Route = createFileRoute("/app/vacancies/new")({
   head: () => ({ meta: [{ title: "Nueva vacante — FLUX Talent" }] }),
 });
 
-type SQOption = { value: string; discard: boolean; min?: number | null; max?: number | null };
+type SQOption = { value: string; discard: boolean; min?: number | null; max?: number | null; discard_below?: boolean; discard_above?: boolean };
 type SQ = {
   question: string;
   required: boolean;
@@ -265,16 +265,24 @@ export function ScreeningEditor({ screening, setScreening }: { screening: SQ[]; 
                 <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("Rango aceptado")}</div>
                 <div className="grid gap-2 sm:grid-cols-2">
                   <div>
-                    <Label className="mb-1 block text-xs text-muted-foreground">{t("Mínimo (descartar si es menor)")}</Label>
+                    <Label className="mb-1 block text-xs text-muted-foreground">{t("Mínimo")}</Label>
                     <Input type="number" value={r.min ?? ""} placeholder={t("Sin mínimo")} onChange={e => setR({ min: num(e.target.value) })} />
+                    <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                      <Checkbox checked={r.discard_below !== false} onCheckedChange={(v) => setR({ discard_below: !!v })} />
+                      {t("Descartar si es menor al mínimo")}
+                    </label>
                   </div>
                   <div>
-                    <Label className="mb-1 block text-xs text-muted-foreground">{t("Máximo (descartar si es mayor)")}</Label>
+                    <Label className="mb-1 block text-xs text-muted-foreground">{t("Máximo")}</Label>
                     <Input type="number" value={r.max ?? ""} placeholder={t("Sin máximo")} onChange={e => setR({ max: num(e.target.value) })} />
+                    <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                      <Checkbox checked={r.discard_above !== false} onCheckedChange={(v) => setR({ discard_above: !!v })} />
+                      {t("Descartar si supera el máximo")}
+                    </label>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {t("El postulante responde con un número. Si queda fuera del rango, el CV se descarta automáticamente. Ej: pretensión salarial.")}
+                  {t("El postulante responde con un número (ej: pretensión salarial). Marcá qué límite descarta el CV automáticamente.")}
                 </p>
               </div>
             );
