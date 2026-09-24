@@ -45,6 +45,7 @@ import { Route as AppCandidatesIdRouteImport } from './routes/app.candidates.$id
 import { Route as AppVacanciesIndexRouteImport } from './routes/app.vacancies.index'
 import { Route as AppVacanciesVacancyIdRouteImport } from './routes/app.vacancies.$vacancyId'
 import { Route as AppVacanciesNewRouteImport } from './routes/app.vacancies.new'
+import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicGoogleCallbackRouteImport } from './routes/api.public.google.callback'
 import { Route as ApiPublicHooksProcessCvQueueRouteImport } from './routes/api.public.hooks.process-cv-queue'
@@ -240,6 +241,11 @@ const AppVacanciesNewRoute = AppVacanciesNewRouteImport.update({
   path: '/vacancies/new',
   getParentRoute: () => AppRoute,
 } as any)
+const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
+  id: '/lovable/email/events',
+  path: '/lovable/email/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
@@ -352,6 +358,7 @@ export interface FileRoutesByFullPath {
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/vacancies/$vacancyId': typeof AppVacanciesVacancyIdRoute
   '/app/vacancies/new': typeof AppVacanciesNewRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/vacancies/': typeof AppVacanciesIndexRoute
@@ -402,6 +409,7 @@ export interface FileRoutesByTo {
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/vacancies/$vacancyId': typeof AppVacanciesVacancyIdRoute
   '/app/vacancies/new': typeof AppVacanciesNewRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/app/admin': typeof AppAdminIndexRoute
   '/app/vacancies': typeof AppVacanciesIndexRoute
@@ -455,6 +463,7 @@ export interface FileRoutesById {
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/vacancies/$vacancyId': typeof AppVacanciesVacancyIdRoute
   '/app/vacancies/new': typeof AppVacanciesNewRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/vacancies/': typeof AppVacanciesIndexRoute
@@ -509,6 +518,7 @@ export interface FileRouteTypes {
     | '/app/candidates/$id'
     | '/app/vacancies/$vacancyId'
     | '/app/vacancies/new'
+    | '/lovable/email/events'
     | '/lovable/email/suppression'
     | '/app/admin/'
     | '/app/vacancies/'
@@ -559,6 +569,7 @@ export interface FileRouteTypes {
     | '/app/candidates/$id'
     | '/app/vacancies/$vacancyId'
     | '/app/vacancies/new'
+    | '/lovable/email/events'
     | '/lovable/email/suppression'
     | '/app/admin'
     | '/app/vacancies'
@@ -611,6 +622,7 @@ export interface FileRouteTypes {
     | '/app/candidates/$id'
     | '/app/vacancies/$vacancyId'
     | '/app/vacancies/new'
+    | '/lovable/email/events'
     | '/lovable/email/suppression'
     | '/app/admin/'
     | '/app/vacancies/'
@@ -645,6 +657,7 @@ export interface RootRouteChildren {
   ApiPublicApplyRoute: typeof ApiPublicApplyRoute
   ApiPublicGeoRoute: typeof ApiPublicGeoRoute
   ApiPublicTrackRoute: typeof ApiPublicTrackRoute
+  LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicGoogleCallbackRoute: typeof ApiPublicGoogleCallbackRoute
   ApiPublicHooksProcessCvQueueRoute: typeof ApiPublicHooksProcessCvQueueRoute
@@ -915,6 +928,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppVacanciesNewRouteImport
       parentRoute: typeof AppRoute
     }
+    '/lovable/email/events': {
+      id: '/lovable/email/events'
+      path: '/lovable/email/events'
+      fullPath: '/lovable/email/events'
+      preLoaderRoute: typeof LovableEmailEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/suppression': {
       id: '/lovable/email/suppression'
       path: '/lovable/email/suppression'
@@ -1100,6 +1120,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicApplyRoute: ApiPublicApplyRoute,
   ApiPublicGeoRoute: ApiPublicGeoRoute,
   ApiPublicTrackRoute: ApiPublicTrackRoute,
+  LovableEmailEventsRoute: LovableEmailEventsRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicGoogleCallbackRoute: ApiPublicGoogleCallbackRoute,
   ApiPublicHooksProcessCvQueueRoute: ApiPublicHooksProcessCvQueueRoute,
