@@ -255,21 +255,10 @@ export function useProductTour(flow: TourFlow) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    let cancelled = false;
-    // small delay so the page content is mounted before measuring targets
-    const t = setTimeout(() => {
-      if (cancelled) return;
-      let seen = true;
-      try { seen = !!localStorage.getItem(seenKey(flow)); } catch { /* ignore */ }
-      if (!seen) {
-        // mark as seen as soon as it auto-opens, so it never shows twice
-        try { localStorage.setItem(seenKey(flow), "1"); } catch { /* ignore */ }
-        setOpen(true);
-      } else {
-        setOpen(false);
-      }
-    }, 600);
-    return () => { cancelled = true; clearTimeout(t); };
+    // El recorrido ya no se abre solo: solo se muestra cuando el usuario
+    // lo pide desde el botón "Ayuda". Marcamos como visto para compatibilidad.
+    try { localStorage.setItem(seenKey(flow), "1"); } catch { /* ignore */ }
+    setOpen(false);
   }, [flow]);
 
 
