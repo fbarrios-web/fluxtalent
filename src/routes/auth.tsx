@@ -89,13 +89,10 @@ function AuthForm() {
         }
         trackEvent("signup_completed");
         try {
-          const { sendTransactionalEmail } = await import("@/lib/email/send");
-          void sendTransactionalEmail({
-            templateName: "welcome",
-            recipientEmail: email,
-            templateData: { fullName: email.split("@")[0] },
-            idempotencyKey: `welcome-${email.toLowerCase()}`,
-          });
+          if (su.session) {
+            const { sendWelcomeEmail } = await import("@/lib/email/send");
+            void sendWelcomeEmail();
+          }
         } catch {}
         if (!su.session) {
           toast.success("¡Cuenta creada! Revisá tu email para confirmarla y empezar.", { duration: 8000 });

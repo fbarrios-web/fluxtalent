@@ -13,18 +13,13 @@ function getSupabase(): any {
   return _supabase;
 }
 
-async function notifySupport(subject: string, body: string) {
+async function notifySupport(subject: string, body: string, eventId: string) {
   try {
-    await fetch(`${process.env.SUPABASE_URL}`.replace(/\/$/, "") + "/functions/v1", { method: "GET" }).catch(() => {});
-    // Enqueue transactional email to support via pgmq
-    await getSupabase().rpc("enqueue_email", {
-      queue_name: "q_transactional_emails",
-      payload: {
-        template: "invoice-request",
-        to: "soporte@fluxtalent.com.ar",
-        subject,
-        data: { body },
-      },
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    await sendTemplateEmail("payment-alert", "soporte@fluxtalent.com.ar", {
+      templateData: { subject, body },
+      idempotencyKey: `paddle-support-${eventId}`,
+      replyTo: "soporte@fluxtalent.com.ar",
     });
   } catch (e) {
     console.error("notifySupport failed:", e);
@@ -33,9 +28,11 @@ async function notifySupport(subject: string, body: string) {
 
 async function sendUserEmail(to: string, template: string, data: Record<string, any>) {
   try {
-    await getSupabase().rpc("enqueue_email", {
-      queue_name: "q_transactional_emails",
-      payload: { template, to, data },
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    await sendTemplateEmail(template, to, {
+      templateData: data,
+      idempotencyKey: `paddle-${template}-${String(data.subscriptionId ?? data.transactionId ?? to)}`,
+      replyTo: "soporte@fluxtalent.com.ar",
     });
   } catch (e) {
     console.error("sendUserEmail failed:", e);
@@ -119,13 +116,15 @@ async function handleSubscriptionCreated(data: any, env: PaddleEnv) {
 
   if (email) {
     await sendUserEmail(email, "subscription-confirmed", {
-      plan: mapping?.plan ?? "premium",
-      orgName,
+      planName: mapping?.plan ?? "premium",
+      fullName: orgName,
+      subscriptionId: id,
     });
   }
   await notifySupport(
     `Nueva suscripción USD — ${mapping?.plan ?? "?"}`,
     `Org: ${orgName} (${orgId})\nUser: ${email ?? userId}\nPlan: ${mapping?.plan}\nSubscription: ${id}\nEnv: ${env}`,
+    `subscription-created-${id}`,
   );
 }
 
@@ -278,9 +277,9 @@ async function handleTransactionPaymentFailed(data: any, env: PaddleEnv) {
   if (owner?.id) {
     const { data: authUser } = await getSupabase().auth.admin.getUserById(owner.id);
     const email = authUser?.user?.email;
-    if (email) await sendUserEmail(email, "capacity-warning", { reason: "payment_failed", graceUntil: until });
+    if (email) await sendUserEmail(email, "capacity-warning", { planName: "tu plan", isFree: false, resourceLabel: "el pago de tu suscripción", transactionId: id });
   }
-  await notifySupport("Cobro USD rechazado", `Org: ${orgId}\nTransacción: ${id}\nGracia hasta: ${until}`);
+  await notifySupport("Cobro USD rechazado", `Org: ${orgId}\nTransacción: ${id}\nGracia hasta: ${until}`, `payment-failed-${id}`);
 }
 
 async function handleWebhook(req: Request, env: PaddleEnv) {
