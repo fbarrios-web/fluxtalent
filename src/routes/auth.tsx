@@ -121,7 +121,7 @@ function AuthForm() {
     setLoading(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/app/dashboard`,
+        redirect_uri: `${window.location.origin}${mode === "signup" ? "/app/vacancies/new" : "/app/dashboard"}`,
       });
       if (result.error) throw result.error instanceof Error ? result.error : new Error(String(result.error));
       if (!result.redirected) nav({ to: "/app/dashboard" });
