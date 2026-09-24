@@ -52,28 +52,29 @@ function Landing() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-6xl px-6 pb-16 pt-20 md:pt-28">
+      <section className="mx-auto max-w-6xl px-6 pb-16 pt-10 md:pt-28">
         <div className="mx-auto max-w-3xl text-center">
-          <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5 text-primary" /> {t("Matching, parsing y emails con IA")}
-          </div>
-          <h1 className="font-display text-5xl leading-[1.05] tracking-tight md:text-7xl">
+          <a href="/auth?signup=1" className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-medium text-foreground">
+            🎁 {t("Este mes: 1 mes del plan Starter gratis")}
+          </a>
+          <h1 className="font-display text-4xl leading-[1.05] tracking-tight md:text-7xl">
             {t("Reclutá")} <em className="text-primary">10×</em> {t("más rápido, sin tareas manuales.")}
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-balance text-base text-muted-foreground md:text-lg">
-            {t("FLUX Talent es el ATS donde la IA lee los CVs, calcula el match, redacta los emails y coordina las entrevistas — vos sólo decidís.")}
+          <p className="mx-auto mt-5 max-w-2xl text-balance text-base text-muted-foreground md:text-lg">
+            {t("Subís la vacante, la IA lee los CVs y te dice a quién llamar.")}
           </p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link to="/auth" className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-              {t("Empezar gratis")} <ArrowRight className="h-4 w-4" />
-            </Link>
-            <a href="#workflow" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground hover:bg-accent">
+          <div className="mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+            <a href="/auth?signup=1" className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-base font-semibold text-primary-foreground shadow-lg hover:bg-primary/90">
+              {t("Probar gratis ahora")} <ArrowRight className="h-4 w-4" />
+            </a>
+            <a href="#workflow" className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-medium text-foreground hover:bg-accent">
               {t("Ver cómo funciona")}
             </a>
           </div>
+          <p className="mt-3 text-xs text-muted-foreground">{t("Sin tarjeta · Registro en 1 minuto · Con Google o email")}</p>
         </div>
 
-        <div className="relative mt-16 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div className="relative mt-12 overflow-hidden rounded-2xl border border-border bg-card shadow-sm md:mt-16">
           <div className="border-b border-border bg-muted/40 px-4 py-2 text-xs text-muted-foreground">{t("Seguimiento de vacantes")}</div>
           <div className="grid gap-4 p-6 md:grid-cols-4">
             {[
@@ -347,6 +348,12 @@ function Landing() {
         </p>
       </footer>
 
+      <div className="h-20 md:hidden" />
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-3 backdrop-blur md:hidden">
+        <a href="/auth?signup=1" className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3.5 text-base font-semibold text-primary-foreground shadow-lg">
+          {t("Probar gratis 1 mes")} <ArrowRight className="h-4 w-4" />
+        </a>
+      </div>
     </div>
   );
 }
