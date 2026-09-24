@@ -13,8 +13,25 @@ import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/apply/$slug")({
   component: ApplyPage,
-  head: () => ({ meta: [{ title: "Postularme — FLUX Talent" }] }),
+  head: () => ({ meta: [
+    { title: "Postularme — FLUX Talent" },
+    { name: "description", content: "Conocé la vacante y enviá tu postulación en FLUX Talent." },
+    { property: "og:title", content: "Postularme — FLUX Talent" },
+    { property: "og:description", content: "Conocé la vacante y enviá tu postulación en FLUX Talent." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
 });
+
+function seniorityLabel(value: string | null | undefined, t: (key: string) => string) {
+  const labels: Record<string, string> = { intern: "Pasantía", junior: "Junior", mid: "Semi Senior", senior: "Senior", lead: "Líder", manager: "Manager", director: "Director" };
+  return value ? t(labels[value] ?? value) : "";
+}
+
+function modalityLabel(value: string | null | undefined, t: (key: string) => string) {
+  const labels: Record<string, string> = { remote: "Remoto", hybrid: "Híbrido", onsite: "Presencial" };
+  return value ? t(labels[value] ?? value) : "";
+}
 
 function reportClientError(e: any, vacancyId: string | undefined, file: File | null) {
   try {
@@ -156,13 +173,26 @@ function ApplyPage() {
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-2xl px-6 py-10">
           {logoUrl && <img src={logoUrl} alt={vacancy.org_name ?? ""} className="mb-6 h-14 w-auto max-w-[200px] object-contain" />}
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">{vacancy.area ?? t("Postulación")} · {vacancy.modality ?? ""}</p>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">{vacancy.area ?? t("Postulación")}</p>
           <h1 className="mt-2 font-display text-4xl">{vacancy.title}</h1>
-          {vacancy.description && <p className="mt-3 text-muted-foreground">{vacancy.description}</p>}
+          <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
+            {vacancy.seniority && <span><b className="font-medium text-foreground">{t("Seniority")}:</b> {seniorityLabel(vacancy.seniority, t)}</span>}
+            {vacancy.modality && <span><b className="font-medium text-foreground">{t("Modalidad")}:</b> {modalityLabel(vacancy.modality, t)}</span>}
+            {vacancy.location && <span><b className="font-medium text-foreground">{t("Ubicación")}:</b> {vacancy.location}</span>}
+            {vacancy.work_schedule && <span><b className="font-medium text-foreground">{t("Días y horario laboral")}:</b> {vacancy.work_schedule}</span>}
+          </div>
         </div>
       </header>
 
       <form onSubmit={submit} className="mx-auto max-w-2xl space-y-6 px-6 py-10">
+        {(vacancy.description || vacancy.requirements || vacancy.nice_to_have) && (
+          <section className="space-y-5 border-b border-border pb-8">
+            <h2 className="font-display text-2xl">{t("Resumen de la vacante")}</h2>
+            {vacancy.description && <VacancySummary title={t("Descripción")} body={vacancy.description} />}
+            {vacancy.requirements && <VacancySummary title={t("Requisitos excluyentes")} body={vacancy.requirements} />}
+            {vacancy.nice_to_have && <VacancySummary title={t("Deseables")} body={vacancy.nice_to_have} />}
+          </section>
+        )}
         <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
           <h3 className="font-semibold">{t("Tus datos")}</h3>
           <div className="grid gap-4 md:grid-cols-2">
@@ -258,5 +288,14 @@ function ApplyPage() {
       </footer>
     </div>
 
+  );
+}
+
+function VacancySummary({ title, body }: { title: string; body: string }) {
+  return (
+    <div>
+      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+      <p className="mt-1 whitespace-pre-line text-sm leading-6 text-muted-foreground">{body}</p>
+    </div>
   );
 }

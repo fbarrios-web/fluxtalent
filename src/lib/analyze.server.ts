@@ -111,7 +111,7 @@ Extraé experiencia, formación y skills del CV. Calculá match (0-100) general 
     });
 
     const min = app.vacancy?.min_match ?? 60;
-    if (result.match_score < min && app.stage === "received") {
+    if (result.match_score < min && (app.stage === "received" || app.stage === "read")) {
       await supabaseAdmin.from("applications").update({ stage: "rejected" }).eq("id", app.id);
       await supabaseAdmin.from("application_events").insert({
         application_id: app.id, type: "auto_reject",
