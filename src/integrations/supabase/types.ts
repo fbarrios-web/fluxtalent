@@ -105,6 +105,7 @@ export type Database = {
           org_id: string
           parsed_data: Json | null
           phone: string | null
+          recruiter_notes: string | null
           red_flags: string[] | null
           screening_answers: Json | null
           source: string | null
@@ -133,6 +134,7 @@ export type Database = {
           org_id: string
           parsed_data?: Json | null
           phone?: string | null
+          recruiter_notes?: string | null
           red_flags?: string[] | null
           screening_answers?: Json | null
           source?: string | null
@@ -161,6 +163,7 @@ export type Database = {
           org_id?: string
           parsed_data?: Json | null
           phone?: string | null
+          recruiter_notes?: string | null
           red_flags?: string[] | null
           screening_answers?: Json | null
           source?: string | null
@@ -1343,6 +1346,7 @@ export type Database = {
       modality: "remote" | "hybrid" | "onsite"
       pipeline_stage:
         | "received"
+        | "read"
         | "shortlisted"
         | "interview_1"
         | "interview_2"
@@ -1491,6 +1495,7 @@ export const Constants = {
       modality: ["remote", "hybrid", "onsite"],
       pipeline_stage: [
         "received",
+        "read",
         "shortlisted",
         "interview_1",
         "interview_2",
