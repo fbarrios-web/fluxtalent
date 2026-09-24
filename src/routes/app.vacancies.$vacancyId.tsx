@@ -25,6 +25,7 @@ import { useT } from "@/lib/i18n";
 
 const STAGES = [
   { id: "received",    label: "Recibidos",     color: "bg-slate-200 text-slate-700 dark:bg-slate-500/20 dark:text-slate-200" },
+  { id: "read",        label: "Leídos",        color: "bg-cyan-200 text-cyan-900 dark:bg-cyan-500/20 dark:text-cyan-200" },
   { id: "interview_1", label: "Entrevista 1",  color: "bg-sky-200 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200" },
   { id: "interview_2", label: "Entrevista 2",  color: "bg-indigo-200 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200" },
   { id: "interview_3", label: "Entrevista 3",  color: "bg-violet-200 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200" },

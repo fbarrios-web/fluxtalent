@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { analyzeApplication, aiInterviewQuestions, aiDraftEmail, aiAnalyzeInterview } from "@/lib/ai.functions";
-import { moveApplicationStage, getSignedCvUrl } from "@/lib/recruiting.functions";
+import { getSignedCvUrl, markApplicationRead, moveApplicationStage, updateApplicationNotes } from "@/lib/recruiting.functions";
 import { generateCandidateReport } from "@/lib/candidate-report";
 import { normalizeLinkedin } from "@/lib/linkedin";
 import { ArrowLeft, Sparkles, Loader2, FileText, Mail, MessageSquare, AlertTriangle, CheckCircle2, FileDown } from "lucide-react";
@@ -16,10 +16,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MatchPill } from "./app.dashboard";
 import { useT } from "@/lib/i18n";
 
-const STAGES = ["received", "interview_1", "interview_2", "interview_3", "hired", "rejected"];
+const STAGES = ["received", "read", "interview_1", "interview_2", "interview_3", "hired", "rejected"];
 
 const STAGE_LABEL: Record<string, string> = {
-  received: "Recibidos", interview_1: "Entrevista 1", interview_2: "Entrevista 2",
+  received: "Recibidos", read: "Leídos", interview_1: "Entrevista 1", interview_2: "Entrevista 2",
   interview_3: "Entrevista 3", hired: "Contratado", rejected: "No avanza",
 };
 const EMAIL_KIND_LABEL: Record<string, string> = {
@@ -60,6 +60,8 @@ function CandidateDetail() {
   const qc = useQueryClient();
   const analyze = useServerFn(analyzeApplication);
   const move = useServerFn(moveApplicationStage);
+  const markRead = useServerFn(markApplicationRead);
+  const saveNotes = useServerFn(updateApplicationNotes);
   const signCv = useServerFn(getSignedCvUrl);
   const draftEmail = useServerFn(aiDraftEmail);
   const interviewQs = useServerFn(aiInterviewQuestions);
@@ -89,6 +91,27 @@ function CandidateDetail() {
   const [analysis, setAnalysis] = useState<any | null>(null);
   const [analyzingTr, setAnalyzingTr] = useState(false);
   const [genDoc, setGenDoc] = useState(false);
+  const [notes, setNotes] = useState("");
+  const [savingNotes, setSavingNotes] = useState(false);
+  const markedReadRef = useRef(false);
+
+  useEffect(() => {
+    if (!app) return;
+    setNotes(app.recruiter_notes ?? "");
+  }, [app?.id, app?.recruiter_notes]);
+
+  useEffect(() => {
+    if (!app || app.stage !== "received" || markedReadRef.current) return;
+    markedReadRef.current = true;
+    void markRead({ data: { id } })
+      .then((result) => {
+        if (result.changed) {
+          qc.invalidateQueries({ queryKey: ["candidate", id] });
+          qc.invalidateQueries({ queryKey: ["vacancy-apps", app.vacancy?.id] });
+        }
+      })
+      .catch(() => { markedReadRef.current = false; });
+  }, [app, id, markRead, qc]);
 
   if (isLoading || !app) return <div className="p-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
   const a = app as any;
@@ -103,6 +126,19 @@ function CandidateDetail() {
     qc.invalidateQueries({ queryKey: ["candidate", id] });
     toast.success(t("Etapa actualizada"));
     if (res?.inviteWarning) toast.warning(res.inviteWarning);
+  }
+
+  async function persistNotes() {
+    setSavingNotes(true);
+    try {
+      await saveNotes({ data: { id, notes } });
+      await qc.invalidateQueries({ queryKey: ["candidate", id] });
+      toast.success(t("Observaciones guardadas"));
+    } catch (e: any) {
+      toast.error(e?.message ?? t("No se pudieron guardar las observaciones"));
+    } finally {
+      setSavingNotes(false);
+    }
   }
 
   async function openCv() {
@@ -318,6 +354,21 @@ function CandidateDetail() {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{STAGES.map(s => <SelectItem key={s} value={s}>{t(STAGE_LABEL[s])}</SelectItem>)}</SelectContent>
             </Select>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <h4 className="mb-2 text-xs font-semibold uppercase text-muted-foreground">{t("Notas y observaciones")}</h4>
+            <Textarea
+              rows={6}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder={t("Agregá información interna sobre este postulante…")}
+              maxLength={5000}
+            />
+            <Button className="mt-3 w-full" size="sm" onClick={persistNotes} disabled={savingNotes || notes === (app.recruiter_notes ?? "")}>
+              {savingNotes && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {t("Guardar observaciones")}
+            </Button>
+            <p className="mt-2 text-xs text-muted-foreground">{t("Solo las personas de tu organización pueden ver estas notas.")}</p>
           </div>
           <div className="rounded-2xl border border-border bg-card p-4">
             <h4 data-tour="cand-history" className="mb-3 text-xs font-semibold uppercase text-muted-foreground">{t("Historial")}</h4>

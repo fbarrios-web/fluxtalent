@@ -202,7 +202,7 @@ export const moveApplicationStage = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z.object({
       id: z.string().uuid(),
-      stage: z.enum(["received", "shortlisted", "interview_1", "interview_2", "interview_3", "offer", "hired", "rejected"]),
+      stage: z.enum(["received", "read", "shortlisted", "interview_1", "interview_2", "interview_3", "offer", "hired", "rejected"]),
     }).parse(input))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("applications").update({ stage: data.stage }).eq("id", data.id);
@@ -232,6 +232,44 @@ export const moveApplicationStage = createServerFn({ method: "POST" })
       }
     }
     return { ok: true, inviteWarning };
+  });
+
+export const markApplicationRead = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: updated, error } = await context.supabase
+      .from("applications")
+      .update({ stage: "read" })
+      .eq("id", data.id)
+      .eq("stage", "received")
+      .select("id")
+      .maybeSingle();
+    if (error) throw error;
+    if (!updated) return { changed: false };
+
+    const { error: eventError } = await context.supabase.from("application_events").insert({
+      application_id: data.id,
+      actor_id: context.userId,
+      type: "stage_change",
+      payload: { stage: "read", automatic: true },
+    });
+    if (eventError) throw eventError;
+    return { changed: true };
+  });
+
+export const updateApplicationNotes = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ id: z.string().uuid(), notes: z.string().max(5000) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const notes = data.notes.trim() || null;
+    const { error } = await context.supabase
+      .from("applications")
+      .update({ recruiter_notes: notes })
+      .eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
   });
 
 export const saveScorecard = createServerFn({ method: "POST" })
