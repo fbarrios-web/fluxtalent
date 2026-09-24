@@ -161,7 +161,8 @@ export const updateVacancy = createServerFn({ method: "POST" })
       }
     }
     // Re-evaluate auto-rejection when min_match changes:
-    // any "received" application with match_score below new threshold gets auto-rejected and gets rejection email.
+    // Any application that has not advanced beyond received/read and scores below
+    // the new threshold gets auto-rejected and receives the rejection email.
     let autoRejected = 0;
     if (typeof data.patch.min_match === "number") {
       const min = data.patch.min_match;
@@ -169,7 +170,7 @@ export const updateVacancy = createServerFn({ method: "POST" })
         .from("applications")
         .select("id, match_score")
         .eq("vacancy_id", data.id)
-        .eq("stage", "received")
+        .in("stage", ["received", "read"])
         .not("match_score", "is", null)
         .lt("match_score", min);
       if (low?.length) {
