@@ -2,8 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
-const BUCKETS = [10, 30, 50] as const;
-type Bucket = (typeof BUCKETS)[number];
+const INTERVAL_DAYS = 90; // una encuesta cada 3 meses
+type Bucket = number;
 
 /** Decide which bucket (if any) the user should be prompted with right now. */
 export const getDueSurvey = createServerFn({ method: "GET" })
