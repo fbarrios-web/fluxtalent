@@ -16,20 +16,22 @@ export const getDueSurvey = createServerFn({ method: "GET" })
     if (!createdAt) return { dueBucket: null as Bucket | null, ageDays: 0 };
     const ageDays = Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000);
 
-    const reached = BUCKETS.filter(b => ageDays >= b);
-    if (reached.length === 0) return { dueBucket: null as Bucket | null, ageDays };
+    if (ageDays < INTERVAL_DAYS) return { dueBucket: null as Bucket | null, ageDays };
+
+    // Bucket = trimestre actual (90, 180, 270...). Se pide una vez por trimestre.
+    const currentBucket = Math.floor(ageDays / INTERVAL_DAYS) * INTERVAL_DAYS;
 
     const { data: existing } = await sb
       .from("satisfaction_surveys" as any)
       .select("bucket")
       .eq("user_id", context.userId);
     const filled = new Set((existing ?? []).map((r: any) => Number(r.bucket)));
-    const due = reached.find(b => !filled.has(b)) ?? null;
+    const due = filled.has(currentBucket) ? null : currentBucket;
     return { dueBucket: due as Bucket | null, ageDays };
   });
 
 const SubmitSchema = z.object({
-  bucket: z.union([z.literal(10), z.literal(30), z.literal(50)]),
+  bucket: z.number().int().positive(),
   nps: z.number().int().min(0).max(10),
   comments: z.string().max(2000).optional().nullable(),
 });
