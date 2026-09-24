@@ -234,4 +234,11 @@ export const EN_VACANCIES: Record<string, string> = {
   "¿Eliminar esta franja horaria?": "Delete this time slot?",
   "¿Tenés disponibilidad full-time?": "Do you have full-time availability?",
   "Área": "Area",
+  "Respondé todas las preguntas obligatorias": "Please answer all required questions",
+  "Indicanos tu rango salarial pretendido": "Tell us your expected salary",
+  "Mínimo": "Minimum",
+  "Máximo": "Maximum",
+  "Descartar si es menor al mínimo": "Discard if below the minimum",
+  "Descartar si supera el máximo": "Discard if above the maximum",
+  "El postulante responde con un número (ej: pretensión salarial). Marcá qué límite descarta el CV automáticamente.": "The applicant answers with a number (e.g. expected salary). Choose which limit automatically discards the résumé.",
 };
