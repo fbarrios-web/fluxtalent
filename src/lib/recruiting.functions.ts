@@ -11,6 +11,8 @@ const screeningQuestionSchema = z.object({
     discard: z.boolean().default(false),
     min: z.number().nullable().optional(),
     max: z.number().nullable().optional(),
+    discard_below: z.boolean().optional(),
+    discard_above: z.boolean().optional(),
   })).max(20).default([]),
 });
 

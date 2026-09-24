@@ -30,6 +30,14 @@ function reportClientError(e: any, vacancyId: string | undefined, file: File | n
 function ApplyPage() {
   const t = useT();
   const { slug } = Route.useParams();
+  const { data: logoUrl } = useQuery({
+    queryKey: ["public-vacancy-logo", slug],
+    queryFn: async () => {
+      const r = await fetch(`/api/public/schedule/logo?slug=${encodeURIComponent(slug)}`);
+      const j = await r.json().catch(() => ({}));
+      return (j?.url as string | null) ?? null;
+    },
+  });
   const { data: vacancy, isLoading } = useQuery({
     queryKey: ["public-vacancy", slug],
     queryFn: async () => {
@@ -49,6 +57,12 @@ function ApplyPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!vacancy) return;
+    const reqMissing = (vacancy.screening_questions ?? []).some((q: any) => {
+      if (!q.required) return false;
+      const v = answers[q.question];
+      return v == null || (Array.isArray(v) ? v.length === 0 : String(v).trim() === "");
+    });
+    if (reqMissing) { toast.error(t("Respondé todas las preguntas obligatorias")); return; }
     if (!cv) { toast.error(t("Adjuntá tu CV para postularte.")); return; }
     if (!form.phone.trim()) { toast.error(t("El teléfono es obligatorio.")); return; }
     if (form.linkedin.trim() && !isValidLinkedin(form.linkedin)) {
@@ -141,6 +155,7 @@ function ApplyPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-2xl px-6 py-10">
+          {logoUrl && <img src={logoUrl} alt={vacancy.org_name ?? ""} className="mb-6 h-14 w-auto max-w-[200px] object-contain" />}
           <p className="text-xs uppercase tracking-wider text-muted-foreground">{vacancy.area ?? t("Postulación")} · {vacancy.modality ?? ""}</p>
           <h1 className="mt-2 font-display text-4xl">{vacancy.title}</h1>
           {vacancy.description && <p className="mt-3 text-muted-foreground">{vacancy.description}</p>}
@@ -179,8 +194,8 @@ function ApplyPage() {
                 return (
                   <div key={q.id}>
                     <Label>{t(q.question)}{q.required && " *"}</Label>
-                    <Input type="number" inputMode="numeric" min={0} required={q.required} className="mt-2"
-                      value={(val as string) ?? ""} placeholder={t("Ingresá un número")}
+                    <Input type="number" inputMode="numeric" min={0} className="mt-2"
+                      value={(val as string) ?? ""} placeholder={t("Indicanos tu rango salarial pretendido")}
                       onChange={e => setAnswers(a => ({ ...a, [q.question]: e.target.value }))} />
                   </div>
                 );
@@ -192,7 +207,7 @@ function ApplyPage() {
                     <div className="mt-2 space-y-2">
                       {opts.map(o => (
                         <label key={o.value} className="flex items-center gap-2 text-sm cursor-pointer">
-                          <input type="radio" name={`q-${q.id}`} value={o.value} required={q.required}
+                          <input type="radio" name={`q-${q.id}`} value={o.value}
                             checked={val === o.value}
                             onChange={() => setAnswers(a => ({ ...a, [q.question]: o.value }))} />
                           {o.value}
@@ -226,7 +241,7 @@ function ApplyPage() {
               return (
                 <div key={q.id}>
                   <Label>{t(q.question)}{q.required && " *"}</Label>
-                  <Textarea required={q.required} rows={3} value={(val as string) ?? ""} onChange={e => setAnswers(a => ({ ...a, [q.question]: e.target.value }))} />
+                  <Textarea rows={3} value={(val as string) ?? ""} onChange={e => setAnswers(a => ({ ...a, [q.question]: e.target.value }))} />
                 </div>
               );
             })}
