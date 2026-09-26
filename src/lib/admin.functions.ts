@@ -123,10 +123,23 @@ export const adminListOrgs = createServerFn({ method: "POST" })
     const cvsByOrg = new Map<string, number>();
 
     if (orgIds.length) {
+      // Page through results: the API caps each response at 1000 rows,
+      // which silently dropped CVs for newer accounts.
+      const fetchAll = async (table: string, cols: string) => {
+        const out: any[] = [];
+        for (let from = 0; ; from += 1000) {
+          const { data, error } = await (supabaseAdmin.from(table as any) as any)
+            .select(cols).in("org_id", orgIds).order("id").range(from, from + 999);
+          if (error) throw error;
+          out.push(...(data ?? []));
+          if (!data || data.length < 1000) break;
+        }
+        return { data: out };
+      };
       const [{ data: allProfs }, { data: vacs }, { data: apps }] = await Promise.all([
-        supabaseAdmin.from("profiles").select("org_id").in("org_id", orgIds),
-        supabaseAdmin.from("vacancies").select("org_id, status").in("org_id", orgIds),
-        supabaseAdmin.from("applications").select("org_id, cv_url").in("org_id", orgIds),
+        fetchAll("profiles", "org_id"),
+        fetchAll("vacancies", "org_id, status"),
+        fetchAll("applications", "org_id, cv_url"),
       ]);
       (allProfs ?? []).forEach((p: any) => {
         if (p.org_id) usersByOrg.set(p.org_id, (usersByOrg.get(p.org_id) ?? 0) + 1);
