@@ -155,8 +155,11 @@ export const analyzeApplication = createServerFn({ method: "POST" })
 
       // Auto-reject if below threshold
       const min = app.vacancy?.min_match ?? 60;
-      if (result.match_score < min && (app.stage === "received" || app.stage === "read")) {
-        await supabase.from("applications").update({ stage: "rejected" }).eq("id", app.id);
+      const { data: flipped } = result.match_score < min
+        ? await supabase.from("applications").update({ stage: "rejected" })
+            .eq("id", app.id).in("stage", ["received", "read"]).select("id")
+        : { data: [] as any[] };
+      if (flipped?.length) {
         await supabase.from("application_events").insert({
           application_id: app.id,
           type: "auto_reject",
