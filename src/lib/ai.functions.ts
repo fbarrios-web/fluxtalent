@@ -80,13 +80,8 @@ export const analyzeApplication = createServerFn({ method: "POST" })
     try {
       let userContent: any;
       if (app.cv_url) {
-        const cv = await fetchCvAsBase64(supabase, app.cv_url);
-        if (cv) {
-          userContent = [
-            { type: "text", text: buildAnalysisPrompt(app, app.vacancy) },
-            { type: "file", file: { filename: "cv.pdf", file_data: `data:${cv.mime};base64,${cv.b64}` } },
-          ];
-        }
+        const { buildCvContent } = await import("@/lib/cv-content.server");
+        userContent = await buildCvContent(supabase, app.cv_url, buildAnalysisPrompt(app, app.vacancy));
       }
       if (!userContent) userContent = buildAnalysisPrompt(app, app.vacancy) + "\n(No hay CV adjunto, evaluá con los datos disponibles.)";
 

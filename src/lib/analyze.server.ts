@@ -44,13 +44,8 @@ CANDIDATO
 Extraé experiencia, formación y skills del CV. Calculá match (0-100) general y por categoría. Resumí en 2-3 oraciones. Listá fortalezas, gaps y red flags.`;
 
     if (app.cv_url) {
-      const cv = await fetchCvAsBase64(supabaseAdmin, app.cv_url);
-      if (cv) {
-        userContent = [
-          { type: "text", text: prompt },
-          { type: "file", file: { filename: "cv.pdf", file_data: `data:${cv.mime};base64,${cv.b64}` } },
-        ];
-      }
+      const { buildCvContent } = await import("./cv-content.server");
+      userContent = await buildCvContent(supabaseAdmin, app.cv_url, prompt);
     }
     if (!userContent) userContent = prompt + "\n(Sin CV adjunto.)";
 
