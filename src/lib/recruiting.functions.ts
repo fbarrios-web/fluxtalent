@@ -174,8 +174,11 @@ export const updateVacancy = createServerFn({ method: "POST" })
         .not("match_score", "is", null)
         .lt("match_score", min);
       if (low?.length) {
-        const ids = low.map((a: any) => a.id);
-        await context.supabase.from("applications").update({ stage: "rejected" }).in("id", ids);
+        const { data: flippedRows } = await context.supabase.from("applications").update({ stage: "rejected" })
+          .in("id", low.map((a: any) => a.id)).in("stage", ["received", "read"]).select("id");
+        const ids = (flippedRows ?? []).map((a: any) => a.id);
+        const flippedSet = new Set(ids);
+        low.splice(0, low.length, ...low.filter((a: any) => flippedSet.has(a.id)));
         await context.supabase.from("application_events").insert(
           low.map((a: any) => ({
             application_id: a.id,

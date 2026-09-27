@@ -106,8 +106,13 @@ Extraé experiencia, formación y skills del CV. Calculá match (0-100) general 
     });
 
     const min = app.vacancy?.min_match ?? 60;
-    if (result.match_score < min && (app.stage === "received" || app.stage === "read")) {
-      await supabaseAdmin.from("applications").update({ stage: "rejected" }).eq("id", app.id);
+    // Atomic: only the run that actually flips the stage sends the email (avoids duplicates
+    // when the instant kick and the queue worker analyze the same CV concurrently).
+    const { data: flipped } = result.match_score < min
+      ? await supabaseAdmin.from("applications").update({ stage: "rejected" })
+          .eq("id", app.id).in("stage", ["received", "read"]).select("id")
+      : { data: [] };
+    if (flipped?.length) {
       await supabaseAdmin.from("application_events").insert({
         application_id: app.id, type: "auto_reject",
         payload: { reason: `match ${result.match_score}% < ${min}%` },
