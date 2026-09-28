@@ -42,8 +42,9 @@ export function UsageCard() {
   if (data.maxNewVacanciesPerCycle !== -1 && newPct >= 80) alerts.push(t("Vacantes nuevas del ciclo al {pct}% del límite.", { pct: newPct }));
   if (data.maxCvsPerCycle !== -1 && cvsPct >= 80) alerts.push(t("CVs procesados al {pct}% del cupo del ciclo.", { pct: cvsPct }));
 
-  const cycleStart = new Date(data.cycleStart).toLocaleDateString("es-AR");
-  const cycleEnd = new Date(data.cycleEnd).toLocaleDateString("es-AR");
+  const dateFormat: Intl.DateTimeFormatOptions = { timeZone: "America/Argentina/Buenos_Aires" };
+  const cycleStart = new Date(data.cycleStart).toLocaleDateString("es-AR", dateFormat);
+  const cycleEnd = new Date(data.cycleEnd).toLocaleDateString("es-AR", dateFormat);
   const isCustom = data.planId === "custom" && data.planName === "Custom";
 
   return (

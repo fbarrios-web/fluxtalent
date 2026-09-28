@@ -170,6 +170,8 @@ export const EN_APP: Record<string, string> = {
   "Estás en {mode}.": "You're in {mode}.",
   "Activar suscripción →": "Activate subscription →",
   // usage card
+  "Plan Custom": "Custom Plan",
+  "Plan activo: del {start} al {end}": "Active plan: from {start} to {end}",
   "Uso del plan {name}": "{name} plan usage",
   "Renovación: {date}": "Renewal: {date}",
   "Cerca del límite": "Close to limit",
