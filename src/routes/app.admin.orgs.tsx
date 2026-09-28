@@ -451,7 +451,79 @@ function AdminOrgs() {
         }}
         pending={mut.isPending}
       />
+      <CustomFeaturesDialog
+        org={customDialog}
+        onClose={() => setCustomDialog(null)}
+        onSave={(vars) => customMut.mutate(vars)}
+        pending={customMut.isPending}
+      />
     </div>
+  );
+}
+
+function CustomFeaturesDialog({ org, onClose, onSave, pending }: {
+  org: any | null;
+  onClose: () => void;
+  onSave: (vars: { org_id: string; subdomain: string | null; features: any }) => void;
+  pending: boolean;
+}) {
+  const t = useT();
+  const cf = (org?.custom_features ?? {}) as any;
+  const [subdomain, setSubdomain] = useState("");
+  const [features, setFeatures] = useState({ subdomain: false, sensitive_fields: false, personality_test: false });
+  useEffect(() => {
+    if (org) {
+      setSubdomain(org.subdomain ?? "");
+      setFeatures({
+        subdomain: !!cf.subdomain,
+        sensitive_fields: !!cf.sensitive_fields,
+        personality_test: !!cf.personality_test,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [org?.id]);
+  const toggle = (k: keyof typeof features) => setFeatures(f => ({ ...f, [k]: !f[k] }));
+  return (
+    <Dialog open={!!org} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t("Funciones personalizadas")} {org ? `· ${org.name}` : ""}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox checked={features.subdomain} onCheckedChange={() => toggle("subdomain")} />
+            {t("Subdominio propio")}
+          </label>
+          {features.subdomain && (
+            <div className="pl-6">
+              <Label className="text-xs">{t("Subdominio")}</Label>
+              <div className="flex items-center gap-2">
+                <Input value={subdomain} onChange={e => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} placeholder="freddo" className="w-40" />
+                <span className="text-sm text-muted-foreground">.fluxtalent.com.ar</span>
+              </div>
+            </div>
+          )}
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox checked={features.sensitive_fields} onCheckedChange={() => toggle("sensitive_fields")} />
+            {t("Datos sensibles en formulario")}
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox checked={features.personality_test} onCheckedChange={() => toggle("personality_test")} />
+            {t("Test de personalidad (pendiente de definición)")}
+          </label>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>{t("Cancelar")}</Button>
+          <Button
+            disabled={pending || (features.subdomain && !subdomain)}
+            onClick={() => org && onSave({ org_id: org.id, subdomain: subdomain || null, features })}
+          >
+            {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {t("Guardar")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
