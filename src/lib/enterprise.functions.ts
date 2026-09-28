@@ -255,7 +255,32 @@ export const createTeamMember = createServerFn({ method: "POST" })
       await supabaseAdmin.from("organizations").delete().eq("id", autoProfile.org_id);
     }
     await writeAccess(supabaseAdmin, orgId, newId, data.all_vacancies, data.vacancy_ids);
-    return { user_id: newId };
+
+    // Invitation email with access data and the organization's own login page
+    let emailSent = false;
+    try {
+      const [{ data: org }, { data: inviter }] = await Promise.all([
+        supabaseAdmin.from("organizations").select("name, subdomain").eq("id", orgId).maybeSingle(),
+        supabaseAdmin.from("profiles").select("display_name, full_name").eq("id", context.userId).maybeSingle(),
+      ]);
+      const host = org?.subdomain ? `${org.subdomain}.fluxtalent.com.ar` : "fluxtalent.com.ar";
+      const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+      const r = await sendTemplateEmail("team-invite", data.email, {
+        templateData: {
+          name: data.display_name,
+          orgName: org?.name ?? "FLUX Talent",
+          inviterName: inviter?.display_name || inviter?.full_name || undefined,
+          email: data.email,
+          password: data.password,
+          loginUrl: `https://${host}/auth`,
+        },
+        idempotencyKey: `team-invite-${newId}`,
+      });
+      emailSent = r.sent;
+    } catch (e) {
+      console.error("team-invite email failed", e);
+    }
+    return { user_id: newId, email_sent: emailSent };
   });
 
 export const updateTeamMemberAccess = createServerFn({ method: "POST" })

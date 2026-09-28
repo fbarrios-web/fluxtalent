@@ -81,7 +81,7 @@ function AccessDialog({ member, vacancies, onClose, onSaved }: { member: Member 
     mutationFn: (): Promise<unknown> => member
       ? update({ data: { user_id: member.id, all_vacancies: all, vacancy_ids: selected } })
       : create({ data: { ...form, all_vacancies: all, vacancy_ids: selected } }),
-    onSuccess: () => { toast.success(member ? t("Acceso actualizado") : t("Usuario creado")); onSaved(); },
+    onSuccess: () => { toast.success(member ? t("Acceso actualizado") : t("Usuario creado. Le enviamos un mail con la invitación y sus datos de acceso.")); onSaved(); },
     onError: (e: any) => toast.error(e?.message ?? t("Error")),
   });
 
