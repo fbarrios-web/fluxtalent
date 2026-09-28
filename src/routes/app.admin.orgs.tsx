@@ -478,7 +478,7 @@ function AssignPlanDialog({ open, org, onClose, onAssign, pending }: {
   pending: boolean;
 }) {
   const t = useT();
-  const assignable = PLANS.filter(p => !p.contactOnly && p.priceArs >= 0);
+  const assignable = PLANS.filter(p => p.priceArs >= 0 || p.id === "custom");
   const [planId, setPlanId] = useState<string>(assignable[1]?.id ?? assignable[0].id);
   const [days, setDays] = useState<string>("30");
   const plan = assignable.find(p => p.id === planId) ?? assignable[0];
@@ -496,7 +496,7 @@ function AssignPlanDialog({ open, org, onClose, onAssign, pending }: {
               <SelectContent>
                 {assignable.map(p => (
                   <SelectItem key={p.id} value={p.id}>
-                    {p.name} — {p.priceArs === 0 ? t("Gratis") : t("ARS {amount} / 15 días.", { amount: p.priceArs.toLocaleString("es-AR") })}
+                    {p.name} — {p.id === "custom" ? t("A medida · ilimitado + funciones personalizadas") : p.priceArs === 0 ? t("Gratis") : t("ARS {amount} / 15 días.", { amount: p.priceArs.toLocaleString("es-AR") })}
                   </SelectItem>
                 ))}
               </SelectContent>
