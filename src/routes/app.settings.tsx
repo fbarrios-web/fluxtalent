@@ -164,7 +164,10 @@ function Settings() {
         logo_url: logoUrl || null,
         signature_html: signature || null,
         signature_image_url: signatureImageUrl || null,
-        
+        sensitive_fields: sensitiveFields
+          .filter(f => f.label.trim())
+          .slice(0, 3)
+          .map((f, i) => ({ id: f.id, label: f.label.trim(), type: f.type, position: i })),
         timezone: timezone || "America/Argentina/Buenos_Aires",
       };
       const { error } = await supabase.from("organizations").update(patch as any).eq("id", org.id);
