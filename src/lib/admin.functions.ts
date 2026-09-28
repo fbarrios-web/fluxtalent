@@ -78,7 +78,7 @@ export const adminListOrgs = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = supabaseAdmin
       .from("organizations")
-      .select("id, name, subscription_status, trial_ends_at, current_period_end, plan_price_ars, last_payment_at, created_at, mp_preapproval_id, parent_org_id, is_unlimited, archived_at")
+      .select("id, name, subscription_status, trial_ends_at, current_period_end, plan_price_ars, last_payment_at, created_at, mp_preapproval_id, parent_org_id, is_unlimited, archived_at, subdomain, custom_features")
       .order("created_at", { ascending: false });
     q = data.archived ? q.not("archived_at", "is", null) : q.is("archived_at", null);
     const { data: rows, error } = await q;
