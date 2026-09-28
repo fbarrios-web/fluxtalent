@@ -68,8 +68,10 @@ export async function getOrgPlan(supabase: Sb, orgId: string): Promise<Plan> {
   if (!org) return PLANS[0];
   // Cupo de CVs a medida para una cuenta puntual (acordado comercialmente).
   const override = Number((org as any).cv_limit_override ?? 0);
-  const withOverride = (p: Plan): Plan =>
-    override > 0 && p.maxCvsPerMonth !== -1 ? { ...p, maxCvsPerMonth: override } : p;
+  const withOverride = (p: Plan): Plan => {
+    if (override === -1) return { ...p, maxCvsPerMonth: -1 }; // CVs ilimitados
+    return override > 0 && p.maxCvsPerMonth !== -1 ? { ...p, maxCvsPerMonth: override } : p;
+  };
 
   if ((org as any).is_unlimited) {
     return { ...PLANS[0], id: "custom", name: "Admin (ilimitado)", maxVacancies: -1, maxNewVacanciesPerCycle: -1, maxCvsPerMonth: -1 };
