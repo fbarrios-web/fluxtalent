@@ -171,7 +171,7 @@ export const adminGrantLicense = createServerFn({ method: "POST" })
     z.object({
       org_id: z.string().uuid(),
       action: z.enum(["activate_30", "activate_90", "activate_365", "extend_trial_15", "mark_paid_manual", "suspend", "cancel", "set_plan", "grant_admin_unlimited", "revoke_admin_unlimited"]),
-      plan_price_ars: z.number().int().nonnegative().optional(),
+      plan_price_ars: z.number().int().min(-1).optional(),
       days: z.number().int().positive().max(3650).optional(),
     }).parse(input))
   .handler(async ({ data, context }) => {
