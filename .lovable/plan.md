@@ -32,6 +32,6 @@
 
 ## Detalles técnicos
 - `organizations`: columnas `subdomain` (único), `custom_features jsonb`, `sensitive_fields jsonb` (máx. 3); `vacancies.sensitive_field_ids jsonb`; `applications.sensitive_answers jsonb`. GRANT/RLS existentes cubren estas tablas.
-- `planByPrice`/`getOrgPlan`: plan `custom` con `is_unlimited`-like limits vía `plan_id = 'custom'`.
+- `planByPrice`/`getOrgPlan`: plan `custom` con `is_unlimited`-like limits vía `plan_id = 'custom'`; `myEnterprise`/`createSubOrg` tratan `custom` como Enterprise (hoy chequean `plan_price_ars >= 90000`, se amplía a plan custom) para habilitar la sección Multi-organización.
 - Link de vacante: helper `vacancyPublicUrl(org, slug)` usado en listado, detalle y copiar link; solo usa subdominio si la vacante se creó después de activarlo (`vacancies.public_host` guardado al crear).
 - `/apply/$slug`: detecta host; `get_public_vacancy_by_slug` devuelve campos sensibles activos; `api.public.apply` los valida.
