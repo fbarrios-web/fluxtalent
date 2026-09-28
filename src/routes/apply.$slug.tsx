@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,7 @@ import { Loader2, CheckCircle2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { isValidLinkedin } from "@/lib/linkedin";
 import { useT } from "@/lib/i18n";
+import { MAIN_APP_HOST } from "@/lib/vacancy-url";
 
 export const Route = createFileRoute("/apply/$slug")({
   component: ApplyPage,
@@ -63,11 +64,24 @@ function ApplyPage() {
     },
   });
 
+  // Si se abre desde un subdominio propio (ej. freddo.fluxtalent.com.ar) una
+  // vacante de otra organización, redirigir al dominio general.
+  useEffect(() => {
+    if (!vacancy || typeof window === "undefined") return;
+    const host = window.location.host;
+    if (!host.endsWith(`.${MAIN_APP_HOST}`)) return;
+    const sub = host.slice(0, host.length - MAIN_APP_HOST.length - 1);
+    if (sub && sub !== "www" && vacancy.org_subdomain !== sub) {
+      window.location.replace(`https://${MAIN_APP_HOST}/apply/${slug}`);
+    }
+  }, [vacancy, slug]);
+
 
   const [form, setForm] = useState({ first_name: "", last_name: "", email: "", phone: "", linkedin: "" });
   type AnswerVal = string | string[];
   const [cv, setCv] = useState<File | null>(null);
   const [answers, setAnswers] = useState<Record<string, AnswerVal>>({});
+  const [sensitiveAnswers, setSensitiveAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
