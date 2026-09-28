@@ -18,8 +18,16 @@ export function TeamAccessSection() {
   const t = useT();
   const qc = useQueryClient();
   const list = useServerFn(listTeamMembers);
+  const remove = useServerFn(removeTeamMember);
   const { data, isLoading, error } = useQuery({ queryKey: ["team-members"], queryFn: () => list(), retry: false });
   const [editing, setEditing] = useState<Member | "new" | null>(null);
+  const [removing, setRemoving] = useState<Member | null>(null);
+
+  const removeMut = useMutation({
+    mutationFn: (id: string) => remove({ data: { user_id: id } }),
+    onSuccess: () => { toast.success(t("Acceso quitado. El usuario ya no puede ingresar.")); setRemoving(null); qc.invalidateQueries({ queryKey: ["team-members"] }); },
+    onError: (e: any) => toast.error(e?.message ?? t("Error")),
+  });
 
   if (error) return null;
   const vacTitle = new Map((data?.vacancies ?? []).map((v: Vac) => [v.id, v.title]));
