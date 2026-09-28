@@ -15,7 +15,7 @@ export const myEnterprise = createServerFn({ method: "GET" })
       .eq("id", profile.org_id).maybeSingle();
     if (!org) return null;
 
-    const isEnterprisePlan = Number(org.plan_price_ars) >= 90000;
+    const isEnterprisePlan = Number(org.plan_price_ars) >= 90000 || Number(org.plan_price_ars) === -1;
     const rootId = org.parent_org_id ?? org.id;
 
     // List sub-orgs of the root org (admin client: user's RLS only sees their own org row)
@@ -49,7 +49,7 @@ export const createSubOrg = createServerFn({ method: "POST" })
       .from("organizations").select("id, plan_price_ars, parent_org_id").eq("id", profile.org_id).maybeSingle();
     if (!org) throw new Error("Organización no encontrada");
     if (org.parent_org_id) throw new Error("Solo la organización raíz puede crear sub-organizaciones");
-    if (Number(org.plan_price_ars) < 90000) throw new Error("Multi-organización requiere plan Enterprise");
+    if (Number(org.plan_price_ars) < 90000 && Number(org.plan_price_ars) !== -1) throw new Error("Multi-organización requiere plan Enterprise");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: created, error } = await supabaseAdmin.from("organizations").insert({
@@ -81,7 +81,7 @@ export const createSubOrgUser = createServerFn({ method: "POST" })
     const { data: rootOrg } = await supabase
       .from("organizations").select("id, plan_price_ars, parent_org_id").eq("id", profile.org_id).maybeSingle();
     if (!rootOrg || rootOrg.parent_org_id) throw new Error("Solo la org raíz puede crear usuarios");
-    if (Number(rootOrg.plan_price_ars) < 90000) throw new Error("Requiere plan Enterprise");
+    if (Number(rootOrg.plan_price_ars) < 90000 && Number(rootOrg.plan_price_ars) !== -1) throw new Error("Requiere plan Enterprise");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     // Verify sub_org belongs to this root
