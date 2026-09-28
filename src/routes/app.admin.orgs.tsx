@@ -371,12 +371,16 @@ function AdminOrgs() {
                     {isVisible("plan") && (
                       <td className="px-4 py-3 border-b border-border">
                         <div className="font-medium">
-                          {(o as any).is_unlimited
+                          {Number(o.plan_price_ars) === -1
+                            ? "Custom"
+                            : (o as any).is_unlimited
                             ? `★ ${t("Admin ilimitado")}`
                             : (o.subscription_status === "trialing" ? t("Free (trial)") : planByPrice(o.plan_price_ars).name)}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {(o as any).is_unlimited ? t("Sin costo · no cuenta en ganancias") : t("ARS {amount}/mes", { amount: Number(o.plan_price_ars).toLocaleString("es-AR") })}
+                          {Number(o.plan_price_ars) === -1
+                            ? t("A medida · ilimitado")
+                            : (o as any).is_unlimited ? t("Sin costo · no cuenta en ganancias") : t("ARS {amount}/mes", { amount: Number(o.plan_price_ars).toLocaleString("es-AR") })}
                         </div>
                       </td>
                     )}
@@ -395,6 +399,11 @@ function AdminOrgs() {
                           <Button variant="outline" size="sm" onClick={() => setPlanDialog({ orgId: o.id, orgName: o.name })} disabled={mut.isPending}>
                             {t("Asignar plan")}
                           </Button>
+                          {Number(o.plan_price_ars) === -1 && (
+                            <Button variant="outline" size="sm" onClick={() => setCustomDialog(o)} disabled={customMut.isPending}>
+                              {t("Funciones")}
+                            </Button>
+                          )}
                           <ActionMenu orgId={o.id} onPick={(action) => mut.mutate({ org_id: o.id, action })} disabled={mut.isPending} />
                           <Button
                             variant="outline"
