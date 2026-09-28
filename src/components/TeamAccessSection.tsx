@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listTeamMembers, createTeamMember, updateTeamMemberAccess } from "@/lib/enterprise.functions";
+import { listTeamMembers, createTeamMember, updateTeamMemberAccess, removeTeamMember } from "@/lib/enterprise.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Loader2, Pencil, UserPlus, Users } from "lucide-react";
+import { Loader2, Pencil, Trash2, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
 
