@@ -58,7 +58,10 @@ export function TeamAccessSection() {
                 </div>
               </div>
               {!m.is_me && (
-                <Button variant="outline" size="sm" onClick={() => setEditing(m)}><Pencil className="mr-2 h-3.5 w-3.5" /> {t("Editar acceso")}</Button>
+                <div className="flex shrink-0 gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setEditing(m)}><Pencil className="mr-2 h-3.5 w-3.5" /> {t("Editar acceso")}</Button>
+                  <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setRemoving(m)}><Trash2 className="mr-2 h-3.5 w-3.5" /> {t("Quitar acceso")}</Button>
+                </div>
               )}
             </div>
           ))}
