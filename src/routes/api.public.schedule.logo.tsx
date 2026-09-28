@@ -20,8 +20,8 @@ export const Route = createFileRoute("/api/public/schedule/logo")({
           orgId = vac?.org_id ?? null;
         } else if (subdomain && /^[a-z0-9-]{2,40}$/i.test(subdomain)) {
           const { data: orgBySub } = await supabaseAdmin
-            .from("organizations").select("id").eq("subdomain", subdomain.toLowerCase()).maybeSingle();
-          if (orgBySub && (orgBySub as any).custom_features?.subdomain !== false) orgId = orgBySub.id;
+            .from("organizations").select("id, custom_features").eq("subdomain", subdomain.toLowerCase()).maybeSingle();
+          if (orgBySub && (orgBySub as any).custom_features?.subdomain === true) orgId = orgBySub.id;
         } else {
           return Response.json({ url: null }, { status: 400 });
         }
