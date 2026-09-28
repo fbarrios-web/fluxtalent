@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { FluxLogo } from "@/components/flux-logo";
 import { trackEvent } from "@/lib/track";
+import freddoLogo from "@/assets/freddo-logo.png.asset.json";
 
 
 export const Route = createFileRoute("/auth")({
@@ -63,6 +64,7 @@ function AuthForm() {
     const host = window.location.host.toLowerCase();
     const m = host.match(/^(?:www\.)?([a-z0-9-]{2,40})\.fluxtalent\.com\.ar$/);
     if (m && m[1] !== "www") {
+      if (m[1] === "freddo") setBrandLogo(freddoLogo.url);
       fetch(`/api/public/schedule/logo?subdomain=${encodeURIComponent(m[1])}`)
         .then(r => r.json())
         .then(j => { if (j?.url) setBrandLogo(j.url); })
