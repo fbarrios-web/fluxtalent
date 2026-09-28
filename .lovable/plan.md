@@ -2,7 +2,7 @@
 
 ## 1. Plan "Custom" en el panel admin
 - En Organizaciones → asignar plan: nueva opción **Custom**.
-- Custom = vacantes ilimitadas + CVs ilimitados + un set de funciones personalizadas que se prenden por organización (checkboxes en el admin):
+- Custom = vacantes ilimitadas + CVs ilimitados + sección **Multi-organización** habilitada (igual que Enterprise) + un set de funciones personalizadas que se prenden por organización (checkboxes en el admin):
   - Subdominio propio (ej. `freddo`)
   - Datos sensibles en formulario
   - Test de personalidad (queda **apagado y oculto** hasta que definas el test; la columna "Test" no aparece)
