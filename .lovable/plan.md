@@ -2,7 +2,7 @@
 
 ## 1. Plan "Custom" en el panel admin
 - En Organizaciones → asignar plan: nueva opción **Custom**.
-- Custom = vacantes ilimitadas + CVs ilimitados + un set de funciones personalizadas que se prenden por organización (checkboxes en el admin):
+- Custom = vacantes ilimitadas + CVs ilimitados + sección **Multi-organización** habilitada (igual que Enterprise) + un set de funciones personalizadas que se prenden por organización (checkboxes en el admin):
   - Subdominio propio (ej. `freddo`)
   - Datos sensibles en formulario
   - Test de personalidad (queda **apagado y oculto** hasta que definas el test; la columna "Test" no aparece)
@@ -32,6 +32,6 @@
 
 ## Detalles técnicos
 - `organizations`: columnas `subdomain` (único), `custom_features jsonb`, `sensitive_fields jsonb` (máx. 3); `vacancies.sensitive_field_ids jsonb`; `applications.sensitive_answers jsonb`. GRANT/RLS existentes cubren estas tablas.
-- `planByPrice`/`getOrgPlan`: plan `custom` con `is_unlimited`-like limits vía `plan_id = 'custom'`.
+- `planByPrice`/`getOrgPlan`: plan `custom` con `is_unlimited`-like limits vía `plan_id = 'custom'`; `myEnterprise`/`createSubOrg` tratan `custom` como Enterprise (hoy chequean `plan_price_ars >= 90000`, se amplía a plan custom) para habilitar la sección Multi-organización.
 - Link de vacante: helper `vacancyPublicUrl(org, slug)` usado en listado, detalle y copiar link; solo usa subdominio si la vacante se creó después de activarlo (`vacancies.public_host` guardado al crear).
 - `/apply/$slug`: detecta host; `get_public_vacancy_by_slug` devuelve campos sensibles activos; `api.public.apply` los valida.
