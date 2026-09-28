@@ -76,6 +76,23 @@ export function TeamAccessSection() {
           onSaved={() => { setEditing(null); qc.invalidateQueries({ queryKey: ["team-members"] }); }}
         />
       )}
+
+      {removing && (
+        <Dialog open onOpenChange={o => !o && setRemoving(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader><DialogTitle>{t("Quitar acceso a {name}", { name: removing.name })}</DialogTitle></DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              {t("Se elimina el usuario y su acceso a todas las vacantes. Esta acción no se puede deshacer. Los candidatos y las vacantes no se tocan.")}
+            </p>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setRemoving(null)}>{t("Cancelar")}</Button>
+              <Button variant="destructive" onClick={() => removeMut.mutate(removing.id)} disabled={removeMut.isPending}>
+                {removeMut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{t("Sí, quitar acceso")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </section>
   );
 }
