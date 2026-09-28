@@ -561,6 +561,38 @@ export type Database = {
           },
         ]
       }
+      org_member_access: {
+        Row: {
+          all_vacancies: boolean
+          created_at: string
+          org_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          all_vacancies?: boolean
+          created_at?: string
+          org_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          all_vacancies?: boolean
+          created_at?: string
+          org_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_member_access_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           archived_at: string | null
@@ -1314,6 +1346,7 @@ export type Database = {
     }
     Functions: {
       admin_delete_org: { Args: { _org_id: string }; Returns: undefined }
+      can_access_vacancy: { Args: { _vacancy_id: string }; Returns: boolean }
       claim_pending_ai_analyses: {
         Args: { _limit?: number; _stale_seconds?: number }
         Returns: {
@@ -1357,6 +1390,7 @@ export type Database = {
         Args: { _birth_date: string; _dni: string; _full_name: string }
         Returns: boolean
       }
+      is_restricted_member: { Args: never; Returns: boolean }
       is_subscription_active: { Args: { _org_id: string }; Returns: boolean }
       reserve_slot: {
         Args: { _slot_id: string; _token: string }
