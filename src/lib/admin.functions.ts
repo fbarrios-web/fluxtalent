@@ -271,6 +271,37 @@ export const adminGrantLicense = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Plan Custom: subdominio propio + funciones personalizadas por organización. */
+export const adminSetCustomFeatures = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({
+      org_id: z.string().uuid(),
+      subdomain: z.string().trim().toLowerCase().regex(/^[a-z0-9-]{2,40}$/).nullable(),
+      features: z.object({
+        subdomain: z.boolean(),
+        sensitive_fields: z.boolean(),
+        personality_test: z.boolean(),
+      }),
+    }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const patch: Record<string, unknown> = {
+      subdomain: data.features.subdomain ? data.subdomain : null,
+      custom_features: data.features,
+    };
+    const { error } = await supabaseAdmin.from("organizations").update(patch as never).eq("id", data.org_id);
+    if (error) {
+      if ((error as any).code === "23505") throw new Error("Ese subdominio ya está en uso por otra organización.");
+      throw error;
+    }
+    await supabaseAdmin.from("activity_events").insert({
+      org_id: data.org_id, user_id: context.userId, event_type: "admin.custom_features", metadata: { ...data.features, subdomain: data.subdomain },
+    });
+    return { ok: true };
+  });
+
 export const adminCreateUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
