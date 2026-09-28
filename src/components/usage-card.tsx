@@ -42,13 +42,20 @@ export function UsageCard() {
   if (data.maxNewVacanciesPerCycle !== -1 && newPct >= 80) alerts.push(t("Vacantes nuevas del ciclo al {pct}% del límite.", { pct: newPct }));
   if (data.maxCvsPerCycle !== -1 && cvsPct >= 80) alerts.push(t("CVs procesados al {pct}% del cupo del ciclo.", { pct: cvsPct }));
 
+  const cycleStart = new Date(data.cycleStart).toLocaleDateString("es-AR");
+  const cycleEnd = new Date(data.cycleEnd).toLocaleDateString("es-AR");
+  const isCustom = data.planId === "custom" && data.planName === "Custom";
+
   return (
     <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h3 className="font-medium">{t("Uso del plan {name}", { name: data.planName })}</h3>
+          <h3 className="font-medium">{isCustom ? t("Plan Custom") : t("Uso del plan {name}", { name: data.planName })}</h3>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <CalendarClock className="h-3 w-3" /> {t("Renovación: {date}", { date: new Date(data.cycleEnd).toLocaleDateString("es-AR") })}
+            <CalendarClock className="h-3 w-3" />
+            {isCustom
+              ? t("Plan activo: del {start} al {end}", { start: cycleStart, end: cycleEnd })
+              : t("Renovación: {date}", { date: cycleEnd })}
           </p>
         </div>
         {alerts.length > 0 && (

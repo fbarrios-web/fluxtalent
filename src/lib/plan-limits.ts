@@ -73,12 +73,12 @@ export async function getOrgPlan(supabase: Sb, orgId: string): Promise<Plan> {
     return override > 0 && p.maxCvsPerMonth !== -1 ? { ...p, maxCvsPerMonth: override } : p;
   };
 
-  if ((org as any).is_unlimited) {
-    return { ...PLANS[0], id: "custom", name: "Admin (ilimitado)", maxVacancies: -1, maxNewVacanciesPerCycle: -1, maxCvsPerMonth: -1 };
-  }
   // Plan Custom (plan_price_ars = -1): todo ilimitado.
   if (Number(org.plan_price_ars) === -1) {
     return withOverride({ ...PLANS.find(p => p.id === "custom")! });
+  }
+  if ((org as any).is_unlimited) {
+    return { ...PLANS[0], id: "custom", name: "Admin (ilimitado)", maxVacancies: -1, maxNewVacanciesPerCycle: -1, maxCvsPerMonth: -1 };
   }
   // Promo vigente: límites del plan Starter sin costo.
   if (isPromoActive(org)) {
