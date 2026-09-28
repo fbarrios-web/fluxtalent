@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listTeamMembers, createTeamMember, updateTeamMemberAccess } from "@/lib/enterprise.functions";
+import { listTeamMembers, createTeamMember, updateTeamMemberAccess, removeTeamMember } from "@/lib/enterprise.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Loader2, Pencil, UserPlus, Users } from "lucide-react";
+import { Loader2, Pencil, Trash2, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
 
@@ -18,8 +18,16 @@ export function TeamAccessSection() {
   const t = useT();
   const qc = useQueryClient();
   const list = useServerFn(listTeamMembers);
+  const remove = useServerFn(removeTeamMember);
   const { data, isLoading, error } = useQuery({ queryKey: ["team-members"], queryFn: () => list(), retry: false });
   const [editing, setEditing] = useState<Member | "new" | null>(null);
+  const [removing, setRemoving] = useState<Member | null>(null);
+
+  const removeMut = useMutation({
+    mutationFn: (id: string) => remove({ data: { user_id: id } }),
+    onSuccess: () => { toast.success(t("Acceso quitado. El usuario ya no puede ingresar.")); setRemoving(null); qc.invalidateQueries({ queryKey: ["team-members"] }); },
+    onError: (e: any) => toast.error(e?.message ?? t("Error")),
+  });
 
   if (error) return null;
   const vacTitle = new Map((data?.vacancies ?? []).map((v: Vac) => [v.id, v.title]));
@@ -50,7 +58,10 @@ export function TeamAccessSection() {
                 </div>
               </div>
               {!m.is_me && (
-                <Button variant="outline" size="sm" onClick={() => setEditing(m)}><Pencil className="mr-2 h-3.5 w-3.5" /> {t("Editar acceso")}</Button>
+                <div className="flex shrink-0 gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setEditing(m)}><Pencil className="mr-2 h-3.5 w-3.5" /> {t("Editar acceso")}</Button>
+                  <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setRemoving(m)}><Trash2 className="mr-2 h-3.5 w-3.5" /> {t("Quitar acceso")}</Button>
+                </div>
               )}
             </div>
           ))}
@@ -64,6 +75,23 @@ export function TeamAccessSection() {
           onClose={() => setEditing(null)}
           onSaved={() => { setEditing(null); qc.invalidateQueries({ queryKey: ["team-members"] }); }}
         />
+      )}
+
+      {removing && (
+        <Dialog open onOpenChange={o => !o && setRemoving(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader><DialogTitle>{t("Quitar acceso a {name}", { name: removing.name })}</DialogTitle></DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              {t("Se elimina el usuario y su acceso a todas las vacantes. Esta acción no se puede deshacer. Los candidatos y las vacantes no se tocan.")}
+            </p>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setRemoving(null)}>{t("Cancelar")}</Button>
+              <Button variant="destructive" onClick={() => removeMut.mutate(removing.id)} disabled={removeMut.isPending}>
+                {removeMut.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{t("Sí, quitar acceso")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </section>
   );

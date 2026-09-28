@@ -300,3 +300,21 @@ export const updateTeamMemberAccess = createServerFn({ method: "POST" })
     await writeAccess(supabaseAdmin, orgId, data.user_id, data.all_vacancies, data.vacancy_ids);
     return { ok: true };
   });
+
+export const removeTeamMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ user_id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const orgId = await requireManager(context.supabase, context.userId);
+    if (data.user_id === context.userId) throw new Error("No podés quitarte el acceso a vos mismo");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: prof } = await supabaseAdmin.from("profiles").select("org_id").eq("id", data.user_id).maybeSingle();
+    if (prof?.org_id !== orgId) throw new Error("Usuario inválido");
+    await supabaseAdmin.from("org_member_access").delete().eq("user_id", data.user_id);
+    await supabaseAdmin.from("vacancy_assignees").delete().eq("user_id", data.user_id);
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.user_id);
+    await supabaseAdmin.from("profiles").delete().eq("id", data.user_id);
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
