@@ -11,6 +11,7 @@ import { Building2, Loader2, Plus, ShieldAlert, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useT } from "@/lib/i18n";
+import { TeamAccessSection } from "@/components/TeamAccessSection";
 
 export const Route = createFileRoute("/app/enterprise")({
   component: EnterprisePage,
@@ -69,6 +70,8 @@ function EnterprisePage() {
     <div className="mx-auto max-w-5xl p-6 md:p-10">
       <h1 className="font-display text-4xl">{t("Multi-organización")}</h1>
       <p className="mt-1 text-muted-foreground">{t("Creá sub-organizaciones (clientes) y usuarios con acceso restringido a su grupo.")}</p>
+
+      <TeamAccessSection />
 
       <section className="mt-8 rounded-2xl border border-border bg-card p-6">
         <div className="flex items-center justify-between gap-3">
