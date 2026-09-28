@@ -44,6 +44,7 @@ export const Route = createFileRoute("/api/public/hooks/process-cv-queue")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { runAnalysisAdmin } = await import("@/lib/analyze.server");
+        const { isInsufficientCreditsError } = await import("@/lib/ai-gateway.server");
 
         const { data: claimed, error: claimErr } = await supabaseAdmin.rpc(
           "claim_pending_ai_analyses",
@@ -61,6 +62,21 @@ export const Route = createFileRoute("/api/public/hooks/process-cv-queue")({
 
         let processed = 0;
         let failed = 0;
+        let paused = false;
+
+        // Sin créditos: el análisis vuelve a 'pending' sin gastar intentos y el
+        // resto del lote se reencola; el worker retoma solo al recargar créditos.
+        async function pauseForCredits(appId: string) {
+          await supabaseAdmin
+            .from("applications")
+            .update({
+              ai_status: "pending",
+              ai_attempts: 0,
+              ai_last_error: "Análisis pausado: sin créditos de IA. Se reanudará automáticamente.",
+              ai_next_attempt_at: new Date(Date.now() + 5 * 60_000).toISOString(),
+            })
+            .eq("id", appId);
+        }
 
         // Bounded-concurrency runner.
         const queue = [...ids];
@@ -68,10 +84,20 @@ export const Route = createFileRoute("/api/public/hooks/process-cv-queue")({
           while (queue.length) {
             const appId = queue.shift();
             if (!appId) return;
+            if (paused) {
+              await pauseForCredits(appId);
+              continue;
+            }
             try {
               await runAnalysisAdmin(supabaseAdmin, appId);
               processed++;
             } catch (e: any) {
+              if (isInsufficientCreditsError(e)) {
+                paused = true;
+                await pauseForCredits(appId);
+                console.warn("[process-cv-queue] paused: AI credits exhausted");
+                continue;
+              }
               failed++;
               const msg = (e?.message ?? String(e)).slice(0, 500);
               console.error("[process-cv-queue] analysis failed", appId, msg);
@@ -104,7 +130,7 @@ export const Route = createFileRoute("/api/public/hooks/process-cv-queue")({
         }
         await Promise.all(Array.from({ length: Math.min(CONCURRENCY, ids.length) }, worker));
 
-        return Response.json({ ok: true, claimed: ids.length, processed, failed, ids });
+        return Response.json({ ok: true, claimed: ids.length, processed, failed, paused, ids });
       },
       GET: async () => new Response("ok"),
     },
