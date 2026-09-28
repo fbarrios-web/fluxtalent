@@ -77,7 +77,7 @@ function AccessDialog({ member, vacancies, onClose, onSaved }: { member: Member 
   const [all, setAll] = useState(member?.all_vacancies ?? true);
   const [selected, setSelected] = useState<string[]>(member?.vacancy_ids ?? []);
 
-  const mut = useMutation({
+  const mut = useMutation<unknown>({
     mutationFn: (): Promise<unknown> => member
       ? update({ data: { user_id: member.id, all_vacancies: all, vacancy_ids: selected } })
       : create({ data: { ...form, all_vacancies: all, vacancy_ids: selected } }),
