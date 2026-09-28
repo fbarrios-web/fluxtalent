@@ -87,7 +87,7 @@ function VacancyDetail() {
   );
 
 
-  const applyUrl = `${window.location.origin}/apply/${v.public_slug}`;
+  const applyUrl = vacancyPublicUrl(v);
   function copyLink() {
     navigator.clipboard.writeText(applyUrl);
     toast.success(t("Link copiado"));
