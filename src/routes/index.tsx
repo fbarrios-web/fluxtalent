@@ -6,7 +6,8 @@ import {
 } from "lucide-react";
 import { FluxLogo } from "@/components/flux-logo";
 import { TRIAL_DAYS, formatArs, formatUsd, mergePlanOverrides } from "@/lib/plans";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
 
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
