@@ -35,6 +35,7 @@ export const createVacancy = createServerFn({ method: "POST" })
       min_match: z.number().int().min(0).max(100).default(60),
       status: z.enum(["draft", "active", "paused", "closed"]).default("draft"),
       screening: z.array(screeningQuestionSchema).max(10).default([]),
+      sensitive_field_ids: z.array(z.string().max(60)).max(3).optional(),
     }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
