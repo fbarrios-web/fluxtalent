@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { adminListOrgs, adminGrantLicense, adminExportClients, adminDeleteOrg, adminSetOrgArchived, adminImpersonateOrg } from "@/lib/admin.functions";
+import { adminListOrgs, adminGrantLicense, adminExportClients, adminDeleteOrg, adminSetOrgArchived, adminImpersonateOrg, adminSetCustomFeatures } from "@/lib/admin.functions";
 import { IMPERSONATION_PENDING_KEY, type ImpersonationPendingState } from "@/components/impersonation-banner";
 import { supabase } from "@/integrations/supabase/client";
 import { Download, Loader2, ArrowUpDown, ArrowUp, ArrowDown, Columns3, UserCog } from "lucide-react";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -60,6 +61,7 @@ function AdminOrgs() {
   const exportFn = useServerFn(adminExportClients);
   const delFn = useServerFn(adminDeleteOrg);
   const archiveFn = useServerFn(adminSetOrgArchived);
+  const customFn = useServerFn(adminSetCustomFeatures);
   const [filter, setFilter] = useState("");
   const [emailFilter, setEmailFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -142,6 +144,13 @@ function AdminOrgs() {
   });
 
   const [planDialog, setPlanDialog] = useState<{ orgId: string; orgName: string } | null>(null);
+  const [customDialog, setCustomDialog] = useState<any | null>(null);
+
+  const customMut = useMutation({
+    mutationFn: (vars: { org_id: string; subdomain: string | null; features: any }) => customFn({ data: vars }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-orgs"] }); toast.success(t("Funciones actualizadas")); setCustomDialog(null); },
+    onError: (e: any) => toast.error(e.message ?? t("Error")),
+  });
 
   const rows = useMemo(() => {
     let r = (data ?? []).filter(o => {
