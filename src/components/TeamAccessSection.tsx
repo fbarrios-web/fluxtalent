@@ -78,7 +78,7 @@ function AccessDialog({ member, vacancies, onClose, onSaved }: { member: Member 
   const [selected, setSelected] = useState<string[]>(member?.vacancy_ids ?? []);
 
   const mut = useMutation({
-    mutationFn: () => member
+    mutationFn: (): Promise<unknown> => member
       ? update({ data: { user_id: member.id, all_vacancies: all, vacancy_ids: selected } })
       : create({ data: { ...form, all_vacancies: all, vacancy_ids: selected } }),
     onSuccess: () => { toast.success(member ? t("Acceso actualizado") : t("Usuario creado")); onSaved(); },
