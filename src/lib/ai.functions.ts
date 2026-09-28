@@ -172,6 +172,16 @@ export const analyzeApplication = createServerFn({ method: "POST" })
       }
       return { ok: true, match_score: result.match_score };
     } catch (e: any) {
+      const { isInsufficientCreditsError } = await import("@/lib/ai-gateway.server");
+      if (isInsufficientCreditsError(e)) {
+        // Sin créditos: el análisis queda en espera y se reintenta solo; no se
+        // marca como error ni se consume un intento.
+        await supabase.from("applications").update({
+          ai_status: "pending",
+          ai_last_error: "Análisis pausado: sin créditos de IA. Se reanudará automáticamente.",
+        }).eq("id", app.id);
+        throw new Error("No hay créditos de IA disponibles: el análisis quedó en espera y se reanudará automáticamente.");
+      }
       await supabase.from("applications").update({ ai_status: "error" }).eq("id", app.id);
       throw e;
     }

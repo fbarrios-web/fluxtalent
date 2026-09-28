@@ -123,7 +123,19 @@ Extraé experiencia, formación y skills del CV. Calculá match (0-100) general 
     }
 
   } catch (e) {
-    await supabaseAdmin.from("applications").update({ ai_status: "error" }).eq("id", app.id);
+    const { isInsufficientCreditsError } = await import("./ai-gateway.server");
+    if (isInsufficientCreditsError(e)) {
+      // Sin créditos: pausar, no marcar error. Vuelve a 'pending' sin gastar
+      // intentos; el worker lo retoma solo cuando se recarguen los créditos.
+      await supabaseAdmin.from("applications").update({
+        ai_status: "pending",
+        ai_attempts: 0,
+        ai_last_error: "Análisis pausado: sin créditos de IA. Se reanudará automáticamente.",
+        ai_next_attempt_at: new Date(Date.now() + 5 * 60_000).toISOString(),
+      }).eq("id", app.id);
+    } else {
+      await supabaseAdmin.from("applications").update({ ai_status: "error" }).eq("id", app.id);
+    }
     throw e;
   }
 }

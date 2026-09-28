@@ -1,6 +1,21 @@
 // Server-only helper for Lovable AI Gateway
 const BASE = "https://ai.gateway.lovable.dev/v1";
 
+// Typed error so callers (analysis runner, queue worker) can distinguish
+// "out of credits" — a pause-and-resume condition — from a real analysis failure.
+export class InsufficientCreditsError extends Error {
+  constructor() {
+    super("AI gateway: not enough credits");
+    this.name = "InsufficientCreditsError";
+  }
+}
+
+export function isInsufficientCreditsError(e: any): boolean {
+  if (e instanceof InsufficientCreditsError) return true;
+  const msg = typeof e?.message === "string" ? e.message : "";
+  return msg.includes("AI 402") || msg.includes("Not enough credits");
+}
+
 // Retry helper: exponential backoff on 429 (rate limit) and 5xx (transient).
 // Non-retriable errors (4xx other than 429) throw immediately.
 async function fetchWithRetry(url: string, init: RequestInit, maxRetries = 3): Promise<Response> {
@@ -10,6 +25,8 @@ async function fetchWithRetry(url: string, init: RequestInit, maxRetries = 3): P
     try {
       const res = await fetch(url, init);
       if (res.ok) return res;
+      // Out of credits: never retried, surfaced as a typed error.
+      if (res.status === 402) throw new InsufficientCreditsError();
       // Retriable: 429 (rate limit) and 5xx
       if (res.status === 429 || res.status >= 500) {
         if (attempt === maxRetries) return res;
