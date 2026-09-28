@@ -77,6 +77,7 @@ function Settings() {
   const [fullName, setFullName] = useState("");
   const [dni, setDni] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [sensitiveFields, setSensitiveFields] = useState<{ id: string; label: string; type: "text" | "number" | "date" }[]>([]);
   const [saving, setSaving] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -99,7 +100,7 @@ function Settings() {
       setLogoUrl(org.logo_url ?? "");
       setSignature(org.signature_html ?? "");
       setSignatureImageUrl((org as any).signature_image_url ?? "");
-      
+      setSensitiveFields((((org as any).sensitive_fields ?? []) as any[]).map(f => ({ id: String(f.id), label: String(f.label), type: f.type ?? "text" })));
       setTimezone((org as any).timezone ?? "America/Argentina/Buenos_Aires");
       signedPreview(org.logo_url ?? "").then(setLogoPreview);
       signedPreview((org as any).signature_image_url ?? "").then(setSignaturePreview);
