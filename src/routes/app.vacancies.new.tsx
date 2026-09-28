@@ -219,6 +219,25 @@ function NewVacancy() {
           <ScreeningEditor screening={screening} setScreening={setScreening} />
         </Section>
 
+        {!!(gate?.sensFields?.length) && (
+          <Section title={t("Datos adicionales obligatorios")}>
+            <p className="text-xs text-muted-foreground">
+              {t("Datos fijos de tu organización. Elegí cuáles pedir en esta vacante.")}
+            </p>
+            <div className="space-y-2">
+              {(gate!.sensFields as any[]).map((f: any) => (
+                <label key={f.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Checkbox
+                    checked={!sensOff.includes(String(f.id))}
+                    onCheckedChange={(c) => setSensOff(prev => c ? prev.filter(x => x !== String(f.id)) : [...prev, String(f.id)])}
+                  />
+                  {f.label}
+                </label>
+              ))}
+            </div>
+          </Section>
+        )}
+
         <div className="flex items-center justify-end gap-2 pt-4">
           <Button variant="ghost" onClick={() => set("status", "draft")}>{t("Guardar borrador")}</Button>
           <Button onClick={save} disabled={saving || !form.title}>
