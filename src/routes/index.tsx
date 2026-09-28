@@ -6,7 +6,8 @@ import {
 } from "lucide-react";
 import { FluxLogo } from "@/components/flux-logo";
 import { TRIAL_DAYS, formatArs, formatUsd, mergePlanOverrides } from "@/lib/plans";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
 
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -26,6 +27,13 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   const t = useT();
+  const navigate = useNavigate();
+  useEffect(() => {
+    const host = window.location.hostname;
+    if (host === "freddo.fluxtalent.com.ar" || host === "www.freddo.fluxtalent.com.ar") {
+      navigate({ to: "/auth", replace: true });
+    }
+  }, [navigate]);
   const getPricing = useServerFn(getPlanPricing);
   const { data: overrides } = useQuery({ queryKey: ["plan-pricing"], queryFn: () => getPricing() });
   const plans = mergePlanOverrides(overrides);
