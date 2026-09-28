@@ -7,6 +7,7 @@ export const Route = createFileRoute("/api/public/schedule/logo")({
         const url = new URL(request.url);
         const token = url.searchParams.get("token");
         const slug = url.searchParams.get("slug");
+        const subdomain = url.searchParams.get("subdomain");
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         let orgId: string | null = null;
         if (token && /^[0-9a-f-]{36}$/i.test(token)) {
@@ -17,6 +18,10 @@ export const Route = createFileRoute("/api/public/schedule/logo")({
           const { data: vac } = await supabaseAdmin
             .from("vacancies").select("org_id").eq("public_slug", slug).eq("status", "active").maybeSingle();
           orgId = vac?.org_id ?? null;
+        } else if (subdomain && /^[a-z0-9-]{2,40}$/i.test(subdomain)) {
+          const { data: orgBySub } = await supabaseAdmin
+            .from("organizations").select("id, custom_features").eq("subdomain", subdomain.toLowerCase()).maybeSingle();
+          if (orgBySub && (orgBySub as any).custom_features?.subdomain === true) orgId = orgBySub.id;
         } else {
           return Response.json({ url: null }, { status: 400 });
         }

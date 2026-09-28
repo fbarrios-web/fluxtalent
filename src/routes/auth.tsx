@@ -53,11 +53,21 @@ function AuthForm() {
   }
 
   const [inApp, setInApp] = useState(false);
+  const [brandLogo, setBrandLogo] = useState<string | null>(null);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("signup") === "1") setMode("signup");
     const ua = navigator.userAgent || "";
     setInApp(/Instagram|FBAN|FBAV|FB_IAB|Line\/|TikTok/i.test(ua));
+    // Subdominio propio (plan Custom): mostrar el logo de la organización.
+    const host = window.location.host.toLowerCase();
+    const m = host.match(/^(?:www\.)?([a-z0-9-]{2,40})\.fluxtalent\.com\.ar$/);
+    if (m && m[1] !== "www") {
+      fetch(`/api/public/schedule/logo?subdomain=${encodeURIComponent(m[1])}`)
+        .then(r => r.json())
+        .then(j => { if (j?.url) setBrandLogo(j.url); })
+        .catch(() => {});
+    }
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) nav({ to: "/app/dashboard" });
     });
@@ -149,6 +159,9 @@ function AuthForm() {
 
       <div className="flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
+          {brandLogo && (
+            <img src={brandLogo} alt="" className="mb-6 h-14 w-auto max-w-[220px] object-contain" />
+          )}
           <h1 className="font-display text-3xl">{mode === "signin" ? "Bienvenido de vuelta" : "Creá tu cuenta gratis"}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {mode === "signin" ? "Ingresá para gestionar tus búsquedas." : "Solo email y contraseña. En 1 minuto estás creando tu primera vacante."}
