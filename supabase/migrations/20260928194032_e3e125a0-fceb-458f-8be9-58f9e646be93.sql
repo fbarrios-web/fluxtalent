@@ -1,0 +1,2 @@
+REVOKE EXECUTE ON FUNCTION public.can_access_vacancy(uuid), public.is_restricted_member(), public.auto_assign_restricted_creator() FROM PUBLIC, anon;
+REVOKE EXECUTE ON FUNCTION public.auto_assign_restricted_creator() FROM authenticated;
