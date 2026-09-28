@@ -165,3 +165,113 @@ export const listVacancyAssignees = createServerFn({ method: "GET" })
       .from("vacancy_assignees").select("user_id").eq("vacancy_id", data.vacancy_id);
     return (rows ?? []).map(r => r.user_id);
   });
+
+// ---------- Team members with vacancy-level access (same organization) ----------
+
+async function requireManager(supabase: any, userId: string) {
+  const { data: profile } = await supabase.from("profiles").select("org_id").eq("id", userId).maybeSingle();
+  if (!profile?.org_id) throw new Error("Sin organización");
+  const { data: org } = await supabase
+    .from("organizations").select("id, plan_price_ars, parent_org_id").eq("id", profile.org_id).maybeSingle();
+  if (!org) throw new Error("Organización no encontrada");
+  if (Number(org.plan_price_ars) < 90000 && Number(org.plan_price_ars) !== -1) throw new Error("Requiere plan Enterprise o Custom");
+  const { data: access } = await supabase
+    .from("org_member_access").select("all_vacancies").eq("user_id", userId).maybeSingle();
+  if (access && access.all_vacancies === false) throw new Error("No tenés permisos para administrar usuarios");
+  return org.id as string;
+}
+
+async function writeAccess(admin: any, orgId: string, userId: string, allVacancies: boolean, vacancyIds: string[]) {
+  const { error } = await admin.from("org_member_access").upsert({
+    user_id: userId, org_id: orgId, all_vacancies: allVacancies, updated_at: new Date().toISOString(),
+  });
+  if (error) throw error;
+  await admin.from("vacancy_assignees").delete().eq("user_id", userId);
+  if (!allVacancies && vacancyIds.length) {
+    const { data: valid } = await admin.from("vacancies").select("id").eq("org_id", orgId).in("id", vacancyIds);
+    const rows = (valid ?? []).map((v: any) => ({ vacancy_id: v.id, user_id: userId }));
+    if (rows.length) {
+      const { error: e2 } = await admin.from("vacancy_assignees").insert(rows);
+      if (e2) throw e2;
+    }
+  }
+}
+
+export const listTeamMembers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const orgId = await requireManager(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [{ data: profs }, { data: access }, { data: vacs }] = await Promise.all([
+      supabaseAdmin.from("profiles").select("id, display_name, full_name").eq("org_id", orgId),
+      supabaseAdmin.from("org_member_access").select("user_id, all_vacancies").eq("org_id", orgId),
+      supabaseAdmin.from("vacancies").select("id, title, status").eq("org_id", orgId).order("created_at", { ascending: false }),
+    ]);
+    const vacIds = (vacs ?? []).map((v: any) => v.id);
+    const { data: assigns } = vacIds.length
+      ? await supabaseAdmin.from("vacancy_assignees").select("user_id, vacancy_id").in("vacancy_id", vacIds)
+      : { data: [] as any[] };
+    const accessMap = new Map((access ?? []).map((a: any) => [a.user_id, a.all_vacancies]));
+    const members = await Promise.all((profs ?? []).map(async (p: any) => {
+      const { data: u } = await supabaseAdmin.auth.admin.getUserById(p.id);
+      return {
+        id: p.id,
+        name: p.display_name || p.full_name || u?.user?.email || "—",
+        email: u?.user?.email ?? "",
+        is_me: p.id === context.userId,
+        all_vacancies: accessMap.has(p.id) ? accessMap.get(p.id) : true,
+        vacancy_ids: (assigns ?? []).filter((a: any) => a.user_id === p.id).map((a: any) => a.vacancy_id),
+      };
+    }));
+    return { members, vacancies: vacs ?? [] };
+  });
+
+export const createTeamMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({
+      email: z.string().trim().email().max(255),
+      password: z.string().min(8).max(72),
+      display_name: z.string().trim().min(1).max(80),
+      all_vacancies: z.boolean(),
+      vacancy_ids: z.array(z.string().uuid()).max(500),
+    }).parse(input))
+  .handler(async ({ data, context }) => {
+    const orgId = await requireManager(context.supabase, context.userId);
+    if (!data.all_vacancies && data.vacancy_ids.length === 0) throw new Error("Elegí al menos una vacante");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
+      email: data.email, password: data.password, email_confirm: true,
+      user_metadata: { display_name: data.display_name, org_name: "—" },
+    });
+    if (error) throw new Error(error.message.includes("already") ? "Ya existe un usuario con ese email" : error.message);
+    const newId = created.user!.id;
+    const { data: autoProfile } = await supabaseAdmin.from("profiles").select("org_id").eq("id", newId).maybeSingle();
+    await supabaseAdmin.from("profiles").upsert({
+      id: newId, org_id: orgId, display_name: data.display_name, setup_completed_at: new Date().toISOString(),
+    });
+    // Clean up the empty org created automatically on signup
+    if (autoProfile?.org_id && autoProfile.org_id !== orgId) {
+      await supabaseAdmin.from("organizations").delete().eq("id", autoProfile.org_id);
+    }
+    await writeAccess(supabaseAdmin, orgId, newId, data.all_vacancies, data.vacancy_ids);
+    return { user_id: newId };
+  });
+
+export const updateTeamMemberAccess = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({
+      user_id: z.string().uuid(),
+      all_vacancies: z.boolean(),
+      vacancy_ids: z.array(z.string().uuid()).max(500),
+    }).parse(input))
+  .handler(async ({ data, context }) => {
+    const orgId = await requireManager(context.supabase, context.userId);
+    if (data.user_id === context.userId) throw new Error("No podés cambiar tu propio acceso");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: prof } = await supabaseAdmin.from("profiles").select("org_id").eq("id", data.user_id).maybeSingle();
+    if (prof?.org_id !== orgId) throw new Error("Usuario inválido");
+    await writeAccess(supabaseAdmin, orgId, data.user_id, data.all_vacancies, data.vacancy_ids);
+    return { ok: true };
+  });
