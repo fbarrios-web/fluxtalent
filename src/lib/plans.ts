@@ -123,6 +123,8 @@ export const PLANS: Plan[] = [
 
 export function planByPrice(price: number | string | null | undefined): Plan {
   const p = Number(price ?? 0);
+  // Custom plan: price -1 stored in organizations.plan_price_ars
+  if (p === -1) return PLANS.find(x => x.id === "custom")!;
   // Legacy price mapping for backward compatibility
   if (p === 0) return PLANS.find(x => x.id === "free")!;
   if (p === 20000 || p === 24000) return PLANS.find(x => x.id === "starter")!;
