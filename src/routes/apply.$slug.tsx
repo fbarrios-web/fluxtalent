@@ -222,6 +222,27 @@ function ApplyPage() {
           </div>
         </div>
 
+        {!!(vacancy.sensitive_fields ?? []).length && (
+          <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
+            <h3 className="font-semibold">{t("Datos adicionales")}</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              {(vacancy.sensitive_fields as any[]).map((f: any) => (
+                <div key={f.id}>
+                  <Label>{f.label} *</Label>
+                  <Input
+                    required
+                    type={f.type === "date" ? "date" : f.type === "number" ? "number" : "text"}
+                    inputMode={f.type === "number" ? "numeric" : undefined}
+                    value={sensitiveAnswers[f.id] ?? ""}
+                    onChange={e => setSensitiveAnswers(a => ({ ...a, [f.id]: e.target.value }))}
+                  />
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">{t("Estos datos son confidenciales y solo los ve la empresa de esta búsqueda.")}</p>
+          </div>
+        )}
+
         <div className="rounded-2xl border border-border bg-card p-6">
           <h3 className="font-semibold">{t("CV (PDF) *")}</h3>
           <label className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border p-6 text-sm text-muted-foreground hover:border-primary hover:text-foreground">
