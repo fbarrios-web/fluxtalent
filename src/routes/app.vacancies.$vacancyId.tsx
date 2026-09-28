@@ -419,6 +419,20 @@ function EditVacancyDialog({ vacancy, onSaved }: { vacancy: any; onSaved: () => 
               <Label className="mb-2 block">{t("Preguntas de filtro")}</Label>
               {loadedQs ? <ScreeningEditor screening={screening} setScreening={setScreening} /> : <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
             </div>
+            {!!sensFields.length && (
+              <div>
+                <Label className="mb-2 block">{t("Datos adicionales obligatorios")}</Label>
+                <div className="space-y-2">
+                  {sensFields.map((f: any) => (
+                    <label key={f.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input type="checkbox" checked={sensOn.includes(String(f.id))}
+                        onChange={e => setSensOn(prev => e.target.checked ? [...prev, String(f.id)] : prev.filter(x => x !== String(f.id)))} />
+                      {f.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)}>{t("Cancelar")}</Button>
