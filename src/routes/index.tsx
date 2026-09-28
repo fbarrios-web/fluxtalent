@@ -27,6 +27,13 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   const t = useT();
+  const navigate = useNavigate();
+  useEffect(() => {
+    const host = window.location.hostname;
+    if (host === "freddo.fluxtalent.com.ar" || host === "www.freddo.fluxtalent.com.ar") {
+      navigate({ to: "/auth", replace: true });
+    }
+  }, [navigate]);
   const getPricing = useServerFn(getPlanPricing);
   const { data: overrides } = useQuery({ queryKey: ["plan-pricing"], queryFn: () => getPricing() });
   const plans = mergePlanOverrides(overrides);
