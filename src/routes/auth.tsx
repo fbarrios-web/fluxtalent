@@ -61,7 +61,7 @@ function AuthForm() {
     const ua = navigator.userAgent || "";
     setInApp(/Instagram|FBAN|FBAV|FB_IAB|Line\/|TikTok/i.test(ua));
     // Subdominio propio (plan Custom): mostrar el logo de la organización.
-    const host = window.location.host.toLowerCase();
+    const host = window.location.hostname.toLowerCase();
     const m = host.match(/^(?:www\.)?([a-z0-9-]{2,40})\.fluxtalent\.com\.ar$/);
     if (m && m[1] !== "www") {
       if (m[1] === "freddo") setBrandLogo(freddoLogo.url);
