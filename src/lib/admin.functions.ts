@@ -226,7 +226,7 @@ export const adminGrantLicense = createServerFn({ method: "POST" })
       await supabaseAdmin.from("payments").insert({
         org_id: data.org_id,
         provider: "manual",
-        amount_ars: data.action === "set_plan" ? (data.plan_price_ars ?? 0) : 20000,
+        amount_ars: data.action === "set_plan" ? Math.max(0, data.plan_price_ars ?? 0) : 20000,
         status: "approved",
         paid_at: new Date().toISOString(),
         raw: { by: context.userId, action: data.action, plan_price_ars: data.plan_price_ars, days: data.days },
