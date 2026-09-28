@@ -78,7 +78,7 @@ export const adminListOrgs = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = supabaseAdmin
       .from("organizations")
-      .select("id, name, subscription_status, trial_ends_at, current_period_end, plan_price_ars, last_payment_at, created_at, mp_preapproval_id, parent_org_id, is_unlimited, archived_at")
+      .select("id, name, subscription_status, trial_ends_at, current_period_end, plan_price_ars, last_payment_at, created_at, mp_preapproval_id, parent_org_id, is_unlimited, archived_at, subdomain, custom_features")
       .order("created_at", { ascending: false });
     q = data.archived ? q.not("archived_at", "is", null) : q.is("archived_at", null);
     const { data: rows, error } = await q;
@@ -171,7 +171,7 @@ export const adminGrantLicense = createServerFn({ method: "POST" })
     z.object({
       org_id: z.string().uuid(),
       action: z.enum(["activate_30", "activate_90", "activate_365", "extend_trial_15", "mark_paid_manual", "suspend", "cancel", "set_plan", "grant_admin_unlimited", "revoke_admin_unlimited"]),
-      plan_price_ars: z.number().int().nonnegative().optional(),
+      plan_price_ars: z.number().int().min(-1).optional(),
       days: z.number().int().positive().max(3650).optional(),
     }).parse(input))
   .handler(async ({ data, context }) => {
@@ -226,7 +226,7 @@ export const adminGrantLicense = createServerFn({ method: "POST" })
       await supabaseAdmin.from("payments").insert({
         org_id: data.org_id,
         provider: "manual",
-        amount_ars: data.action === "set_plan" ? (data.plan_price_ars ?? 0) : 20000,
+        amount_ars: data.action === "set_plan" ? Math.max(0, data.plan_price_ars ?? 0) : 20000,
         status: "approved",
         paid_at: new Date().toISOString(),
         raw: { by: context.userId, action: data.action, plan_price_ars: data.plan_price_ars, days: data.days },
@@ -268,6 +268,37 @@ export const adminGrantLicense = createServerFn({ method: "POST" })
       }
     }
 
+    return { ok: true };
+  });
+
+/** Plan Custom: subdominio propio + funciones personalizadas por organización. */
+export const adminSetCustomFeatures = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({
+      org_id: z.string().uuid(),
+      subdomain: z.string().trim().toLowerCase().regex(/^[a-z0-9-]{2,40}$/).nullable(),
+      features: z.object({
+        subdomain: z.boolean(),
+        sensitive_fields: z.boolean(),
+        personality_test: z.boolean(),
+      }),
+    }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const patch: Record<string, unknown> = {
+      subdomain: data.features.subdomain ? data.subdomain : null,
+      custom_features: data.features,
+    };
+    const { error } = await supabaseAdmin.from("organizations").update(patch as never).eq("id", data.org_id);
+    if (error) {
+      if ((error as any).code === "23505") throw new Error("Ese subdominio ya está en uso por otra organización.");
+      throw error;
+    }
+    await supabaseAdmin.from("activity_events").insert({
+      org_id: data.org_id, user_id: context.userId, event_type: "admin.custom_features", metadata: { ...data.features, subdomain: data.subdomain },
+    });
     return { ok: true };
   });
 

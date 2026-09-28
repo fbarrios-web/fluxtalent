@@ -43,12 +43,13 @@ function NewVacancy() {
       const { data: profile } = await supabase.from("profiles").select("google_refresh_token, microsoft_refresh_token, org_id").eq("id", u.user.id).maybeSingle();
       let org: any = null;
       if (profile?.org_id) {
-        const { data } = await supabase.from("organizations").select("name").eq("id", profile.org_id).maybeSingle();
+        const { data } = await supabase.from("organizations").select("name, custom_features, sensitive_fields").eq("id", profile.org_id).maybeSingle();
         org = data;
       }
       const gmailOk = !!profile?.google_refresh_token || !!profile?.microsoft_refresh_token;
       const orgOk = !!org?.name;
-      return { gmailOk, orgOk };
+      const sensFields = org?.custom_features?.sensitive_fields === true ? ((org.sensitive_fields ?? []) as any[]) : [];
+      return { gmailOk, orgOk, sensFields };
     },
   });
 
@@ -59,6 +60,8 @@ function NewVacancy() {
   });
   const [compInput, setCompInput] = useState("");
   const [screening, setScreening] = useState<SQ[]>([]);
+  // Datos sensibles: por defecto todos prendidos.
+  const [sensOff, setSensOff] = useState<string[]>([]);
   const [drafting, setDrafting] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -77,7 +80,9 @@ function NewVacancy() {
   async function save() {
     setSaving(true);
     try {
-      const v = await create({ data: { ...form, screening } as any });
+      const allSens = (gate?.sensFields ?? []).map((f: any) => String(f.id));
+      const sensitive_field_ids = allSens.filter(id => !sensOff.includes(id));
+      const v = await create({ data: { ...form, screening, sensitive_field_ids } as any });
       toast.success(t("Vacante creada"));
       trackEvent("vacancy_created");
       if ((v as any).promo_ends_at) {
@@ -213,6 +218,25 @@ function NewVacancy() {
           </p>
           <ScreeningEditor screening={screening} setScreening={setScreening} />
         </Section>
+
+        {!!(gate?.sensFields?.length) && (
+          <Section title={t("Datos adicionales obligatorios")}>
+            <p className="text-xs text-muted-foreground">
+              {t("Datos fijos de tu organización. Elegí cuáles pedir en esta vacante.")}
+            </p>
+            <div className="space-y-2">
+              {(gate!.sensFields as any[]).map((f: any) => (
+                <label key={f.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Checkbox
+                    checked={!sensOff.includes(String(f.id))}
+                    onCheckedChange={(c) => setSensOff(prev => c ? prev.filter(x => x !== String(f.id)) : [...prev, String(f.id)])}
+                  />
+                  {f.label}
+                </label>
+              ))}
+            </div>
+          </Section>
+        )}
 
         <div className="flex items-center justify-end gap-2 pt-4">
           <Button variant="ghost" onClick={() => set("status", "draft")}>{t("Guardar borrador")}</Button>

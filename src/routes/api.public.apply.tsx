@@ -85,6 +85,31 @@ export const Route = createFileRoute("/api/public/apply")({
           if (dup) {
             return Response.json({ error: "Ya te postulaste a esta vacante con este email." }, { status: 409, headers: cors });
           }
+
+          // Datos sensibles obligatorios (plan Custom): validar en el servidor.
+          const { data: vacCfg } = await supabaseAdmin
+            .from("vacancies")
+            .select("sensitive_field_ids, organizations!inner(custom_features, sensitive_fields)")
+            .eq("id", vac.id)
+            .maybeSingle();
+          const orgCfg = (vacCfg as any)?.organizations;
+          const sensitiveAnswers: Record<string, string> = {};
+          if (orgCfg?.custom_features?.sensitive_fields === true) {
+            const enabledIds = new Set((((vacCfg as any)?.sensitive_field_ids ?? []) as any[]).map(String));
+            const fields = ((orgCfg.sensitive_fields ?? []) as any[]).filter(f => enabledIds.has(String(f.id)));
+            if (fields.length) {
+              let raw: any = {};
+              try { raw = JSON.parse(String(form.get("sensitive_answers") ?? "{}")); } catch { raw = {}; }
+              for (const f of fields) {
+                const v = String(raw[f.id] ?? "").trim();
+                if (!v) return Response.json({ error: "Respondé todas las preguntas obligatorias" }, { status: 400, headers: cors });
+                if (f.type === "number" && !Number.isFinite(Number(v))) return Response.json({ error: `El campo "${f.label}" debe ser un número.` }, { status: 400, headers: cors });
+                if (f.type === "date" && !/^\d{4}-\d{2}-\d{2}$/.test(v)) return Response.json({ error: `El campo "${f.label}" debe ser una fecha válida.` }, { status: 400, headers: cors });
+                if (v.length > 200) return Response.json({ error: `El campo "${f.label}" es demasiado largo.` }, { status: 400, headers: cors });
+                sensitiveAnswers[String(f.id)] = v;
+              }
+            }
+          }
           // Enforce plan CV-per-month cap (Free = 20, Starter = 200, etc.).
           const { getOrgPlan, getCvsThisMonth } = await import("@/lib/plan-limits");
           const planForOrg = await getOrgPlan(supabaseAdmin, vac.org_id);
@@ -176,6 +201,7 @@ export const Route = createFileRoute("/api/public/apply")({
               first_name, last_name, email, phone, linkedin,
               cv_url,
               screening_answers: answers,
+              sensitive_answers: sensitiveAnswers,
               ai_status: analyzeAi ? "pending" : "skipped",
               stage: autoDiscard ? ("rejected" as any) : undefined,
             })

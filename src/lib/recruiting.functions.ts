@@ -35,6 +35,7 @@ export const createVacancy = createServerFn({ method: "POST" })
       min_match: z.number().int().min(0).max(100).default(60),
       status: z.enum(["draft", "active", "paused", "closed"]).default("draft"),
       screening: z.array(screeningQuestionSchema).max(10).default([]),
+      sensitive_field_ids: z.array(z.string().max(60)).max(3).optional(),
     }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -87,10 +88,33 @@ export const createVacancy = createServerFn({ method: "POST" })
     }
 
 
-    const { screening, ...rest } = data;
+    const { screening, sensitive_field_ids, ...rest } = data;
+
+    // Plan Custom: subdominio propio + datos sensibles del formulario.
+    const { data: orgCfg } = await supabase
+      .from("organizations")
+      .select("subdomain, custom_features, sensitive_fields")
+      .eq("id", profile.org_id!)
+      .maybeSingle();
+    const { orgSubdomainHost } = await import("@/lib/vacancy-url");
+    const publicHost = orgCfg ? orgSubdomainHost(orgCfg as any) : null;
+
+    let sensitiveIds: string[] = [];
+    if ((orgCfg as any)?.custom_features?.sensitive_fields === true) {
+      const allIds = (((orgCfg as any).sensitive_fields ?? []) as any[]).map(f => String(f.id));
+      // Por defecto todos prendidos; el reclutador puede apagar alguno.
+      sensitiveIds = (sensitive_field_ids ?? allIds).filter(id => allIds.includes(id));
+    }
+
     const { data: vac, error } = await supabase
       .from("vacancies")
-      .insert({ ...rest, org_id: profile.org_id!, created_by: userId })
+      .insert({
+        ...rest,
+        org_id: profile.org_id!,
+        created_by: userId,
+        public_host: publicHost,
+        sensitive_field_ids: sensitiveIds,
+      } as any)
       .select("id, public_slug")
       .single();
     if (error) throw error;
@@ -127,6 +151,7 @@ export const updateVacancy = createServerFn({ method: "POST" })
         requirements: z.string().optional(),
         nice_to_have: z.string().optional(),
         competencies: z.array(z.string()).optional(),
+        sensitive_field_ids: z.array(z.string().max(60)).max(3).optional(),
       }),
       screening: z.array(screeningQuestionSchema).max(10).optional(),
     }).parse(input))

@@ -81,6 +81,15 @@ function CandidateDetail() {
     refetchInterval: (q: any) => (q.state.data?.ai_status === "running" || q.state.data?.ai_status === "pending" ? 3000 : false),
   });
 
+  const { data: orgSensFields } = useQuery<any[]>({
+    queryKey: ["org-sensitive-fields", app?.org_id],
+    enabled: !!app?.org_id && !!Object.keys(app?.sensitive_answers ?? {}).length,
+    queryFn: async () => {
+      const { data } = await supabase.from("organizations").select("sensitive_fields").eq("id", app.org_id).maybeSingle();
+      return (((data as any)?.sensitive_fields ?? []) as any[]);
+    },
+  });
+
   const [analyzing, setAnalyzing] = useState(false);
   const [emailKind, setEmailKind] = useState<"rejection" | "interview_invite" | "followup">("interview_invite");
   const [emailBody, setEmailBody] = useState("");
@@ -254,7 +263,7 @@ function CandidateDetail() {
             </TabsList>
 
             <TabsContent value="screening" className="mt-4 rounded-xl border border-border bg-card p-5">
-              {Object.entries(app.screening_answers ?? {}).length === 0 && <p className="text-sm text-muted-foreground">{t("Sin respuestas.")}</p>}
+              {Object.entries(app.screening_answers ?? {}).length === 0 && Object.keys(app.sensitive_answers ?? {}).length === 0 && <p className="text-sm text-muted-foreground">{t("Sin respuestas.")}</p>}
               <ul className="space-y-3">
                 {Object.entries(app.screening_answers ?? {}).map(([q, a]: any) => (
                   <li key={q}>
@@ -263,6 +272,22 @@ function CandidateDetail() {
                   </li>
                 ))}
               </ul>
+              {!!Object.keys(app.sensitive_answers ?? {}).length && (
+                <div className="mt-4 border-t border-border pt-4">
+                  <div className="mb-2 text-xs font-semibold uppercase text-muted-foreground">{t("Datos adicionales (confidenciales)")}</div>
+                  <ul className="space-y-3">
+                    {Object.entries(app.sensitive_answers ?? {}).map(([fid, val]: any) => {
+                      const label = (orgSensFields ?? []).find((f: any) => String(f.id) === String(fid))?.label ?? fid;
+                      return (
+                        <li key={fid}>
+                          <div className="text-xs text-muted-foreground">{label}</div>
+                          <div className="text-sm">{String(val)}</div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="profile" className="mt-4 space-y-3 rounded-xl border border-border bg-card p-5">

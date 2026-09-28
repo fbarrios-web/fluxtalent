@@ -21,6 +21,7 @@ import { VacancyScheduling } from "@/components/vacancy-scheduling";
 import { SchedulingTour } from "@/components/product-tour";
 import { downloadCSV } from "@/lib/export-csv";
 import { ScreeningEditor } from "./app.vacancies.new";
+import { vacancyPublicUrl } from "@/lib/vacancy-url";
 import { useT } from "@/lib/i18n";
 
 const STAGES = [
@@ -87,7 +88,7 @@ function VacancyDetail() {
   );
 
 
-  const applyUrl = `${window.location.origin}/apply/${v.public_slug}`;
+  const applyUrl = vacancyPublicUrl(v);
   function copyLink() {
     navigator.clipboard.writeText(applyUrl);
     toast.success(t("Link copiado"));
@@ -331,6 +332,8 @@ function EditVacancyDialog({ vacancy, onSaved }: { vacancy: any; onSaved: () => 
   });
   const [screening, setScreening] = useState<any[]>([]);
   const [loadedQs, setLoadedQs] = useState(false);
+  const [sensFields, setSensFields] = useState<any[]>([]);
+  const [sensOn, setSensOn] = useState<string[]>(vacancy.sensitive_field_ids ?? []);
 
   useEffect(() => {
     if (!open || loadedQs) return;
@@ -344,14 +347,19 @@ function EditVacancyDialog({ vacancy, onSaved }: { vacancy: any; onSaved: () => 
         question: q.question, required: q.required,
         qtype: q.qtype ?? "text", options: q.options ?? [],
       })));
+      const { data: org } = await supabase
+        .from("organizations").select("custom_features, sensitive_fields").eq("id", vacancy.org_id).maybeSingle();
+      if ((org as any)?.custom_features?.sensitive_fields === true) {
+        setSensFields(((org as any).sensitive_fields ?? []) as any[]);
+      }
       setLoadedQs(true);
     })();
-  }, [open, loadedQs, vacancy.id]);
+  }, [open, loadedQs, vacancy.id, vacancy.org_id]);
 
   async function save() {
     setSaving(true);
     try {
-      await update({ data: { id: vacancy.id, patch, screening } as any });
+      await update({ data: { id: vacancy.id, patch: { ...patch, sensitive_field_ids: sensOn }, screening } as any });
       toast.success(t("Vacante actualizada"));
       onSaved();
       setOpen(false);
@@ -411,6 +419,20 @@ function EditVacancyDialog({ vacancy, onSaved }: { vacancy: any; onSaved: () => 
               <Label className="mb-2 block">{t("Preguntas de filtro")}</Label>
               {loadedQs ? <ScreeningEditor screening={screening} setScreening={setScreening} /> : <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
             </div>
+            {!!sensFields.length && (
+              <div>
+                <Label className="mb-2 block">{t("Datos adicionales obligatorios")}</Label>
+                <div className="space-y-2">
+                  {sensFields.map((f: any) => (
+                    <label key={f.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input type="checkbox" checked={sensOn.includes(String(f.id))}
+                        onChange={e => setSensOn(prev => e.target.checked ? [...prev, String(f.id)] : prev.filter(x => x !== String(f.id)))} />
+                      {f.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)}>{t("Cancelar")}</Button>

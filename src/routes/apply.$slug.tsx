@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,7 @@ import { Loader2, CheckCircle2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { isValidLinkedin } from "@/lib/linkedin";
 import { useT } from "@/lib/i18n";
+import { MAIN_APP_HOST } from "@/lib/vacancy-url";
 
 export const Route = createFileRoute("/apply/$slug")({
   component: ApplyPage,
@@ -63,11 +64,24 @@ function ApplyPage() {
     },
   });
 
+  // Si se abre desde un subdominio propio (ej. freddo.fluxtalent.com.ar) una
+  // vacante de otra organización, redirigir al dominio general.
+  useEffect(() => {
+    if (!vacancy || typeof window === "undefined") return;
+    const host = window.location.host;
+    if (!host.endsWith(`.${MAIN_APP_HOST}`)) return;
+    const sub = host.slice(0, host.length - MAIN_APP_HOST.length - 1);
+    if (sub && sub !== "www" && vacancy.org_subdomain !== sub) {
+      window.location.replace(`https://${MAIN_APP_HOST}/apply/${slug}`);
+    }
+  }, [vacancy, slug]);
+
 
   const [form, setForm] = useState({ first_name: "", last_name: "", email: "", phone: "", linkedin: "" });
   type AnswerVal = string | string[];
   const [cv, setCv] = useState<File | null>(null);
   const [answers, setAnswers] = useState<Record<string, AnswerVal>>({});
+  const [sensitiveAnswers, setSensitiveAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -80,6 +94,9 @@ function ApplyPage() {
       return v == null || (Array.isArray(v) ? v.length === 0 : String(v).trim() === "");
     });
     if (reqMissing) { toast.error(t("Respondé todas las preguntas obligatorias")); return; }
+    const sensFields: any[] = vacancy.sensitive_fields ?? [];
+    const sensMissing = sensFields.some((f: any) => !String(sensitiveAnswers[f.id] ?? "").trim());
+    if (sensMissing) { toast.error(t("Respondé todas las preguntas obligatorias")); return; }
     if (!cv) { toast.error(t("Adjuntá tu CV para postularte.")); return; }
     if (!form.phone.trim()) { toast.error(t("El teléfono es obligatorio.")); return; }
     if (form.linkedin.trim() && !isValidLinkedin(form.linkedin)) {
@@ -91,6 +108,7 @@ function ApplyPage() {
     fd.set("vacancy_id", vacancy.id);
     Object.entries(form).forEach(([k, v]) => fd.set(k, v));
     fd.set("answers", JSON.stringify(answers));
+    if (sensFields.length) fd.set("sensitive_answers", JSON.stringify(sensitiveAnswers));
     if (cv) fd.set("cv", cv, cv.name);
     let lastErr: any = null;
     try {
@@ -203,6 +221,27 @@ function ApplyPage() {
             <div className="md:col-span-2"><Label>LinkedIn</Label><Input placeholder="https://linkedin.com/in/…" value={form.linkedin} onChange={e => setForm(f => ({ ...f, linkedin: e.target.value }))} /></div>
           </div>
         </div>
+
+        {!!(vacancy.sensitive_fields ?? []).length && (
+          <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
+            <h3 className="font-semibold">{t("Datos adicionales")}</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              {(vacancy.sensitive_fields as any[]).map((f: any) => (
+                <div key={f.id}>
+                  <Label>{f.label} *</Label>
+                  <Input
+                    required
+                    type={f.type === "date" ? "date" : f.type === "number" ? "number" : "text"}
+                    inputMode={f.type === "number" ? "numeric" : undefined}
+                    value={sensitiveAnswers[f.id] ?? ""}
+                    onChange={e => setSensitiveAnswers(a => ({ ...a, [f.id]: e.target.value }))}
+                  />
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">{t("Estos datos son confidenciales y solo los ve la empresa de esta búsqueda.")}</p>
+          </div>
+        )}
 
         <div className="rounded-2xl border border-border bg-card p-6">
           <h3 className="font-semibold">{t("CV (PDF) *")}</h3>

@@ -77,6 +77,7 @@ function Settings() {
   const [fullName, setFullName] = useState("");
   const [dni, setDni] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [sensitiveFields, setSensitiveFields] = useState<{ id: string; label: string; type: "text" | "number" | "date" }[]>([]);
   const [saving, setSaving] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -99,7 +100,7 @@ function Settings() {
       setLogoUrl(org.logo_url ?? "");
       setSignature(org.signature_html ?? "");
       setSignatureImageUrl((org as any).signature_image_url ?? "");
-      
+      setSensitiveFields((((org as any).sensitive_fields ?? []) as any[]).map(f => ({ id: String(f.id), label: String(f.label), type: f.type ?? "text" })));
       setTimezone((org as any).timezone ?? "America/Argentina/Buenos_Aires");
       signedPreview(org.logo_url ?? "").then(setLogoPreview);
       signedPreview((org as any).signature_image_url ?? "").then(setSignaturePreview);
@@ -163,7 +164,10 @@ function Settings() {
         logo_url: logoUrl || null,
         signature_html: signature || null,
         signature_image_url: signatureImageUrl || null,
-        
+        sensitive_fields: sensitiveFields
+          .filter(f => f.label.trim())
+          .slice(0, 3)
+          .map((f, i) => ({ id: f.id, label: f.label.trim(), type: f.type, position: i })),
         timezone: timezone || "America/Argentina/Buenos_Aires",
       };
       const { error } = await supabase.from("organizations").update(patch as any).eq("id", org.id);
@@ -292,6 +296,43 @@ function Settings() {
             </div>
             <Button onClick={save} disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{t("Guardar")}</Button>
           </section>
+
+          {(org as any)?.custom_features?.sensitive_fields === true && (
+            <section className="space-y-4 rounded-2xl border border-border bg-card p-6">
+              <h3 className="font-semibold">{t("Datos fijos del formulario")}</h3>
+              <p className="text-sm text-muted-foreground">
+                {t("Definí hasta 3 datos obligatorios que se piden en los formularios de postulación (ej.: DNI, fecha de nacimiento, domicilio). En cada vacante podés elegir cuáles pedir.")}
+              </p>
+              <div className="space-y-3">
+                {sensitiveFields.map((f, i) => (
+                  <div key={f.id} className="flex flex-wrap items-end gap-2">
+                    <div className="min-w-52 flex-1">
+                      <Label className="text-xs">{t("Nombre del dato")}</Label>
+                      <Input value={f.label} placeholder={t("Ej.: DNI")} onChange={e => setSensitiveFields(prev => prev.map((x, j) => j === i ? { ...x, label: e.target.value } : x))} />
+                    </div>
+                    <div className="w-36">
+                      <Label className="text-xs">{t("Tipo")}</Label>
+                      <Select value={f.type} onValueChange={v => setSensitiveFields(prev => prev.map((x, j) => j === i ? { ...x, type: v as any } : x))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="text">{t("Texto")}</SelectItem>
+                          <SelectItem value="number">{t("Número")}</SelectItem>
+                          <SelectItem value="date">{t("Fecha")}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => setSensitiveFields(prev => prev.filter((_, j) => j !== i))}>{t("Quitar")}</Button>
+                  </div>
+                ))}
+                {sensitiveFields.length < 3 && (
+                  <Button variant="outline" size="sm" onClick={() => setSensitiveFields(prev => [...prev, { id: crypto.randomUUID(), label: "", type: "text" }])}>
+                    {t("Agregar dato")}
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">{t("Guardá con el botón \"Guardar\" de la sección Empresa & marca.")}</p>
+            </section>
+          )}
 
           <section className="space-y-3 rounded-2xl border border-border bg-card p-6">
             <h3 className="font-semibold">{t("Soporte")}</h3>

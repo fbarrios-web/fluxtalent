@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { adminListOrgs, adminGrantLicense, adminExportClients, adminDeleteOrg, adminSetOrgArchived, adminImpersonateOrg } from "@/lib/admin.functions";
+import { adminListOrgs, adminGrantLicense, adminExportClients, adminDeleteOrg, adminSetOrgArchived, adminImpersonateOrg, adminSetCustomFeatures } from "@/lib/admin.functions";
 import { IMPERSONATION_PENDING_KEY, type ImpersonationPendingState } from "@/components/impersonation-banner";
 import { supabase } from "@/integrations/supabase/client";
 import { Download, Loader2, ArrowUpDown, ArrowUp, ArrowDown, Columns3, UserCog } from "lucide-react";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -60,6 +61,7 @@ function AdminOrgs() {
   const exportFn = useServerFn(adminExportClients);
   const delFn = useServerFn(adminDeleteOrg);
   const archiveFn = useServerFn(adminSetOrgArchived);
+  const customFn = useServerFn(adminSetCustomFeatures);
   const [filter, setFilter] = useState("");
   const [emailFilter, setEmailFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -142,6 +144,13 @@ function AdminOrgs() {
   });
 
   const [planDialog, setPlanDialog] = useState<{ orgId: string; orgName: string } | null>(null);
+  const [customDialog, setCustomDialog] = useState<any | null>(null);
+
+  const customMut = useMutation({
+    mutationFn: (vars: { org_id: string; subdomain: string | null; features: any }) => customFn({ data: vars }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-orgs"] }); toast.success(t("Funciones actualizadas")); setCustomDialog(null); },
+    onError: (e: any) => toast.error(e.message ?? t("Error")),
+  });
 
   const rows = useMemo(() => {
     let r = (data ?? []).filter(o => {
@@ -362,12 +371,16 @@ function AdminOrgs() {
                     {isVisible("plan") && (
                       <td className="px-4 py-3 border-b border-border">
                         <div className="font-medium">
-                          {(o as any).is_unlimited
+                          {Number(o.plan_price_ars) === -1
+                            ? "Custom"
+                            : (o as any).is_unlimited
                             ? `★ ${t("Admin ilimitado")}`
                             : (o.subscription_status === "trialing" ? t("Free (trial)") : planByPrice(o.plan_price_ars).name)}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {(o as any).is_unlimited ? t("Sin costo · no cuenta en ganancias") : t("ARS {amount}/mes", { amount: Number(o.plan_price_ars).toLocaleString("es-AR") })}
+                          {Number(o.plan_price_ars) === -1
+                            ? t("A medida · ilimitado")
+                            : (o as any).is_unlimited ? t("Sin costo · no cuenta en ganancias") : t("ARS {amount}/mes", { amount: Number(o.plan_price_ars).toLocaleString("es-AR") })}
                         </div>
                       </td>
                     )}
@@ -386,6 +399,11 @@ function AdminOrgs() {
                           <Button variant="outline" size="sm" onClick={() => setPlanDialog({ orgId: o.id, orgName: o.name })} disabled={mut.isPending}>
                             {t("Asignar plan")}
                           </Button>
+                          {Number(o.plan_price_ars) === -1 && (
+                            <Button variant="outline" size="sm" onClick={() => setCustomDialog(o)} disabled={customMut.isPending}>
+                              {t("Funciones")}
+                            </Button>
+                          )}
                           <ActionMenu orgId={o.id} onPick={(action) => mut.mutate({ org_id: o.id, action })} disabled={mut.isPending} />
                           <Button
                             variant="outline"
@@ -433,7 +451,79 @@ function AdminOrgs() {
         }}
         pending={mut.isPending}
       />
+      <CustomFeaturesDialog
+        org={customDialog}
+        onClose={() => setCustomDialog(null)}
+        onSave={(vars) => customMut.mutate(vars)}
+        pending={customMut.isPending}
+      />
     </div>
+  );
+}
+
+function CustomFeaturesDialog({ org, onClose, onSave, pending }: {
+  org: any | null;
+  onClose: () => void;
+  onSave: (vars: { org_id: string; subdomain: string | null; features: any }) => void;
+  pending: boolean;
+}) {
+  const t = useT();
+  const cf = (org?.custom_features ?? {}) as any;
+  const [subdomain, setSubdomain] = useState("");
+  const [features, setFeatures] = useState({ subdomain: false, sensitive_fields: false, personality_test: false });
+  useEffect(() => {
+    if (org) {
+      setSubdomain(org.subdomain ?? "");
+      setFeatures({
+        subdomain: !!cf.subdomain,
+        sensitive_fields: !!cf.sensitive_fields,
+        personality_test: !!cf.personality_test,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [org?.id]);
+  const toggle = (k: keyof typeof features) => setFeatures(f => ({ ...f, [k]: !f[k] }));
+  return (
+    <Dialog open={!!org} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t("Funciones personalizadas")} {org ? `· ${org.name}` : ""}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox checked={features.subdomain} onCheckedChange={() => toggle("subdomain")} />
+            {t("Subdominio propio")}
+          </label>
+          {features.subdomain && (
+            <div className="pl-6">
+              <Label className="text-xs">{t("Subdominio")}</Label>
+              <div className="flex items-center gap-2">
+                <Input value={subdomain} onChange={e => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} placeholder="freddo" className="w-40" />
+                <span className="text-sm text-muted-foreground">.fluxtalent.com.ar</span>
+              </div>
+            </div>
+          )}
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox checked={features.sensitive_fields} onCheckedChange={() => toggle("sensitive_fields")} />
+            {t("Datos sensibles en formulario")}
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox checked={features.personality_test} onCheckedChange={() => toggle("personality_test")} />
+            {t("Test de personalidad (pendiente de definición)")}
+          </label>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>{t("Cancelar")}</Button>
+          <Button
+            disabled={pending || (features.subdomain && !subdomain)}
+            onClick={() => org && onSave({ org_id: org.id, subdomain: subdomain || null, features })}
+          >
+            {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {t("Guardar")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -478,7 +568,7 @@ function AssignPlanDialog({ open, org, onClose, onAssign, pending }: {
   pending: boolean;
 }) {
   const t = useT();
-  const assignable = PLANS.filter(p => !p.contactOnly && p.priceArs >= 0);
+  const assignable = PLANS.filter(p => p.priceArs >= 0 || p.id === "custom");
   const [planId, setPlanId] = useState<string>(assignable[1]?.id ?? assignable[0].id);
   const [days, setDays] = useState<string>("30");
   const plan = assignable.find(p => p.id === planId) ?? assignable[0];
@@ -496,7 +586,7 @@ function AssignPlanDialog({ open, org, onClose, onAssign, pending }: {
               <SelectContent>
                 {assignable.map(p => (
                   <SelectItem key={p.id} value={p.id}>
-                    {p.name} — {p.priceArs === 0 ? t("Gratis") : t("ARS {amount} / 15 días.", { amount: p.priceArs.toLocaleString("es-AR") })}
+                    {p.name} — {p.id === "custom" ? t("A medida · ilimitado + funciones personalizadas") : p.priceArs === 0 ? t("Gratis") : t("ARS {amount} / 15 días.", { amount: p.priceArs.toLocaleString("es-AR") })}
                   </SelectItem>
                 ))}
               </SelectContent>

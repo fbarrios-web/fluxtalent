@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, ExternalLink, Download, Search } from "lucide-react";
 import { downloadCSV } from "@/lib/export-csv";
+import { vacancyPublicUrl } from "@/lib/vacancy-url";
 import { UsageCard } from "@/components/usage-card";
 import { PromoNotice } from "@/components/promo-notice";
 import { useT } from "@/lib/i18n";
@@ -23,7 +24,7 @@ function VacanciesList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("vacancies")
-        .select("id, title, area, seniority, status, public_slug, created_at, applications:applications(count)")
+        .select("id, title, area, seniority, status, public_slug, public_host, created_at, applications:applications(count)")
         .order("created_at", { ascending: false })
         .abortSignal(AbortSignal.timeout(15000));
       if (error) throw new Error(error.message);
@@ -131,7 +132,7 @@ function VacanciesList() {
               </div>
               {isActive && (
                 <a
-                  href={`/apply/${v.public_slug}`}
+                  href={vacancyPublicUrl(v)}
                   target="_blank" rel="noreferrer"
                   onClick={e => e.stopPropagation()}
                   className="inline-flex items-center justify-center gap-1 self-start rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-background sm:self-auto"

@@ -108,6 +108,7 @@ export type Database = {
           recruiter_notes: string | null
           red_flags: string[] | null
           screening_answers: Json | null
+          sensitive_answers: Json
           source: string | null
           stage: Database["public"]["Enums"]["pipeline_stage"]
           strengths: string[] | null
@@ -137,6 +138,7 @@ export type Database = {
           recruiter_notes?: string | null
           red_flags?: string[] | null
           screening_answers?: Json | null
+          sensitive_answers?: Json
           source?: string | null
           stage?: Database["public"]["Enums"]["pipeline_stage"]
           strengths?: string[] | null
@@ -166,6 +168,7 @@ export type Database = {
           recruiter_notes?: string | null
           red_flags?: string[] | null
           screening_answers?: Json | null
+          sensitive_answers?: Json
           source?: string | null
           stage?: Database["public"]["Enums"]["pipeline_stage"]
           strengths?: string[] | null
@@ -566,6 +569,7 @@ export type Database = {
           contact_email: string | null
           created_at: string
           current_period_end: string | null
+          custom_features: Json
           cv_limit_override: number | null
           grace_until: string | null
           id: string
@@ -585,8 +589,10 @@ export type Database = {
           promo_plan_id: string | null
           promo_started_at: string | null
           sender_email: string | null
+          sensitive_fields: Json
           signature_html: string | null
           signature_image_url: string | null
+          subdomain: string | null
           subscription_status: Database["public"]["Enums"]["subscription_status"]
           timezone: string
           trial_ends_at: string
@@ -599,6 +605,7 @@ export type Database = {
           contact_email?: string | null
           created_at?: string
           current_period_end?: string | null
+          custom_features?: Json
           cv_limit_override?: number | null
           grace_until?: string | null
           id?: string
@@ -618,8 +625,10 @@ export type Database = {
           promo_plan_id?: string | null
           promo_started_at?: string | null
           sender_email?: string | null
+          sensitive_fields?: Json
           signature_html?: string | null
           signature_image_url?: string | null
+          subdomain?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           timezone?: string
           trial_ends_at?: string
@@ -632,6 +641,7 @@ export type Database = {
           contact_email?: string | null
           created_at?: string
           current_period_end?: string | null
+          custom_features?: Json
           cv_limit_override?: number | null
           grace_until?: string | null
           id?: string
@@ -651,8 +661,10 @@ export type Database = {
           promo_plan_id?: string | null
           promo_started_at?: string | null
           sender_email?: string | null
+          sensitive_fields?: Json
           signature_html?: string | null
           signature_image_url?: string | null
+          subdomain?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           timezone?: string
           trial_ends_at?: string
@@ -1042,10 +1054,12 @@ export type Database = {
           modality: Database["public"]["Enums"]["modality"] | null
           nice_to_have: string | null
           org_id: string
+          public_host: string | null
           public_slug: string
           requirements: string | null
           responsibilities: string | null
           seniority: Database["public"]["Enums"]["seniority"] | null
+          sensitive_field_ids: Json
           status: Database["public"]["Enums"]["vacancy_status"]
           title: string
           updated_at: string
@@ -1064,10 +1078,12 @@ export type Database = {
           modality?: Database["public"]["Enums"]["modality"] | null
           nice_to_have?: string | null
           org_id: string
+          public_host?: string | null
           public_slug?: string
           requirements?: string | null
           responsibilities?: string | null
           seniority?: Database["public"]["Enums"]["seniority"] | null
+          sensitive_field_ids?: Json
           status?: Database["public"]["Enums"]["vacancy_status"]
           title: string
           updated_at?: string
@@ -1086,10 +1102,12 @@ export type Database = {
           modality?: Database["public"]["Enums"]["modality"] | null
           nice_to_have?: string | null
           org_id?: string
+          public_host?: string | null
           public_slug?: string
           requirements?: string | null
           responsibilities?: string | null
           seniority?: Database["public"]["Enums"]["seniority"] | null
+          sensitive_field_ids?: Json
           status?: Database["public"]["Enums"]["vacancy_status"]
           title?: string
           updated_at?: string
@@ -1313,12 +1331,16 @@ export type Database = {
           location: string
           modality: string
           nice_to_have: string
+          org_brand_color: string
           org_id: string
+          org_logo_url: string
           org_name: string
+          org_subdomain: string
           requirements: string
           responsibilities: string
           screening_questions: Json
           seniority: string
+          sensitive_fields: Json
           status: string
           title: string
           work_schedule: string
