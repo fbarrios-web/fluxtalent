@@ -94,6 +94,9 @@ function ApplyPage() {
       return v == null || (Array.isArray(v) ? v.length === 0 : String(v).trim() === "");
     });
     if (reqMissing) { toast.error(t("Respondé todas las preguntas obligatorias")); return; }
+    const sensFields: any[] = vacancy.sensitive_fields ?? [];
+    const sensMissing = sensFields.some((f: any) => !String(sensitiveAnswers[f.id] ?? "").trim());
+    if (sensMissing) { toast.error(t("Respondé todas las preguntas obligatorias")); return; }
     if (!cv) { toast.error(t("Adjuntá tu CV para postularte.")); return; }
     if (!form.phone.trim()) { toast.error(t("El teléfono es obligatorio.")); return; }
     if (form.linkedin.trim() && !isValidLinkedin(form.linkedin)) {
@@ -105,6 +108,7 @@ function ApplyPage() {
     fd.set("vacancy_id", vacancy.id);
     Object.entries(form).forEach(([k, v]) => fd.set(k, v));
     fd.set("answers", JSON.stringify(answers));
+    if (sensFields.length) fd.set("sensitive_answers", JSON.stringify(sensitiveAnswers));
     if (cv) fd.set("cv", cv, cv.name);
     let lastErr: any = null;
     try {
