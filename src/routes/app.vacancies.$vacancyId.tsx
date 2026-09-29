@@ -140,7 +140,21 @@ function VacancyDetail() {
           <Button
             variant="outline"
             disabled={!apps?.length}
-            onClick={() => {
+            onClick={async () => {
+              const { data: org } = await supabase.from("organizations").select("custom_features").eq("id", v.org_id).maybeSingle();
+              const withAnswers = (org as any)?.custom_features?.export_screening === true;
+              let answers: Record<string, Record<string, unknown>> = {};
+              let qs: string[] = [];
+              if (withAnswers) {
+                const [{ data: sq }, { data: ans }] = await Promise.all([
+                  supabase.from("screening_questions").select("question, position").eq("vacancy_id", v.id).order("position"),
+                  supabase.from("applications").select("id, screening_answers").eq("vacancy_id", v.id).limit(5000),
+                ]);
+                qs = (sq ?? []).map((q: any) => q.question);
+                for (const r of ans ?? []) answers[(r as any).id] = ((r as any).screening_answers ?? {}) as any;
+                for (const a of Object.values(answers)) for (const k of Object.keys(a)) if (!qs.includes(k)) qs.push(k);
+              }
+              const fmt = (x: unknown) => x == null ? "" : Array.isArray(x) ? x.join(", ") : typeof x === "object" ? JSON.stringify(x) : String(x);
               const rows = (apps ?? []).map((a: any) => [
                 `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim(),
                 a.email ?? "",
@@ -148,10 +162,11 @@ function VacancyDetail() {
                 a.cv_url ?? "",
                 a.stage ?? "",
                 a.match_score != null ? `${a.match_score}%` : "",
+                ...qs.map(q => fmt(answers[a.id]?.[q])),
               ]);
               downloadCSV(
                 `postulantes-${v.public_slug ?? v.id}`,
-                [t("Postulante"), t("Email"), t("Teléfono"), t("CV"), t("Estado"), t("Match %")],
+                [t("Postulante"), t("Email"), t("Teléfono"), t("CV"), t("Estado"), t("Match %"), ...qs],
                 rows,
               );
             }}
