@@ -203,14 +203,21 @@ function ApplyPage() {
       </header>
 
       <form onSubmit={submit} className="mx-auto max-w-2xl space-y-6 px-6 py-10">
-        {(vacancy.description || vacancy.requirements || vacancy.nice_to_have) && (
-          <section className="space-y-5 border-b border-border pb-8">
-            <h2 className="font-display text-2xl">{t("Resumen de la vacante")}</h2>
-            {vacancy.description && <VacancySummary title={t("Descripción")} body={vacancy.description} />}
-            {vacancy.requirements && <VacancySummary title={t("Requisitos excluyentes")} body={vacancy.requirements} />}
-            {vacancy.nice_to_have && <VacancySummary title={t("Deseables")} body={vacancy.nice_to_have} />}
-          </section>
-        )}
+        {(() => {
+          // Freddo: solo mostrar la descripción (sin requisitos excluyentes ni deseables).
+          const hideReqs = vacancy.org_subdomain === "freddo";
+          const showDesc = !!vacancy.description;
+          const showReqs = !hideReqs && (!!vacancy.requirements || !!vacancy.nice_to_have);
+          if (!showDesc && !showReqs) return null;
+          return (
+            <section className="space-y-5 border-b border-border pb-8">
+              <h2 className="font-display text-2xl">{t("Resumen de la vacante")}</h2>
+              {showDesc && <VacancySummary title={t("Descripción")} body={vacancy.description} />}
+              {showReqs && vacancy.requirements && <VacancySummary title={t("Requisitos excluyentes")} body={vacancy.requirements} />}
+              {showReqs && vacancy.nice_to_have && <VacancySummary title={t("Deseables")} body={vacancy.nice_to_have} />}
+            </section>
+          );
+        })()}
         <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
           <h3 className="font-semibold">{t("Tus datos")}</h3>
           <div className="grid gap-4 md:grid-cols-2">
