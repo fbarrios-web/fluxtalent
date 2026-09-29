@@ -1,3 +1,4 @@
+import { describeAiError } from "@/lib/ai-error-message";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -216,7 +217,7 @@ function CandidateDetail() {
                 {app.cv_url && <button onClick={openCv} className="inline-flex items-center gap-1 text-xs text-primary hover:underline"><FileText className="h-3 w-3" /> {t("Ver CV")}</button>}
               </div>
             </div>
-            <MatchPill score={app.match_score} />
+            <MatchPill score={app.match_score} aiStatus={app.ai_status} aiError={app.ai_last_error} />
           </header>
 
           <div data-tour="cand-ai" className="rounded-2xl border border-border bg-card p-5">
