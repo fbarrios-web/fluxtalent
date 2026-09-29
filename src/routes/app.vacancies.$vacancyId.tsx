@@ -72,7 +72,7 @@ function VacancyDetail() {
     queryFn: async () => {
       const { data } = await supabase
         .from("applications")
-        .select("id, first_name, last_name, email, phone, cv_url, stage, match_score, ai_status, created_at")
+        .select("id, first_name, last_name, email, phone, cv_url, stage, match_score, ai_status, ai_last_error, created_at")
         .eq("vacancy_id", vacancyId)
         .order("match_score", { ascending: false, nullsFirst: false });
       return data ?? [];
@@ -270,7 +270,7 @@ function VacancyDetail() {
                     <td className="px-4 py-3 font-medium">{a.first_name} {a.last_name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{a.email}</td>
                     <td className="px-4 py-3 text-muted-foreground">{a.stage}</td>
-                    <td className="px-4 py-3"><MatchPill score={a.match_score} minMatch={v.min_match} aiStatus={a.ai_status} /></td>
+                    <td className="px-4 py-3"><MatchPill score={a.match_score} minMatch={v.min_match} aiStatus={a.ai_status} aiError={a.ai_last_error} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -872,7 +872,7 @@ function KanbanColumnBody({
     >
       <div className="flex items-center justify-between">
         <div className="truncate text-sm font-medium">{a.first_name} {a.last_name}</div>
-        <MatchPill score={a.match_score} minMatch={minMatch} aiStatus={a.ai_status} />
+        <MatchPill score={a.match_score} minMatch={minMatch} aiStatus={a.ai_status} aiError={a.ai_last_error} />
       </div>
       <div className="mt-1 truncate text-xs text-muted-foreground">{a.email}</div>
     </div>

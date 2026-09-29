@@ -1,3 +1,4 @@
+import { describeAiError } from "@/lib/ai-error-message";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -207,10 +208,10 @@ function StatusPill({ status }: { status: string }) {
   };
   return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${cls[status] ?? "bg-muted"}`}>{status}</span>;
 }
-export function MatchPill({ score, minMatch, aiStatus }: { score: number | null; minMatch?: number | null; aiStatus?: string | null }) {
+export function MatchPill({ score, minMatch, aiStatus, aiError }: { score: number | null; minMatch?: number | null; aiStatus?: string | null; aiError?: string | null }) {
   const t = useT();
   if (score == null) {
-    if (aiStatus === "error") return <span className="text-xs text-destructive">{t("error de análisis")}</span>;
+    if (aiStatus === "error") { const d = describeAiError(aiError); return <span className="text-xs text-destructive" title={t(d.detail)}>{t(d.short)}</span>; }
     if (aiStatus === "skipped") return <span className="text-xs text-muted-foreground">{t("sin CV")}</span>;
     return <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> {t("analizando…")}</span>;
   }
