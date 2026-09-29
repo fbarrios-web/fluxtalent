@@ -232,6 +232,9 @@ function CandidateDetail() {
               {app.ai_status === "running" && <span className="inline-flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> {t("analizando…")}</span>}
             </div>
 
+            {app.ai_status === "error" && !app.ai_summary && (
+              <p className="mb-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{t(describeAiError(app.ai_last_error).detail)}</p>
+            )}
             {app.ai_summary ? (
               <>
                 <p className="text-sm">{app.ai_summary}</p>
