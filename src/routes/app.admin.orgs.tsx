@@ -247,7 +247,7 @@ function AdminOrgs() {
             value={emailFilter}
             onChange={e => setEmailFilter(e.target.value)}
             placeholder={t("Filtrar por email…")}
-            className="w-56 rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            className="w-full sm:w-56 rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-40 h-9"><SelectValue placeholder={t("Estado")} /></SelectTrigger>
