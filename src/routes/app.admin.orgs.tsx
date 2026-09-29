@@ -218,7 +218,7 @@ function AdminOrgs() {
 
   const stickyLeft: Partial<Record<ColKey, string>> = {
     org: "left-0",
-    email: "left-[220px]",
+    email: "left-[150px] md:left-[220px]",
   };
 
   if (isLoading) return <div className="grid h-64 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></div>;
@@ -241,7 +241,7 @@ function AdminOrgs() {
             value={filter}
             onChange={e => setFilter(e.target.value)}
             placeholder={t("Buscar organización…")}
-            className="w-56 rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            className="w-full sm:w-56 rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
           <input
             value={emailFilter}
