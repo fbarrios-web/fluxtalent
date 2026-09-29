@@ -39,26 +39,26 @@ function AdminLayout() {
   );
 
   return (
-    <div className="mx-auto max-w-7xl p-6 md:p-10">
-      <header className="mb-6 flex items-center justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-wider text-primary">{t("Panel de administración")}</p>
-          <h1 className="font-display text-4xl">FLUX Talent · {t("Operaciones")}</h1>
-        </div>
+    <div className="mx-auto max-w-7xl p-4 md:p-10">
+      <header className="mb-4 md:mb-6">
+        <p className="text-xs uppercase tracking-wider text-primary">{t("Panel de administración")}</p>
+        <h1 className="font-display text-2xl md:text-4xl">FLUX Talent · {t("Operaciones")}</h1>
       </header>
 
-      <nav className="mb-6 flex gap-1 border-b border-border">
-        {tabs.map(tb => {
-          const active = tb.exact ? loc.pathname === tb.to : loc.pathname.startsWith(tb.to);
-          return (
-            <Link key={tb.to} to={tb.to} className={cn(
-              "flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium -mb-px",
-              active ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
-            )}>
-              <tb.icon className="h-4 w-4" /> {tb.label}
-            </Link>
-          );
-        })}
+      <nav className="mb-6 -mx-4 overflow-x-auto border-b border-border px-4 md:mx-0 md:px-0">
+        <div className="flex w-max gap-1 md:w-auto">
+          {tabs.map(tb => {
+            const active = tb.exact ? loc.pathname === tb.to : loc.pathname.startsWith(tb.to);
+            return (
+              <Link key={tb.to} to={tb.to} className={cn(
+                "flex shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium -mb-px md:px-4",
+                active ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+              )}>
+                <tb.icon className="h-4 w-4 shrink-0" /> {tb.label}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
 
       <Outlet />
