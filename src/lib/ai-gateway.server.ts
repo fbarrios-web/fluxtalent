@@ -13,7 +13,14 @@ export class InsufficientCreditsError extends Error {
 export function isInsufficientCreditsError(e: any): boolean {
   if (e instanceof InsufficientCreditsError) return true;
   const msg = typeof e?.message === "string" ? e.message : "";
-  return msg.includes("AI 402") || msg.includes("Not enough credits");
+  // 402 = sin créditos; 403 credit_limit_reached = tope de gasto de IA alcanzado.
+  // Ambos pausan (no son errores del CV) y se reanudan solos al liberar saldo.
+  return (
+    msg.includes("AI 402") ||
+    msg.includes("Not enough credits") ||
+    msg.includes("credit_limit_reached") ||
+    msg.includes("Workspace credit limit reached")
+  );
 }
 
 // Retry helper: exponential backoff on 429 (rate limit) and 5xx (transient).
