@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MatchPill } from "./app.dashboard";
 import { useT } from "@/lib/i18n";
-import { ageFromDate, birthDateFieldId } from "@/lib/age";
+import { applicationAge, birthDateFieldId } from "@/lib/age";
 
 const STAGES = ["received", "read", "interview_1", "interview_2", "interview_3", "hired", "rejected"];
 
@@ -214,7 +214,7 @@ function CandidateDetail() {
               <h1 className="font-display text-4xl">{app.first_name} {app.last_name}</h1>
               <p className="text-muted-foreground">{app.email}{app.phone ? ` · ${app.phone}` : ""}{(() => {
                 const fid = birthDateFieldId(orgSensFields);
-                const age = fid ? ageFromDate(app.sensitive_answers?.[fid]) : null;
+                const age = applicationAge(app, fid);
                 return age != null ? ` · ${t("{n} años", { n: age })}` : "";
               })()}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">

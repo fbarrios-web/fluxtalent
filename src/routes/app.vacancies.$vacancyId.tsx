@@ -23,7 +23,7 @@ import { downloadCSV } from "@/lib/export-csv";
 import { ScreeningEditor } from "./app.vacancies.new";
 import { vacancyPublicUrl } from "@/lib/vacancy-url";
 import { useT } from "@/lib/i18n";
-import { ageFromDate, birthDateFieldId } from "@/lib/age";
+import { applicationAge, birthDateFieldId } from "@/lib/age";
 
 const STAGES = [
   { id: "received",    label: "Recibidos",     color: "bg-slate-200 text-slate-700 dark:bg-slate-500/20 dark:text-slate-200" },
@@ -101,7 +101,7 @@ function VacancyDetail() {
   const filteredApps = (apps ?? []).filter((a: any) => {
     if (term && ![a.first_name, a.last_name, a.email, a.phone].filter(Boolean).some((s: string) => String(s).toLowerCase().includes(term))) return false;
     if (birthFieldId && (minA != null || maxA != null)) {
-      const age = ageFromDate(a.sensitive_answers?.[birthFieldId]);
+      const age = applicationAge(a, birthFieldId);
       if (age == null) return false;
       if (minA != null && age < minA) return false;
       if (maxA != null && age > maxA) return false;
