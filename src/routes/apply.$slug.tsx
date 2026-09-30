@@ -226,29 +226,23 @@ function ApplyPage() {
             <div><Label>{t("Email *")}</Label><Input required type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></div>
             <div><Label>{t("Teléfono *")}</Label><Input required value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
             <div className="md:col-span-2"><Label>LinkedIn</Label><Input placeholder="https://linkedin.com/in/…" value={form.linkedin} onChange={e => setForm(f => ({ ...f, linkedin: e.target.value }))} /></div>
+            {!!(vacancy.sensitive_fields ?? []).length && (vacancy.sensitive_fields as any[]).map((f: any) => (
+              <div key={f.id}>
+                <Label>{f.label} *</Label>
+                <Input
+                  required
+                  type={f.type === "date" ? "date" : f.type === "number" ? "number" : "text"}
+                  inputMode={f.type === "number" ? "numeric" : undefined}
+                  value={sensitiveAnswers[f.id] ?? ""}
+                  onChange={e => setSensitiveAnswers(a => ({ ...a, [f.id]: e.target.value }))}
+                />
+              </div>
+            ))}
           </div>
-        </div>
-
-        {!!(vacancy.sensitive_fields ?? []).length && (
-          <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
-            <h3 className="font-semibold">{t("Datos adicionales")}</h3>
-            <div className="grid gap-4 md:grid-cols-2">
-              {(vacancy.sensitive_fields as any[]).map((f: any) => (
-                <div key={f.id}>
-                  <Label>{f.label} *</Label>
-                  <Input
-                    required
-                    type={f.type === "date" ? "date" : f.type === "number" ? "number" : "text"}
-                    inputMode={f.type === "number" ? "numeric" : undefined}
-                    value={sensitiveAnswers[f.id] ?? ""}
-                    onChange={e => setSensitiveAnswers(a => ({ ...a, [f.id]: e.target.value }))}
-                  />
-                </div>
-              ))}
-            </div>
+          {!!(vacancy.sensitive_fields ?? []).length && (
             <p className="text-xs text-muted-foreground">{t("Estos datos son confidenciales y solo los ve la empresa de esta búsqueda.")}</p>
-          </div>
-        )}
+          )}
+        </div>
 
         <div className="rounded-2xl border border-border bg-card p-6">
           <h3 className="font-semibold">{t("CV (PDF) *")}</h3>
