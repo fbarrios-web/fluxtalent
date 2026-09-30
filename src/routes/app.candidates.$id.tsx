@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MatchPill } from "./app.dashboard";
 import { useT } from "@/lib/i18n";
+import { ageFromDate, birthDateFieldId } from "@/lib/age";
 
 const STAGES = ["received", "read", "interview_1", "interview_2", "interview_3", "hired", "rejected"];
 
@@ -211,7 +212,11 @@ function CandidateDetail() {
           <header data-tour="cand-header" className="flex items-start justify-between gap-4">
             <div>
               <h1 className="font-display text-4xl">{app.first_name} {app.last_name}</h1>
-              <p className="text-muted-foreground">{app.email}{app.phone ? ` · ${app.phone}` : ""}</p>
+              <p className="text-muted-foreground">{app.email}{app.phone ? ` · ${app.phone}` : ""}{(() => {
+                const fid = birthDateFieldId(orgSensFields);
+                const age = fid ? ageFromDate(app.sensitive_answers?.[fid]) : null;
+                return age != null ? ` · ${t("{n} años", { n: age })}` : "";
+              })()}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 {app.linkedin && normalizeLinkedin(app.linkedin) && <a href={normalizeLinkedin(app.linkedin)!} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">LinkedIn</a>}
                 {app.cv_url && <button onClick={openCv} className="inline-flex items-center gap-1 text-xs text-primary hover:underline"><FileText className="h-3 w-3" /> {t("Ver CV")}</button>}
@@ -295,6 +300,28 @@ function CandidateDetail() {
             </TabsContent>
 
             <TabsContent value="profile" className="mt-4 space-y-3 rounded-xl border border-border bg-card p-5">
+              {Array.isArray(app.parsed_data?.recent_experience) && app.parsed_data.recent_experience.length > 0 && (
+                <div>
+                  <div className="text-xs uppercase text-muted-foreground">{t("Últimas 2 experiencias")}</div>
+                  <ul className="mt-1 space-y-2 text-sm">
+                    {app.parsed_data.recent_experience.slice(0, 2).map((x: any, i: number) => (
+                      <li key={i} className="rounded-lg border border-border p-3">
+                        <div className="font-medium">{x.role}{x.company ? ` · ${x.company}` : ""}</div>
+                        {x.period && <div className="text-xs text-muted-foreground">{x.period}</div>}
+                        {x.summary && <p className="mt-1">{x.summary}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {Array.isArray(app.parsed_data?.education_detail) && app.parsed_data.education_detail.length > 0 && (
+                <div>
+                  <div className="text-xs uppercase text-muted-foreground">{t("Estudios")}</div>
+                  <ul className="mt-1 list-disc space-y-1 pl-5 text-sm">
+                    {app.parsed_data.education_detail.map((x: string, i: number) => <li key={i}>{x}</li>)}
+                  </ul>
+                </div>
+              )}
               {(["experience", "education", "skills"] as const).map(k => (
                 <div key={k}>
                   <div className="text-xs uppercase text-muted-foreground">{k}</div>
