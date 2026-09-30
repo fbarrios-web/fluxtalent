@@ -301,36 +301,13 @@ function Settings() {
             <section className="space-y-4 rounded-2xl border border-border bg-card p-6">
               <h3 className="font-semibold">{t("Datos fijos del formulario")}</h3>
               <p className="text-sm text-muted-foreground">
-                {t("Definí hasta 3 datos obligatorios que se piden en los formularios de postulación (ej.: DNI, fecha de nacimiento, domicilio). En cada vacante podés elegir cuáles pedir.")}
+                {t("Datos obligatorios que se piden en los formularios de postulación. En cada vacante podés elegir cuáles pedir.")}
               </p>
-              <div className="space-y-3">
-                {sensitiveFields.map((f, i) => (
-                  <div key={f.id} className="flex flex-wrap items-end gap-2">
-                    <div className="min-w-52 flex-1">
-                      <Label className="text-xs">{t("Nombre del dato")}</Label>
-                      <Input value={f.label} placeholder={t("Ej.: DNI")} onChange={e => setSensitiveFields(prev => prev.map((x, j) => j === i ? { ...x, label: e.target.value } : x))} />
-                    </div>
-                    <div className="w-36">
-                      <Label className="text-xs">{t("Tipo")}</Label>
-                      <Select value={f.type} onValueChange={v => setSensitiveFields(prev => prev.map((x, j) => j === i ? { ...x, type: v as any } : x))}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="text">{t("Texto")}</SelectItem>
-                          <SelectItem value="number">{t("Número")}</SelectItem>
-                          <SelectItem value="date">{t("Fecha")}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={() => setSensitiveFields(prev => prev.filter((_, j) => j !== i))}>{t("Quitar")}</Button>
-                  </div>
+              <ul className="space-y-1 text-sm">
+                {sensitiveFields.map(f => (
+                  <li key={f.id}>• {f.label} <span className="text-muted-foreground">({f.type === "date" ? t("Fecha") : f.type === "number" ? t("Número") : t("Texto")})</span></li>
                 ))}
-                {sensitiveFields.length < 3 && (
-                  <Button variant="outline" size="sm" onClick={() => setSensitiveFields(prev => [...prev, { id: crypto.randomUUID(), label: "", type: "text" }])}>
-                    {t("Agregar dato")}
-                  </Button>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">{t("Guardá con el botón \"Guardar\" de la sección Empresa & marca.")}</p>
+              </ul>
             </section>
           )}
 
