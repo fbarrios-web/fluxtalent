@@ -87,7 +87,7 @@ export const analyzeApplication = createServerFn({ method: "POST" })
 
       const result = await aiJSON<{
         cv_text: string;
-        parsed: { experience: string[]; education: string[]; skills: string[] };
+        parsed: { experience: string[]; education: string[]; skills: string[]; recent_experience?: any[]; education_detail?: string[] };
         match_score: number;
         match_breakdown: { experience: number; education: number; skills: number; competencies: number };
         ai_summary: string;
@@ -111,6 +111,21 @@ export const analyzeApplication = createServerFn({ method: "POST" })
                   experience: { type: "array", items: { type: "string" } },
                   education: { type: "array", items: { type: "string" } },
                   skills: { type: "array", items: { type: "string" } },
+                  recent_experience: {
+                    type: "array",
+                    description: "Últimas 2 experiencias laborales, de la más reciente a la más antigua",
+                    items: {
+                      type: "object",
+                      properties: {
+                        role: { type: "string" },
+                        company: { type: "string" },
+                        period: { type: "string" },
+                        summary: { type: "string", description: "Tareas y logros principales en 1-2 oraciones" },
+                      },
+                      required: ["role", "company", "period", "summary"],
+                    },
+                  },
+                  education_detail: { type: "array", items: { type: "string" }, description: "Estudios: título, institución, estado (completo/en curso) y años" },
                 },
                 required: ["experience", "education", "skills"],
               },
@@ -207,7 +222,7 @@ CANDIDATO
 - Respuestas filtro: ${JSON.stringify(app.screening_answers ?? {})}
 
 Instrucciones:
-1. Extraé experiencia, formación y skills del CV adjunto.
+1. Extraé experiencia, formación y skills del CV adjunto. Detallá las últimas 2 experiencias laborales (puesto, empresa, período y resumen) y los estudios (título, institución, estado y años).
 2. Calculá match (0-100) general y por categoría (experiencia, formación, skills, competencias). Sé estricto con los requisitos excluyentes.
 3. Resumí el perfil en 2-3 oraciones.
 4. Listá 3-5 fortalezas, 2-4 gaps y 0-3 red flags.`;

@@ -262,7 +262,10 @@ export const getVacancyScheduling = createServerFn({ method: "GET" })
       .select("*").eq("vacancy_id", data.vacancyId).eq("stage", data.stage)
       .gte("start_at", new Date().toISOString())
       .order("start_at").limit(500);
-    return { config: cfg, rules: rules ?? [], slots: slots ?? [] };
+    const { data: vacOrg } = await context.supabase.from("vacancies")
+      .select("organizations(custom_features)").eq("id", data.vacancyId).maybeSingle();
+    const inPerson = (vacOrg as any)?.organizations?.custom_features?.in_person_interviews === true;
+    return { config: cfg, rules: rules ?? [], slots: slots ?? [], inPerson };
   });
 
 export const saveVacancyScheduling = createServerFn({ method: "POST" })
@@ -516,6 +519,62 @@ export const addManualSlot = createServerFn({ method: "POST" })
         .update({ enabled: true })
         .eq("vacancy_id", data.vacancyId).eq("stage", data.stage);
     }
+    return { ok: true };
+  });
+
+/** Grupo de entrevista presencial: día/horario, cupo y ubicación. */
+export const addGroupSlot = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({
+    vacancyId: z.string().uuid(),
+    stage: stageEnum.default("interview_1"),
+    startISO: z.string(),
+    durationMinutes: z.number().int().min(15).max(480),
+    capacity: z.number().int().min(1).max(200),
+    location: z.string().trim().min(2).max(300),
+    locationUrl: z.string().trim().url().max(1000).optional().nullable().or(z.literal("").transform(() => null)),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: vac } = await context.supabase.from("vacancies")
+      .select("org_id, created_by").eq("id", data.vacancyId).maybeSingle();
+    if (!vac) throw new Error("Vacante no encontrada");
+    const start = new Date(data.startISO);
+    if (!(start.getTime() > Date.now())) throw new Error("Elegí una fecha y hora futura.");
+    const end = new Date(start.getTime() + data.durationMinutes * 60_000);
+    const { error } = await context.supabase.from("availability_slots").insert({
+      vacancy_id: data.vacancyId, org_id: vac.org_id, stage: data.stage,
+      start_at: start.toISOString(), end_at: end.toISOString(),
+      source: "manual", status: "open",
+      capacity: data.capacity, location: data.location, location_url: data.locationUrl ?? null,
+    } as any);
+    if (error) {
+      if ((error as any).code === "23505") throw new Error("Ya hay un grupo cargado en ese día y horario.");
+      throw error;
+    }
+    const { data: existingCfg } = await context.supabase.from("vacancy_scheduling")
+      .select("enabled").eq("vacancy_id", data.vacancyId).eq("stage", data.stage).maybeSingle();
+    if (!existingCfg) {
+      await context.supabase.from("vacancy_scheduling").insert({
+        vacancy_id: data.vacancyId, stage: data.stage, org_id: vac.org_id,
+        recruiter_id: (vac as any).created_by ?? context.userId,
+        duration_minutes: Math.min(data.durationMinutes, 240), enabled: true,
+      } as any);
+    } else if (!existingCfg.enabled) {
+      await context.supabase.from("vacancy_scheduling").update({ enabled: true })
+        .eq("vacancy_id", data.vacancyId).eq("stage", data.stage);
+    }
+    return { ok: true };
+  });
+
+export const deleteGroupSlot = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ slotId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: slot } = await context.supabase.from("availability_slots")
+      .select("booked_count").eq("id", data.slotId).maybeSingle();
+    if ((slot as any)?.booked_count > 0) throw new Error("Este grupo ya tiene postulantes anotados; no se puede eliminar. Podés cerrarlo para que no se sumen más.");
+    const { error } = await context.supabase.from("availability_slots").delete().eq("id", data.slotId);
+    if (error) throw error;
     return { ok: true };
   });
 

@@ -23,6 +23,7 @@ export const Route = createFileRoute("/api/public/schedule/book")({
         const r = reserved as {
           booking_id: string; application_id: string; vacancy_id: string; org_id: string;
           stage: string; recruiter_id: string; start_at: string; end_at: string;
+          location: string | null; location_url: string | null; capacity: number;
         };
 
         // 2) Load context
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/api/public/schedule/book")({
         const { data: vac } = await supabaseAdmin.from("vacancies")
           .select("title").eq("id", r.vacancy_id).single();
         const { data: org } = await supabaseAdmin.from("organizations")
-          .select("name, consultancy_name, contact_email, brand_color, logo_url, signature_html, timezone")
+          .select("name, consultancy_name, contact_email, brand_color, logo_url, signature_html, timezone, custom_features")
           .eq("id", r.org_id).single();
         const { data: recruiter } = await supabaseAdmin.from("profiles")
           .select("id, google_refresh_token, google_email, google_connected_at, microsoft_refresh_token, microsoft_email, microsoft_connected_at, display_name").eq("id", r.recruiter_id).single();
@@ -44,7 +45,7 @@ export const Route = createFileRoute("/api/public/schedule/book")({
 
         if (!app || !vac || !org || !recruiter || !provider) {
           // Roll back the slot
-          await supabaseAdmin.from("availability_slots").update({ status: "open" }).eq("id", parsed.data.slotId);
+          await supabaseAdmin.rpc("release_slot" as any, { _slot_id: parsed.data.slotId } as any);
           await supabaseAdmin.from("interview_bookings").update({ slot_id: null, scheduled_at: null }).eq("id", r.booking_id);
           return Response.json({ error: "El proceso no está disponible. Contactá al reclutador." }, { status: 500 });
         }
@@ -69,7 +70,11 @@ export const Route = createFileRoute("/api/public/schedule/book")({
 
         try {
           const access_token = await providerAccessToken(recruiter as any, provider);
-          const descriptionText = `Entrevista para ${vac.title}\nPostulante: ${candidateName} (${app.email})`;
+          const inPerson = (org as any).custom_features?.in_person_interviews === true;
+          const locationLabel = r.location ?? null;
+          const descriptionText = `${inPerson ? "Entrevista presencial" : "Entrevista"} para ${vac.title}\nPostulante: ${candidateName} (${app.email})`
+            + (locationLabel ? `\nLugar: ${locationLabel}` : "")
+            + (r.location_url ? `\nUbicación: ${r.location_url}` : "");
           const event = await createUserMeetingEvent({
             provider,
             accessToken: access_token,
@@ -80,11 +85,13 @@ export const Route = createFileRoute("/api/public/schedule/book")({
             endISO: r.end_at,
             timezone: tz,
             attendees: Array.from(attendeesMap.values()),
+            location: [locationLabel, r.location_url].filter(Boolean).join(" — ") || null,
+            inPerson,
           });
 
           await supabaseAdmin.from("interview_bookings").update({
             google_event_id: event.eventId,
-            meet_link: event.meetingLink ?? event.webLink,
+            meet_link: inPerson ? (r.location_url ?? null) : (event.meetingLink ?? event.webLink),
             status: "scheduled",
           }).eq("id", r.booking_id);
 
@@ -128,6 +135,8 @@ export const Route = createFileRoute("/api/public/schedule/book")({
                   vacancyTitle: vac.title,
                   whenLabel,
                   meetLink: linkForEmail,
+                  location: inPerson ? locationLabel : null,
+                  locationUrl: inPerson ? r.location_url : null,
                 }),
                 replyTo: brand.contactEmail || undefined,
               });
@@ -145,7 +154,9 @@ export const Route = createFileRoute("/api/public/schedule/book")({
                   candidateEmail: app.email,
                   vacancyTitle: vac.title,
                   whenLabel,
-                  meetLink: linkForEmail,
+                  meetLink: inPerson ? "" : linkForEmail,
+                  location: inPerson ? locationLabel : null,
+                  locationUrl: inPerson ? r.location_url : null,
                 }),
               });
             } catch (mailErr: any) {
@@ -157,15 +168,15 @@ export const Route = createFileRoute("/api/public/schedule/book")({
                   ? "La API de correo no está habilitada en la cuenta del reclutador."
                   : `No se pudo enviar el mail de confirmación: ${msg}`;
             }
-          if (!event.meetingLink && !emailWarning) {
+          if (!inPerson && !event.meetingLink && !emailWarning) {
             emailWarning = "La cuenta Microsoft conectada no permite crear reuniones de Teams (cuenta personal o sin licencia). Se envió el mail con el link del evento de Outlook.";
           }
 
-          return Response.json({ ok: true, meetLink: event.meetingLink ?? event.webLink, emailWarning });
+          return Response.json({ ok: true, meetLink: inPerson ? null : (event.meetingLink ?? event.webLink), emailWarning });
 
         } catch (e: any) {
           // Roll back
-          await supabaseAdmin.from("availability_slots").update({ status: "open" }).eq("id", parsed.data.slotId);
+          await supabaseAdmin.rpc("release_slot" as any, { _slot_id: parsed.data.slotId } as any);
           await supabaseAdmin.from("interview_bookings").update({ slot_id: null, scheduled_at: null }).eq("id", r.booking_id);
           return Response.json({ error: `No se pudo crear la reunión: ${e?.message ?? e}` }, { status: 500 });
         }

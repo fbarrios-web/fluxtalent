@@ -136,8 +136,10 @@ export async function createCalendarEventWithMeet(params: {
   endISO: string;
   timezone: string;
   attendees: { email: string; name?: string }[];
+  location?: string | null;
+  inPerson?: boolean;
 }) {
-  const body = {
+  const body: any = {
     summary: params.summary,
     description: params.description,
     start: { dateTime: params.startISO, timeZone: params.timezone },
@@ -151,6 +153,8 @@ export async function createCalendarEventWithMeet(params: {
     },
     reminders: { useDefault: true },
   };
+  if (params.location) body.location = params.location;
+  if (params.inPerson) delete body.conferenceData;
   const res = await fetch(CALENDAR_INSERT("primary"), {
     method: "POST",
     headers: { Authorization: `Bearer ${params.accessToken}`, "Content-Type": "application/json" },

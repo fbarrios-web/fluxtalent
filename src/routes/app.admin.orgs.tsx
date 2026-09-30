@@ -470,7 +470,7 @@ function CustomFeaturesDialog({ org, onClose, onSave, pending }: {
   const t = useT();
   const cf = (org?.custom_features ?? {}) as any;
   const [subdomain, setSubdomain] = useState("");
-  const [features, setFeatures] = useState({ subdomain: false, sensitive_fields: false, personality_test: false });
+  const [features, setFeatures] = useState({ subdomain: false, sensitive_fields: false, personality_test: false, in_person_interviews: false });
   useEffect(() => {
     if (org) {
       setSubdomain(org.subdomain ?? "");
@@ -478,6 +478,7 @@ function CustomFeaturesDialog({ org, onClose, onSave, pending }: {
         subdomain: !!cf.subdomain,
         sensitive_fields: !!cf.sensitive_fields,
         personality_test: !!cf.personality_test,
+        in_person_interviews: !!cf.in_person_interviews,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -510,6 +511,10 @@ function CustomFeaturesDialog({ org, onClose, onSave, pending }: {
           <label className="flex items-center gap-2 text-sm">
             <Checkbox checked={features.personality_test} onCheckedChange={() => toggle("personality_test")} />
             {t("Test de personalidad (pendiente de definición)")}
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox checked={features.in_person_interviews} onCheckedChange={() => toggle("in_person_interviews")} />
+            {t("Entrevistas presenciales en grupo (sin videollamada)")}
           </label>
         </div>
         <DialogFooter>

@@ -16,12 +16,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Loader2, Plus, X, RefreshCw, AlertTriangle } from "lucide-react";
+import { Loader2, Plus, X, RefreshCw, AlertTriangle, MapPin, Users, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
 import {
   getVacancyScheduling, saveVacancyScheduling, regenerateSlots,
   setSlotStatus, addManualSlot, checkSchedulingOverlaps,
+  addGroupSlot, deleteGroupSlot,
 } from "@/lib/scheduling.functions";
 
 
@@ -265,6 +266,7 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
   }
 
   if (isLoading) return <div className="p-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
+  if ((data as any)?.inPerson) return <InPersonGroups vacancyId={vacancyId} stage={stage} data={data} />;
 
   return (
     <div className="space-y-6 p-1">
@@ -478,6 +480,94 @@ function StageScheduling({ vacancyId, stage }: { vacancyId: string; stage: Stage
                   <div className="font-medium">{label}</div>
                   <div className="opacity-60">{isBooked ? t("Reservado") : isBlocked ? t("Bloqueado") : t("Libre")}</div>
                 </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function InPersonGroups({ vacancyId, stage, data }: { vacancyId: string; stage: StageId; data: any }) {
+  const t = useT();
+  const qc = useQueryClient();
+  const add = useServerFn(addGroupSlot);
+  const del = useServerFn(deleteGroupSlot);
+  const setStatus = useServerFn(setSlotStatus);
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [duration, setDuration] = useState(60);
+  const [capacity, setCapacity] = useState(10);
+  const [location, setLocation] = useState("");
+  const [locationUrl, setLocationUrl] = useState("");
+  const [saving, setSaving] = useState(false);
+  const refresh = () => qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId, stage] });
+
+  async function onAdd() {
+    if (!date || !time || !location.trim()) { toast.error(t("Completá día, horario y ubicación.")); return; }
+    setSaving(true);
+    try {
+      await add({ data: {
+        vacancyId, stage, startISO: new Date(`${date}T${time}:00`).toISOString(),
+        durationMinutes: duration, capacity, location: location.trim(), locationUrl: locationUrl.trim() || null,
+      } });
+      toast.success(t("Grupo creado"));
+      setTime("");
+      refresh();
+    } catch (e: any) { toast.error(e.message); } finally { setSaving(false); }
+  }
+
+  const slots = (data?.slots ?? []) as any[];
+  return (
+    <div className="space-y-6 p-1">
+      <div className="rounded-xl border bg-card p-5 space-y-4">
+        <div>
+          <h3 className="font-semibold">{t("Grupos de entrevistas presenciales")}</h3>
+          <p className="text-xs text-muted-foreground">{t("Definí día, horario, cupo y lugar. Al invitar, el postulante recibe un link y elige un grupo con lugar disponible.")}</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div><Label>{t("Día")}</Label><Input type="date" value={date} onChange={e => setDate(e.target.value)} /></div>
+          <div><Label>{t("Horario")}</Label><Input type="time" value={time} onChange={e => setTime(e.target.value)} /></div>
+          <div><Label>{t("Duración (minutos)")}</Label><Input type="number" min={15} max={480} value={duration} onChange={e => setDuration(Number(e.target.value))} /></div>
+          <div><Label>{t("Cupo")}</Label><Input type="number" min={1} max={200} value={capacity} onChange={e => setCapacity(Number(e.target.value))} /></div>
+          <div className="sm:col-span-2"><Label>{t("Ubicación")}</Label><Input placeholder={t("Ej.: Local Freddo, Av. Santa Fe 1234, CABA")} value={location} onChange={e => setLocation(e.target.value)} /></div>
+          <div className="sm:col-span-2"><Label>{t("Link de Google Maps (opcional)")}</Label><Input type="url" placeholder="https://maps.app.goo.gl/..." value={locationUrl} onChange={e => setLocationUrl(e.target.value)} /></div>
+        </div>
+        <Button onClick={onAdd} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 mr-1" />{t("Crear grupo")}</>}</Button>
+      </div>
+
+      <div className="rounded-xl border bg-card p-5">
+        <h3 className="font-semibold mb-3">{t("Próximos grupos ({n})", { n: slots.length })}</h3>
+        {slots.length === 0 ? <p className="text-sm text-muted-foreground">{t("Todavía no hay grupos cargados.")}</p> : (
+          <div className="divide-y rounded-lg border">
+            {slots.map(s => {
+              const full = s.booked_count >= s.capacity;
+              const closed = s.status === "blocked";
+              return (
+                <div key={s.id} className="flex flex-wrap items-center justify-between gap-3 px-3 py-2 text-sm">
+                  <div className="min-w-0">
+                    <div className="font-medium">{new Intl.DateTimeFormat("es-AR", { dateStyle: "full", timeStyle: "short" }).format(new Date(s.start_at))}</div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <MapPin className="h-3 w-3" />
+                      {s.location_url ? <a href={s.location_url} target="_blank" rel="noreferrer" className="underline">{s.location || t("Ver mapa")}</a> : (s.location || "—")}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-xs"><Users className="h-3 w-3" />{s.booked_count}/{s.capacity}</span>
+                    <span className="text-xs text-muted-foreground">{full ? t("Completo") : closed ? t("Cerrado") : t("Abierto")}</span>
+                    {!full && (
+                      <Button size="sm" variant="outline" onClick={async () => { try { await setStatus({ data: { slotId: s.id, status: closed ? "open" : "blocked" } }); refresh(); } catch (e: any) { toast.error(e.message); } }}>
+                        {closed ? t("Reabrir") : t("Cerrar")}
+                      </Button>
+                    )}
+                    {s.booked_count === 0 && (
+                      <Button size="icon" variant="ghost" aria-label={t("Eliminar grupo")} onClick={async () => { try { await del({ data: { slotId: s.id } }); refresh(); } catch (e: any) { toast.error(e.message); } }}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
               );
             })}
           </div>

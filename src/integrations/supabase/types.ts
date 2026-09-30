@@ -248,9 +248,13 @@ export type Database = {
       }
       availability_slots: {
         Row: {
+          booked_count: number
+          capacity: number
           created_at: string
           end_at: string
           id: string
+          location: string | null
+          location_url: string | null
           org_id: string
           source: string
           stage: string
@@ -259,9 +263,13 @@ export type Database = {
           vacancy_id: string
         }
         Insert: {
+          booked_count?: number
+          capacity?: number
           created_at?: string
           end_at: string
           id?: string
+          location?: string | null
+          location_url?: string | null
           org_id: string
           source?: string
           stage?: string
@@ -270,9 +278,13 @@ export type Database = {
           vacancy_id: string
         }
         Update: {
+          booked_count?: number
+          capacity?: number
           created_at?: string
           end_at?: string
           id?: string
+          location?: string | null
+          location_url?: string | null
           org_id?: string
           source?: string
           stage?: string
@@ -1392,6 +1404,7 @@ export type Database = {
       }
       is_restricted_member: { Args: never; Returns: boolean }
       is_subscription_active: { Args: { _org_id: string }; Returns: boolean }
+      release_slot: { Args: { _slot_id: string }; Returns: undefined }
       reserve_slot: {
         Args: { _slot_id: string; _token: string }
         Returns: Json

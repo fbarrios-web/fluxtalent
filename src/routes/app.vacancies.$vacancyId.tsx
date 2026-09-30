@@ -23,6 +23,7 @@ import { downloadCSV } from "@/lib/export-csv";
 import { ScreeningEditor } from "./app.vacancies.new";
 import { vacancyPublicUrl } from "@/lib/vacancy-url";
 import { useT } from "@/lib/i18n";
+import { ageFromDate, birthDateFieldId } from "@/lib/age";
 
 const STAGES = [
   { id: "received",    label: "Recibidos",     color: "bg-slate-200 text-slate-700 dark:bg-slate-500/20 dark:text-slate-200" },
@@ -58,6 +59,8 @@ function VacancyDetail() {
   const toggleCollapsed = (id: string) => setCollapsed(c => ({ ...c, [id]: !c[id] }));
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState("pipeline");
+  const [ageMin, setAgeMin] = useState("");
+  const [ageMax, setAgeMax] = useState("");
 
 
   const { data: v } = useQuery<any>({
@@ -72,7 +75,7 @@ function VacancyDetail() {
     queryFn: async () => {
       const { data } = await supabase
         .from("applications")
-        .select("id, first_name, last_name, email, phone, cv_url, stage, match_score, ai_status, ai_last_error, created_at")
+        .select("id, first_name, last_name, email, phone, cv_url, stage, match_score, ai_status, ai_last_error, created_at, sensitive_answers")
         .eq("vacancy_id", vacancyId)
         .order("match_score", { ascending: false, nullsFirst: false });
       return data ?? [];
@@ -80,12 +83,31 @@ function VacancyDetail() {
     refetchInterval: 5000,
   });
 
+  const { data: birthFieldId } = useQuery<string | null>({
+    queryKey: ["vacancy-birth-field", v?.org_id],
+    enabled: !!v?.org_id,
+    queryFn: async () => {
+      const { data } = await supabase.from("organizations").select("custom_features, sensitive_fields").eq("id", v.org_id).maybeSingle();
+      if ((data as any)?.custom_features?.sensitive_fields !== true) return null;
+      return birthDateFieldId((data as any)?.sensitive_fields);
+    },
+  });
+
   if (!v) return <div className="p-10 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /></div>;
 
   const term = search.trim().toLowerCase();
-  const filteredApps = !term ? (apps ?? []) : (apps ?? []).filter((a: any) =>
-    [a.first_name, a.last_name, a.email, a.phone].filter(Boolean).some((s: string) => String(s).toLowerCase().includes(term))
-  );
+  const minA = ageMin.trim() ? Number(ageMin) : null;
+  const maxA = ageMax.trim() ? Number(ageMax) : null;
+  const filteredApps = (apps ?? []).filter((a: any) => {
+    if (term && ![a.first_name, a.last_name, a.email, a.phone].filter(Boolean).some((s: string) => String(s).toLowerCase().includes(term))) return false;
+    if (birthFieldId && (minA != null || maxA != null)) {
+      const age = ageFromDate(a.sensitive_answers?.[birthFieldId]);
+      if (age == null) return false;
+      if (minA != null && age < minA) return false;
+      if (maxA != null && age > maxA) return false;
+    }
+    return true;
+  });
 
 
   const applyUrl = vacancyPublicUrl(v);
@@ -196,6 +218,16 @@ function VacancyDetail() {
               className="w-full rounded-full border border-border bg-card px-4 py-2 text-sm outline-none focus:border-primary"
             />
           </div>
+          {birthFieldId && (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">{t("Rango de edad")}</span>
+              <input type="number" min={14} max={99} value={ageMin} onChange={e => setAgeMin(e.target.value)} placeholder={t("Desde")}
+                className="w-20 rounded-full border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary" />
+              <input type="number" min={14} max={99} value={ageMax} onChange={e => setAgeMax(e.target.value)} placeholder={t("Hasta")}
+                className="w-20 rounded-full border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary" />
+              {(ageMin || ageMax) && <button className="text-xs text-primary hover:underline" onClick={() => { setAgeMin(""); setAgeMax(""); }}>{t("Limpiar")}</button>}
+            </div>
+          )}
         </div>
 
         <TabsContent value="pipeline" className="mt-6">

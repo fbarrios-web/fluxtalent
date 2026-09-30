@@ -41,7 +41,7 @@ CANDIDATO
 - LinkedIn: ${app.linkedin ?? "-"}
 - Respuestas filtro: ${JSON.stringify(app.screening_answers ?? {})}
 
-Extraé experiencia, formación y skills del CV. Calculá match (0-100) general y por categoría. Resumí en 2-3 oraciones. Listá fortalezas, gaps y red flags.`;
+Extraé experiencia, formación y skills del CV. Calculá match (0-100) general y por categoría. Detallá las últimas 2 experiencias laborales (puesto, empresa, período y resumen) y los estudios. Resumí en 2-3 oraciones. Listá fortalezas, gaps y red flags.`;
 
     if (app.cv_url) {
       const { buildCvContent } = await import("./cv-content.server");
@@ -65,6 +65,21 @@ Extraé experiencia, formación y skills del CV. Calculá match (0-100) general 
                 experience: { type: "array", items: { type: "string" } },
                 education: { type: "array", items: { type: "string" } },
                 skills: { type: "array", items: { type: "string" } },
+                  recent_experience: {
+                    type: "array",
+                    description: "Últimas 2 experiencias laborales, de la más reciente a la más antigua",
+                    items: {
+                      type: "object",
+                      properties: {
+                        role: { type: "string" },
+                        company: { type: "string" },
+                        period: { type: "string" },
+                        summary: { type: "string", description: "Tareas y logros principales en 1-2 oraciones" },
+                      },
+                      required: ["role", "company", "period", "summary"],
+                    },
+                  },
+                  education_detail: { type: "array", items: { type: "string" }, description: "Estudios: título, institución, estado (completo/en curso) y años" },
               },
               required: ["experience", "education", "skills"],
             },

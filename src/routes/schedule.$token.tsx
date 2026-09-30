@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Loader2, Calendar, Check } from "lucide-react";
+import { Loader2, Calendar, Check, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
 
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/schedule/$token")({
   head: () => ({ meta: [{ title: "Agendá tu entrevista" }] }),
 });
 
-type Slot = { id: string; start_at: string; end_at: string };
+type Slot = { id: string; start_at: string; end_at: string; location?: string | null; location_url?: string | null; remaining?: number; capacity?: number };
 type Booking = {
   id: string;
   status: string;
@@ -29,6 +29,9 @@ type Booking = {
   first_name: string | null;
   candidate_email: string;
   slots: Slot[];
+  in_person?: boolean;
+  location?: string | null;
+  location_url?: string | null;
 };
 
 function SchedulePage() {
@@ -38,7 +41,7 @@ function SchedulePage() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [confirmed, setConfirmed] = useState<{ meetLink: string | null; when: string } | null>(null);
+  const [confirmed, setConfirmed] = useState<{ meetLink: string | null; when: string; location?: string | null; locationUrl?: string | null } | null>(null);
   const [logoSrc, setLogoSrc] = useState<string | null>(null);
 
   async function load() {
@@ -81,7 +84,7 @@ function SchedulePage() {
         timeZone: data.timezone, dateStyle: "full", timeStyle: "short",
       }).format(new Date(slot.start_at));
       if (json.emailWarning) toast.warning(json.emailWarning);
-      setConfirmed({ meetLink: json.meetLink, when });
+      setConfirmed({ meetLink: data.in_person ? null : json.meetLink, when, location: slot.location, locationUrl: slot.location_url });
 
     } catch (e: any) {
       toast.error(e.message || t("No se pudo reservar"));
@@ -113,6 +116,12 @@ function SchedulePage() {
         </div>
         <h1 className="text-2xl font-semibold mb-2">{t("¡Listo!")}</h1>
         <p className="text-muted-foreground mb-6">{t("Tu entrevista quedó agendada para")} <strong className="text-foreground">{confirmed.when}</strong>. {t("Te enviamos la invitación por mail.")}</p>
+        {confirmed.location && <p className="mb-4 flex items-center justify-center gap-1 text-sm"><MapPin className="h-4 w-4" style={{ color: brand }} />{confirmed.location}</p>}
+        {confirmed.locationUrl && (
+          <a href={confirmed.locationUrl} target="_blank" rel="noreferrer">
+            <Button style={{ background: brand }}>{t("Ver ubicación en el mapa")}</Button>
+          </a>
+        )}
         {confirmed.meetLink && (
           <a href={confirmed.meetLink} target="_blank" rel="noreferrer">
             <Button style={{ background: brand }}>{t("Abrir videollamada")}</Button>
@@ -130,7 +139,9 @@ function SchedulePage() {
       <div className="max-w-md w-full bg-card border rounded-xl p-8 text-center">
         <h1 className="text-2xl font-semibold mb-2">{t("Entrevista agendada")}</h1>
         <p className="text-muted-foreground mb-4">{when}</p>
-        {data.meet_link && <a href={data.meet_link} target="_blank" rel="noreferrer"><Button style={{ background: brand }}>{t("Abrir videollamada")}</Button></a>}
+        {data.location && <p className="mb-4 flex items-center justify-center gap-1 text-sm"><MapPin className="h-4 w-4" style={{ color: brand }} />{data.location}</p>}
+        {data.location_url && <a href={data.location_url} target="_blank" rel="noreferrer"><Button style={{ background: brand }}>{t("Ver ubicación en el mapa")}</Button></a>}
+        {!data.in_person && data.meet_link && <a href={data.meet_link} target="_blank" rel="noreferrer"><Button style={{ background: brand }}>{t("Abrir videollamada")}</Button></a>}
       </div>
     </div>;
   }
@@ -177,7 +188,9 @@ function SchedulePage() {
                     <button key={s.id} onClick={() => setSelected(s.id)}
                       className="rounded-lg border px-3 py-2 text-sm font-medium transition-colors"
                       style={isSel ? { background: brand, color: "#fff", borderColor: brand } : {}}>
-                      {time}
+                      <div>{time}</div>
+                      {s.location && <div className="mt-0.5 truncate text-xs font-normal opacity-80">{s.location}</div>}
+                      {(s.capacity ?? 1) > 1 && <div className="text-xs font-normal opacity-70">{t("{n} lugares libres", { n: s.remaining ?? 0 })}</div>}
                     </button>
                   );
                 })}
@@ -194,6 +207,7 @@ function SchedulePage() {
                 <div className="text-muted-foreground text-xs">
                   {new Intl.DateTimeFormat("es-AR", { timeZone: data.timezone, dateStyle: "full", timeStyle: "short" }).format(new Date(data.slots.find(s => s.id === selected)!.start_at))}
                 </div>
+                {data.slots.find(s => s.id === selected)?.location && <div className="text-muted-foreground text-xs">{data.slots.find(s => s.id === selected)!.location}</div>}
               </div>
               <Button disabled={submitting} onClick={book} style={{ background: brand }}>
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t("Reservar")}
