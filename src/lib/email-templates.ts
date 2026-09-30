@@ -56,8 +56,23 @@ export function interviewConfirmCandidateHtml(opts: BrandCtx & {
   vacancyTitle: string;
   whenLabel: string;
   meetLink: string;
+  location?: string | null;
+  locationUrl?: string | null;
 }) {
   const color = opts.brandColor || "#0F766E";
+  if (opts.location || opts.locationUrl) {
+    return shell(opts, `
+    <h1 style="font-size:22px;margin:0 0 12px">¡Listo, ${escapeHtml(opts.firstName)}!</h1>
+    <p style="line-height:1.6;font-size:15px;margin:0 0 16px">Tu entrevista presencial para <strong>${escapeHtml(opts.vacancyTitle)}</strong> quedó confirmada.</p>
+    <div style="background:#f9fafb;border-radius:8px;padding:16px;margin:16px 0;border-left:3px solid ${color}">
+      <div style="font-size:13px;color:#6b7280;margin-bottom:4px">Fecha y hora</div>
+      <div style="font-size:16px;font-weight:600">${escapeHtml(opts.whenLabel)}</div>
+      ${opts.location ? `<div style="font-size:13px;color:#6b7280;margin:12px 0 4px">Lugar</div><div style="font-size:16px;font-weight:600">${escapeHtml(opts.location)}</div>` : ""}
+    </div>
+    ${opts.locationUrl ? `<p style="margin:16px 0"><a href="${escapeHtml(opts.locationUrl)}" style="display:inline-block;background:${color};color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600">Ver ubicación en el mapa</a></p>` : ""}
+    <p style="font-size:13px;color:#6b7280;margin:0">Te llegará también una invitación de calendario.</p>
+  `);
+  }
   return shell(opts, `
     <h1 style="font-size:22px;margin:0 0 12px">¡Listo, ${escapeHtml(opts.firstName)}!</h1>
     <p style="line-height:1.6;font-size:15px;margin:0 0 16px">Tu entrevista para <strong>${escapeHtml(opts.vacancyTitle)}</strong> quedó confirmada.</p>
@@ -78,6 +93,8 @@ export function interviewConfirmRecruiterHtml(opts: BrandCtx & {
   vacancyTitle: string;
   whenLabel: string;
   meetLink: string;
+  location?: string | null;
+  locationUrl?: string | null;
 }) {
   const color = opts.brandColor || "#0F766E";
   return shell(opts, `
@@ -86,8 +103,9 @@ export function interviewConfirmRecruiterHtml(opts: BrandCtx & {
       <div><strong>Postulante:</strong> ${escapeHtml(opts.candidateName)} (${escapeHtml(opts.candidateEmail)})</div>
       <div style="margin-top:6px"><strong>Vacante:</strong> ${escapeHtml(opts.vacancyTitle)}</div>
       <div style="margin-top:6px"><strong>Cuándo:</strong> ${escapeHtml(opts.whenLabel)}</div>
+      ${opts.location ? `<div style="margin-top:6px"><strong>Lugar:</strong> ${escapeHtml(opts.location)}</div>` : ""}
     </div>
-    <p><a href="${opts.meetLink}" style="color:${color}">${opts.meetLink}</a></p>
+    ${opts.locationUrl ? `<p><a href="${escapeHtml(opts.locationUrl)}" style="color:${color}">Ver ubicación en el mapa</a></p>` : opts.meetLink ? `<p><a href="${opts.meetLink}" style="color:${color}">${opts.meetLink}</a></p>` : ""}
   `);
 }
 

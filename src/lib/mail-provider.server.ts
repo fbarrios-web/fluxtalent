@@ -93,6 +93,8 @@ export async function createUserMeetingEvent(params: {
   endISO: string;
   timezone: string;
   attendees: { email: string; name?: string }[];
+  location?: string | null;
+  inPerson?: boolean;
 }): Promise<{ eventId: string; meetingLink: string | null; webLink: string | null; kind: "meet" | "teams" }> {
   if (params.provider === "microsoft") {
     const { createOutlookEventWithTeams } = await import("@/lib/microsoft.server");
@@ -104,8 +106,10 @@ export async function createUserMeetingEvent(params: {
       endISO: params.endISO,
       timezone: params.timezone,
       attendees: params.attendees,
+      location: params.location,
+      inPerson: params.inPerson,
     });
-    return { eventId: ev.eventId, meetingLink: ev.joinUrl, webLink: ev.webLink, kind: "teams" };
+    return { eventId: ev.eventId, meetingLink: params.inPerson ? null : ev.joinUrl, webLink: ev.webLink, kind: "teams" };
   }
   const { createCalendarEventWithMeet } = await import("@/lib/google.server");
   const ev = await createCalendarEventWithMeet({
@@ -116,6 +120,8 @@ export async function createUserMeetingEvent(params: {
     endISO: params.endISO,
     timezone: params.timezone,
     attendees: params.attendees,
+    location: params.location,
+    inPerson: params.inPerson,
   });
-  return { eventId: ev.eventId, meetingLink: ev.meetLink, webLink: ev.htmlLink, kind: "meet" };
+  return { eventId: ev.eventId, meetingLink: params.inPerson ? null : ev.meetLink, webLink: ev.htmlLink, kind: "meet" };
 }

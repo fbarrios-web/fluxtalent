@@ -196,9 +196,11 @@ export async function createOutlookEventWithTeams(params: {
   endISO: string;
   timezone: string;
   attendees: { email: string; name?: string }[];
+  location?: string | null;
+  inPerson?: boolean;
 }) {
   const timeZone = microsoftTimeZone(params.timezone);
-  const baseBody = {
+  const baseBody: any = {
     subject: params.subject,
     body: { contentType: "HTML", content: params.bodyHtml },
     start: { dateTime: graphDateTime(params.startISO, params.timezone), timeZone },
@@ -215,7 +217,11 @@ export async function createOutlookEventWithTeams(params: {
       body: JSON.stringify(body),
     });
   }
-  let res = await post({ ...baseBody, isOnlineMeeting: true, onlineMeetingProvider: "teamsForBusiness" });
+  if (params.location) baseBody.location = { displayName: params.location };
+  let res = params.inPerson
+    ? await post(baseBody)
+    : await post({ ...baseBody, isOnlineMeeting: true, onlineMeetingProvider: "teamsForBusiness" });
+  if (!res.ok && params.inPerson) throw new Error(`Outlook event insert falló [${res.status}]: ${await res.text()}`);
   if (!res.ok) {
     const errText = await res.text();
     if (/teamsForBusiness|OnlineMeeting|not supported|does not have a valid license|ErrorInvalidRequest|UnableToCreateOnlineMeeting|consumer/i.test(errText)) {
