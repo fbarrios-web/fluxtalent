@@ -131,24 +131,24 @@ function VacancyDetail() {
   }
 
   return (
-    <div className="p-6 md:p-10">
+    <div className="p-4 sm:p-6 md:p-10">
       <Link to="/app/vacancies" className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> {t("Volver")}
       </Link>
 
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
+      <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:justify-between">
+        <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="font-display text-4xl">{v.title}</h1>
-            <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase ${
+            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl">{v.title}</h1>
+            <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase ${
               v.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
             }`}>
               {v.status === "active" ? t("Activa") : t("Desactivada")}
             </span>
           </div>
-          <p className="text-muted-foreground">{v.area ?? "—"} · {v.seniority ?? "—"} · {v.modality ?? "—"} · {t("match mínimo {n}%", { n: v.min_match })}</p>
+          <p className="text-sm text-muted-foreground md:text-base">{v.area ?? "—"} · {v.seniority ?? "—"} · {v.modality ?? "—"} · {t("match mínimo {n}%", { n: v.min_match })}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="col-span-2 flex w-full flex-wrap items-center gap-2 sm:col-span-1 sm:w-auto">
           {v.status === "active" ? (
             <Button data-tour="vacancy-status" variant="outline" onClick={() => setStatus("paused")}>{t("Desactivar")}</Button>
           ) : (
@@ -202,37 +202,41 @@ function VacancyDetail() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <TabsList data-tour="vacancy-tabs">
-            <TabsTrigger value="pipeline">{t("Etapas")}</TabsTrigger>
-            <TabsTrigger value="table">{t("Tabla")}</TabsTrigger>
-            <TabsTrigger value="brief">{t("Detalle de vacante")}</TabsTrigger>
-            <TabsTrigger data-tour="vacancy-scheduling" value="scheduling">{t("Agenda")}</TabsTrigger>
-          </TabsList>
-          <div data-tour="vacancy-search" className="relative w-72 max-w-full">
-            <input
-              type="search"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder={t("Buscar postulante por nombre o email…")}
-              className="w-full rounded-full border border-border bg-card px-4 py-2 text-sm outline-none focus:border-primary"
-            />
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="max-w-full overflow-x-auto pb-1">
+            <TabsList data-tour="vacancy-tabs">
+              <TabsTrigger value="pipeline">{t("Etapas")}</TabsTrigger>
+              <TabsTrigger value="table">{t("Tabla")}</TabsTrigger>
+              <TabsTrigger value="brief">{t("Detalle de vacante")}</TabsTrigger>
+              <TabsTrigger data-tour="vacancy-scheduling" value="scheduling">{t("Agenda")}</TabsTrigger>
+            </TabsList>
           </div>
-          {birthFieldId && (
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">{t("Rango de edad")}</span>
-              <input type="number" min={14} max={99} value={ageMin} onChange={e => setAgeMin(e.target.value)} placeholder={t("Desde")}
-                className="w-20 rounded-full border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary" />
-              <input type="number" min={14} max={99} value={ageMax} onChange={e => setAgeMax(e.target.value)} placeholder={t("Hasta")}
-                className="w-20 rounded-full border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary" />
-              {(ageMin || ageMax) && <button className="text-xs text-primary hover:underline" onClick={() => { setAgeMin(""); setAgeMax(""); }}>{t("Limpiar")}</button>}
+          <div className="flex w-full flex-col items-stretch gap-2 md:items-end">
+            <div data-tour="vacancy-search" className="relative w-full md:w-72">
+              <input
+                type="search"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder={t("Buscar postulante por nombre o email…")}
+                className="w-full rounded-full border border-border bg-card px-4 py-2 text-sm outline-none focus:border-primary"
+              />
             </div>
-          )}
+            {birthFieldId && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">{t("Rango de edad")}</span>
+                <input type="number" min={14} max={99} value={ageMin} onChange={e => setAgeMin(e.target.value)} placeholder={t("Desde")}
+                  className="w-20 rounded-full border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary" />
+                <input type="number" min={14} max={99} value={ageMax} onChange={e => setAgeMax(e.target.value)} placeholder={t("Hasta")}
+                  className="w-20 rounded-full border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary" />
+                {(ageMin || ageMax) && <button className="text-xs text-primary hover:underline" onClick={() => { setAgeMin(""); setAgeMax(""); }}>{t("Limpiar")}</button>}
+              </div>
+            )}
+          </div>
         </div>
 
         <TabsContent value="pipeline" className="mt-6">
           <IntegrationAlert context="kanban" vacancyId={vacancyId} onGoToAgenda={() => setTab("scheduling")} />
-          <div className="flex gap-3 overflow-x-auto overflow-y-hidden pb-4 max-h-[calc(100vh-220px)]">
+          <div className="flex gap-3 overflow-x-auto overflow-y-hidden pb-4 max-h-[calc(100vh-320px)] md:max-h-[calc(100vh-220px)]">
 
             {STAGES.map(s => {
               const items = filteredApps.filter((a: any) => a.stage === s.id);
@@ -301,8 +305,8 @@ function VacancyDetail() {
 
 
         <TabsContent value="table" className="mt-6">
-          <div className="overflow-hidden rounded-2xl border border-border bg-card">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+            <table className="w-full min-w-[560px] text-sm">
               <thead className="border-b border-border bg-muted/30 text-left text-xs uppercase text-muted-foreground">
                 <tr>
                   <th className="px-4 py-2">{t("Candidato")}</th>
