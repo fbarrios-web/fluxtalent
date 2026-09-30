@@ -203,14 +203,12 @@ function VacancyDetail() {
 
       <Tabs value={tab} onValueChange={setTab}>
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="max-w-full overflow-x-auto pb-1">
-            <TabsList data-tour="vacancy-tabs">
-              <TabsTrigger value="pipeline">{t("Etapas")}</TabsTrigger>
-              <TabsTrigger value="table">{t("Tabla")}</TabsTrigger>
-              <TabsTrigger value="brief">{t("Detalle de vacante")}</TabsTrigger>
-              <TabsTrigger data-tour="vacancy-scheduling" value="scheduling">{t("Agenda")}</TabsTrigger>
-            </TabsList>
-          </div>
+            <TabsList data-tour="vacancy-tabs" className="grid h-auto w-full grid-cols-2 gap-1 sm:inline-grid sm:w-auto sm:grid-cols-4 sm:gap-1.5">
+            <TabsTrigger value="pipeline" className="w-full px-2 py-1.5 text-[13px] sm:w-auto sm:px-3 sm:py-1 sm:text-sm">{t("Etapas")}</TabsTrigger>
+            <TabsTrigger value="table" className="w-full px-2 py-1.5 text-[13px] sm:w-auto sm:px-3 sm:py-1 sm:text-sm">{t("Tabla")}</TabsTrigger>
+            <TabsTrigger value="brief" className="w-full px-2 py-1.5 text-[13px] sm:w-auto sm:px-3 sm:py-1 sm:text-sm">{t("Detalle de vacante")}</TabsTrigger>
+            <TabsTrigger data-tour="vacancy-scheduling" value="scheduling" className="w-full px-2 py-1.5 text-[13px] sm:w-auto sm:px-3 sm:py-1 sm:text-sm">{t("Agenda")}</TabsTrigger>
+          </TabsList>
           <div className="flex w-full flex-col items-stretch gap-2 md:items-end">
             <div data-tour="vacancy-search" className="relative w-full md:w-72">
               <input
