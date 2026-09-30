@@ -1,0 +1,2 @@
+UPDATE public.organizations SET sensitive_fields = '[{"id":"dni","label":"DNI","type":"number"},{"id":"birth_date","label":"Fecha de nacimiento","type":"date"}]'::jsonb WHERE id = '5bd10ce1-06fd-45ef-8edb-457e973d7277';
+UPDATE public.vacancies SET sensitive_field_ids = '["dni","birth_date"]'::jsonb WHERE org_id = '5bd10ce1-06fd-45ef-8edb-457e973d7277' AND status IN ('active','draft','paused');
