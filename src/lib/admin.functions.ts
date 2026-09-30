@@ -282,14 +282,16 @@ export const adminSetCustomFeatures = createServerFn({ method: "POST" })
         subdomain: z.boolean(),
         sensitive_fields: z.boolean(),
         personality_test: z.boolean(),
+        in_person_interviews: z.boolean().default(false),
       }),
     }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: cur } = await supabaseAdmin.from("organizations").select("custom_features").eq("id", data.org_id).maybeSingle();
     const patch: Record<string, unknown> = {
       subdomain: data.features.subdomain ? data.subdomain : null,
-      custom_features: data.features,
+      custom_features: { ...(((cur as any)?.custom_features ?? {}) as object), ...data.features },
     };
     const { error } = await supabaseAdmin.from("organizations").update(patch as never).eq("id", data.org_id);
     if (error) {
