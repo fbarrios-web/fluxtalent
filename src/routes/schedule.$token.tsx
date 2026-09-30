@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Loader2, Calendar, Check } from "lucide-react";
+import { Loader2, Calendar, Check, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
 
