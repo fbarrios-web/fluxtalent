@@ -1367,6 +1367,15 @@ export type Database = {
       }
       current_org_id: { Args: never; Returns: string }
       get_booking_by_token: { Args: { _token: string }; Returns: Json }
+      get_public_vacancies_board: {
+        Args: { _subdomain: string }
+        Returns: {
+          org_brand_color: string
+          org_logo_url: string
+          org_name: string
+          vacancies: Json
+        }[]
+      }
       get_public_vacancy_by_slug: {
         Args: { _slug: string }
         Returns: {
