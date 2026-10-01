@@ -61,6 +61,14 @@ function VacanciesBoard() {
   const vacancies: any[] = data?.vacancies ?? [];
   const brand = data?.org_brand_color || undefined;
 
+  if (!mounted || (mounted && sub && isLoading)) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-6">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   if (!sub) {
     return (
       <div className="flex min-h-screen items-center justify-center p-6">
