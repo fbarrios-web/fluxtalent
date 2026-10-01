@@ -219,7 +219,7 @@ export async function createOutlookEventWithTeams(params: {
   }
   if (params.location) baseBody.location = { displayName: params.location };
   let res = params.inPerson
-    ? await post(baseBody)
+    ? await post({ ...baseBody, isOnlineMeeting: false, allowNewTimeProposals: false })
     : await post({ ...baseBody, isOnlineMeeting: true, onlineMeetingProvider: "teamsForBusiness" });
   if (!res.ok && params.inPerson) throw new Error(`Outlook event insert falló [${res.status}]: ${await res.text()}`);
   if (!res.ok) {

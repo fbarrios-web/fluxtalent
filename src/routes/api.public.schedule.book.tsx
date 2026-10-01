@@ -70,7 +70,7 @@ export const Route = createFileRoute("/api/public/schedule/book")({
 
         try {
           const access_token = await providerAccessToken(recruiter as any, provider);
-          const inPerson = (org as any).custom_features?.in_person_interviews === true;
+          const inPerson = (org as any).custom_features?.in_person_interviews === true || !!r.location || !!r.location_url;
           const locationLabel = r.location ?? null;
           const descriptionText = `${inPerson ? "Entrevista presencial" : "Entrevista"} para ${vac.title}\nPostulante: ${candidateName} (${app.email})`
             + (locationLabel ? `\nLugar: ${locationLabel}` : "")
@@ -104,7 +104,7 @@ export const Route = createFileRoute("/api/public/schedule/book")({
               booking_id: r.booking_id,
               provider,
               event_id: event.eventId,
-              meeting_link: event.meetingLink ?? event.webLink,
+              meeting_link: inPerson ? null : (event.meetingLink ?? event.webLink),
             },
           });
 
@@ -119,7 +119,7 @@ export const Route = createFileRoute("/api/public/schedule/book")({
             logoUrl: org.logo_url,
             signatureHtml: org.signature_html,
           };
-          const linkForEmail = event.meetingLink ?? event.webLink ?? "";
+          const linkForEmail = inPerson ? "" : (event.meetingLink ?? event.webLink ?? "");
           let emailWarning: string | null = null;
           try {
               await sendUserMail({
