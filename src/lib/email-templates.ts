@@ -60,7 +60,7 @@ export function interviewConfirmCandidateHtml(opts: BrandCtx & {
   locationUrl?: string | null;
 }) {
   const color = opts.brandColor || "#0F766E";
-  if (opts.location || opts.locationUrl) {
+  if (opts.location || opts.locationUrl || !opts.meetLink) {
     return shell(opts, `
     <h1 style="font-size:22px;margin:0 0 12px">¡Listo, ${escapeHtml(opts.firstName)}!</h1>
     <p style="line-height:1.6;font-size:15px;margin:0 0 16px">Tu entrevista presencial para <strong>${escapeHtml(opts.vacancyTitle)}</strong> quedó confirmada.</p>
