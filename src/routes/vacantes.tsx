@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Briefcase, ArrowRight, Loader2 } from "lucide-react";
 import { useT } from "@/lib/i18n";
+import { useEffect, useState } from "react";
 import { MAIN_APP_HOST, vacancyPublicUrl } from "@/lib/vacancy-url";
 
 export const Route = createFileRoute("/vacantes")({
