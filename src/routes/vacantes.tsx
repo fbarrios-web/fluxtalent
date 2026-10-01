@@ -58,6 +58,15 @@ function VacanciesBoard() {
       return (data as any)?.[0] ?? null;
     },
   });
+  const { data: logoUrl } = useQuery({
+    queryKey: ["public-board-logo", sub],
+    enabled: !!sub,
+    queryFn: async () => {
+      const r = await fetch(`/api/public/schedule/logo?subdomain=${encodeURIComponent(sub!)}`);
+      const j = await r.json().catch(() => ({}));
+      return (j?.url as string | null) ?? null;
+    },
+  });
 
   const vacancies: any[] = data?.vacancies ?? [];
   const brand = data?.org_brand_color || undefined;
