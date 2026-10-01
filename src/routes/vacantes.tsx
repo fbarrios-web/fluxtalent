@@ -91,8 +91,8 @@ function VacanciesBoard() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-3xl items-center justify-center px-4 py-8">
-          {data?.org_logo_url ? (
-            <img src={data.org_logo_url} alt={data.org_name ?? ""} className="h-14 w-auto object-contain sm:h-16" />
+          {logoUrl ? (
+            <img src={logoUrl} alt={data?.org_name ?? ""} className="h-14 w-auto object-contain sm:h-16" />
           ) : (
             <h1 className="font-display text-2xl sm:text-3xl">{data?.org_name ?? ""}</h1>
           )}
