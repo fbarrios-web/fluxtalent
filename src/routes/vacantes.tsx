@@ -31,6 +31,9 @@ function modalityLabel(value: string | null | undefined, t: (k: string) => strin
 
 function currentSubdomain(): string | null {
   if (typeof window === "undefined") return null;
+  // Permite previsualizar el portal con ?org=<subdominio> desde cualquier dominio.
+  const preview = new URLSearchParams(window.location.search).get("org");
+  if (preview) return preview;
   const host = window.location.host;
   if (!host.endsWith(`.${MAIN_APP_HOST}`)) return null;
   const sub = host.slice(0, host.length - MAIN_APP_HOST.length - 1);
