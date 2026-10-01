@@ -17,6 +17,7 @@ import { Route as RefundsRouteImport } from './routes/refunds'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TrustRouteImport } from './routes/trust'
+import { Route as VacantesRouteImport } from './routes/vacantes'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppAdminRouteImport } from './routes/app.admin'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
@@ -95,6 +96,11 @@ const TermsRoute = TermsRouteImport.update({
 const TrustRoute = TrustRouteImport.update({
   id: '/trust',
   path: '/trust',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VacantesRoute = VacantesRouteImport.update({
+  id: '/vacantes',
+  path: '/vacantes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -306,6 +312,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
+  '/vacantes': typeof VacantesRoute
   '/app/admin': typeof AppAdminRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
   '/app/enterprise': typeof AppEnterpriseRoute
@@ -354,6 +361,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
+  '/vacantes': typeof VacantesRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/enterprise': typeof AppEnterpriseRoute
   '/app/integrations': typeof AppIntegrationsRoute
@@ -403,6 +411,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
+  '/vacantes': typeof VacantesRoute
   '/app/admin': typeof AppAdminRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
   '/app/enterprise': typeof AppEnterpriseRoute
@@ -454,6 +463,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/terms'
     | '/trust'
+    | '/vacantes'
     | '/app/admin'
     | '/app/dashboard'
     | '/app/enterprise'
@@ -502,6 +512,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/terms'
     | '/trust'
+    | '/vacantes'
     | '/app/dashboard'
     | '/app/enterprise'
     | '/app/integrations'
@@ -550,6 +561,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/terms'
     | '/trust'
+    | '/vacantes'
     | '/app/admin'
     | '/app/dashboard'
     | '/app/enterprise'
@@ -600,6 +612,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermsRoute: typeof TermsRoute
   TrustRoute: typeof TrustRoute
+  VacantesRoute: typeof VacantesRoute
   ApplySlugRoute: typeof ApplySlugRoute
   ScheduleTokenRoute: typeof ScheduleTokenRoute
   ApiPublicAnalyzeRoute: typeof ApiPublicAnalyzeRoute
@@ -676,6 +689,13 @@ declare module '@tanstack/react-router' {
       path: '/trust'
       fullPath: '/trust'
       preLoaderRoute: typeof TrustRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vacantes': {
+      id: '/vacantes'
+      path: '/vacantes'
+      fullPath: '/vacantes'
+      preLoaderRoute: typeof VacantesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/': {
@@ -1031,6 +1051,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   TermsRoute: TermsRoute,
   TrustRoute: TrustRoute,
+  VacantesRoute: VacantesRoute,
   ApplySlugRoute: ApplySlugRoute,
   ScheduleTokenRoute: ScheduleTokenRoute,
   ApiPublicAnalyzeRoute: ApiPublicAnalyzeRoute,
