@@ -42,7 +42,12 @@ function currentSubdomain(): string | null {
 
 function VacanciesBoard() {
   const t = useT();
-  const sub = currentSubdomain();
+  const [sub, setSub] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setSub(currentSubdomain());
+    setMounted(true);
+  }, []);
 
   const { data, isLoading } = useQuery({
     queryKey: ["public-vacancies-board", sub],
