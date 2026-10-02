@@ -197,6 +197,7 @@ function VacanciesList() {
                   <button
                     type="button"
                     onClick={e => {
+                      e.preventDefault();
                       e.stopPropagation();
                       copyShare(vacancyPublicUrl(v), v.id);
                     }}
