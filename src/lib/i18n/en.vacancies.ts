@@ -251,4 +251,10 @@ export const EN_VACANCIES: Record<string, string> = {
   "Descartar si es menor al mínimo": "Discard if below the minimum",
   "Descartar si supera el máximo": "Discard if above the maximum",
   "El postulante responde con un número (ej: pretensión salarial). Marcá qué límite descarta el CV automáticamente.": "The applicant answers with a number (e.g. expected salary). Choose which limit automatically discards the résumé.",
+  "Compartí tus vacantes con los postulantes": "Share your vacancies with applicants",
+  "Copiar link del portal": "Copy portal link",
+  "¡Copiado!": "Copied!",
+  "Ver": "View",
+  "Usá el botón de copiar junto a cada vacante activa para compartir su formulario de postulación.": "Use the copy button next to each active vacancy to share its application form.",
+  "No pudimos copiar el link. Copialo manualmente: ": "We couldn't copy the link. Copy it manually: ",
 };

@@ -2,9 +2,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, ExternalLink, Download, Search } from "lucide-react";
+import { toast } from "sonner";
+import { Plus, ExternalLink, Download, Search, Copy, Share2, Check } from "lucide-react";
 import { downloadCSV } from "@/lib/export-csv";
-import { vacancyPublicUrl } from "@/lib/vacancy-url";
+import { vacancyPublicUrl, MAIN_APP_HOST } from "@/lib/vacancy-url";
 import { UsageCard } from "@/components/usage-card";
 import { PromoNotice } from "@/components/promo-notice";
 import { useT } from "@/lib/i18n";
@@ -18,6 +19,8 @@ export const Route = createFileRoute("/app/vacancies/")({
 function VacanciesList() {
   const t = useT();
   const [q, setQ] = useState("");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedPortal, setCopiedPortal] = useState(false);
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["vacancies-list"],
     retry: 1,
@@ -31,6 +34,39 @@ function VacanciesList() {
       return data ?? [];
     },
   });
+
+  // Organización actual, para el link del portal de vacantes (si tiene subdominio activo).
+  const { data: portal } = useQuery({
+    queryKey: ["vacancies-share-portal"],
+    retry: 1,
+    queryFn: async () => {
+      const { data: prof } = await supabase.from("profiles").select("org_id").maybeSingle();
+      if (!prof?.org_id) return null;
+      const { data: org } = await supabase
+        .from("organizations")
+        .select("subdomain, custom_features")
+        .eq("id", prof.org_id)
+        .maybeSingle();
+      const enabled = (org as any)?.custom_features?.subdomain === true;
+      if (!enabled || !(org as any)?.subdomain) return null;
+      return { url: `https://${(org as any).subdomain}.${MAIN_APP_HOST}/vacantes` };
+    },
+  });
+
+  function copyShare(url: string, id: string | null) {
+    navigator.clipboard.writeText(url).then(
+      () => {
+        if (id === "portal") setCopiedPortal(true);
+        else setCopiedId(id);
+        toast.success(t("Link copiado"));
+        setTimeout(() => {
+          setCopiedPortal(false);
+          setCopiedId(null);
+        }, 2000);
+      },
+      () => toast.error(t("No pudimos copiar el link. Copialo manualmente: " + url)),
+    );
+  }
 
 
   const filtered = useMemo(() => {
@@ -69,6 +105,32 @@ function VacanciesList() {
       <div className="mb-4"><PromoNotice /></div>
 
       <div className="mb-4"><UsageCard /></div>
+
+      <div className="mb-4 rounded-2xl border border-border bg-card p-4">
+        <div className="flex items-start gap-3">
+          <Share2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium">{t("Compartí tus vacantes con los postulantes")}</p>
+            {portal ? (
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+                <code className="min-w-0 flex-1 truncate rounded-lg bg-muted px-3 py-2 text-xs">{portal.url}</code>
+                <button
+                  type="button"
+                  onClick={() => copyShare(portal.url, "portal")}
+                  className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+                >
+                  {copiedPortal ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copiedPortal ? t("¡Copiado!") : t("Copiar link del portal")}
+                </button>
+              </div>
+            ) : (
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t("Usá el botón de copiar junto a cada vacante activa para compartir su formulario de postulación.")}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
 
       <div className="mb-4 relative max-w-md">
 
@@ -131,14 +193,28 @@ function VacanciesList() {
                 </div>
               </div>
               {isActive && (
-                <a
-                  href={vacancyPublicUrl(v)}
-                  target="_blank" rel="noreferrer"
-                  onClick={e => e.stopPropagation()}
-                  className="inline-flex items-center justify-center gap-1 self-start rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-background sm:self-auto"
-                >
-                  <ExternalLink className="h-3 w-3" /> {t("Link público")}
-                </a>
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={e => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      copyShare(vacancyPublicUrl(v), v.id);
+                    }}
+                    className="inline-flex items-center justify-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                  >
+                    {copiedId === v.id ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                    {copiedId === v.id ? t("¡Copiado!") : t("Copiar link")}
+                  </button>
+                  <a
+                    href={vacancyPublicUrl(v)}
+                    target="_blank" rel="noreferrer"
+                    onClick={e => e.stopPropagation()}
+                    className="inline-flex items-center justify-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-background"
+                  >
+                    <ExternalLink className="h-3 w-3" /> {t("Ver")}
+                  </a>
+                </div>
               )}
             </Link>
           );
