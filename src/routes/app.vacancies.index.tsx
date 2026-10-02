@@ -20,7 +20,7 @@ function VacanciesList() {
   const t = useT();
   const [q, setQ] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [copiedPortal, setCopiedPortal] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["vacancies-list"],
     retry: 1,
@@ -35,32 +35,44 @@ function VacanciesList() {
     },
   });
 
-  // Organización actual, para el link del portal de vacantes (si tiene subdominio activo).
+  // Portales de vacantes: el de la organización actual (si tiene subdominio activo) y,
+  // para admins de la plataforma, los portales de organizaciones con portal propio.
   const { data: portal } = useQuery({
     queryKey: ["vacancies-share-portal"],
     retry: 1,
     queryFn: async () => {
+      const toPortal = (o: any) => ({ name: String(o.name ?? ""), url: `https://${o.subdomain}.${MAIN_APP_HOST}/vacantes` });
       const { data: prof } = await supabase.from("profiles").select("org_id").maybeSingle();
-      if (!prof?.org_id) return null;
+      if (!prof?.org_id) return [];
       const { data: org } = await supabase
         .from("organizations")
-        .select("subdomain, custom_features")
+        .select("name, subdomain, custom_features")
         .eq("id", prof.org_id)
         .maybeSingle();
-      const enabled = (org as any)?.custom_features?.subdomain === true;
-      if (!enabled || !(org as any)?.subdomain) return null;
-      return { url: `https://${(org as any).subdomain}.${MAIN_APP_HOST}/vacantes` };
+      const own = (org as any)?.custom_features?.subdomain === true && (org as any)?.subdomain ? [toPortal(org)] : [];
+      if (own.length) return own;
+      const { data: user } = await supabase.auth.getUser();
+      const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: user?.user?.id ?? "", _role: "admin" });
+      if (!isAdmin) return [];
+      const { data: orgs } = await supabase
+        .from("organizations")
+        .select("name, subdomain, custom_features")
+        .not("subdomain", "is", null)
+        .limit(50);
+      return (orgs ?? [])
+        .filter((o: any) => o.custom_features?.subdomain === true && o.subdomain)
+        .map(toPortal);
     },
   });
 
   function copyShare(url: string, id: string | null) {
     navigator.clipboard.writeText(url).then(
       () => {
-        if (id === "portal") setCopiedPortal(true);
+        if (id === "portal") setCopiedUrl(url);
         else setCopiedId(id);
         toast.success(t("Link copiado"));
         setTimeout(() => {
-          setCopiedPortal(false);
+          setCopiedUrl(null);
           setCopiedId(null);
         }, 2000);
       },
@@ -111,17 +123,24 @@ function VacanciesList() {
           <Share2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium">{t("Compartí tus vacantes con los postulantes")}</p>
-            {portal ? (
-              <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
-                <code className="min-w-0 flex-1 truncate rounded-lg bg-muted px-3 py-2 text-xs">{portal.url}</code>
-                <button
-                  type="button"
-                  onClick={() => copyShare(portal.url, "portal")}
-                  className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
-                >
-                  {copiedPortal ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                  {copiedPortal ? t("¡Copiado!") : t("Copiar link del portal")}
-                </button>
+            {portal && portal.length > 0 ? (
+              <div className="mt-2 flex flex-col gap-2">
+                {(portal as { name: string; url: string }[]).map((p) => (
+                  <div key={p.url} className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    {portal.length > 1 && (
+                      <span className="shrink-0 text-xs font-medium text-muted-foreground sm:w-28 sm:truncate">{p.name}</span>
+                    )}
+                    <code className="min-w-0 flex-1 truncate rounded-lg bg-muted px-3 py-2 text-xs">{p.url}</code>
+                    <button
+                      type="button"
+                      onClick={() => copyShare(p.url, "portal")}
+                      className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+                    >
+                      {copiedUrl === p.url ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                      {copiedUrl === p.url ? t("¡Copiado!") : t("Copiar link del portal")}
+                    </button>
+                  </div>
+                ))}
               </div>
             ) : (
               <p className="mt-1 text-xs text-muted-foreground">
