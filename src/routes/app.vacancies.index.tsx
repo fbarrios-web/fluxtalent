@@ -193,14 +193,27 @@ function VacanciesList() {
                 </div>
               </div>
               {isActive && (
-                <a
-                  href={vacancyPublicUrl(v)}
-                  target="_blank" rel="noreferrer"
-                  onClick={e => e.stopPropagation()}
-                  className="inline-flex items-center justify-center gap-1 self-start rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-background sm:self-auto"
-                >
-                  <ExternalLink className="h-3 w-3" /> {t("Link público")}
-                </a>
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={e => {
+                      e.stopPropagation();
+                      copyShare(vacancyPublicUrl(v), v.id);
+                    }}
+                    className="inline-flex items-center justify-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                  >
+                    {copiedId === v.id ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                    {copiedId === v.id ? t("¡Copiado!") : t("Copiar link")}
+                  </button>
+                  <a
+                    href={vacancyPublicUrl(v)}
+                    target="_blank" rel="noreferrer"
+                    onClick={e => e.stopPropagation()}
+                    className="inline-flex items-center justify-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-background"
+                  >
+                    <ExternalLink className="h-3 w-3" /> {t("Ver")}
+                  </a>
+                </div>
               )}
             </Link>
           );
