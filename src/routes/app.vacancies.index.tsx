@@ -19,6 +19,8 @@ export const Route = createFileRoute("/app/vacancies/")({
 function VacanciesList() {
   const t = useT();
   const [q, setQ] = useState("");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedPortal, setCopiedPortal] = useState(false);
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["vacancies-list"],
     retry: 1,
@@ -32,6 +34,39 @@ function VacanciesList() {
       return data ?? [];
     },
   });
+
+  // Organización actual, para el link del portal de vacantes (si tiene subdominio activo).
+  const { data: portal } = useQuery({
+    queryKey: ["vacancies-share-portal"],
+    retry: 1,
+    queryFn: async () => {
+      const { data: prof } = await supabase.from("profiles").select("org_id").maybeSingle();
+      if (!prof?.org_id) return null;
+      const { data: org } = await supabase
+        .from("organizations")
+        .select("subdomain, custom_features")
+        .eq("id", prof.org_id)
+        .maybeSingle();
+      const enabled = (org as any)?.custom_features?.subdomain === true;
+      if (!enabled || !(org as any)?.subdomain) return null;
+      return { url: `https://${(org as any).subdomain}.${MAIN_APP_HOST}/vacantes` };
+    },
+  });
+
+  function copyShare(url: string, id: string | null) {
+    navigator.clipboard.writeText(url).then(
+      () => {
+        if (id === "portal") setCopiedPortal(true);
+        else setCopiedId(id);
+        toast.success(t("Link copiado"));
+        setTimeout(() => {
+          setCopiedPortal(false);
+          setCopiedId(null);
+        }, 2000);
+      },
+      () => toast.error(t("No pudimos copiar el link. Copialo manualmente: " + url)),
+    );
+  }
 
 
   const filtered = useMemo(() => {
