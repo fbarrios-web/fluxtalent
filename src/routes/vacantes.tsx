@@ -89,19 +89,28 @@ function VacanciesBoard() {
 
   return (
     <div className="min-h-screen bg-background">
+      {brand && (
+        <div
+          className="h-1.5 w-full"
+          style={{ background: `linear-gradient(90deg, ${brand}, color-mix(in oklab, ${brand} 55%, white))` }}
+        />
+      )}
       <header className="border-b border-border bg-card">
-        <div className="mx-auto flex max-w-3xl items-center justify-center px-4 py-8">
+        <div className="mx-auto flex max-w-3xl flex-col items-center justify-center gap-3 px-4 py-10 sm:py-14">
           {logoUrl ? (
-            <img src={logoUrl} alt={data?.org_name ?? ""} className="h-14 w-auto object-contain sm:h-16" />
+            <img src={logoUrl} alt={data?.org_name ?? ""} className="h-24 w-auto object-contain sm:h-32" />
           ) : (
-            <h1 className="font-display text-2xl sm:text-3xl">{data?.org_name ?? ""}</h1>
+            <h1 className="font-display text-3xl sm:text-4xl" style={brand ? { color: brand } : undefined}>
+              {data?.org_name ?? ""}
+            </h1>
           )}
         </div>
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
         <h2 className="font-display text-xl sm:text-2xl">{t("Vacantes")}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{t("Conocé nuestras búsquedas activas y postulate.")}</p>
+        <div className="mt-1.5 h-1 w-12 rounded-full" style={{ backgroundColor: brand }} />
+        <p className="mt-2 text-sm text-muted-foreground">{t("Conocé nuestras búsquedas activas y postulate.")}</p>
 
         {isLoading && (
           <div className="flex justify-center py-16">
@@ -144,7 +153,12 @@ function VacanciesBoard() {
                   )}
                 </div>
                 <span
-                  className="mt-1 inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs font-medium transition-colors group-hover:bg-accent"
+                  className={
+                    brand
+                      ? "mt-1 inline-flex shrink-0 items-center gap-1 rounded-full px-3.5 py-1.5 text-xs font-semibold text-white transition-opacity group-hover:opacity-90"
+                      : "mt-1 inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium transition-colors group-hover:bg-accent"
+                  }
+                  style={brand ? { backgroundColor: brand } : undefined}
                 >
                   {t("Postularme")}
                   <ArrowRight className="h-3 w-3" />
