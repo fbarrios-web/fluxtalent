@@ -106,6 +106,32 @@ function VacanciesList() {
 
       <div className="mb-4"><UsageCard /></div>
 
+      <div className="mb-4 rounded-2xl border border-border bg-card p-4">
+        <div className="flex items-start gap-3">
+          <Share2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium">{t("Compartí tus vacantes con los postulantes")}</p>
+            {portal ? (
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+                <code className="min-w-0 flex-1 truncate rounded-lg bg-muted px-3 py-2 text-xs">{portal.url}</code>
+                <button
+                  type="button"
+                  onClick={() => copyShare(portal.url, "portal")}
+                  className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+                >
+                  {copiedPortal ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copiedPortal ? t("¡Copiado!") : t("Copiar link del portal")}
+                </button>
+              </div>
+            ) : (
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t("Usá el botón de copiar junto a cada vacante activa para compartir su formulario de postulación.")}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="mb-4 relative max-w-md">
 
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
