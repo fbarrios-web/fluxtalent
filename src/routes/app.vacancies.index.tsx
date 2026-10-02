@@ -68,11 +68,11 @@ function VacanciesList() {
   function copyShare(url: string, id: string | null) {
     navigator.clipboard.writeText(url).then(
       () => {
-        if (id === "portal") setCopiedPortal(true);
+        if (id === "portal") setCopiedUrl(url);
         else setCopiedId(id);
         toast.success(t("Link copiado"));
         setTimeout(() => {
-          setCopiedPortal(false);
+          setCopiedUrl(null);
           setCopiedId(null);
         }, 2000);
       },
