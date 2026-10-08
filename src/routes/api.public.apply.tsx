@@ -75,15 +75,16 @@ export const Route = createFileRoute("/api/public/apply")({
             return Response.json({ error: "Esta vacante no está recibiendo postulaciones en este momento." }, { status: 403, headers: cors });
           }
 
-          // Block duplicate applications by email per vacancy
-          const { data: dup } = await supabaseAdmin
+          // Una única postulación por persona y vacante: bloquear por email.
+          const DUP_MSG = "Ya te postulaste a esta vacante. Solo se permite una postulación por persona.";
+          const { data: dupRows } = await supabaseAdmin
             .from("applications")
             .select("id")
             .eq("vacancy_id", vac.id)
             .ilike("email", email)
-            .maybeSingle();
-          if (dup) {
-            return Response.json({ error: "Ya te postulaste a esta vacante con este email." }, { status: 409, headers: cors });
+            .limit(1);
+          if (dupRows && dupRows.length) {
+            return Response.json({ error: DUP_MSG }, { status: 409, headers: cors });
           }
 
           // Datos sensibles obligatorios (plan Custom): validar en el servidor.
