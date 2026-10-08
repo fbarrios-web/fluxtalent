@@ -75,15 +75,16 @@ export const Route = createFileRoute("/api/public/apply")({
             return Response.json({ error: "Esta vacante no está recibiendo postulaciones en este momento." }, { status: 403, headers: cors });
           }
 
-          // Block duplicate applications by email per vacancy
-          const { data: dup } = await supabaseAdmin
+          // Una única postulación por persona y vacante: bloquear por email.
+          const DUP_MSG = "Ya te postulaste a esta vacante. Solo se permite una postulación por persona.";
+          const { data: dupRows } = await supabaseAdmin
             .from("applications")
             .select("id")
             .eq("vacancy_id", vac.id)
             .ilike("email", email)
-            .maybeSingle();
-          if (dup) {
-            return Response.json({ error: "Ya te postulaste a esta vacante con este email." }, { status: 409, headers: cors });
+            .limit(1);
+          if (dupRows && dupRows.length) {
+            return Response.json({ error: DUP_MSG }, { status: 409, headers: cors });
           }
 
           // Datos sensibles obligatorios (plan Custom): validar en el servidor.
@@ -107,6 +108,41 @@ export const Route = createFileRoute("/api/public/apply")({
                 if (f.type === "date" && !/^\d{4}-\d{2}-\d{2}$/.test(v)) return Response.json({ error: `El campo "${f.label}" debe ser una fecha válida.` }, { status: 400, headers: cors });
                 if (v.length > 200) return Response.json({ error: `El campo "${f.label}" es demasiado largo.` }, { status: 400, headers: cors });
                 sensitiveAnswers[String(f.id)] = v;
+              }
+            }
+          }
+
+          // Una única postulación por persona y vacante: bloquear por DNI
+          // (campo fijo de datos personales o pregunta filtro con "DNI"/"documento").
+          {
+            const digits = (s: unknown) => String(s ?? "").replace(/\D/g, "");
+            const isDniLabel = (s: unknown) => /\bdni\b|documento/i.test(String(s ?? ""));
+            const dniFieldIds = new Set(
+              ((orgCfg?.sensitive_fields ?? []) as any[])
+                .filter(f => isDniLabel(f?.label) || String(f?.id) === "dni")
+                .map(f => String(f.id)),
+            );
+            const extractDni = (sens: any, scr: any): string => {
+              for (const id of dniFieldIds) {
+                const d = digits(sens?.[id]);
+                if (d.length >= 6) return d;
+              }
+              for (const [k, val] of Object.entries(scr ?? {})) {
+                if (!isDniLabel(k)) continue;
+                const d = digits(Array.isArray(val) ? val[0] : val);
+                if (d.length >= 6) return d;
+              }
+              return "";
+            };
+            const myDni = extractDni(sensitiveAnswers, answers);
+            if (myDni) {
+              const { data: prev } = await supabaseAdmin
+                .from("applications")
+                .select("sensitive_answers, screening_answers")
+                .eq("vacancy_id", vac.id)
+                .limit(5000);
+              if ((prev ?? []).some((p: any) => extractDni(p.sensitive_answers, p.screening_answers) === myDni)) {
+                return Response.json({ error: DUP_MSG }, { status: 409, headers: cors });
               }
             }
           }
