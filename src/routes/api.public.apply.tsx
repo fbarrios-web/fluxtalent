@@ -111,6 +111,41 @@ export const Route = createFileRoute("/api/public/apply")({
               }
             }
           }
+
+          // Una única postulación por persona y vacante: bloquear por DNI
+          // (campo fijo de datos personales o pregunta filtro con "DNI"/"documento").
+          {
+            const digits = (s: unknown) => String(s ?? "").replace(/\D/g, "");
+            const isDniLabel = (s: unknown) => /\bdni\b|documento/i.test(String(s ?? ""));
+            const dniFieldIds = new Set(
+              ((orgCfg?.sensitive_fields ?? []) as any[])
+                .filter(f => isDniLabel(f?.label) || String(f?.id) === "dni")
+                .map(f => String(f.id)),
+            );
+            const extractDni = (sens: any, scr: any): string => {
+              for (const id of dniFieldIds) {
+                const d = digits(sens?.[id]);
+                if (d.length >= 6) return d;
+              }
+              for (const [k, val] of Object.entries(scr ?? {})) {
+                if (!isDniLabel(k)) continue;
+                const d = digits(Array.isArray(val) ? val[0] : val);
+                if (d.length >= 6) return d;
+              }
+              return "";
+            };
+            const myDni = extractDni(sensitiveAnswers, answers);
+            if (myDni) {
+              const { data: prev } = await supabaseAdmin
+                .from("applications")
+                .select("sensitive_answers, screening_answers")
+                .eq("vacancy_id", vac.id)
+                .limit(5000);
+              if ((prev ?? []).some((p: any) => extractDni(p.sensitive_answers, p.screening_answers) === myDni)) {
+                return Response.json({ error: DUP_MSG }, { status: 409, headers: cors });
+              }
+            }
+          }
           // Enforce plan CV-per-month cap (Free = 20, Starter = 200, etc.).
           const { getOrgPlan, getCvsThisMonth } = await import("@/lib/plan-limits");
           const planForOrg = await getOrgPlan(supabaseAdmin, vac.org_id);
