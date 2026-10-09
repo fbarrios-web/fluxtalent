@@ -125,6 +125,23 @@ export const createDemoBlockedPeriod = createServerFn({ method: "POST" })
     return { blockedPeriod, conflictingBookings: conflictingBookings?.length ?? 0 };
   });
 
+export const createDemoBlockedPeriods = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({
+    periods: z.array(z.object({ startsAt: z.string().datetime(), endsAt: z.string().datetime() })
+      .refine(v => new Date(v.endsAt) > new Date(v.startsAt), { message: "La hora final debe ser posterior a la inicial." })).min(1).max(400),
+    reason: z.string().trim().max(300).optional().default(""),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("demo_blocked_periods").insert(data.periods.map(p => ({
+      starts_at: p.startsAt, ends_at: p.endsAt, reason: data.reason || null, created_by: context.userId,
+    })));
+    if (error) throw error;
+    return { created: data.periods.length };
+  });
+
 export const deleteDemoBlockedPeriod = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
