@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { createDemoBlockedPeriod, deleteDemoBlockedPeriod, getDemoScheduling, saveDemoScheduling } from "@/lib/demo-scheduling.functions";
+import { createDemoBlockedPeriod, createDemoBlockedPeriods, deleteDemoBlockedPeriod, getDemoScheduling, saveDemoScheduling } from "@/lib/demo-scheduling.functions";
 import { zonedToUtc } from "@/lib/scheduling-overlap.server";
 
 export const Route = createFileRoute("/app/admin/demos")({
@@ -39,6 +39,9 @@ function DemoSchedulingAdmin() {
   const [saving, setSaving] = useState(false);
   const [blocking, setBlocking] = useState(false);
   const [block, setBlock] = useState({ date: "", allDay: true, startTime: "09:00", endTime: "18:00", reason: "" });
+  const [recurring, setRecurring] = useState(false);
+  const [weekly, setWeekly] = useState({ weekdays: [3] as number[], startTime: "10:00", endTime: "11:00", from: "", until: "", reason: "" });
+  const createBlocks = useServerFn(createDemoBlockedPeriods);
   const publicUrl = typeof window === "undefined" ? "/reservar-demo" : `${window.location.origin}/reservar-demo`;
 
   useEffect(() => {
@@ -72,6 +75,38 @@ function DemoSchedulingAdmin() {
       if (result.conflictingBookings > 0) toast.warning(`Bloqueo guardado. Hay ${result.conflictingBookings} reserva${result.conflictingBookings === 1 ? "" : "s"} confirmada${result.conflictingBookings === 1 ? "" : "s"} dentro de ese período.`);
       else toast.success("Bloqueo guardado.");
       setBlock({ date: "", allDay: true, startTime: "09:00", endTime: "18:00", reason: "" });
+      await qc.invalidateQueries({ queryKey: ["demo-scheduling"] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo guardar el bloqueo.");
+    } finally {
+      setBlocking(false);
+    }
+  }
+
+  async function onCreateWeekly() {
+    const w = weekly;
+    if (!w.weekdays.length) return toast.error("Elegí al menos un día de la semana.");
+    if (!w.from || !w.until) return toast.error("Completá las fechas desde y hasta.");
+    if (w.until < w.from) return toast.error("La fecha hasta debe ser posterior a la fecha desde.");
+    if (w.endTime <= w.startTime) return toast.error("La hora final debe ser posterior a la inicial.");
+    const tz = "America/Argentina/Buenos_Aires";
+    const periods: { startsAt: string; endsAt: string }[] = [];
+    const cursor = new Date(`${w.from}T12:00:00Z`);
+    const end = new Date(`${w.until}T12:00:00Z`);
+    while (cursor <= end) {
+      if (w.weekdays.includes(cursor.getUTCDay())) {
+        const d = cursor.toISOString().slice(0, 10);
+        periods.push({ startsAt: zonedToUtc(`${d}T${w.startTime}`, tz).toISOString(), endsAt: zonedToUtc(`${d}T${w.endTime}`, tz).toISOString() });
+      }
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+    if (!periods.length) return toast.error("No hay días que coincidan en ese rango.");
+    if (periods.length > 400) return toast.error("El rango es demasiado largo. Elegí un período menor.");
+    setBlocking(true);
+    try {
+      const result = await createBlocks({ data: { periods, reason: w.reason } });
+      toast.success(`Se bloquearon ${result.created} franjas.`);
+      setWeekly({ weekdays: [3], startTime: "10:00", endTime: "11:00", from: "", until: "", reason: "" });
       await qc.invalidateQueries({ queryKey: ["demo-scheduling"] });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "No se pudo guardar el bloqueo.");
@@ -156,14 +191,30 @@ function DemoSchedulingAdmin() {
     </section>
 
     <section className="space-y-5 border-t border-border pt-8">
-      <div><h3 className="flex items-center gap-2 font-semibold"><Ban className="h-4 w-4" /> Bloqueos</h3><p className="mt-1 text-sm text-muted-foreground">Impedí nuevas reservas durante un día completo o una franja específica.</p></div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div><h3 className="flex items-center gap-2 font-semibold"><Ban className="h-4 w-4" /> Bloqueos</h3><p className="mt-1 text-sm text-muted-foreground">Impedí nuevas reservas durante un día completo, una franja específica o de forma semanal.</p></div>
+      <div className="flex gap-2">
+        <Button size="sm" variant={!recurring ? "default" : "outline"} onClick={() => setRecurring(false)}>Fecha puntual</Button>
+        <Button size="sm" variant={recurring ? "default" : "outline"} onClick={() => setRecurring(true)}>Semanal (por día)</Button>
+      </div>
+      {recurring ? <div className="space-y-4">
+        <div className="flex flex-wrap gap-1.5">{DAYS.map((day, weekday) => {
+          const active = weekly.weekdays.includes(weekday);
+          return <Button key={day} type="button" size="sm" variant={active ? "default" : "outline"} onClick={() => setWeekly({ ...weekly, weekdays: active ? weekly.weekdays.filter(v => v !== weekday) : [...weekly.weekdays, weekday].sort() })}>{day}</Button>;
+        })}</div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <div><Label>Hora desde</Label><Input type="time" value={weekly.startTime} onChange={e => setWeekly({ ...weekly, startTime: e.target.value })} /></div>
+          <div><Label>Hora hasta</Label><Input type="time" value={weekly.endTime} onChange={e => setWeekly({ ...weekly, endTime: e.target.value })} /></div>
+          <div><Label>Fecha desde</Label><Input type="date" value={weekly.from} onChange={e => setWeekly({ ...weekly, from: e.target.value })} /></div>
+          <div><Label>Fecha hasta</Label><Input type="date" value={weekly.until} onChange={e => setWeekly({ ...weekly, until: e.target.value })} /></div>
+          <div><Label>Motivo (opcional)</Label><Input maxLength={300} placeholder="Ej. reunión semanal" value={weekly.reason} onChange={e => setWeekly({ ...weekly, reason: e.target.value })} /></div>
+        </div>
+      </div> : <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <div><Label>Fecha</Label><Input type="date" value={block.date} onChange={event => setBlock({ ...block, date: event.target.value })} /></div>
         <div className="flex items-end"><label className="flex h-10 items-center gap-3 text-sm"><Switch checked={block.allDay} onCheckedChange={allDay => setBlock({ ...block, allDay })} /> Día completo</label></div>
         {!block.allDay && <><div><Label>Desde</Label><Input type="time" value={block.startTime} onChange={event => setBlock({ ...block, startTime: event.target.value })} /></div><div><Label>Hasta</Label><Input type="time" value={block.endTime} onChange={event => setBlock({ ...block, endTime: event.target.value })} /></div></>}
         <div className={block.allDay ? "lg:col-span-3" : ""}><Label>Motivo (opcional)</Label><Input maxLength={300} placeholder="Ej. feriado o reunión interna" value={block.reason} onChange={event => setBlock({ ...block, reason: event.target.value })} /></div>
-      </div>
-      <Button variant="outline" onClick={onCreateBlock} disabled={blocking}>{blocking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />} Agregar bloqueo</Button>
+      </div>}
+      <Button variant="outline" onClick={recurring ? onCreateWeekly : onCreateBlock} disabled={blocking}>{blocking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />} Agregar bloqueo</Button>
       <div className="divide-y divide-border border-t border-border">
         {data.blockedPeriods.map(period => <div key={period.id} className="flex items-center justify-between gap-4 py-3 text-sm"><div><div className="font-medium">{new Intl.DateTimeFormat("es-AR", { dateStyle: "full", timeStyle: "short", timeZone: "America/Argentina/Buenos_Aires" }).format(new Date(period.starts_at))} — {new Intl.DateTimeFormat("es-AR", { timeStyle: "short", timeZone: "America/Argentina/Buenos_Aires" }).format(new Date(period.ends_at))}</div>{period.reason && <div className="text-muted-foreground">{period.reason}</div>}</div><Button variant="ghost" size="icon" aria-label="Eliminar bloqueo" onClick={() => onDeleteBlock(period.id)}><Trash2 className="h-4 w-4" /></Button></div>)}
         {!data.blockedPeriods.length && <p className="py-4 text-sm text-muted-foreground">No hay bloqueos próximos.</p>}
