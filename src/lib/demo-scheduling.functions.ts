@@ -152,3 +152,82 @@ export const deleteDemoBlockedPeriod = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+async function organizerToken(supabaseAdmin: any) {
+  const { data: config } = await supabaseAdmin.from("demo_scheduling_config").select("organizer_id, timezone").eq("id", true).maybeSingle();
+  const { data: organizer } = await supabaseAdmin.from("profiles")
+    .select("id, google_refresh_token, google_email, google_connected_at")
+    .eq("id", config?.organizer_id).maybeSingle();
+  if (!organizer?.google_refresh_token) throw new Error("La cuenta Google organizadora no está conectada.");
+  const { refreshAccessToken } = await import("@/lib/google.server");
+  const { access_token } = await refreshAccessToken(organizer.google_refresh_token);
+  return { accessToken: access_token as string, timezone: (config?.timezone ?? DEMO_TIMEZONE) as string };
+}
+
+const fmtWhen = (iso: string, tz: string) => new Intl.DateTimeFormat("es-AR", { dateStyle: "full", timeStyle: "short", timeZone: tz }).format(new Date(iso));
+
+async function loadActiveBooking(supabaseAdmin: any, id: string) {
+  const { data: booking, error } = await supabaseAdmin.from("demo_bookings")
+    .select("id, slot_id, first_name, email, status, google_event_id, meet_link, demo_slots(start_at, end_at)")
+    .eq("id", id).maybeSingle();
+  if (error) throw error;
+  if (!booking || !["reserved", "confirmed"].includes(booking.status)) throw new Error("La reunión ya no está activa.");
+  return booking;
+}
+
+export const cancelDemoBooking = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ bookingId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const booking = await loadActiveBooking(supabaseAdmin, data.bookingId);
+    const { accessToken, timezone } = await organizerToken(supabaseAdmin);
+    if (booking.google_event_id) {
+      const { cancelCalendarEvent } = await import("@/lib/google.server");
+      await cancelCalendarEvent({ accessToken, eventId: booking.google_event_id });
+    }
+    await supabaseAdmin.from("demo_bookings").update({ status: "canceled" }).eq("id", booking.id);
+    await supabaseAdmin.from("demo_slots").update({ status: "open" }).eq("id", booking.slot_id).gt("start_at", new Date().toISOString());
+    const { dispatchTransactionalEmail } = await import("@/lib/email/dispatch.server");
+    const mail = await dispatchTransactionalEmail({
+      templateName: "demo-update", recipientEmail: booking.email, idempotencyKey: `demo-cancel:${booking.id}`,
+      templateData: { kind: "canceled", firstName: booking.first_name, previousLabel: booking.demo_slots?.start_at ? fmtWhen(booking.demo_slots.start_at, timezone) : "" },
+    });
+    return { ok: true, emailSent: mail.ok };
+  });
+
+export const rescheduleDemoBooking = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ bookingId: z.string().uuid(), slotId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const booking = await loadActiveBooking(supabaseAdmin, data.bookingId);
+    const { data: claimed, error: claimError } = await supabaseAdmin.from("demo_slots")
+      .update({ status: "booked" }).eq("id", data.slotId).eq("status", "open").gt("start_at", new Date().toISOString())
+      .select("id, start_at, end_at").maybeSingle();
+    if (claimError) throw claimError;
+    if (!claimed) throw new Error("Ese horario ya no está disponible.");
+    try {
+      const { accessToken, timezone } = await organizerToken(supabaseAdmin);
+      if (booking.google_event_id) {
+        const { rescheduleCalendarEvent } = await import("@/lib/google.server");
+        await rescheduleCalendarEvent({ accessToken, eventId: booking.google_event_id, startISO: claimed.start_at, endISO: claimed.end_at, timezone });
+      }
+      await supabaseAdmin.from("demo_bookings").update({ slot_id: claimed.id }).eq("id", booking.id);
+      await supabaseAdmin.from("demo_slots").update({ status: "open" }).eq("id", booking.slot_id).gt("start_at", new Date().toISOString());
+      const { dispatchTransactionalEmail } = await import("@/lib/email/dispatch.server");
+      const mail = await dispatchTransactionalEmail({
+        templateName: "demo-update", recipientEmail: booking.email, idempotencyKey: `demo-reschedule:${booking.id}:${claimed.id}`,
+        templateData: {
+          kind: "rescheduled", firstName: booking.first_name, meetLink: booking.meet_link ?? "",
+          whenLabel: fmtWhen(claimed.start_at, timezone),
+          previousLabel: booking.demo_slots?.start_at ? fmtWhen(booking.demo_slots.start_at, timezone) : "",
+        },
+      });
+      return { ok: true, emailSent: mail.ok };
+    } catch (error) {
+      await supabaseAdmin.from("demo_slots").update({ status: "open" }).eq("id", claimed.id);
+      throw error;
+    }
+  });

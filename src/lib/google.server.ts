@@ -204,3 +204,22 @@ export async function sendGmail(params: {
   if (!res.ok) throw new Error(`Gmail send falló: ${await res.text()}`);
   return (await res.json()) as { id: string };
 }
+
+/** Move an existing event; Google emails every attendee (sendUpdates=all). */
+export async function rescheduleCalendarEvent(params: { accessToken: string; eventId: string; startISO: string; endISO: string; timezone: string }) {
+  const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(params.eventId)}?sendUpdates=all`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${params.accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ start: { dateTime: params.startISO, timeZone: params.timezone }, end: { dateTime: params.endISO, timeZone: params.timezone } }),
+  });
+  if (!res.ok) throw new Error(`Calendar update falló: ${await res.text()}`);
+}
+
+/** Cancel an event; Google emails every attendee (sendUpdates=all). */
+export async function cancelCalendarEvent(params: { accessToken: string; eventId: string }) {
+  const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(params.eventId)}?sendUpdates=all`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${params.accessToken}` },
+  });
+  if (!res.ok && res.status !== 404 && res.status !== 410) throw new Error(`Calendar cancel falló: ${await res.text()}`);
+}
