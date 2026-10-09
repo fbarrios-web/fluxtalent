@@ -11,12 +11,13 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/reservar-demo")({
   component: BookDemoPage,
   head: () => ({ meta: [
-    { title: "Reservá una demo — FLUX Talent" },
-    { name: "description", content: "Conocé FLUX Talent en una demo personalizada. Elegí el horario que mejor te quede." },
-    { property: "og:title", content: "Reservá una demo — FLUX Talent" },
+    { title: "Agenda Flux Talent" },
+    { name: "description", content: "Elegí un horario y conocé cómo FLUX Talent ordena postulaciones y analiza perfiles con IA." },
+    { property: "og:title", content: "Agenda Flux Talent" },
     { property: "og:description", content: "Elegí un horario y descubrí cómo FLUX Talent mejora tu proceso de selección." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
+    { name: "twitter:title", content: "Agenda Flux Talent" },
   ] }),
 });
 
