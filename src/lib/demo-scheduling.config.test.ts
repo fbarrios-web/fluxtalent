@@ -8,7 +8,7 @@ describe("demo scheduling rules", () => {
   });
 
   it("both sales addresses are copied on every demo", () => {
-    assert.deepEqual(DEMO_COPY_EMAILS, ["fbarrios@fluxtalent.com.ar", "ccominicini@fluxtalent.com.ar"]);
+    assert.deepEqual(DEMO_COPY_EMAILS, ["fbarrios@fluxtalent.com.ar", "ccomincini@fluxtalent.com.ar"]);
   });
 
   it("confirmation support uses the requested WhatsApp and Buenos Aires timezone", () => {
