@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { DEMO_COPY_EMAILS } from "@/lib/demo-scheduling.config";
 
 const schema = z.object({
   slotId: z.string().uuid(),
@@ -41,11 +42,7 @@ export const Route = createFileRoute("/api/public/demo/book")({
       if (!organizer || provider !== "google") throw new Error("La cuenta Google organizadora no está conectada.");
       const accessToken = await providerAccessToken(organizer, provider);
       const prospectName = `${booking.first_name} ${booking.last_name}`;
-      const attendees = [
-        { email: booking.email, name: prospectName },
-        { email: "fbarrios@fluxtalent.com.ar", name: "Florencia Barrios" },
-        { email: "ccominicini@fluxtalent.com.ar" },
-      ];
+      const attendees = [{ email: booking.email, name: prospectName }, ...DEMO_COPY_EMAILS.map(email => ({ email }))];
       const description = `Demo de FLUX Talent\nProspecto: ${prospectName}\nEmail: ${booking.email}\nTeléfono: ${booking.phone}`;
       const event = await createUserMeetingEvent({
         provider,

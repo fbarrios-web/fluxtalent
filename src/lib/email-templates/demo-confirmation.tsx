@@ -2,6 +2,7 @@ import React from "react";
 import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from "@react-email/components";
 import type { TemplateEntry } from "./registry";
 import { Footer, Header, styles, SUBJECT_PREFIX } from "./brand";
+import { DEMO_ORGANIZER_EMAIL, DEMO_WHATSAPP } from "@/lib/demo-scheduling.config";
 
 type Props = { firstName?: string; whenLabel?: string; meetLink?: string };
 
@@ -19,7 +20,7 @@ const DemoConfirmationEmail = ({ firstName = "", whenLabel = "", meetLink = "" }
             <Text style={{ ...styles.p, margin: 0 }}><strong>{whenLabel}</strong></Text>
           </Section>
           {meetLink && <Section style={{ textAlign: "center", margin: "24px 0" }}><Button href={meetLink} style={styles.button}>Ingresar al Google Meet</Button></Section>}
-          <Text style={styles.p}>Por cualquier duda, podés comunicarte con <strong>fbarrios@fluxtalent.com.ar</strong> o por WhatsApp al <strong>3519090777</strong>.</Text>
+          <Text style={styles.p}>Por cualquier duda, podés comunicarte con <strong>{DEMO_ORGANIZER_EMAIL}</strong> o por WhatsApp al <strong>{DEMO_WHATSAPP}</strong>.</Text>
         </Section>
         <Footer locale="es" />
       </Container>

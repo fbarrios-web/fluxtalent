@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { DEMO_ORGANIZER_EMAIL, DEMO_TIMEZONE } from "@/lib/demo-scheduling.config";
 
 const ruleSchema = z.object({
   weekdays: z.array(z.number().int().min(0).max(6)).min(1),
@@ -42,7 +43,7 @@ export const saveDemoScheduling = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: organizer } = await supabaseAdmin.from("profiles")
       .select("id")
-      .eq("google_email", "fbarrios@fluxtalent.com.ar")
+      .eq("google_email", DEMO_ORGANIZER_EMAIL)
       .not("google_refresh_token", "is", null)
       .order("google_connected_at", { ascending: false })
       .limit(1)
@@ -53,7 +54,7 @@ export const saveDemoScheduling = createServerFn({ method: "POST" })
       id: true,
       organizer_id: organizer.id,
       duration_minutes: data.durationMinutes,
-      timezone: "America/Argentina/Buenos_Aires",
+      timezone: DEMO_TIMEZONE,
       enabled: data.enabled,
       updated_at: new Date().toISOString(),
     });
@@ -73,7 +74,7 @@ export const saveDemoScheduling = createServerFn({ method: "POST" })
     }
 
     const { expandRulesToSlots } = await import("@/lib/scheduling-overlap.server");
-    const generated = expandRulesToSlots(data.rules, data.durationMinutes, "America/Argentina/Buenos_Aires", 60);
+    const generated = expandRulesToSlots(data.rules, data.durationMinutes, DEMO_TIMEZONE, 60);
     await supabaseAdmin.from("demo_slots").delete().eq("source", "rule").eq("status", "open").gt("start_at", new Date().toISOString());
     if (generated.length) {
       const { error } = await supabaseAdmin.from("demo_slots").upsert(
