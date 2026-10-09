@@ -11,6 +11,14 @@ const ruleSchema = z.object({
   effectiveUntil: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
 });
 
+const blockedPeriodSchema = z.object({
+  startsAt: z.string().datetime(),
+  endsAt: z.string().datetime(),
+  reason: z.string().trim().max(300).optional().default(""),
+}).refine(value => new Date(value.endsAt) > new Date(value.startsAt), {
+  message: "La finalización del bloqueo debe ser posterior al inicio.",
+});
+
 async function assertAdmin(supabase: any, userId: string) {
   const { data, error } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
   if (error) throw error;
@@ -22,13 +30,14 @@ export const getDemoScheduling = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const [{ data: config }, { data: rules }, { data: slots }, { data: bookings }] = await Promise.all([
+    const [{ data: config }, { data: rules }, { data: blockedPeriods }, { data: slots }, { data: bookings }] = await Promise.all([
       supabaseAdmin.from("demo_scheduling_config").select("*").eq("id", true).maybeSingle(),
       supabaseAdmin.from("demo_availability_rules").select("*").order("weekday").order("start_time"),
+      supabaseAdmin.from("demo_blocked_periods").select("*").gte("ends_at", new Date().toISOString()).order("starts_at"),
       supabaseAdmin.from("demo_slots").select("*").gte("start_at", new Date().toISOString()).order("start_at").limit(500),
       supabaseAdmin.from("demo_bookings").select("id, slot_id, first_name, last_name, email, phone, status, meet_link, created_at, demo_slots(start_at, end_at)").order("created_at", { ascending: false }).limit(100),
     ]);
-    return { config, rules: rules ?? [], slots: slots ?? [], bookings: bookings ?? [] };
+    return { config, rules: rules ?? [], blockedPeriods: blockedPeriods ?? [], slots: slots ?? [], bookings: bookings ?? [] };
   });
 
 export const saveDemoScheduling = createServerFn({ method: "POST" })
@@ -73,8 +82,14 @@ export const saveDemoScheduling = createServerFn({ method: "POST" })
       if (error) throw error;
     }
 
-    const { expandRulesToSlots } = await import("@/lib/scheduling-overlap.server");
-    const generated = expandRulesToSlots(data.rules, data.durationMinutes, DEMO_TIMEZONE, 60);
+    const { data: blockedPeriods } = await supabaseAdmin.from("demo_blocked_periods")
+      .select("starts_at, ends_at")
+      .gte("ends_at", new Date().toISOString());
+    const { expandRulesToSlots, excludeBlockedSlots } = await import("@/lib/scheduling-overlap.server");
+    const generated = excludeBlockedSlots(
+      expandRulesToSlots(data.rules, data.durationMinutes, DEMO_TIMEZONE, 60),
+      (blockedPeriods ?? []).map(period => ({ startsAt: period.starts_at, endsAt: period.ends_at })),
+    );
     await supabaseAdmin.from("demo_slots").delete().eq("source", "rule").eq("status", "open").gt("start_at", new Date().toISOString());
     if (generated.length) {
       const { error } = await supabaseAdmin.from("demo_slots").upsert(
@@ -84,4 +99,39 @@ export const saveDemoScheduling = createServerFn({ method: "POST" })
       if (error) throw error;
     }
     return { ok: true, generated: generated.length };
+  });
+
+export const createDemoBlockedPeriod = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => blockedPeriodSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: conflictingBookings, error: conflictError } = await supabaseAdmin
+      .from("demo_bookings")
+      .select("id, demo_slots!inner(start_at, end_at)")
+      .in("status", ["reserved", "confirmed"])
+      .lt("demo_slots.start_at", data.endsAt)
+      .gt("demo_slots.end_at", data.startsAt);
+    if (conflictError) throw conflictError;
+
+    const { data: blockedPeriod, error } = await supabaseAdmin.from("demo_blocked_periods").insert({
+      starts_at: data.startsAt,
+      ends_at: data.endsAt,
+      reason: data.reason || null,
+      created_by: context.userId,
+    }).select("*").single();
+    if (error) throw error;
+    return { blockedPeriod, conflictingBookings: conflictingBookings?.length ?? 0 };
+  });
+
+export const deleteDemoBlockedPeriod = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("demo_blocked_periods").delete().eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
   });
