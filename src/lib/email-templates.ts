@@ -58,8 +58,10 @@ export function interviewConfirmCandidateHtml(opts: BrandCtx & {
   meetLink: string;
   location?: string | null;
   locationUrl?: string | null;
+  instructions?: string | null;
 }) {
   const color = opts.brandColor || "#0F766E";
+  const important = importantInstructionsHtml(opts.instructions, color);
   if (opts.location || opts.locationUrl || !opts.meetLink) {
     return shell(opts, `
     <h1 style="font-size:22px;margin:0 0 12px">¡Listo, ${escapeHtml(opts.firstName)}!</h1>
@@ -69,6 +71,7 @@ export function interviewConfirmCandidateHtml(opts: BrandCtx & {
       <div style="font-size:16px;font-weight:600">${escapeHtml(opts.whenLabel)}</div>
       ${opts.location ? `<div style="font-size:13px;color:#6b7280;margin:12px 0 4px">Lugar</div><div style="font-size:16px;font-weight:600">${escapeHtml(opts.location)}</div>` : ""}
     </div>
+    ${important}
     ${opts.locationUrl ? `<p style="margin:16px 0"><a href="${escapeHtml(opts.locationUrl)}" style="display:inline-block;background:${color};color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600">Ver ubicación en el mapa</a></p>` : ""}
     <p style="font-size:13px;color:#6b7280;margin:0">Te llegará también una invitación de calendario.</p>
   `);
@@ -80,6 +83,7 @@ export function interviewConfirmCandidateHtml(opts: BrandCtx & {
       <div style="font-size:13px;color:#6b7280;margin-bottom:4px">Fecha y hora</div>
       <div style="font-size:16px;font-weight:600">${escapeHtml(opts.whenLabel)}</div>
     </div>
+    ${important}
     <p style="margin:16px 0">
       <a href="${opts.meetLink}" style="display:inline-block;background:${color};color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600">Unirme a la videollamada</a>
     </p>
@@ -95,6 +99,7 @@ export function interviewConfirmRecruiterHtml(opts: BrandCtx & {
   meetLink: string;
   location?: string | null;
   locationUrl?: string | null;
+  instructions?: string | null;
 }) {
   const color = opts.brandColor || "#0F766E";
   return shell(opts, `
@@ -105,8 +110,18 @@ export function interviewConfirmRecruiterHtml(opts: BrandCtx & {
       <div style="margin-top:6px"><strong>Cuándo:</strong> ${escapeHtml(opts.whenLabel)}</div>
       ${opts.location ? `<div style="margin-top:6px"><strong>Lugar:</strong> ${escapeHtml(opts.location)}</div>` : ""}
     </div>
+    ${importantInstructionsHtml(opts.instructions, color)}
     ${opts.locationUrl ? `<p><a href="${escapeHtml(opts.locationUrl)}" style="color:${color}">Ver ubicación en el mapa</a></p>` : opts.meetLink ? `<p><a href="${opts.meetLink}" style="color:${color}">${opts.meetLink}</a></p>` : ""}
   `);
+}
+
+function importantInstructionsHtml(instructions: string | null | undefined, color: string) {
+  const value = instructions?.trim();
+  if (!value) return "";
+  return `<div style="border:2px solid ${color};border-radius:8px;padding:16px;margin:16px 0">
+    <div style="font-size:13px;font-weight:800;color:${color};margin-bottom:6px">IMPORTANTE</div>
+    <div style="font-size:15px;line-height:1.6;white-space:pre-line">${escapeHtml(value)}</div>
+  </div>`;
 }
 
 function escapeHtml(s: string) {

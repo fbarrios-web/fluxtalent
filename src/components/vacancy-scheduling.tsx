@@ -495,14 +495,41 @@ function InPersonGroups({ vacancyId, stage, data }: { vacancyId: string; stage: 
   const add = useServerFn(addGroupSlot);
   const del = useServerFn(deleteGroupSlot);
   const setStatus = useServerFn(setSlotStatus);
+  const save = useServerFn(saveVacancyScheduling);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [duration, setDuration] = useState(60);
   const [capacity, setCapacity] = useState(10);
   const [location, setLocation] = useState("");
   const [locationUrl, setLocationUrl] = useState("");
+  const [instructions, setInstructions] = useState(data?.config?.instructions ?? "");
   const [saving, setSaving] = useState(false);
   const refresh = () => qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId, stage] });
+
+  async function saveInstructions() {
+    setSaving(true);
+    try {
+      const invitees = Array.isArray(data?.config?.extra_invitees)
+        ? data.config.extra_invitees.filter((value: unknown): value is string => typeof value === "string")
+        : [];
+      await save({ data: {
+        vacancyId,
+        stage,
+        durationMinutes: data?.config?.duration_minutes ?? duration,
+        instructions: instructions.trim() || null,
+        enabled: data?.config?.enabled ?? true,
+        interviewerEmail: data?.config?.interviewer_email ?? null,
+        extraInvitees: invitees,
+        rules: [],
+      } });
+      toast.success(t("Configuración guardada"));
+      refresh();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function onAdd() {
     if (!date || !time || !location.trim()) { toast.error(t("Completá día, horario y ubicación.")); return; }
@@ -526,6 +553,20 @@ function InPersonGroups({ vacancyId, stage, data }: { vacancyId: string; stage: 
           <h3 className="font-semibold">{t("Grupos de entrevistas presenciales")}</h3>
           <p className="text-xs text-muted-foreground">{t("Definí día, horario, cupo y lugar. Al invitar, el postulante recibe un link y elige un grupo con lugar disponible.")}</p>
         </div>
+        <div>
+          <Label>{t("Instrucciones para el postulante (opcional)")}</Label>
+          <Textarea
+            value={instructions}
+            onChange={event => setInstructions(event.target.value)}
+            rows={3}
+            maxLength={2000}
+            placeholder={t("Ej.: Presentate 10 minutos antes con DNI.")}
+          />
+          <p className="mt-1 text-xs text-muted-foreground">{t("Se mostrarán como IMPORTANTE en la invitación, el evento y la confirmación.")}</p>
+        </div>
+        <Button variant="outline" onClick={saveInstructions} disabled={saving}>
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : t("Guardar instrucciones")}
+        </Button>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div><Label>{t("Día")}</Label><Input type="date" value={date} onChange={e => setDate(e.target.value)} /></div>
           <div><Label>{t("Horario")}</Label><Input type="time" value={time} onChange={e => setTime(e.target.value)} /></div>
