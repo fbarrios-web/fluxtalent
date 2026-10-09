@@ -1556,6 +1556,7 @@ export type Database = {
       }
       is_restricted_member: { Args: never; Returns: boolean }
       is_subscription_active: { Args: { _org_id: string }; Returns: boolean }
+      release_demo_slot: { Args: { _booking_id: string }; Returns: undefined }
       release_slot: { Args: { _slot_id: string }; Returns: undefined }
       reserve_demo_slot: {
         Args: {
