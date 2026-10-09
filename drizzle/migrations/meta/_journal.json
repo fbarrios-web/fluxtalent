@@ -8,6 +8,20 @@
       "when": 1791555327818,
       "tag": "0000_expose_scheduling_instructions_in_booking",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791555884095,
+      "tag": "0001_create_demo_booking_scheduler",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791555923065,
+      "tag": "0002_secure_demo_slot_reservation",
+      "breakpoints": true
     }
   ]
 }

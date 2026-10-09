@@ -309,6 +309,148 @@ export type Database = {
           },
         ]
       }
+      demo_availability_rules: {
+        Row: {
+          created_at: string
+          effective_from: string | null
+          effective_until: string | null
+          end_time: string
+          id: string
+          start_time: string
+          weekday: number
+        }
+        Insert: {
+          created_at?: string
+          effective_from?: string | null
+          effective_until?: string | null
+          end_time: string
+          id?: string
+          start_time: string
+          weekday: number
+        }
+        Update: {
+          created_at?: string
+          effective_from?: string | null
+          effective_until?: string | null
+          end_time?: string
+          id?: string
+          start_time?: string
+          weekday?: number
+        }
+        Relationships: []
+      }
+      demo_bookings: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string
+          google_event_id: string | null
+          id: string
+          last_name: string
+          meet_link: string | null
+          phone: string
+          slot_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name: string
+          google_event_id?: string | null
+          id?: string
+          last_name: string
+          meet_link?: string | null
+          phone: string
+          slot_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string
+          google_event_id?: string | null
+          id?: string
+          last_name?: string
+          meet_link?: string | null
+          phone?: string
+          slot_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demo_bookings_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: true
+            referencedRelation: "demo_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demo_scheduling_config: {
+        Row: {
+          duration_minutes: number
+          enabled: boolean
+          id: boolean
+          organizer_id: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          duration_minutes?: number
+          enabled?: boolean
+          id?: boolean
+          organizer_id: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          duration_minutes?: number
+          enabled?: boolean
+          id?: boolean
+          organizer_id?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demo_scheduling_config_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demo_slots: {
+        Row: {
+          created_at: string
+          end_at: string
+          id: string
+          source: string
+          start_at: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          end_at: string
+          id?: string
+          source?: string
+          start_at: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          end_at?: string
+          id?: string
+          source?: string
+          start_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -1367,6 +1509,7 @@ export type Database = {
       }
       current_org_id: { Args: never; Returns: string }
       get_booking_by_token: { Args: { _token: string }; Returns: Json }
+      get_public_demo_slots: { Args: never; Returns: Json }
       get_public_vacancies_board: {
         Args: { _subdomain: string }
         Returns: {
@@ -1413,7 +1556,18 @@ export type Database = {
       }
       is_restricted_member: { Args: never; Returns: boolean }
       is_subscription_active: { Args: { _org_id: string }; Returns: boolean }
+      release_demo_slot: { Args: { _booking_id: string }; Returns: undefined }
       release_slot: { Args: { _slot_id: string }; Returns: undefined }
+      reserve_demo_slot: {
+        Args: {
+          _email: string
+          _first_name: string
+          _last_name: string
+          _phone: string
+          _slot_id: string
+        }
+        Returns: Json
+      }
       reserve_slot: {
         Args: { _slot_id: string; _token: string }
         Returns: Json
