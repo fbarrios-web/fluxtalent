@@ -32,6 +32,7 @@ type Booking = {
   in_person?: boolean;
   location?: string | null;
   location_url?: string | null;
+  instructions?: string | null;
 };
 
 function SchedulePage() {
@@ -116,6 +117,7 @@ function SchedulePage() {
         </div>
         <h1 className="text-2xl font-semibold mb-2">{t("¡Listo!")}</h1>
         <p className="text-muted-foreground mb-6">{t("Tu entrevista quedó agendada para")} <strong className="text-foreground">{confirmed.when}</strong>. {t("Te enviamos la invitación por mail.")}</p>
+        {data.instructions && <ImportantInstructions text={data.instructions} />}
         {confirmed.location && <p className="mb-4 flex items-center justify-center gap-1 text-sm"><MapPin className="h-4 w-4" style={{ color: brand }} />{confirmed.location}</p>}
         {confirmed.locationUrl && (
           <a href={confirmed.locationUrl} target="_blank" rel="noreferrer">
@@ -139,6 +141,7 @@ function SchedulePage() {
       <div className="max-w-md w-full bg-card border rounded-xl p-8 text-center">
         <h1 className="text-2xl font-semibold mb-2">{t("Entrevista agendada")}</h1>
         <p className="text-muted-foreground mb-4">{when}</p>
+        {data.instructions && <ImportantInstructions text={data.instructions} />}
         {data.location && <p className="mb-4 flex items-center justify-center gap-1 text-sm"><MapPin className="h-4 w-4" style={{ color: brand }} />{data.location}</p>}
         {data.location_url && <a href={data.location_url} target="_blank" rel="noreferrer"><Button style={{ background: brand }}>{t("Ver ubicación en el mapa")}</Button></a>}
         {!data.in_person && data.meet_link && <a href={data.meet_link} target="_blank" rel="noreferrer"><Button style={{ background: brand }}>{t("Abrir videollamada")}</Button></a>}
@@ -216,6 +219,15 @@ function SchedulePage() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function ImportantInstructions({ text }: { text: string }) {
+  return (
+    <div className="mb-5 border-2 border-primary bg-primary/5 p-4 text-left">
+      <div className="mb-1 text-xs font-extrabold text-primary">IMPORTANTE</div>
+      <p className="whitespace-pre-line text-sm font-medium text-foreground">{text}</p>
     </div>
   );
 }

@@ -37,7 +37,7 @@ export const Route = createFileRoute("/api/public/schedule/book")({
         const { data: recruiter } = await supabaseAdmin.from("profiles")
           .select("id, google_refresh_token, google_email, google_connected_at, microsoft_refresh_token, microsoft_email, microsoft_connected_at, display_name").eq("id", r.recruiter_id).single();
         const { data: stageCfg } = await supabaseAdmin.from("vacancy_scheduling")
-          .select("interviewer_email, extra_invitees")
+          .select("interviewer_email, extra_invitees, instructions")
           .eq("vacancy_id", r.vacancy_id).eq("stage", r.stage).maybeSingle();
 
         const { pickProvider, providerEmail, providerAccessToken, sendUserMail, createUserMeetingEvent } = await import("@/lib/mail-provider.server");
@@ -72,9 +72,11 @@ export const Route = createFileRoute("/api/public/schedule/book")({
           const access_token = await providerAccessToken(recruiter as any, provider);
           const inPerson = (org as any).custom_features?.in_person_interviews === true || !!r.location || !!r.location_url;
           const locationLabel = r.location ?? null;
+          const candidateInstructions = typeof stageCfg?.instructions === "string" ? stageCfg.instructions.trim() : "";
           const descriptionText = `${inPerson ? "Entrevista presencial" : "Entrevista"} para ${vac.title}\nPostulante: ${candidateName} (${app.email})`
             + (locationLabel ? `\nLugar: ${locationLabel}` : "")
-            + (r.location_url ? `\nUbicación: ${r.location_url}` : "");
+            + (r.location_url ? `\nUbicación: ${r.location_url}` : "")
+            + (candidateInstructions ? `\n\nIMPORTANTE\n${candidateInstructions}` : "");
           const event = await createUserMeetingEvent({
             provider,
             accessToken: access_token,
@@ -137,6 +139,7 @@ export const Route = createFileRoute("/api/public/schedule/book")({
                   meetLink: linkForEmail,
                   location: inPerson ? locationLabel : null,
                   locationUrl: inPerson ? r.location_url : null,
+                  instructions: candidateInstructions || null,
                 }),
                 replyTo: brand.contactEmail || undefined,
               });
@@ -157,6 +160,7 @@ export const Route = createFileRoute("/api/public/schedule/book")({
                   meetLink: inPerson ? "" : linkForEmail,
                   location: inPerson ? locationLabel : null,
                   locationUrl: inPerson ? r.location_url : null,
+                  instructions: candidateInstructions || null,
                 }),
               });
             } catch (mailErr: any) {
