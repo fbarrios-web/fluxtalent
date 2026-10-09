@@ -1,4 +1,5 @@
-import { describe, expect, test } from "bun:test";
+import assert from "node:assert/strict";
+import { describe, test } from "node:test";
 import { interviewConfirmCandidateHtml, interviewConfirmRecruiterHtml } from "./email-templates";
 
 const brand = { consultancyName: "Freddo", brandColor: "#141353" };
@@ -13,8 +14,8 @@ describe("interview confirmation instructions", () => {
       meetLink: "https://meet.example.com/interview",
       instructions: "Presentate 10 minutos antes con DNI.",
     });
-    expect(html).toContain("IMPORTANTE");
-    expect(html).toContain("Presentate 10 minutos antes con DNI.");
+    assert.match(html, /IMPORTANTE/);
+    assert.match(html, /Presentate 10 minutos antes con DNI\./);
   });
 
   test("recruiter confirmation includes the same important instructions", () => {
@@ -28,7 +29,7 @@ describe("interview confirmation instructions", () => {
       location: "Local Freddo",
       instructions: "Presentate 10 minutos antes con DNI.",
     });
-    expect(html).toContain("IMPORTANTE");
-    expect(html).toContain("Presentate 10 minutos antes con DNI.");
+    assert.match(html, /IMPORTANTE/);
+    assert.match(html, /Presentate 10 minutos antes con DNI\./);
   });
 });
