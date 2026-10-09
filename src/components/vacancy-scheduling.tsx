@@ -633,7 +633,7 @@ function GroupAttendeesDialog({ slot, onClose }: { slot: any | null; onClose: ()
         .from("interview_bookings")
         .select("id, status, applications(first_name, last_name, email, phone)")
         .eq("slot_id", slot.id)
-        .neq("status", "cancelled");
+        .not("status", "in", "(cancelled,canceled)");
       if (error) throw error;
       return data ?? [];
     },
