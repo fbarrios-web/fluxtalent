@@ -17,6 +17,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Loader2, Plus, X, RefreshCw, AlertTriangle, MapPin, Users, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
 import {
@@ -504,6 +506,7 @@ function InPersonGroups({ vacancyId, stage, data }: { vacancyId: string; stage: 
   const [locationUrl, setLocationUrl] = useState("");
   const [instructions, setInstructions] = useState(data?.config?.instructions ?? "");
   const [saving, setSaving] = useState(false);
+  const [openSlot, setOpenSlot] = useState<any | null>(null);
   const refresh = () => qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId, stage] });
 
   async function saveInstructions() {
@@ -587,13 +590,14 @@ function InPersonGroups({ vacancyId, stage, data }: { vacancyId: string; stage: 
               const closed = s.status === "blocked";
               return (
                 <div key={s.id} className="flex flex-wrap items-center justify-between gap-3 px-3 py-2 text-sm">
-                  <div className="min-w-0">
-                    <div className="font-medium">{new Intl.DateTimeFormat("es-AR", { dateStyle: "full", timeStyle: "short" }).format(new Date(s.start_at))}</div>
+                  <button type="button" className="min-w-0 text-left hover:opacity-80" onClick={() => setOpenSlot(s)}>
+                    <div className="font-medium underline-offset-2 hover:underline">{new Intl.DateTimeFormat("es-AR", { dateStyle: "full", timeStyle: "short" }).format(new Date(s.start_at))}</div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <MapPin className="h-3 w-3" />
-                      {s.location_url ? <a href={s.location_url} target="_blank" rel="noreferrer" className="underline">{s.location || t("Ver mapa")}</a> : (s.location || "—")}
+                      {s.location || "—"}
+                      <span className="ml-2 text-primary">{t("Ver inscriptos")}</span>
                     </div>
-                  </div>
+                  </button>
                   <div className="flex items-center gap-2">
                     <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-xs"><Users className="h-3 w-3" />{s.booked_count}/{s.capacity}</span>
                     <span className="text-xs text-muted-foreground">{full ? t("Completo") : closed ? t("Cerrado") : t("Abierto")}</span>
@@ -614,6 +618,47 @@ function InPersonGroups({ vacancyId, stage, data }: { vacancyId: string; stage: 
           </div>
         )}
       </div>
+      <GroupAttendeesDialog slot={openSlot} onClose={() => setOpenSlot(null)} />
     </div>
+  );
+}
+
+function GroupAttendeesDialog({ slot, onClose }: { slot: any | null; onClose: () => void }) {
+  const t = useT();
+  const { data, isLoading } = useQuery({
+    queryKey: ["group-attendees", slot?.id],
+    enabled: !!slot,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("interview_bookings")
+        .select("id, status, applications(first_name, last_name, email, phone)")
+        .eq("slot_id", slot.id)
+        .not("status", "in", "(cancelled,canceled)");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  return (
+    <Dialog open={!!slot} onOpenChange={o => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{t("Inscriptos al grupo")}</DialogTitle>
+          {slot && <DialogDescription>
+            {new Intl.DateTimeFormat("es-AR", { dateStyle: "full", timeStyle: "short" }).format(new Date(slot.start_at))}
+            {slot.location ? ` — ${slot.location}` : ""} · {slot.booked_count}/{slot.capacity}
+          </DialogDescription>}
+        </DialogHeader>
+        {isLoading ? <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin" /></div>
+          : !data?.length ? <p className="text-sm text-muted-foreground">{t("Todavía no se inscribió nadie en este grupo.")}</p>
+          : <div className="max-h-[60vh] divide-y overflow-y-auto rounded-lg border">
+              {data.map((b: any, i: number) => (
+                <div key={b.id} className="px-3 py-2 text-sm">
+                  <div className="font-medium">{i + 1}. {b.applications?.first_name} {b.applications?.last_name}</div>
+                  <div className="text-xs text-muted-foreground">{b.applications?.email}{b.applications?.phone ? ` · ${b.applications.phone}` : ""}</div>
+                </div>
+              ))}
+            </div>}
+      </DialogContent>
+    </Dialog>
   );
 }
