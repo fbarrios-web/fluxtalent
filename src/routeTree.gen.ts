@@ -14,6 +14,7 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RefundsRouteImport } from './routes/refunds'
+import { Route as ReservarDemoRouteImport } from './routes/reservar-demo'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TrustRouteImport } from './routes/trust'
@@ -47,6 +48,7 @@ import { Route as AppVacanciesIndexRouteImport } from './routes/app.vacancies.in
 import { Route as AppVacanciesVacancyIdRouteImport } from './routes/app.vacancies.$vacancyId'
 import { Route as AppVacanciesNewRouteImport } from './routes/app.vacancies.new'
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
+import { Route as ApiPublicDemoBookRouteImport } from './routes/api.public.demo.book'
 import { Route as ApiPublicGoogleCallbackRouteImport } from './routes/api.public.google.callback'
 import { Route as ApiPublicHooksProcessCvQueueRouteImport } from './routes/api.public.hooks.process-cv-queue'
 import { Route as ApiPublicMicrosoftCallbackRouteImport } from './routes/api.public.microsoft.callback'
@@ -82,6 +84,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const RefundsRoute = RefundsRouteImport.update({
   id: '/refunds',
   path: '/refunds',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReservarDemoRoute = ReservarDemoRouteImport.update({
+  id: '/reservar-demo',
+  path: '/reservar-demo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -249,6 +256,11 @@ const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
   path: '/lovable/email/events',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicDemoBookRoute = ApiPublicDemoBookRouteImport.update({
+  id: '/api/public/demo/book',
+  path: '/api/public/demo/book',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicGoogleCallbackRoute = ApiPublicGoogleCallbackRouteImport.update({
   id: '/api/public/google/callback',
   path: '/api/public/google/callback',
@@ -315,6 +327,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/refunds': typeof RefundsRoute
+  '/reservar-demo': typeof ReservarDemoRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
@@ -348,6 +361,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/vacancies/': typeof AppVacanciesIndexRoute
+  '/api/public/demo/book': typeof ApiPublicDemoBookRoute
   '/api/public/google/callback': typeof ApiPublicGoogleCallbackRoute
   '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
   '/api/public/microsoft/callback': typeof ApiPublicMicrosoftCallbackRoute
@@ -365,6 +379,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/refunds': typeof RefundsRoute
+  '/reservar-demo': typeof ReservarDemoRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
@@ -397,6 +412,7 @@ export interface FileRoutesByTo {
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/app/admin': typeof AppAdminIndexRoute
   '/app/vacancies': typeof AppVacanciesIndexRoute
+  '/api/public/demo/book': typeof ApiPublicDemoBookRoute
   '/api/public/google/callback': typeof ApiPublicGoogleCallbackRoute
   '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
   '/api/public/microsoft/callback': typeof ApiPublicMicrosoftCallbackRoute
@@ -416,6 +432,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/refunds': typeof RefundsRoute
+  '/reservar-demo': typeof ReservarDemoRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
@@ -449,6 +466,7 @@ export interface FileRoutesById {
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/vacancies/': typeof AppVacanciesIndexRoute
+  '/api/public/demo/book': typeof ApiPublicDemoBookRoute
   '/api/public/google/callback': typeof ApiPublicGoogleCallbackRoute
   '/api/public/hooks/process-cv-queue': typeof ApiPublicHooksProcessCvQueueRoute
   '/api/public/microsoft/callback': typeof ApiPublicMicrosoftCallbackRoute
@@ -469,6 +487,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/privacy'
     | '/refunds'
+    | '/reservar-demo'
     | '/reset-password'
     | '/terms'
     | '/trust'
@@ -502,6 +521,7 @@ export interface FileRouteTypes {
     | '/lovable/email/events'
     | '/app/admin/'
     | '/app/vacancies/'
+    | '/api/public/demo/book'
     | '/api/public/google/callback'
     | '/api/public/hooks/process-cv-queue'
     | '/api/public/microsoft/callback'
@@ -519,6 +539,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/privacy'
     | '/refunds'
+    | '/reservar-demo'
     | '/reset-password'
     | '/terms'
     | '/trust'
@@ -551,6 +572,7 @@ export interface FileRouteTypes {
     | '/lovable/email/events'
     | '/app/admin'
     | '/app/vacancies'
+    | '/api/public/demo/book'
     | '/api/public/google/callback'
     | '/api/public/hooks/process-cv-queue'
     | '/api/public/microsoft/callback'
@@ -569,6 +591,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/privacy'
     | '/refunds'
+    | '/reservar-demo'
     | '/reset-password'
     | '/terms'
     | '/trust'
@@ -602,6 +625,7 @@ export interface FileRouteTypes {
     | '/lovable/email/events'
     | '/app/admin/'
     | '/app/vacancies/'
+    | '/api/public/demo/book'
     | '/api/public/google/callback'
     | '/api/public/hooks/process-cv-queue'
     | '/api/public/microsoft/callback'
@@ -621,6 +645,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   PrivacyRoute: typeof PrivacyRoute
   RefundsRoute: typeof RefundsRoute
+  ReservarDemoRoute: typeof ReservarDemoRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermsRoute: typeof TermsRoute
   TrustRoute: typeof TrustRoute
@@ -632,6 +657,7 @@ export interface RootRouteChildren {
   ApiPublicGeoRoute: typeof ApiPublicGeoRoute
   ApiPublicTrackRoute: typeof ApiPublicTrackRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
+  ApiPublicDemoBookRoute: typeof ApiPublicDemoBookRoute
   ApiPublicGoogleCallbackRoute: typeof ApiPublicGoogleCallbackRoute
   ApiPublicHooksProcessCvQueueRoute: typeof ApiPublicHooksProcessCvQueueRoute
   ApiPublicMicrosoftCallbackRoute: typeof ApiPublicMicrosoftCallbackRoute
@@ -680,6 +706,13 @@ declare module '@tanstack/react-router' {
       path: '/refunds'
       fullPath: '/refunds'
       preLoaderRoute: typeof RefundsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reservar-demo': {
+      id: '/reservar-demo'
+      path: '/reservar-demo'
+      fullPath: '/reservar-demo'
+      preLoaderRoute: typeof ReservarDemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -913,6 +946,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/demo/book': {
+      id: '/api/public/demo/book'
+      path: '/api/public/demo/book'
+      fullPath: '/api/public/demo/book'
+      preLoaderRoute: typeof ApiPublicDemoBookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/google/callback': {
       id: '/api/public/google/callback'
       path: '/api/public/google/callback'
@@ -1069,6 +1109,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   PrivacyRoute: PrivacyRoute,
   RefundsRoute: RefundsRoute,
+  ReservarDemoRoute: ReservarDemoRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TermsRoute: TermsRoute,
   TrustRoute: TrustRoute,
@@ -1080,6 +1121,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicGeoRoute: ApiPublicGeoRoute,
   ApiPublicTrackRoute: ApiPublicTrackRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
+  ApiPublicDemoBookRoute: ApiPublicDemoBookRoute,
   ApiPublicGoogleCallbackRoute: ApiPublicGoogleCallbackRoute,
   ApiPublicHooksProcessCvQueueRoute: ApiPublicHooksProcessCvQueueRoute,
   ApiPublicMicrosoftCallbackRoute: ApiPublicMicrosoftCallbackRoute,
