@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, CheckCircle2, Clock, Loader2, Mail, Phone, UserRound, Video } from "lucide-react";
+import { CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock, Loader2, Mail, Phone, UserRound, Video } from "lucide-react";
 import { toast } from "sonner";
 import { FluxLogo } from "@/components/flux-logo";
 import { Button } from "@/components/ui/button";
