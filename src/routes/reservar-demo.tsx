@@ -26,6 +26,8 @@ type PublicData = { enabled: boolean; duration_minutes: number; timezone: string
 function BookDemoPage() {
   const [data, setData] = useState<PublicData | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [viewMonth, setViewMonth] = useState<string | null>(null);
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", website: "" });
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState<{ whenLabel: string; meetLink: string | null } | null>(null);
