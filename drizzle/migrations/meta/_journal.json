@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791555327818,
+      "tag": "0000_expose_scheduling_instructions_in_booking",
+      "breakpoints": true
+    }
+  ]
+}
