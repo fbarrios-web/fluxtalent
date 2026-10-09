@@ -2,13 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
-import { Ban, CalendarDays, Check, Clock, Copy, ExternalLink, Loader2, Plus, Trash2, X } from "lucide-react";
+import { Ban, CalendarDays, Check, ChevronDown, ChevronUp, RefreshCw, Clock, Copy, ExternalLink, Loader2, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { createDemoBlockedPeriod, createDemoBlockedPeriods, deleteDemoBlockedPeriod, getDemoScheduling, saveDemoScheduling } from "@/lib/demo-scheduling.functions";
+import { cancelDemoBooking, rescheduleDemoBooking, createDemoBlockedPeriod, createDemoBlockedPeriods, deleteDemoBlockedPeriod, getDemoScheduling, saveDemoScheduling } from "@/lib/demo-scheduling.functions";
 import { zonedToUtc } from "@/lib/scheduling-overlap.server";
 
 export const Route = createFileRoute("/app/admin/demos")({
@@ -43,6 +43,12 @@ function DemoSchedulingAdmin() {
   const [recurring, setRecurring] = useState(false);
   const [weekly, setWeekly] = useState({ weekdays: [3] as number[], startTime: "10:00", endTime: "11:00", from: "", until: "", reason: "" });
   const createBlocks = useServerFn(createDemoBlockedPeriods);
+  const cancelBooking = useServerFn(cancelDemoBooking);
+  const rescheduleBooking = useServerFn(rescheduleDemoBooking);
+  const [showBlocks, setShowBlocks] = useState(false);
+  const [busyBooking, setBusyBooking] = useState<string | null>(null);
+  const [reschedulingId, setReschedulingId] = useState<string | null>(null);
+  const [newSlot, setNewSlot] = useState("");
   const publicUrl = typeof window === "undefined" ? "/reservar-demo" : `${window.location.origin}/reservar-demo`;
 
   useEffect(() => {
@@ -124,6 +130,31 @@ function DemoSchedulingAdmin() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "No se pudo eliminar el bloqueo.");
     }
+  }
+
+  async function onCancelBooking(id: string) {
+    if (!window.confirm("¿Cancelar esta reunión? Se avisará al prospecto y a los invitados.")) return;
+    setBusyBooking(id);
+    try {
+      const r = await cancelBooking({ data: { bookingId: id } });
+      toast.success(r.emailSent ? "Reunión cancelada y participantes notificados." : "Reunión cancelada. Google avisó a los invitados, pero no se pudo enviar el email adicional.");
+      await qc.invalidateQueries({ queryKey: ["demo-scheduling"] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo cancelar.");
+    } finally { setBusyBooking(null); }
+  }
+
+  async function onReschedule(id: string) {
+    if (!newSlot) return toast.error("Elegí el nuevo horario.");
+    setBusyBooking(id);
+    try {
+      const r = await rescheduleBooking({ data: { bookingId: id, slotId: newSlot } });
+      toast.success(r.emailSent ? "Reunión reprogramada y participantes notificados." : "Reunión reprogramada. Google avisó a los invitados, pero no se pudo enviar el email adicional.");
+      setReschedulingId(null); setNewSlot("");
+      await qc.invalidateQueries({ queryKey: ["demo-scheduling"] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo reprogramar.");
+    } finally { setBusyBooking(null); }
   }
 
   async function onSave() {
@@ -216,15 +247,39 @@ function DemoSchedulingAdmin() {
         <div className={block.allDay ? "lg:col-span-3" : ""}><Label>Motivo (opcional)</Label><Input maxLength={300} placeholder="Ej. feriado o reunión interna" value={block.reason} onChange={event => setBlock({ ...block, reason: event.target.value })} /></div>
       </div>}
       <Button variant="outline" onClick={recurring ? onCreateWeekly : onCreateBlock} disabled={blocking}>{blocking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />} Agregar bloqueo</Button>
-      <div className="divide-y divide-border border-t border-border">
+      <button type="button" onClick={() => setShowBlocks(v => !v)} className="flex w-full items-center justify-between border-t border-border pt-4 text-sm font-medium">
+        <span>Bloqueos cargados ({data.blockedPeriods.length})</span>
+        <span className="flex items-center gap-1 text-muted-foreground">{showBlocks ? <>Ocultar <ChevronUp className="h-4 w-4" /></> : <>Ver lista <ChevronDown className="h-4 w-4" /></>}</span>
+      </button>
+      {showBlocks && <div className="max-h-80 divide-y divide-border overflow-y-auto border-t border-border">
         {data.blockedPeriods.map(period => <div key={period.id} className="flex items-center justify-between gap-4 py-3 text-sm"><div><div className="font-medium">{new Intl.DateTimeFormat("es-AR", { dateStyle: "full", timeStyle: "short", timeZone: "America/Argentina/Buenos_Aires" }).format(new Date(period.starts_at))} — {new Intl.DateTimeFormat("es-AR", { timeStyle: "short", timeZone: "America/Argentina/Buenos_Aires" }).format(new Date(period.ends_at))}</div>{period.reason && <div className="text-muted-foreground">{period.reason}</div>}</div><Button variant="ghost" size="icon" aria-label="Eliminar bloqueo" onClick={() => onDeleteBlock(period.id)}><Trash2 className="h-4 w-4" /></Button></div>)}
         {!data.blockedPeriods.length && <p className="py-4 text-sm text-muted-foreground">No hay bloqueos próximos.</p>}
-      </div>
+      </div>}
     </section>
 
     <section className="grid gap-6 border-t border-border pt-8 lg:grid-cols-2">
       <div><h3 className="flex items-center gap-2 font-semibold"><Clock className="h-4 w-4" /> Próximos horarios disponibles</h3><div className="mt-3 space-y-2">{futureSlots.slice(0, 12).map(slot => <div key={slot.id} className="flex items-center justify-between border-b border-border py-2 text-sm"><span>{new Intl.DateTimeFormat("es-AR", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Argentina/Buenos_Aires" }).format(new Date(slot.start_at))}</span><span className="text-muted-foreground">Disponible</span></div>)}{!futureSlots.length && <p className="text-sm text-muted-foreground">No hay horarios disponibles.</p>}</div></div>
-      <div><h3 className="flex items-center gap-2 font-semibold"><CalendarDays className="h-4 w-4" /> Últimas reservas</h3><div className="mt-3 space-y-3">{data.bookings.map((booking: any) => <div key={booking.id} className="border-b border-border pb-3 text-sm"><div className="font-medium">{booking.first_name} {booking.last_name}</div><div className="text-muted-foreground">{booking.email} · {booking.phone}</div><div className="mt-1 text-xs text-muted-foreground">{booking.demo_slots?.start_at ? new Intl.DateTimeFormat("es-AR", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Argentina/Buenos_Aires" }).format(new Date(booking.demo_slots.start_at)) : "Horario no disponible"}</div></div>)}{!data.bookings.length && <p className="text-sm text-muted-foreground">Todavía no hay reservas.</p>}</div></div>
+      <div><h3 className="flex items-center gap-2 font-semibold"><CalendarDays className="h-4 w-4" /> Últimas reservas</h3><div className="mt-3 space-y-3">{data.bookings.map((booking: any) => {
+        const start = booking.demo_slots?.start_at;
+        const active = ["reserved", "confirmed"].includes(booking.status) && start && new Date(start) > new Date();
+        const busy = busyBooking === booking.id;
+        return <div key={booking.id} className="border-b border-border pb-3 text-sm">
+          <div className="flex items-start justify-between gap-2"><div className="font-medium">{booking.first_name} {booking.last_name}</div>{booking.status === "canceled" && <span className="text-xs font-medium text-destructive">Cancelada</span>}</div>
+          <div className="text-muted-foreground">{booking.email} · {booking.phone}</div>
+          <div className="mt-1 text-xs text-muted-foreground">{start ? new Intl.DateTimeFormat("es-AR", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Argentina/Buenos_Aires" }).format(new Date(start)) : "Horario no disponible"}</div>
+          {active && <div className="mt-2 flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" disabled={busy} onClick={() => { setReschedulingId(reschedulingId === booking.id ? null : booking.id); setNewSlot(""); }}><RefreshCw className="h-4 w-4" /> Reprogramar</Button>
+            <Button size="sm" variant="outline" disabled={busy} className="text-destructive" onClick={() => onCancelBooking(booking.id)}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />} Cancelar</Button>
+          </div>}
+          {active && reschedulingId === booking.id && <div className="mt-2 flex flex-wrap items-center gap-2">
+            <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={newSlot} onChange={e => setNewSlot(e.target.value)}>
+              <option value="">Elegí nuevo horario…</option>
+              {futureSlots.map(slot => <option key={slot.id} value={slot.id}>{new Intl.DateTimeFormat("es-AR", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Argentina/Buenos_Aires" }).format(new Date(slot.start_at))}</option>)}
+            </select>
+            <Button size="sm" disabled={busy || !newSlot} onClick={() => onReschedule(booking.id)}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} Confirmar</Button>
+          </div>}
+        </div>;
+      })}{!data.bookings.length && <p className="text-sm text-muted-foreground">Todavía no hay reservas.</p>}</div></div>
     </section>
   </div>;
 }

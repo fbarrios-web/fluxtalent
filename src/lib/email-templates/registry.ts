@@ -8,6 +8,7 @@ import { template as trialExtendedTemplate } from './trial-extended'
 import { template as paymentAlertTemplate } from './payment-alert'
 import { template as teamInviteTemplate } from './team-invite'
 import { template as demoConfirmationTemplate } from './demo-confirmation'
+import { template as demoUpdateTemplate } from './demo-update'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -28,4 +29,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'payment-alert': paymentAlertTemplate,
   'team-invite': teamInviteTemplate,
   'demo-confirmation': demoConfirmationTemplate,
+  'demo-update': demoUpdateTemplate,
 }
