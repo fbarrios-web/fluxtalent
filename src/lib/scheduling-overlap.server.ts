@@ -1,6 +1,19 @@
 // Detección de superposición de horarios entre vacantes / agendas (etapas).
 
 export type CandidateSlot = { start: string; end: string };
+export type BlockedPeriod = { startsAt: string; endsAt: string };
+
+export function periodsOverlap(
+  first: { start: string; end: string },
+  second: BlockedPeriod,
+): boolean {
+  return new Date(first.start).getTime() < new Date(second.endsAt).getTime()
+    && new Date(second.startsAt).getTime() < new Date(first.end).getTime();
+}
+
+export function excludeBlockedSlots(slots: CandidateSlot[], blockedPeriods: BlockedPeriod[]): CandidateSlot[] {
+  return slots.filter(slot => !blockedPeriods.some(period => periodsOverlap(slot, period)));
+}
 
 export function zonedToUtc(localISO: string, timeZone: string): Date {
   const [date, time] = localISO.split("T");

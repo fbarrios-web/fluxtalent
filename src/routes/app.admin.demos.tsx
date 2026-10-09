@@ -2,13 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, Check, Clock, Copy, ExternalLink, Loader2, Plus, X } from "lucide-react";
+import { Ban, CalendarDays, Check, Clock, Copy, ExternalLink, Loader2, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { getDemoScheduling, saveDemoScheduling } from "@/lib/demo-scheduling.functions";
+import { createDemoBlockedPeriod, deleteDemoBlockedPeriod, getDemoScheduling, saveDemoScheduling } from "@/lib/demo-scheduling.functions";
+import { zonedToUtc } from "@/lib/scheduling-overlap.server";
 
 export const Route = createFileRoute("/app/admin/demos")({
   component: DemoSchedulingAdmin,
@@ -28,12 +29,16 @@ const DAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 function DemoSchedulingAdmin() {
   const get = useServerFn(getDemoScheduling);
   const save = useServerFn(saveDemoScheduling);
+  const createBlock = useServerFn(createDemoBlockedPeriod);
+  const deleteBlock = useServerFn(deleteDemoBlockedPeriod);
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ["demo-scheduling"], queryFn: () => get() });
   const [duration, setDuration] = useState(30);
   const [enabled, setEnabled] = useState(true);
   const [rules, setRules] = useState<Rule[]>([]);
   const [saving, setSaving] = useState(false);
+  const [blocking, setBlocking] = useState(false);
+  const [block, setBlock] = useState({ date: "", allDay: true, startTime: "09:00", endTime: "18:00", reason: "" });
   const publicUrl = typeof window === "undefined" ? "/reservar-demo" : `${window.location.origin}/reservar-demo`;
 
   useEffect(() => {
@@ -54,7 +59,36 @@ function DemoSchedulingAdmin() {
     setRules(Array.from(grouped.values()));
   }, [data]);
 
-  const futureSlots = useMemo(() => data?.slots.filter(slot => slot.status === "open") ?? [], [data]);
+  const futureSlots = useMemo(() => data?.slots.filter(slot => slot.status === "open" && !data.blockedPeriods.some(period => new Date(slot.start_at) < new Date(period.ends_at) && new Date(period.starts_at) < new Date(slot.end_at))) ?? [], [data]);
+
+  async function onCreateBlock() {
+    if (!block.date) return toast.error("Elegí la fecha que querés bloquear.");
+    if (!block.allDay && block.endTime <= block.startTime) return toast.error("La hora final debe ser posterior a la inicial.");
+    setBlocking(true);
+    try {
+      const startsAt = zonedToUtc(`${block.date}T${block.allDay ? "00:00" : block.startTime}`, "America/Argentina/Buenos_Aires").toISOString();
+      const endsAt = zonedToUtc(`${block.date}T${block.allDay ? "23:59" : block.endTime}`, "America/Argentina/Buenos_Aires").toISOString();
+      const result = await createBlock({ data: { startsAt, endsAt, reason: block.reason } });
+      if (result.conflictingBookings > 0) toast.warning(`Bloqueo guardado. Hay ${result.conflictingBookings} reserva${result.conflictingBookings === 1 ? "" : "s"} confirmada${result.conflictingBookings === 1 ? "" : "s"} dentro de ese período.`);
+      else toast.success("Bloqueo guardado.");
+      setBlock({ date: "", allDay: true, startTime: "09:00", endTime: "18:00", reason: "" });
+      await qc.invalidateQueries({ queryKey: ["demo-scheduling"] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo guardar el bloqueo.");
+    } finally {
+      setBlocking(false);
+    }
+  }
+
+  async function onDeleteBlock(id: string) {
+    try {
+      await deleteBlock({ data: { id } });
+      toast.success("Bloqueo eliminado.");
+      await qc.invalidateQueries({ queryKey: ["demo-scheduling"] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo eliminar el bloqueo.");
+    }
+  }
 
   async function onSave() {
     setSaving(true);
@@ -119,6 +153,21 @@ function DemoSchedulingAdmin() {
         </div>
       </div>)}
       <Button onClick={onSave} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} Guardar y generar horarios</Button>
+    </section>
+
+    <section className="space-y-5 border-t border-border pt-8">
+      <div><h3 className="flex items-center gap-2 font-semibold"><Ban className="h-4 w-4" /> Bloqueos</h3><p className="mt-1 text-sm text-muted-foreground">Impedí nuevas reservas durante un día completo o una franja específica.</p></div>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <div><Label>Fecha</Label><Input type="date" value={block.date} onChange={event => setBlock({ ...block, date: event.target.value })} /></div>
+        <div className="flex items-end"><label className="flex h-10 items-center gap-3 text-sm"><Switch checked={block.allDay} onCheckedChange={allDay => setBlock({ ...block, allDay })} /> Día completo</label></div>
+        {!block.allDay && <><div><Label>Desde</Label><Input type="time" value={block.startTime} onChange={event => setBlock({ ...block, startTime: event.target.value })} /></div><div><Label>Hasta</Label><Input type="time" value={block.endTime} onChange={event => setBlock({ ...block, endTime: event.target.value })} /></div></>}
+        <div className={block.allDay ? "lg:col-span-3" : ""}><Label>Motivo (opcional)</Label><Input maxLength={300} placeholder="Ej. feriado o reunión interna" value={block.reason} onChange={event => setBlock({ ...block, reason: event.target.value })} /></div>
+      </div>
+      <Button variant="outline" onClick={onCreateBlock} disabled={blocking}>{blocking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />} Agregar bloqueo</Button>
+      <div className="divide-y divide-border border-t border-border">
+        {data.blockedPeriods.map(period => <div key={period.id} className="flex items-center justify-between gap-4 py-3 text-sm"><div><div className="font-medium">{new Intl.DateTimeFormat("es-AR", { dateStyle: "full", timeStyle: "short", timeZone: "America/Argentina/Buenos_Aires" }).format(new Date(period.starts_at))} — {new Intl.DateTimeFormat("es-AR", { timeStyle: "short", timeZone: "America/Argentina/Buenos_Aires" }).format(new Date(period.ends_at))}</div>{period.reason && <div className="text-muted-foreground">{period.reason}</div>}</div><Button variant="ghost" size="icon" aria-label="Eliminar bloqueo" onClick={() => onDeleteBlock(period.id)}><Trash2 className="h-4 w-4" /></Button></div>)}
+        {!data.blockedPeriods.length && <p className="py-4 text-sm text-muted-foreground">No hay bloqueos próximos.</p>}
+      </div>
     </section>
 
     <section className="grid gap-6 border-t border-border pt-8 lg:grid-cols-2">

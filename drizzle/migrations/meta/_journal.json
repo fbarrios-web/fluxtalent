@@ -22,6 +22,13 @@
       "when": 1791555923065,
       "tag": "0002_secure_demo_slot_reservation",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791556553435,
+      "tag": "0003_add_demo_blocked_periods",
+      "breakpoints": true
     }
   ]
 }
