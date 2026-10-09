@@ -14,12 +14,13 @@ import { zonedToUtc } from "@/lib/scheduling-overlap.server";
 export const Route = createFileRoute("/app/admin/demos")({
   component: DemoSchedulingAdmin,
   head: () => ({ meta: [
-    { title: "Agenda de demos — FLUX Talent" },
+    { title: "Agenda Flux Talent" },
     { name: "description", content: "Configuración de disponibilidad y reservas de demos de FLUX Talent." },
-    { property: "og:title", content: "Agenda de demos — FLUX Talent" },
+    { property: "og:title", content: "Agenda Flux Talent" },
     { property: "og:description", content: "Configuración de disponibilidad y reservas de demos de FLUX Talent." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
+    { name: "twitter:title", content: "Agenda Flux Talent" },
   ] }),
 });
 
