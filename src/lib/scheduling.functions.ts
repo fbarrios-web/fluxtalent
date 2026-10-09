@@ -578,6 +578,41 @@ export const deleteGroupSlot = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const updateGroupSlot = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({
+    slotId: z.string().uuid(),
+    startISO: z.string().datetime().optional(),
+    durationMinutes: z.number().int().min(15).max(480).optional(),
+    capacity: z.number().int().min(1).max(200),
+    location: z.string().trim().min(1).max(500),
+    locationUrl: z.string().trim().url().max(1000).nullable(),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: slot, error: readErr } = await context.supabase.from("availability_slots")
+      .select("booked_count, start_at, end_at").eq("id", data.slotId).maybeSingle();
+    if (readErr) throw readErr;
+    if (!slot) throw new Error("Grupo no encontrado");
+    const s = slot as any;
+    if (data.capacity < s.booked_count) throw new Error(`El cupo no puede ser menor a los ${s.booked_count} inscriptos.`);
+    const patch: Record<string, unknown> = {
+      capacity: data.capacity, location: data.location, location_url: data.locationUrl,
+    };
+    if (data.startISO && data.durationMinutes) {
+      const start = new Date(data.startISO);
+      const changed = start.getTime() !== new Date(s.start_at).getTime()
+        || data.durationMinutes !== Math.round((new Date(s.end_at).getTime() - new Date(s.start_at).getTime()) / 60000);
+      if (changed) {
+        if (s.booked_count > 0) throw new Error("Este grupo ya tiene inscriptos; no se puede cambiar el día u horario.");
+        patch.start_at = start.toISOString();
+        patch.end_at = new Date(start.getTime() + data.durationMinutes * 60000).toISOString();
+      }
+    }
+    const { error } = await context.supabase.from("availability_slots").update(patch as any).eq("id", data.slotId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
 // ---------- Trigger interview invite ----------
 
 export async function inviteForInterview(

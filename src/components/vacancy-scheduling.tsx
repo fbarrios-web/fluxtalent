@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Loader2, Plus, X, RefreshCw, AlertTriangle, MapPin, Users, Trash2 } from "lucide-react";
+import { Loader2, Plus, X, RefreshCw, AlertTriangle, MapPin, Users, Trash2, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -24,7 +24,7 @@ import { useT } from "@/lib/i18n";
 import {
   getVacancyScheduling, saveVacancyScheduling, regenerateSlots,
   setSlotStatus, addManualSlot, checkSchedulingOverlaps,
-  addGroupSlot, deleteGroupSlot,
+  addGroupSlot, deleteGroupSlot, updateGroupSlot,
 } from "@/lib/scheduling.functions";
 
 
@@ -507,6 +507,7 @@ function InPersonGroups({ vacancyId, stage, data }: { vacancyId: string; stage: 
   const [instructions, setInstructions] = useState(data?.config?.instructions ?? "");
   const [saving, setSaving] = useState(false);
   const [openSlot, setOpenSlot] = useState<any | null>(null);
+  const [editSlot, setEditSlot] = useState<any | null>(null);
   const refresh = () => qc.invalidateQueries({ queryKey: ["vac-sched", vacancyId, stage] });
 
   async function saveInstructions() {
@@ -606,6 +607,9 @@ function InPersonGroups({ vacancyId, stage, data }: { vacancyId: string; stage: 
                         {closed ? t("Reabrir") : t("Cerrar")}
                       </Button>
                     )}
+                    <Button size="icon" variant="ghost" aria-label={t("Editar grupo")} onClick={() => setEditSlot(s)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
                     {s.booked_count === 0 && (
                       <Button size="icon" variant="ghost" aria-label={t("Eliminar grupo")} onClick={async () => { try { await del({ data: { slotId: s.id } }); refresh(); } catch (e: any) { toast.error(e.message); } }}>
                         <Trash2 className="h-4 w-4" />
@@ -619,9 +623,73 @@ function InPersonGroups({ vacancyId, stage, data }: { vacancyId: string; stage: 
         )}
       </div>
       <GroupAttendeesDialog slot={openSlot} onClose={() => setOpenSlot(null)} />
+      <EditGroupDialog slot={editSlot} onClose={() => setEditSlot(null)} onSaved={refresh} />
     </div>
   );
 }
+
+function pad(n: number) { return String(n).padStart(2, "0"); }
+
+function EditGroupDialog({ slot, onClose, onSaved }: { slot: any | null; onClose: () => void; onSaved: () => void }) {
+  const t = useT();
+  const update = useServerFn(updateGroupSlot);
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [duration, setDuration] = useState(60);
+  const [capacity, setCapacity] = useState(10);
+  const [location, setLocation] = useState("");
+  const [locationUrl, setLocationUrl] = useState("");
+  const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    if (!slot) return;
+    const d = new Date(slot.start_at);
+    setDate(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
+    setTime(`${pad(d.getHours())}:${pad(d.getMinutes())}`);
+    setDuration(Math.round((new Date(slot.end_at).getTime() - d.getTime()) / 60000));
+    setCapacity(slot.capacity);
+    setLocation(slot.location ?? "");
+    setLocationUrl(slot.location_url ?? "");
+  }, [slot]);
+  const locked = (slot?.booked_count ?? 0) > 0;
+  async function onSave() {
+    if (!location.trim()) { toast.error(t("Completá la ubicación.")); return; }
+    setSaving(true);
+    try {
+      await update({ data: {
+        slotId: slot.id,
+        startISO: new Date(`${date}T${time}:00`).toISOString(),
+        durationMinutes: duration,
+        capacity, location: location.trim(), locationUrl: locationUrl.trim() || null,
+      } });
+      toast.success(t("Grupo actualizado"));
+      onSaved();
+      onClose();
+    } catch (e: any) { toast.error(e.message); } finally { setSaving(false); }
+  }
+  return (
+    <Dialog open={!!slot} onOpenChange={o => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{t("Editar grupo")}</DialogTitle>
+          {locked && <DialogDescription>{t("Este grupo ya tiene inscriptos: el día y horario no se pueden cambiar. Los cambios aplican a nuevas reservas.")}</DialogDescription>}
+        </DialogHeader>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div><Label>{t("Día")}</Label><Input type="date" disabled={locked} value={date} onChange={e => setDate(e.target.value)} /></div>
+          <div><Label>{t("Horario")}</Label><Input type="time" disabled={locked} value={time} onChange={e => setTime(e.target.value)} /></div>
+          <div><Label>{t("Duración (minutos)")}</Label><Input type="number" min={15} max={480} disabled={locked} value={duration} onChange={e => setDuration(Number(e.target.value))} /></div>
+          <div><Label>{t("Cupo")}</Label><Input type="number" min={Math.max(1, slot?.booked_count ?? 1)} max={200} value={capacity} onChange={e => setCapacity(Number(e.target.value))} /></div>
+          <div className="sm:col-span-2"><Label>{t("Ubicación y aclaraciones")}</Label><Textarea rows={3} maxLength={500} value={location} onChange={e => setLocation(e.target.value)} /></div>
+          <div className="sm:col-span-2"><Label>{t("Link de Google Maps (opcional)")}</Label><Input type="url" value={locationUrl} onChange={e => setLocationUrl(e.target.value)} /></div>
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onClose}>{t("Cancelar")}</Button>
+          <Button onClick={onSave} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : t("Guardar")}</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 function GroupAttendeesDialog({ slot, onClose }: { slot: any | null; onClose: () => void }) {
   const t = useT();
