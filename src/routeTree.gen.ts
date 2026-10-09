@@ -34,6 +34,7 @@ import { Route as ApiPublicApplyRouteImport } from './routes/api.public.apply'
 import { Route as ApiPublicGeoRouteImport } from './routes/api.public.geo'
 import { Route as ApiPublicTrackRouteImport } from './routes/api.public.track'
 import { Route as AppAdminIndexRouteImport } from './routes/app.admin.index'
+import { Route as AppAdminDemosRouteImport } from './routes/app.admin.demos'
 import { Route as AppAdminOrgsRouteImport } from './routes/app.admin.orgs'
 import { Route as AppAdminPaymentsRouteImport } from './routes/app.admin.payments'
 import { Route as AppAdminPricingRouteImport } from './routes/app.admin.pricing'
@@ -183,6 +184,11 @@ const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppAdminRoute,
 } as any)
+const AppAdminDemosRoute = AppAdminDemosRouteImport.update({
+  id: '/demos',
+  path: '/demos',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 const AppAdminOrgsRoute = AppAdminOrgsRouteImport.update({
   id: '/orgs',
   path: '/orgs',
@@ -328,6 +334,7 @@ export interface FileRoutesByFullPath {
   '/api/public/apply': typeof ApiPublicApplyRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
   '/api/public/track': typeof ApiPublicTrackRoute
+  '/app/admin/demos': typeof AppAdminDemosRoute
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
   '/app/admin/pricing': typeof AppAdminPricingRoute
@@ -376,6 +383,7 @@ export interface FileRoutesByTo {
   '/api/public/apply': typeof ApiPublicApplyRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
   '/api/public/track': typeof ApiPublicTrackRoute
+  '/app/admin/demos': typeof AppAdminDemosRoute
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
   '/app/admin/pricing': typeof AppAdminPricingRoute
@@ -427,6 +435,7 @@ export interface FileRoutesById {
   '/api/public/apply': typeof ApiPublicApplyRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
   '/api/public/track': typeof ApiPublicTrackRoute
+  '/app/admin/demos': typeof AppAdminDemosRoute
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
   '/app/admin/pricing': typeof AppAdminPricingRoute
@@ -479,6 +488,7 @@ export interface FileRouteTypes {
     | '/api/public/apply'
     | '/api/public/geo'
     | '/api/public/track'
+    | '/app/admin/demos'
     | '/app/admin/orgs'
     | '/app/admin/payments'
     | '/app/admin/pricing'
@@ -527,6 +537,7 @@ export interface FileRouteTypes {
     | '/api/public/apply'
     | '/api/public/geo'
     | '/api/public/track'
+    | '/app/admin/demos'
     | '/app/admin/orgs'
     | '/app/admin/payments'
     | '/app/admin/pricing'
@@ -577,6 +588,7 @@ export interface FileRouteTypes {
     | '/api/public/apply'
     | '/api/public/geo'
     | '/api/public/track'
+    | '/app/admin/demos'
     | '/app/admin/orgs'
     | '/app/admin/payments'
     | '/app/admin/pricing'
@@ -810,6 +822,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminIndexRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/app/admin/demos': {
+      id: '/app/admin/demos'
+      path: '/demos'
+      fullPath: '/app/admin/demos'
+      preLoaderRoute: typeof AppAdminDemosRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/app/admin/orgs': {
       id: '/app/admin/orgs'
       path: '/orgs'
@@ -975,6 +994,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppAdminRouteChildren {
+  AppAdminDemosRoute: typeof AppAdminDemosRoute
   AppAdminOrgsRoute: typeof AppAdminOrgsRoute
   AppAdminPaymentsRoute: typeof AppAdminPaymentsRoute
   AppAdminPricingRoute: typeof AppAdminPricingRoute
@@ -986,6 +1006,7 @@ interface AppAdminRouteChildren {
 }
 
 const AppAdminRouteChildren: AppAdminRouteChildren = {
+  AppAdminDemosRoute: AppAdminDemosRoute,
   AppAdminOrgsRoute: AppAdminOrgsRoute,
   AppAdminPaymentsRoute: AppAdminPaymentsRoute,
   AppAdminPricingRoute: AppAdminPricingRoute,
