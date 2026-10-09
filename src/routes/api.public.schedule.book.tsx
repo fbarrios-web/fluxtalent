@@ -77,12 +77,17 @@ export const Route = createFileRoute("/api/public/schedule/book")({
             + (locationLabel ? `\nLugar: ${locationLabel}` : "")
             + (r.location_url ? `\nUbicación: ${r.location_url}` : "")
             + (candidateInstructions ? `\n\nIMPORTANTE\n${candidateInstructions}` : "");
+          const descriptionHtml = `<p>${descriptionText
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/\n/g, "<br/>")}</p>`;
           const event = await createUserMeetingEvent({
             provider,
             accessToken: access_token,
             summary,
             descriptionText,
-            descriptionHtml: `<p>${descriptionText.replace(/\n/g, "<br/>")}</p>`,
+            descriptionHtml,
             startISO: r.start_at,
             endISO: r.end_at,
             timezone: tz,

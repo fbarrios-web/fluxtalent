@@ -9,7 +9,16 @@ import { useT } from "@/lib/i18n";
 export const Route = createFileRoute("/schedule/$token")({
   component: SchedulePage,
   ssr: false,
-  head: () => ({ meta: [{ title: "Agendá tu entrevista" }] }),
+  head: () => ({
+    meta: [
+      { title: "Agendá tu entrevista — FLUX Talent" },
+      { name: "description", content: "Elegí y confirmá el horario de tu entrevista." },
+      { property: "og:title", content: "Agendá tu entrevista — FLUX Talent" },
+      { property: "og:description", content: "Elegí y confirmá el horario de tu entrevista." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
 });
 
 type Slot = { id: string; start_at: string; end_at: string; location?: string | null; location_url?: string | null; remaining?: number; capacity?: number };
