@@ -38,15 +38,39 @@ function BookDemoPage() {
   }
   useEffect(() => { void load(); }, []);
 
-  const dates = useMemo(() => {
-    const grouped = new Map<string, Slot[]>();
+  const days = useMemo(() => {
+    const grouped = new Map<string, { label: string; monthKey: string; slots: Slot[] }>();
     if (!data) return grouped;
+    const dayFmt = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: data.timezone });
+    const labelFmt = new Intl.DateTimeFormat("es-AR", { weekday: "long", day: "numeric", month: "long", timeZone: data.timezone });
     for (const slot of data.slots) {
-      const label = new Intl.DateTimeFormat("es-AR", { weekday: "long", day: "numeric", month: "long", timeZone: data.timezone }).format(new Date(slot.start_at));
-      grouped.set(label, [...(grouped.get(label) ?? []), slot]);
+      const date = new Date(slot.start_at);
+      const key = dayFmt.format(date); // yyyy-mm-dd en la zona horaria de la agenda
+      const entry = grouped.get(key) ?? { label: labelFmt.format(date), monthKey: key.slice(0, 7), slots: [] };
+      entry.slots.push(slot);
+      grouped.set(key, entry);
     }
     return grouped;
   }, [data]);
+
+  const months = useMemo(() => Array.from(new Set(Array.from(days.values()).map(day => day.monthKey))).sort(), [days]);
+  const activeMonth = viewMonth && months.includes(viewMonth) ? viewMonth : months[0] ?? null;
+  const activeDay = selectedDay && days.has(selectedDay) ? selectedDay : null;
+
+  const calendar = useMemo(() => {
+    if (!activeMonth) return null;
+    const [year, month] = activeMonth.split("-").map(Number);
+    const firstWeekday = (new Date(Date.UTC(year, month - 1, 1)).getUTCDay() + 6) % 7; // lunes = 0
+    const totalDays = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    const cells: Array<string | null> = [...Array<null>(firstWeekday).fill(null)];
+    for (let day = 1; day <= totalDays; day++) cells.push(`${activeMonth}-${String(day).padStart(2, "0")}`);
+    return { cells, title: new Intl.DateTimeFormat("es-AR", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(year, month - 1, 1))) };
+  }, [activeMonth]);
+
+  function pickDay(dayKey: string) {
+    setSelectedDay(dayKey);
+    setSelected(null);
+  }
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
