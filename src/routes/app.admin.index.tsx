@@ -1,9 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 import { adminMetrics } from "@/lib/admin.functions";
 import { Building2, Users, Briefcase, FileText, TrendingUp, DollarSign, Loader2 } from "lucide-react";
 import { useT } from "@/lib/i18n";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+
+const signupChartConfig = {
+  count: { label: "Nuevos usuarios", color: "var(--chart-1)" },
+} satisfies ChartConfig;
 
 export const Route = createFileRoute("/app/admin/")({
   component: AdminMetrics,
@@ -16,7 +22,8 @@ function AdminMetrics() {
 
   if (isLoading || !data) return <div className="grid h-64 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></div>;
 
-  const max = Math.max(1, ...data.signupsByDay.map(d => d.count));
+  const total14 = data.signupsByDay.reduce((sum, d) => sum + d.count, 0);
+  const peak = data.signupsByDay.reduce((best, d) => (d.count > best.count ? d : best), { date: "—", count: 0 });
 
   return (
     <div className="space-y-6">
@@ -51,14 +58,18 @@ function AdminMetrics() {
 
         <div className="rounded-2xl border border-border bg-card p-5">
           <h3 className="font-semibold">{t("Nuevos usuarios · últimos 14 días")}</h3>
-          <div className="mt-4 flex h-40 items-end gap-1">
-            {data.signupsByDay.map(d => (
-              <div key={d.date} className="flex flex-1 flex-col items-center gap-1">
-                <div className="w-full rounded-t bg-primary/80" style={{ height: `${(d.count / max) * 100}%`, minHeight: d.count > 0 ? 4 : 0 }} title={`${d.date}: ${d.count}`} />
-                <span className="text-[10px] text-muted-foreground">{d.date}</span>
-              </div>
-            ))}
-          </div>
+          <ChartContainer config={signupChartConfig} className="mt-4 h-44 w-full">
+            <LineChart data={data.signupsByDay} margin={{ top: 8, right: 8, left: -14, bottom: 0 }}>
+              <CartesianGrid vertical={false} />
+              <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={6} minTickGap={8} tick={{ fontSize: 10 }} />
+              <YAxis allowDecimals={false} width={30} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Line type="monotone" dataKey="count" stroke="var(--color-count)" strokeWidth={2} dot={{ r: 2.5 }} activeDot={{ r: 4 }} />
+            </LineChart>
+          </ChartContainer>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {t("Total 14 días")}: <span className="font-semibold text-foreground">{total14}</span> · {t("Día más alto")}: <span className="font-semibold text-foreground">{peak.count}</span> ({peak.date})
+          </p>
         </div>
       </div>
 
