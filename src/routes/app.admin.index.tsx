@@ -24,7 +24,7 @@ function AdminMetrics() {
 
   if (isLoading || !data) return <div className="grid h-64 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></div>;
 
-  const ddmm = (d: string) => { const m = d.match(/(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}` : d; };
+  const ddmm = (d: string) => { const m = d.match(/(\d{2})-(\d{2})$/); return m ? `${m[2]}/${m[1]}` : d; };
   const chartData = data.signupsByDay.map(d => ({ ...d, label: ddmm(d.date) }));
   const toggleDay = (d: string) => setSelectedDays(s => s.includes(d) ? s.filter(x => x !== d) : [...s, d]);
   const selectedTotal = data.signupsByDay.filter(d => selectedDays.includes(d.date)).reduce((a, d) => a + d.count, 0);
