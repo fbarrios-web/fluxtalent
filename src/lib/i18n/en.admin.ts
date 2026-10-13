@@ -203,6 +203,7 @@ export const EN_ADMIN: Record<string, string> = {
   "Todos los planes": "All plans",
   "Total 14 días": "14-day total",
   "Filtrar días": "Filter days",
+  "Limpiar": "Clear",
   "Total días seleccionados": "Selected days total",
   "Total recaudado (aprobados)": "Total collected (approved)",
   "Trial": "Trial",
