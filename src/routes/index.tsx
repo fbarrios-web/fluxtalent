@@ -7,7 +7,8 @@ import {
 import { FluxLogo } from "@/components/flux-logo";
 import { TRIAL_DAYS, formatArs, formatUsd, mergePlanOverrides } from "@/lib/plans";
 import { useState, useEffect } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { FreddoEntry } from "@/components/freddo-entry";
+import { isFreddoEntry } from "@/lib/freddo-entry";
 
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -21,19 +22,29 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "FLUX Talent — ATS inteligente para equipos modernos" },
       { name: "description", content: "Publicá vacantes, recibí postulaciones, y dejá que la IA haga el matching, los emails y la coordinación de entrevistas." },
+      { property: "og:title", content: "FLUX Talent — ATS inteligente para equipos modernos" },
+      { property: "og:description", content: "Publicá vacantes, recibí postulaciones y coordiná entrevistas con FLUX Talent." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
 });
 
 function Landing() {
-  const t = useT();
-  const navigate = useNavigate();
+  const [entry, setEntry] = useState<{ freddo: boolean; preview: boolean } | null>(null);
   useEffect(() => {
-    const host = window.location.hostname;
-    if (host === "freddo.fluxtalent.com.ar" || host === "www.freddo.fluxtalent.com.ar") {
-      navigate({ to: "/auth", replace: true });
-    }
-  }, [navigate]);
+    setEntry({
+      freddo: isFreddoEntry(window.location.hostname, window.location.search),
+      preview: new URLSearchParams(window.location.search).get("org") === "freddo",
+    });
+  }, []);
+  if (!entry) return <div className="min-h-screen bg-background" />;
+  if (entry.freddo) return <FreddoEntry preview={entry.preview} />;
+  return <FluxLanding />;
+}
+
+function FluxLanding() {
+  const t = useT();
   const getPricing = useServerFn(getPlanPricing);
   const { data: overrides } = useQuery({ queryKey: ["plan-pricing"], queryFn: () => getPricing() });
   const plans = mergePlanOverrides(overrides);
