@@ -1,7 +1,7 @@
 /**
  * Promoción "Starter free por 1 mes".
  *
- * Toda organización creada entre el 11/09 y el 30/09 (hora Argentina) accede
+ * Toda organización creada desde el 01/09/2026 (promo fija, sin fecha de fin) accede
  * automáticamente al plan Starter sin costo por un mes corrido, contado desde
  * la fecha en que activa su primera vacante. Al terminar el mes se cae la
  * licencia y la cuenta queda en modo solo-lectura hasta que se suscriba.
@@ -9,9 +9,8 @@
 
 export const PROMO_PLAN_ID = "starter" as const;
 
-/** Ventana de alta de cuentas elegibles (01/09 00:00 a 30/09 23:59:59, UTC-3). */
+/** Alta de cuentas elegibles: desde el 01/09 00:00 (UTC-3), sin fecha de cierre. */
 export const PROMO_SIGNUP_FROM = "2026-09-01T03:00:00.000Z";
-export const PROMO_SIGNUP_UNTIL = "2026-10-01T02:59:59.999Z";
 
 export interface PromoFields {
   promo_plan_id?: string | null;
@@ -35,7 +34,7 @@ export function addOneMonth(from: Date): Date {
 export function isPromoSignupWindow(createdAt: string | null | undefined): boolean {
   if (!createdAt) return false;
   const t = new Date(createdAt).getTime();
-  return t >= new Date(PROMO_SIGNUP_FROM).getTime() && t <= new Date(PROMO_SIGNUP_UNTIL).getTime();
+  return t >= new Date(PROMO_SIGNUP_FROM).getTime();
 }
 
 export function isPromoActive(org: PromoFields | null | undefined, now = Date.now()): boolean {
