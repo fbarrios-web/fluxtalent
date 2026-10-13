@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -18,10 +19,15 @@ export const Route = createFileRoute("/app/admin/")({
 function AdminMetrics() {
   const t = useT();
   const fn = useServerFn(adminMetrics);
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const { data, isLoading } = useQuery({ queryKey: ["admin-metrics"], queryFn: () => fn() });
 
   if (isLoading || !data) return <div className="grid h-64 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></div>;
 
+  const ddmm = (d: string) => { const m = d.match(/(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}` : d; };
+  const chartData = data.signupsByDay.map(d => ({ ...d, label: ddmm(d.date) }));
+  const toggleDay = (d: string) => setSelectedDays(s => s.includes(d) ? s.filter(x => x !== d) : [...s, d]);
+  const selectedTotal = data.signupsByDay.filter(d => selectedDays.includes(d.date)).reduce((a, d) => a + d.count, 0);
   const total14 = data.signupsByDay.reduce((sum, d) => sum + d.count, 0);
   const peak = data.signupsByDay.reduce((best, d) => (d.count > best.count ? d : best), { date: "—", count: 0 });
 
@@ -59,17 +65,37 @@ function AdminMetrics() {
         <div className="rounded-2xl border border-border bg-card p-5">
           <h3 className="font-semibold">{t("Nuevos usuarios · últimos 14 días")}</h3>
           <ChartContainer config={signupChartConfig} className="mt-4 h-44 w-full">
-            <LineChart data={data.signupsByDay} margin={{ top: 8, right: 8, left: -14, bottom: 0 }}>
+            <LineChart data={chartData} margin={{ top: 8, right: 8, left: -14, bottom: 0 }}>
               <CartesianGrid vertical={false} />
-              <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={6} minTickGap={8} tick={{ fontSize: 10 }} />
+              <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={6} minTickGap={8} tick={{ fontSize: 10 }} />
               <YAxis allowDecimals={false} width={30} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
               <ChartTooltip content={<ChartTooltipContent />} />
               <Line type="monotone" dataKey="count" stroke="var(--color-count)" strokeWidth={2} dot={{ r: 2.5 }} activeDot={{ r: 4 }} />
             </LineChart>
           </ChartContainer>
           <p className="mt-2 text-xs text-muted-foreground">
-            {t("Total 14 días")}: <span className="font-semibold text-foreground">{total14}</span> · {t("Día más alto")}: <span className="font-semibold text-foreground">{peak.count}</span> ({peak.date})
+            {t("Total 14 días")}: <span className="font-semibold text-foreground">{total14}</span> · {t("Día más alto")}: <span className="font-semibold text-foreground">{peak.count}</span> ({ddmm(peak.date)})
           </p>
+          <div className="mt-4 border-t border-border pt-3">
+            <p className="text-xs font-medium">{t("Filtrar días")}</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {data.signupsByDay.map(d => {
+                const on = selectedDays.includes(d.date);
+                return (
+                  <button key={d.date} type="button" onClick={() => toggleDay(d.date)} aria-pressed={on}
+                    className={`rounded-full border px-2 py-0.5 text-xs transition-colors ${on ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:bg-muted"}`}>
+                    {ddmm(d.date)}
+                  </button>
+                );
+              })}
+            </div>
+            {selectedDays.length > 0 && (
+              <p className="mt-2 text-sm">
+                {t("Total días seleccionados")} ({selectedDays.length}): <span className="font-semibold">{selectedTotal}</span>
+                <button type="button" onClick={() => setSelectedDays([])} className="ml-2 text-xs text-muted-foreground underline">{t("Limpiar")}</button>
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
