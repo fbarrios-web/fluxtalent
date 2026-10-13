@@ -173,6 +173,7 @@ export const EN_PUBLIC: Record<string, string> = {
   "Preguntas rápidas": "Quick questions",
   "Presentar un reclamo ante la autoridad de control (en Argentina, la Agencia de Acceso a la Información Pública).": "File a complaint with the supervisory authority (in Argentina, the Agencia de Acceso a la Información Pública).",
   "Prestación del Servicio": "Provision of the Service",
+  "Probá el plan Starter gratis por un mes.": "Try the Starter plan free for one month.",
   "Procesador de pagos ARS:": "ARS payment processor:",
   "Procesamos los datos que los candidatos envían a través del formulario público de postulación (nombre, contacto, CV, respuestas de screening) y los datos que vos cargás manualmente desde la app.": "We process the data candidates submit through the public application form (name, contact, CV, screening answers) and the data you manually load from the app.",
   "Proceso end-to-end, en una sola pantalla.": "End-to-end process, on a single screen.",
