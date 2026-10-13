@@ -4,3 +4,4 @@
 - Scheduling instructions are stored per vacancy and stage and must appear as “IMPORTANTE” in calendar details, confirmation emails, and candidate confirmation screens. Why: candidates must read operational instructions before attending.
 - Age is derived from the org's date-type sensitive field whose label contains "nac" (src/lib/age.ts). Why: no dedicated birth-date column.
 - Product demos use a platform-admin-managed public agenda with persistent blocked periods, with Florencia's connected Google account as organizer and both sales addresses invited to every Meet. Why: demo scheduling is a FLUX Talent sales operation and admins need durable exclusions, not organization recruiting data.
+- Resolve the home-page host after hydration and render the Freddo entry separately from the FLUX marketing page; support ?org=freddo for preview. Why: candidates must not be redirected to login and preview must exercise the same entry experience without changing the main site.

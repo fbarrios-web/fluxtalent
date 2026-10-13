@@ -134,3 +134,16 @@
 }
 
 .font-display { font-family: var(--font-display); font-weight: 400; }
+
+.freddo-entry {
+  --primary: #141353;
+  --primary-foreground: #ffffff;
+  --background: #ffffff;
+  --foreground: #19192b;
+  --muted-foreground: #626273;
+  --border: #e3e3ec;
+  --input: #d9d9e5;
+  --accent: #eeeef6;
+  --accent-foreground: #141353;
+  --ring: #141353;
+}
