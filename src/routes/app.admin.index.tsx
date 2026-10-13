@@ -50,7 +50,7 @@ function AdminMetrics() {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-5">
-          <h3 className="font-semibold">{t("Nuevas organizaciones · últimos 14 días")}</h3>
+          <h3 className="font-semibold">{t("Nuevos usuarios · últimos 14 días")}</h3>
           <div className="mt-4 flex h-40 items-end gap-1">
             {data.signupsByDay.map(d => (
               <div key={d.date} className="flex flex-1 flex-col items-center gap-1">

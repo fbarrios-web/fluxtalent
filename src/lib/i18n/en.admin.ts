@@ -150,7 +150,7 @@ export const EN_ADMIN: Record<string, string> = {
   "Nombre de la organización *": "Organization name *",
   "Nombre del usuario *": "User name *",
   "Notas de cálculo": "Calculation notes",
-  "Nuevas organizaciones · últimos 14 días": "New organizations · last 14 days",
+  "Nuevos usuarios · últimos 14 días": "New users · last 14 days",
   "Operaciones": "Operations",
   "Organizaciones": "Organizations",
   "Organización": "Organization",

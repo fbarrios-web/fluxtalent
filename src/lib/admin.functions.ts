@@ -29,7 +29,7 @@ export const adminMetrics = createServerFn({ method: "GET" })
       sb.from("applications").select("*", { count: "exact", head: true }),
       sb.from("organizations").select("subscription_status, plan_price_ars, is_unlimited").is("archived_at", null),
       sb.from("payments").select("amount_ars, paid_at, created_at").gte("created_at", new Date(Date.now() - 30 * 86400000).toISOString()),
-      sb.from("organizations").select("created_at").gte("created_at", new Date(Date.now() - 14 * 86400000).toISOString()).is("archived_at", null),
+      sb.from("profiles").select("created_at").gte("created_at", new Date(Date.now() - 15 * 86400000).toISOString()),
       sb.from("activity_events").select("event_type, created_at").gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()),
     ]);
 
@@ -45,9 +45,9 @@ export const adminMetrics = createServerFn({ method: "GET" })
     // Daily signup buckets (14 days)
     const days: { date: string; count: number }[] = [];
     for (let i = 13; i >= 0; i--) {
-      const d = new Date(Date.now() - i * 86400000);
-      const key = d.toISOString().slice(0, 10);
-      const count = (signups14 ?? []).filter((s: any) => s.created_at.slice(0, 10) === key).length;
+      const arDay = (t: number) => new Date(t - 3 * 3600000).toISOString().slice(0, 10); // Buenos Aires (UTC-3)
+      const key = arDay(Date.now() - i * 86400000);
+      const count = (signups14 ?? []).filter((s: any) => arDay(new Date(s.created_at).getTime()) === key).length;
       days.push({ date: key.slice(5), count });
     }
 
