@@ -242,7 +242,7 @@ function FluxLanding() {
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="font-display text-4xl">{t("Planes y precios")}</h2>
             <p className="mt-3 text-muted-foreground">
-              {t("El plan")} <strong>Free</strong> {t("incluye")} <strong>{t("{n} días gratis", { n: TRIAL_DAYS })}</strong>, {t("sin tarjeta. Los planes pagos no tienen período de prueba.")}
+              {t("Probá el plan Starter gratis por un mes.")}
             </p>
             <div className="mt-6 inline-flex rounded-full border border-border bg-card p-1 text-sm">
               {(["ars", "usd"] as const).map(c => (
