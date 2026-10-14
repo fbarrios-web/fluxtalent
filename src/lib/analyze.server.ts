@@ -50,6 +50,7 @@ Extraé experiencia, formación y skills del CV. Calculá match (0-100) general 
     if (!userContent) userContent = prompt + "\n(Sin CV adjunto.)";
 
     const result = await aiJSON<any>({
+      track: { orgId: app.org_id, feature: "cv_analysis" },
       system: "Sos un evaluador técnico objetivo. Devolvés sólo el JSON pedido.",
       user: userContent,
       schema: {

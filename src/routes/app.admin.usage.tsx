@@ -108,6 +108,42 @@ function UsagePage() {
       </div>
 
       <Card className="p-5">
+        <h3 className="font-medium">{t("Consumo por organización · últimos 30 días")}</h3>
+        <p className="mb-3 text-xs text-muted-foreground">{t("Tokens reales de IA registrados desde que se activó el monitoreo; postulaciones y CVs guardados por organización.")}</p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-xs text-muted-foreground">
+              <tr className="border-b text-left">
+                <th className="py-2 pr-3">{t("Organización")}</th>
+                <th className="py-2 pr-3 text-right">{t("Análisis IA")}</th>
+                <th className="py-2 pr-3 text-right">{t("Tokens entrada")}</th>
+                <th className="py-2 pr-3 text-right">{t("Tokens salida")}</th>
+                <th className="py-2 pr-3 text-right">{t("% de la IA")}</th>
+                <th className="py-2 pr-3 text-right">{t("Postulaciones 30 d")}</th>
+                <th className="py-2 text-right">{t("CVs guardados")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(() => {
+                const totalTok = data.byOrg.reduce((n: number, r: any) => n + r.inTok + r.outTok, 0);
+                return data.byOrg.map((r: any) => (
+                  <tr key={r.orgId ?? "none"} className="border-b last:border-0">
+                    <td className="py-2 pr-3 font-medium">{r.name}</td>
+                    <td className="py-2 pr-3 text-right tabular-nums">{r.calls.toLocaleString()}</td>
+                    <td className="py-2 pr-3 text-right tabular-nums">{r.inTok.toLocaleString()}</td>
+                    <td className="py-2 pr-3 text-right tabular-nums">{r.outTok.toLocaleString()}</td>
+                    <td className="py-2 pr-3 text-right tabular-nums">{totalTok ? Math.round(((r.inTok + r.outTok) / totalTok) * 100) : 0}%</td>
+                    <td className="py-2 pr-3 text-right tabular-nums">{r.apps30.toLocaleString()}</td>
+                    <td className="py-2 text-right tabular-nums">{r.cvFiles.toLocaleString()} · {fmtBytes(r.cvBytes)}</td>
+                  </tr>
+                ));
+              })()}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <Card className="p-5">
         <h3 className="font-medium mb-3">{t("Notas de cálculo")}</h3>
         <ul className="space-y-1.5 text-xs text-muted-foreground list-disc pl-5">
           <li><strong>{t("IA:")}</strong> {t("1 llamada por aplicación + eventos")} <code>ai.*</code> / <code>report.*</code>. {t("Estimación: 2500 tokens in + 600 out por CV con Gemini 2.5 Flash (US$ 0.075/M in, US$ 0.30/M out).")}</li>

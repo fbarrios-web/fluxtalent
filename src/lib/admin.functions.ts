@@ -444,6 +444,40 @@ export const adminExportClients = createServerFn({ method: "GET" })
   });
 
 /** Consumo de plataforma: IA, emails y almacenamiento. */
+// Per-organization split: real AI tokens (ai_usage_log), applications and CV storage.
+async function usageByOrg(sb: any, since: string) {
+  const [{ data: logs }, { data: apps }, { data: orgs }] = await Promise.all([
+    sb.from("ai_usage_log").select("org_id, prompt_tokens, completion_tokens, created_at").gte("created_at", since).limit(100000),
+    sb.from("applications").select("org_id").gte("created_at", since).limit(100000),
+    sb.from("organizations").select("id, name"),
+  ]);
+  const names = new Map((orgs ?? []).map((o: any) => [o.id, o.name]));
+  const rows = new Map<string, any>();
+  const row = (id: string | null) => {
+    const k = id ?? "none";
+    if (!rows.has(k)) rows.set(k, { orgId: id, name: id ? names.get(id) ?? "—" : "Sin organización", calls: 0, inTok: 0, outTok: 0, apps30: 0, cvFiles: 0, cvBytes: 0, firstLog: null as string | null });
+    return rows.get(k);
+  };
+  for (const l of logs ?? []) {
+    const r = row(l.org_id); r.calls++; r.inTok += l.prompt_tokens; r.outTok += l.completion_tokens;
+    if (!r.firstLog || l.created_at < r.firstLog) r.firstLog = l.created_at;
+  }
+  for (const a of apps ?? []) row(a.org_id).apps30++;
+  // CV files are stored under "<org_id>/..." in the cvs bucket.
+  for (const r of rows.values()) {
+    if (!r.orgId) continue;
+    let offset = 0;
+    while (offset <= 20000) {
+      const { data } = await sb.storage.from("cvs").list(r.orgId, { limit: 1000, offset });
+      if (!data?.length) break;
+      for (const f of data) if (f.metadata?.size) { r.cvFiles++; r.cvBytes += Number(f.metadata.size); }
+      if (data.length < 1000) break;
+      offset += 1000;
+    }
+  }
+  return [...rows.values()].sort((a, b) => (b.inTok + b.outTok) - (a.inTok + a.outTok) || b.apps30 - a.apps30).slice(0, 25);
+}
+
 export const adminUsage = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -522,6 +556,7 @@ export const adminUsage = createServerFn({ method: "GET" })
       storage: { cvs, orgAssets, totalBytes: cvs.bytes + orgAssets.bytes, totalGB, costUsd: storageCostUsd },
       apps: { total: appsTotal ?? 0, last30: apps30 ?? 0, last7: apps7 ?? 0 },
       totalCostUsd: aiCostUsd + emailCostUsd + storageCostUsd,
+      byOrg: await usageByOrg(sb, since30),
     };
   });
 

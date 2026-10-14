@@ -49,6 +49,44 @@ export type Database = {
           },
         ]
       }
+      ai_usage_log: {
+        Row: {
+          completion_tokens: number
+          created_at: string
+          feature: string
+          id: string
+          model: string
+          org_id: string | null
+          prompt_tokens: number
+        }
+        Insert: {
+          completion_tokens?: number
+          created_at?: string
+          feature: string
+          id?: string
+          model: string
+          org_id?: string | null
+          prompt_tokens?: number
+        }
+        Update: {
+          completion_tokens?: number
+          created_at?: string
+          feature?: string
+          id?: string
+          model?: string
+          org_id?: string | null
+          prompt_tokens?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_usage_log_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       application_events: {
         Row: {
           actor_id: string | null
