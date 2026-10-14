@@ -95,6 +95,7 @@ export const analyzeApplication = createServerFn({ method: "POST" })
         gaps: string[];
         red_flags: string[];
       }>({
+        track: { orgId: app.org_id, feature: "cv_analysis" },
         system:
           "Sos un experto en evaluación técnica de CVs. Sos objetivo, conciso y sin sesgos. Respondés sólo el JSON pedido.",
         user: userContent,
