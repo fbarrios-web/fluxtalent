@@ -590,7 +590,7 @@ export const updateGroupSlot = createServerFn({ method: "POST" })
   }).parse(input))
   .handler(async ({ data, context }) => {
     const { data: slot, error: readErr } = await context.supabase.from("availability_slots")
-      .select("booked_count, start_at, end_at").eq("id", data.slotId).maybeSingle();
+      .select("booked_count, status, start_at, end_at").eq("id", data.slotId).maybeSingle();
     if (readErr) throw readErr;
     if (!slot) throw new Error("Grupo no encontrado");
     const s = slot as any;
@@ -598,6 +598,12 @@ export const updateGroupSlot = createServerFn({ method: "POST" })
     const patch: Record<string, unknown> = {
       capacity: data.capacity, location: data.location, location_url: data.locationUrl,
     };
+    // Raising capacity on a full group leaves status 'booked', which blocks new
+    // bookings (the booking RPC requires status = 'open'). Reopen it so the
+    // extra spots can actually be booked.
+    if (s.status === "booked" && data.capacity > s.booked_count) {
+      patch.status = "open";
+    }
     if (data.startISO && data.durationMinutes) {
       const start = new Date(data.startISO);
       const changed = start.getTime() !== new Date(s.start_at).getTime()
