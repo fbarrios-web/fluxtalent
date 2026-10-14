@@ -56,7 +56,27 @@ async function fetchWithRetry(url: string, init: RequestInit, maxRetries = 3): P
   throw lastErr ?? new Error("AI gateway: retries exhausted");
 }
 
+export type AiTrack = { orgId?: string | null; feature: string };
+
+// Records token usage per organization so the admin panel can split AI spend by client.
+async function logUsage(track: AiTrack | undefined, model: string, data: any) {
+  if (!track) return;
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("ai_usage_log").insert({
+      org_id: track.orgId ?? null,
+      feature: track.feature,
+      model,
+      prompt_tokens: Number(data?.usage?.prompt_tokens ?? 0),
+      completion_tokens: Number(data?.usage?.completion_tokens ?? 0),
+    });
+  } catch (e) {
+    console.warn("[ai-usage] log failed", e);
+  }
+}
+
 export async function aiJSON<T = any>(opts: {
+  track?: AiTrack;
   system?: string;
   user: string | Array<any>;
   model?: string;
@@ -92,6 +112,7 @@ export async function aiJSON<T = any>(opts: {
     throw new Error(`AI ${res.status}: ${text.slice(0, 300)}`);
   }
   const data = await res.json();
+  await logUsage(opts.track, body.model, data);
   const choice = data.choices?.[0];
   const toolCall = choice?.message?.tool_calls?.[0];
   const raw = toolCall ? toolCall.function.arguments : choice?.message?.content;
@@ -103,7 +124,7 @@ export async function aiJSON<T = any>(opts: {
   }
 }
 
-export async function aiText(opts: { system?: string; user: string; model?: string }): Promise<string> {
+export async function aiText(opts: { track?: AiTrack; system?: string; user: string; model?: string }): Promise<string> {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) throw new Error("LOVABLE_API_KEY missing");
   const messages: any[] = [];
@@ -116,6 +137,7 @@ export async function aiText(opts: { system?: string; user: string; model?: stri
   });
   if (!res.ok) throw new Error(`AI ${res.status}: ${(await res.text()).slice(0, 300)}`);
   const data = await res.json();
+  await logUsage(opts.track, opts.model ?? "google/gemini-3-flash-preview", data);
   return data.choices?.[0]?.message?.content ?? "";
 }
 
