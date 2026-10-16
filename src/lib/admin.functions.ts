@@ -463,14 +463,27 @@ async function usageByOrg(sb: any, since: string) {
     if (!r.firstLog || l.created_at < r.firstLog) r.firstLog = l.created_at;
   }
   for (const a of apps ?? []) row(a.org_id).apps30++;
-  // CV files are stored under "<org_id>/..." in the cvs bucket.
+  // CV files are stored under "<org_id>/<vacancy_id>/<file>" in the cvs bucket,
+  // so listing the org folder returns vacancy subfolders (no metadata) and we
+  // must list each subfolder to reach the actual files.
   for (const r of rows.values()) {
     if (!r.orgId) continue;
     let offset = 0;
     while (offset <= 20000) {
       const { data } = await sb.storage.from("cvs").list(r.orgId, { limit: 1000, offset });
       if (!data?.length) break;
-      for (const f of data) if (f.metadata?.size) { r.cvFiles++; r.cvBytes += Number(f.metadata.size); }
+      for (const f of data) {
+        if (f.metadata?.size) { r.cvFiles++; r.cvBytes += Number(f.metadata.size); continue; }
+        // Folder (vacancy): list its files.
+        let subOffset = 0;
+        while (subOffset <= 20000) {
+          const { data: inner } = await sb.storage.from("cvs").list(`${r.orgId}/${f.name}`, { limit: 1000, offset: subOffset });
+          if (!inner?.length) break;
+          for (const x of inner) if (x.metadata?.size) { r.cvFiles++; r.cvBytes += Number(x.metadata.size); }
+          if (inner.length < 1000) break;
+          subOffset += 1000;
+        }
+      }
       if (data.length < 1000) break;
       offset += 1000;
     }
