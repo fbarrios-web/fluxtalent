@@ -27,6 +27,7 @@ function AuthForm() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
   const [orgName, setOrgName] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -87,7 +88,7 @@ function AuthForm() {
           email, password,
           options: {
             emailRedirectTo: `${window.location.origin}/app/vacancies/new`,
-            data: { org_name: orgName.trim() || "Mi empresa", display_name: email.split("@")[0] },
+            data: { org_name: orgName.trim() || "Mi empresa", display_name: email.split("@")[0], phone: phone.trim() },
           },
         });
         if (error) {
