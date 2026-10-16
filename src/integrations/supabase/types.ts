@@ -1016,6 +1016,7 @@ export type Database = {
           microsoft_email: string | null
           microsoft_refresh_token: string | null
           org_id: string | null
+          phone: string | null
           province: string | null
           setup_completed_at: string | null
         }
@@ -1035,6 +1036,7 @@ export type Database = {
           microsoft_email?: string | null
           microsoft_refresh_token?: string | null
           org_id?: string | null
+          phone?: string | null
           province?: string | null
           setup_completed_at?: string | null
         }
@@ -1054,6 +1056,7 @@ export type Database = {
           microsoft_email?: string | null
           microsoft_refresh_token?: string | null
           org_id?: string | null
+          phone?: string | null
           province?: string | null
           setup_completed_at?: string | null
         }
