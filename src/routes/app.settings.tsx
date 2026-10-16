@@ -38,7 +38,7 @@ function Settings() {
       const { data: u } = await supabase.auth.getUser();
       const user = u?.user;
       if (!user) return null;
-      const { data: profile } = await supabase.from("profiles").select("display_name, org_id, full_name, dni, birth_date").eq("id", user.id).maybeSingle();
+      const { data: profile } = await supabase.from("profiles").select("display_name, org_id, full_name, dni, birth_date, phone").eq("id", user.id).maybeSingle();
       const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
       return {
         id: user.id,
@@ -48,6 +48,7 @@ function Settings() {
         fullName: (profile as any)?.full_name ?? "",
         dni: (profile as any)?.dni ?? "",
         birthDate: (profile as any)?.birth_date ?? "",
+        phone: (profile as any)?.phone ?? "",
         roles: (roles ?? []).map((r: any) => r.role),
       };
     },
@@ -77,6 +78,7 @@ function Settings() {
   const [fullName, setFullName] = useState("");
   const [dni, setDni] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [phone, setPhone] = useState("");
   const [sensitiveFields, setSensitiveFields] = useState<{ id: string; label: string; type: "text" | "number" | "date" }[]>([]);
   const [saving, setSaving] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -113,6 +115,7 @@ function Settings() {
       setFullName(account.fullName);
       setDni(account.dni);
       setBirthDate(account.birthDate);
+      setPhone(account.phone);
     }
   }, [account]);
 
@@ -189,6 +192,7 @@ function Settings() {
         full_name: fullName.trim() || null,
         dni: dni.trim() || null,
         birth_date: birthDate || null,
+        phone: phone.trim() || null,
       };
       const { error } = await supabase.from("profiles").update(patch as any).eq("id", account.id);
       if (error) throw error;
@@ -239,6 +243,7 @@ function Settings() {
               <div><Label>{t("Nombre completo")}</Label><Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder={t("Nombre y apellido")} /></div>
               <div><Label>{t("DNI")}</Label><Input value={dni} onChange={e => setDni(e.target.value)} placeholder="12345678" /></div>
               <div><Label>{t("Fecha de nacimiento")}</Label><Input type="date" value={birthDate ?? ""} onChange={e => setBirthDate(e.target.value)} /></div>
+              <div><Label>{t("Teléfono / WhatsApp")}</Label><Input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+54 351 ..." /></div>
               <div><Label>{t("Miembro desde")}</Label><Input value={account?.createdAt ? new Date(account.createdAt).toLocaleDateString(lang === "en" ? "en-US" : "es-AR") : "—"} disabled /></div>
             </div>
             <Button onClick={saveProfile} disabled={savingProfile || !account}>{savingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{t("Guardar perfil")}</Button>
