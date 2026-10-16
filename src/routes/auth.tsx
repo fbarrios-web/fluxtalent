@@ -27,6 +27,7 @@ function AuthForm() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
   const [orgName, setOrgName] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -87,7 +88,7 @@ function AuthForm() {
           email, password,
           options: {
             emailRedirectTo: `${window.location.origin}/app/vacancies/new`,
-            data: { org_name: orgName.trim() || "Mi empresa", display_name: email.split("@")[0] },
+            data: { org_name: orgName.trim() || "Mi empresa", display_name: email.split("@")[0], phone: phone.trim() },
           },
         });
         if (error) {
@@ -102,6 +103,7 @@ function AuthForm() {
         trackEvent("signup_completed");
         try {
           if (su.session) {
+            if (su.user) await supabase.from("profiles").update({ phone: phone.trim() } as any).eq("id", su.user.id);
             const { sendWelcomeEmail } = await import("@/lib/email/send");
             void sendWelcomeEmail();
           }
@@ -197,6 +199,12 @@ function AuthForm() {
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
+            {mode === "signup" && (
+              <div>
+                <Label htmlFor="phone">Teléfono / WhatsApp</Label>
+                <Input id="phone" type="tel" value={phone} onChange={e => setPhone(e.target.value)} required placeholder="+54 351 ..." />
+              </div>
+            )}
             <div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Contraseña</Label>
