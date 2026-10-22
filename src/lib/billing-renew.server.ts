@@ -79,58 +79,22 @@ export async function applyApprovedPayment(
     kind?: "checkout" | "renewal";
   },
 ) {
-  const { data: org } = await supabaseAdmin
-    .from("organizations")
-    .select("current_period_end, plan_price_ars, subscription_status")
-    .eq("id", args.orgId)
-    .maybeSingle();
-
-  const periodEnd = args.nextPaymentDate
-    ? new Date(args.nextPaymentDate).toISOString()
-    : nextPeriodEnd(org?.current_period_end);
-
-  await supabaseAdmin.from("payments").upsert(
-    {
-      org_id: args.orgId,
-      provider: "mercadopago",
-      provider_payment_id: String(args.providerPaymentId),
-      amount_ars: args.amountArs,
-      status: "approved",
-      paid_at: args.paidAt ?? new Date().toISOString(),
-      raw: args.raw ?? null,
-    },
-    { onConflict: "provider,provider_payment_id" },
-  );
-
-  const patch: Record<string, any> = {
-    subscription_status: "active",
-    current_period_end: periodEnd,
-    last_payment_at: args.paidAt ?? new Date().toISOString(),
-    plan_currency: "ars",
-    grace_until: null,
-  };
-  // Un pago con monto de otro plan es un cambio de plan: se aplica siempre,
-  // así un upgrade (ej. Starter → Pro) actualiza los cupos sin intervención manual.
-  if (args.plan && args.plan.priceArs > 0) patch.plan_price_ars = args.plan.priceArs;
-  else if (args.amountArs > 0) patch.plan_price_ars = args.amountArs;
-  if (args.preapprovalId) patch.mp_preapproval_id = String(args.preapprovalId);
-
-  const { error } = await supabaseAdmin.from("organizations").update(patch).eq("id", args.orgId);
-  if (error) console.error("[applyApprovedPayment] org update failed:", error.message);
-
-  await supabaseAdmin.from("activity_events").insert({
-    org_id: args.orgId,
-    event_type: args.kind === "renewal" ? "mp.subscription_renewed" : "mp.payment_approved",
-    metadata: {
-      payment_id: String(args.providerPaymentId),
-      amount: args.amountArs,
-      plan_id: args.plan?.id ?? null,
-      period_end: periodEnd,
-      previous_status: org?.subscription_status ?? null,
-    },
+  // Payment, access and quota cycle commit together; repeated deliveries are no-ops.
+  const { data, error } = await supabaseAdmin.rpc("apply_verified_payment", {
+    _org_id: args.orgId,
+    _provider: "mercadopago",
+    _payment_id: args.providerPaymentId,
+    _amount: args.amountArs,
+    _paid_at: args.paidAt ?? new Date().toISOString(),
+    _price: args.plan && args.plan.priceArs > 0 ? args.plan.priceArs : null,
+    _preapproval_id: args.preapprovalId ?? null,
+    _next_payment_date: args.nextPaymentDate ?? null,
+    _raw: args.raw ?? null,
+    _currency: "ars",
   });
-
-  return { periodEnd, previousStatus: org?.subscription_status ?? null };
+  if (error) throw error;
+  if (!data?.periodEnd) throw new Error("No se pudo confirmar la renovación");
+  return data as { periodEnd: string; previousStatus: string | null; duplicate: boolean };
 }
 
 /** Cobro rechazado: pasa la org a past_due con ventana de gracia. */
