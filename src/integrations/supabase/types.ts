@@ -1568,6 +1568,21 @@ export type Database = {
     }
     Functions: {
       admin_delete_org: { Args: { _org_id: string }; Returns: undefined }
+      apply_verified_payment: {
+        Args: {
+          _amount: number
+          _currency?: string
+          _next_payment_date?: string
+          _org_id: string
+          _paid_at: string
+          _payment_id: string
+          _preapproval_id?: string
+          _price?: number
+          _provider: string
+          _raw?: Json
+        }
+        Returns: Json
+      }
       can_access_vacancy: { Args: { _vacancy_id: string }; Returns: boolean }
       claim_pending_ai_analyses: {
         Args: { _limit?: number; _stale_seconds?: number }

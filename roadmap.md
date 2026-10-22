@@ -1,0 +1,3 @@
+- [ ] Verify Bridge's renewal and restore the paid Pro cycle with its 1,000-CV override.
+- [ ] Prevent stale quota cycles and duplicate payment renewals across payment paths.
+- [ ] Test renewal rules and verify the customer-visible quota.

@@ -27,7 +27,7 @@ export async function getCurrentCycle(supabase: Sb, orgId: string): Promise<Cycl
     ? new Date((org as any).usage_cycle_start)
     : null;
   const withOverrideStart = (c: CycleInfo): CycleInfo =>
-    overrideStart && overrideStart < c.start && overrideStart <= now
+    overrideStart && overrideStart < c.end && overrideStart <= now
       ? { start: overrideStart, end: c.end }
       : c;
   // Promo Starter free: el ciclo es el mes de la promo.
@@ -75,14 +75,17 @@ export async function getOrgPlan(supabase: Sb, orgId: string): Promise<Plan> {
 
   // Plan Custom (plan_price_ars = -1): todo ilimitado.
   if (Number(org.plan_price_ars) === -1) {
-    return withOverride({ ...PLANS.find(p => p.id === "custom")! });
+    const custom = PLANS.find(p => p.id === "custom");
+    if (!custom) throw new Error("Plan Custom no configurado");
+    return withOverride({ ...custom });
   }
   if ((org as any).is_unlimited) {
     return { ...PLANS[0], id: "custom", name: "Admin (ilimitado)", maxVacancies: -1, maxNewVacanciesPerCycle: -1, maxCvsPerMonth: -1 };
   }
   // Promo vigente: límites del plan Starter sin costo.
   if (isPromoActive(org)) {
-    const promoPlan = PLANS.find(p => p.id === PROMO_PLAN_ID)!;
+    const promoPlan = PLANS.find(p => p.id === PROMO_PLAN_ID);
+    if (!promoPlan) throw new Error("Plan de promoción no configurado");
     return withOverride({ ...promoPlan, name: `${promoPlan.name} (promo)` });
   }
   if (org.subscription_status === "trialing") return withOverride(PLANS[0]);
@@ -95,36 +98,39 @@ export async function getOrgPlan(supabase: Sb, orgId: string): Promise<Plan> {
  * siguen accesibles pero no consumen el cupo del mes en curso.
  */
 export async function getActiveVacancyCount(supabase: Sb, orgId: string): Promise<number> {
-  const { start } = await getCurrentCycle(supabase, orgId);
+  const { start, end } = await getCurrentCycle(supabase, orgId);
   const { count } = await supabase
     .from("vacancies")
     .select("*", { count: "exact", head: true })
     .eq("org_id", orgId)
     .in("status", ["draft", "active", "paused"])
-    .gte("created_at", start.toISOString());
+    .gte("created_at", start.toISOString())
+    .lt("created_at", end.toISOString());
   return count ?? 0;
 }
 
 /** Vacantes creadas dentro del ciclo actual (todas, sin importar estado). */
 export async function getNewVacanciesThisCycle(supabase: Sb, orgId: string): Promise<number> {
-  const { start } = await getCurrentCycle(supabase, orgId);
+  const { start, end } = await getCurrentCycle(supabase, orgId);
   const { count } = await supabase
     .from("vacancies")
     .select("*", { count: "exact", head: true })
     .eq("org_id", orgId)
-    .gte("created_at", start.toISOString());
+    .gte("created_at", start.toISOString())
+    .lt("created_at", end.toISOString());
   return count ?? 0;
 }
 
 /** CVs procesados en el ciclo actual. */
 export async function getCvsThisCycle(supabase: Sb, orgId: string): Promise<number> {
-  const { start } = await getCurrentCycle(supabase, orgId);
+  const { start, end } = await getCurrentCycle(supabase, orgId);
   const { count } = await supabase
     .from("applications")
     .select("*", { count: "exact", head: true })
     .eq("org_id", orgId)
     .not("cv_url", "is", null)
-    .gte("created_at", start.toISOString());
+    .gte("created_at", start.toISOString())
+    .lt("created_at", end.toISOString());
   return count ?? 0;
 }
 

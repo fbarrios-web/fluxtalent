@@ -50,11 +50,12 @@ export const Route = createFileRoute("/api/public/mp/webhook")({
         }
 
         const url = new URL(request.url);
-        const type = url.searchParams.get("type") || url.searchParams.get("topic");
+        let type = url.searchParams.get("type") || url.searchParams.get("topic");
         const id = url.searchParams.get("id") || url.searchParams.get("data.id");
         const bodyText = await request.text();
         let body: any = {};
         try { body = bodyText ? JSON.parse(bodyText) : {}; } catch {}
+        type = type ?? body?.type ?? body?.topic;
         const dataId = id ?? body?.data?.id ?? body?.id;
 
         if (!type || !dataId) return new Response("ok"); // ack noisy pings
@@ -82,7 +83,7 @@ export const Route = createFileRoute("/api/public/mp/webhook")({
             // otra cuenta de Mercado Pago que la que cobró: hay que loguearlo,
             // si no la activación falla en silencio.
             console.error(`[mp.webhook] MP fetch ${path} failed: ${r.status} ${await r.text().catch(() => "")}`);
-            return null;
+            throw new Error(`Mercado Pago lookup failed: ${r.status}`);
           }
           return r.json();
         }
@@ -120,7 +121,7 @@ export const Route = createFileRoute("/api/public/mp/webhook")({
           });
           if (!orgId) {
             console.error("[mp.webhook] no org for payment", dataId, p.external_reference, p.payer?.email);
-            return new Response("ok");
+            return new Response("Payment organization unresolved", { status: 503 });
           }
 
           const txAmount = Number(p.transaction_amount ?? 0);
@@ -170,7 +171,7 @@ export const Route = createFileRoute("/api/public/mp/webhook")({
           });
           if (!orgId) {
             console.error("[mp.webhook] no org for authorized_payment", dataId, preapprovalId);
-            return new Response("ok");
+            return new Response("Payment organization unresolved", { status: 503 });
           }
 
           const amount = Number(ap.transaction_amount ?? pa?.auto_recurring?.transaction_amount ?? 0);
