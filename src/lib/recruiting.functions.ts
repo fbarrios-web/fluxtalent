@@ -422,7 +422,7 @@ export const manualCreateApplication = createServerFn({ method: "POST" })
       cv_url, source: "manual",
       ai_status: analyzeAi ? "pending" : "skipped",
     }).select("id").single();
-    if (error) throw error;
+    if (error) { if ((error as any).code === "23505") throw new Error(`${data.email} ya se postuló a esta vacante`); throw error; }
 
     await supabase.from("application_events").insert({
       application_id: appRow.id, actor_id: userId, type: "manual_created", payload: {},
@@ -523,7 +523,7 @@ export const bulkCreateApplicationFromCv = createServerFn({ method: "POST" })
       cv_url: path, source: "manual",
       ai_status: "pending",
     }).select("id").single();
-    if (error) throw error;
+    if (error) { if ((error as any).code === "23505") throw new Error(`"${data.cv_filename}": ${email} ya se postuló a esta vacante`); throw error; }
 
     await supabase.from("application_events").insert({
       application_id: appRow.id, actor_id: userId, type: "bulk_uploaded", payload: { filename: data.cv_filename },
