@@ -233,6 +233,19 @@ function VacancyDetail() {
                 className="w-full rounded-full border border-border bg-card px-4 py-2 text-sm outline-none focus:border-primary"
               />
             </div>
+            {!legacyReadColumn && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">{t("CV leídos")}</span>
+                <Select value={readFilter} onValueChange={(val) => setReadFilter(val as "all" | "read" | "unread")}>
+                  <SelectTrigger className="w-32 rounded-full"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("Todos")}</SelectItem>
+                    <SelectItem value="read">{t("Sí")}</SelectItem>
+                    <SelectItem value="unread">{t("No")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             {birthFieldId && (
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-muted-foreground">{t("Rango de edad")}</span>
@@ -309,6 +322,7 @@ function VacancyDetail() {
                     items={items}
                     onCardClick={(id) => nav({ to: "/app/candidates/$id", params: { id } })}
                     minMatch={v.min_match}
+                    showReadTick={!legacyReadColumn}
                   />
                 </div>
               );
