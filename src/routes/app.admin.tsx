@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, Link, useLocation } from "@tanstack/react-rout
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { adminAmI } from "@/lib/admin.functions";
-import { Loader2, BarChart3, Building2, Users, CreditCard, ShieldAlert, Tag, Activity, Smile, Globe, CalendarDays } from "lucide-react";
+import { Loader2, BarChart3, Building2, Users, CreditCard, ShieldAlert, Tag, Activity, Smile, Globe, CalendarDays, BriefcaseBusiness } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
 
@@ -23,6 +23,7 @@ function AdminLayout() {
     { to: "/app/admin/usage", label: t("Consumo"), icon: Activity },
     { to: "/app/admin/surveys", label: t("Encuestas"), icon: Smile },
     { to: "/app/admin/demos", label: t("Demos"), icon: CalendarDays },
+    { to: "/app/admin/clients", label: "Seguimiento de clientes", icon: BriefcaseBusiness },
   ];
   const fn = useServerFn(adminAmI);
   const { data, isLoading } = useQuery({ queryKey: ["am-i-admin"], queryFn: () => fn() });
