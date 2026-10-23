@@ -176,6 +176,8 @@ export const EN_VACANCIES: Record<string, string> = {
   "Requisitos": "Requirements",
   "Requisitos excluyentes": "Exclusionary requirements",
   "Leídos": "Read",
+  "CV leídos": "Read CVs",
+  "Todos": "All",
   "Notas y observaciones": "Notes and observations",
   "Agregá información interna sobre este postulante…": "Add internal information about this applicant…",
   "Guardar observaciones": "Save observations",

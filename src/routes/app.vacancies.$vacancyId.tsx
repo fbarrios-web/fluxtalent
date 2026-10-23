@@ -5,7 +5,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { moveApplicationStage, updateVacancy, bulkCreateApplicationFromCv } from "@/lib/recruiting.functions";
-import { ArrowLeft, ExternalLink, Copy, Loader2, Download, ChevronLeft, ChevronRight, Pencil, ImageIcon, Sparkles, Upload, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, ExternalLink, Copy, Loader2, Download, ChevronLeft, ChevronRight, Pencil, ImageIcon, Sparkles, Upload, CheckCircle2, XCircle, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { IntegrationAlert } from "@/components/integration-alert";
@@ -35,6 +35,7 @@ const STAGES = [
   { id: "rejected",    label: "No avanza",      color: "bg-red-200 text-red-800 dark:bg-red-500/20 dark:text-red-200" },
 ] as const;
 // NOTE: labels above are Spanish source keys; translate at render with t(s.label)
+const STAGE_LABEL: Record<string, string> = Object.fromEntries(STAGES.map(s => [s.id, s.label]));
 
 export const Route = createFileRoute("/app/vacancies/$vacancyId")({
   component: VacancyDetail,
@@ -61,6 +62,7 @@ function VacancyDetail() {
   const [tab, setTab] = useState("pipeline");
   const [ageMin, setAgeMin] = useState("");
   const [ageMax, setAgeMax] = useState("");
+  const [readFilter, setReadFilter] = useState<"all" | "read" | "unread">("all");
 
 
   const { data: v } = useQuery<any>({
@@ -83,15 +85,20 @@ function VacancyDetail() {
     refetchInterval: 5000,
   });
 
-  const { data: birthFieldId } = useQuery<string | null>({
-    queryKey: ["vacancy-birth-field", v?.org_id],
+  const { data: orgCfg } = useQuery<{ birthFieldId: string | null; legacyReadColumn: boolean } | null>({
+    queryKey: ["vacancy-org-cfg", v?.org_id],
     enabled: !!v?.org_id,
     queryFn: async () => {
       const { data } = await supabase.from("organizations").select("custom_features, sensitive_fields").eq("id", v.org_id).maybeSingle();
-      if ((data as any)?.custom_features?.sensitive_fields !== true) return null;
-      return birthDateFieldId((data as any)?.sensitive_fields);
+      const cf = (data as any)?.custom_features ?? {};
+      return {
+        birthFieldId: cf.sensitive_fields === true ? birthDateFieldId((data as any)?.sensitive_fields) : null,
+        legacyReadColumn: cf.legacy_read_column === true,
+      };
     },
   });
+  const birthFieldId = orgCfg?.birthFieldId ?? null;
+  const legacyReadColumn = orgCfg?.legacyReadColumn ?? false;
 
   if (!v) return <div className="p-10 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /></div>;
 
@@ -100,6 +107,11 @@ function VacancyDetail() {
   const maxA = ageMax.trim() ? Number(ageMax) : null;
   const filteredApps = (apps ?? []).filter((a: any) => {
     if (term && ![a.first_name, a.last_name, a.email, a.phone].filter(Boolean).some((s: string) => String(s).toLowerCase().includes(term))) return false;
+    if (!legacyReadColumn && readFilter !== "all") {
+      const isRead = a.stage !== "received";
+      if (readFilter === "read" && !isRead) return false;
+      if (readFilter === "unread" && isRead) return false;
+    }
     if (birthFieldId && (minA != null || maxA != null)) {
       const age = applicationAge(a, birthFieldId);
       if (age == null) return false;
@@ -108,6 +120,9 @@ function VacancyDetail() {
     }
     return true;
   });
+
+  // Sin columna "Leídos": los leídos se muestran en Recibidos con doble tilde verde.
+  const visibleStages = legacyReadColumn ? STAGES : STAGES.filter(s => s.id !== "read");
 
 
   const applyUrl = vacancyPublicUrl(v);
@@ -219,6 +234,19 @@ function VacancyDetail() {
                 className="w-full rounded-full border border-border bg-card px-4 py-2 text-sm outline-none focus:border-primary"
               />
             </div>
+            {!legacyReadColumn && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">{t("CV leídos")}</span>
+                <Select value={readFilter} onValueChange={(val) => setReadFilter(val as "all" | "read" | "unread")}>
+                  <SelectTrigger className="w-32 rounded-full"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("Todos")}</SelectItem>
+                    <SelectItem value="read">{t("Sí")}</SelectItem>
+                    <SelectItem value="unread">{t("No")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             {birthFieldId && (
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-muted-foreground">{t("Rango de edad")}</span>
@@ -236,8 +264,10 @@ function VacancyDetail() {
           <IntegrationAlert context="kanban" vacancyId={vacancyId} onGoToAgenda={() => setTab("scheduling")} />
           <div className="flex gap-3 overflow-x-auto overflow-y-hidden pb-4 max-h-[calc(100vh-320px)] md:max-h-[calc(100vh-220px)]">
 
-            {STAGES.map(s => {
-              const items = filteredApps.filter((a: any) => a.stage === s.id);
+            {visibleStages.map(s => {
+              const items = filteredApps.filter((a: any) =>
+                s.id === "received" && !legacyReadColumn ? a.stage === "received" || a.stage === "read" : a.stage === s.id
+              );
               const isCollapsed = !!collapsed[s.id];
               if (isCollapsed) {
                 return (
@@ -293,6 +323,7 @@ function VacancyDetail() {
                     items={items}
                     onCardClick={(id) => nav({ to: "/app/candidates/$id", params: { id } })}
                     minMatch={v.min_match}
+                    showReadTick={!legacyReadColumn}
                   />
                 </div>
               );
@@ -318,7 +349,7 @@ function VacancyDetail() {
                   <tr key={a.id} className="cursor-pointer border-b border-border last:border-0 hover:bg-accent/30" onClick={() => nav({ to: "/app/candidates/$id", params: { id: a.id } })}>
                     <td className="px-4 py-3 font-medium">{a.first_name} {a.last_name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{a.email}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{a.stage}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{t(STAGE_LABEL[a.stage] ?? a.stage)}</td>
                     <td className="px-4 py-3"><MatchPill score={a.match_score} minMatch={v.min_match} aiStatus={a.ai_status} aiError={a.ai_last_error} /></td>
                   </tr>
                 ))}
@@ -887,10 +918,12 @@ function KanbanColumnBody({
   items,
   onCardClick,
   minMatch,
+  showReadTick = false,
 }: {
   items: any[];
   onCardClick: (id: string) => void;
   minMatch?: number;
+  showReadTick?: boolean;
 }) {
   const parentRef = useRef<HTMLDivElement>(null);
   const shouldVirtualize = items.length > 30;
@@ -923,7 +956,12 @@ function KanbanColumnBody({
         <div className="truncate text-sm font-medium">{a.first_name} {a.last_name}</div>
         <MatchPill score={a.match_score} minMatch={minMatch} aiStatus={a.ai_status} aiError={a.ai_last_error} />
       </div>
-      <div className="mt-1 truncate text-xs text-muted-foreground">{a.email}</div>
+      <div className="mt-1 flex items-center justify-between gap-2">
+        <span className="truncate text-xs text-muted-foreground">{a.email}</span>
+        {showReadTick && a.stage !== "received" && (
+          <CheckCheck className="h-4 w-4 shrink-0 text-emerald-600" aria-label="Leído" />
+        )}
+      </div>
     </div>
   );
 

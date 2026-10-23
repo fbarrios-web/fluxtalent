@@ -83,14 +83,20 @@ function CandidateDetail() {
     refetchInterval: (q: any) => (q.state.data?.ai_status === "running" || q.state.data?.ai_status === "pending" ? 3000 : false),
   });
 
-  const { data: orgSensFields } = useQuery<any[]>({
-    queryKey: ["org-sensitive-fields", app?.org_id],
-    enabled: !!app?.org_id && !!Object.keys(app?.sensitive_answers ?? {}).length,
+  const { data: orgCfg } = useQuery<{ sensitiveFields: any[]; legacyReadColumn: boolean }>({
+    queryKey: ["org-candidate-cfg", app?.org_id],
+    enabled: !!app?.org_id,
     queryFn: async () => {
-      const { data } = await supabase.from("organizations").select("sensitive_fields").eq("id", app.org_id).maybeSingle();
-      return (((data as any)?.sensitive_fields ?? []) as any[]);
+      const { data } = await supabase.from("organizations").select("sensitive_fields, custom_features").eq("id", app.org_id).maybeSingle();
+      return {
+        sensitiveFields: (((data as any)?.sensitive_fields ?? []) as any[]),
+        legacyReadColumn: (data as any)?.custom_features?.legacy_read_column === true,
+      };
     },
   });
+  const orgSensFields = orgCfg?.sensitiveFields;
+  const stageOptions = (orgCfg?.legacyReadColumn ? STAGES : STAGES.filter(s => s !== "read"));
+  if (app && !stageOptions.includes(app.stage)) stageOptions.push(app.stage);
 
   const [analyzing, setAnalyzing] = useState(false);
   const [emailKind, setEmailKind] = useState<"rejection" | "interview_invite" | "followup">("interview_invite");
@@ -408,7 +414,7 @@ function CandidateDetail() {
             <h4 data-tour="cand-stage" className="mb-2 text-xs font-semibold uppercase text-muted-foreground">{t("Etapa")}</h4>
             <Select value={app.stage} onValueChange={setStage}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{STAGES.map(s => <SelectItem key={s} value={s}>{t(STAGE_LABEL[s])}</SelectItem>)}</SelectContent>
+              <SelectContent>{stageOptions.map(s => <SelectItem key={s} value={s}>{t(STAGE_LABEL[s])}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="rounded-2xl border border-border bg-card p-4">

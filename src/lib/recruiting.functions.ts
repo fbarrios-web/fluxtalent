@@ -267,6 +267,9 @@ export const markApplicationRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
+    // El estado "read" es la marca de leído (doble tilde). Las orgs con
+    // custom_features.legacy_read_column (Bridge) la ven como columna aparte;
+    // el resto la ve dentro de Recibidos con la doble tilde verde.
     const { data: updated, error } = await context.supabase
       .from("applications")
       .update({ stage: "read" })
