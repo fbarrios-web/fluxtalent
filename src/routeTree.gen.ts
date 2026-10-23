@@ -35,6 +35,7 @@ import { Route as ApiPublicApplyRouteImport } from './routes/api.public.apply'
 import { Route as ApiPublicGeoRouteImport } from './routes/api.public.geo'
 import { Route as ApiPublicTrackRouteImport } from './routes/api.public.track'
 import { Route as AppAdminIndexRouteImport } from './routes/app.admin.index'
+import { Route as AppAdminClientsRouteImport } from './routes/app.admin.clients'
 import { Route as AppAdminDemosRouteImport } from './routes/app.admin.demos'
 import { Route as AppAdminOrgsRouteImport } from './routes/app.admin.orgs'
 import { Route as AppAdminPaymentsRouteImport } from './routes/app.admin.payments'
@@ -189,6 +190,11 @@ const ApiPublicTrackRoute = ApiPublicTrackRouteImport.update({
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppAdminRoute,
+} as any)
+const AppAdminClientsRoute = AppAdminClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
   getParentRoute: () => AppAdminRoute,
 } as any)
 const AppAdminDemosRoute = AppAdminDemosRouteImport.update({
@@ -347,6 +353,7 @@ export interface FileRoutesByFullPath {
   '/api/public/apply': typeof ApiPublicApplyRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
   '/api/public/track': typeof ApiPublicTrackRoute
+  '/app/admin/clients': typeof AppAdminClientsRoute
   '/app/admin/demos': typeof AppAdminDemosRoute
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
@@ -398,6 +405,7 @@ export interface FileRoutesByTo {
   '/api/public/apply': typeof ApiPublicApplyRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
   '/api/public/track': typeof ApiPublicTrackRoute
+  '/app/admin/clients': typeof AppAdminClientsRoute
   '/app/admin/demos': typeof AppAdminDemosRoute
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
@@ -452,6 +460,7 @@ export interface FileRoutesById {
   '/api/public/apply': typeof ApiPublicApplyRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
   '/api/public/track': typeof ApiPublicTrackRoute
+  '/app/admin/clients': typeof AppAdminClientsRoute
   '/app/admin/demos': typeof AppAdminDemosRoute
   '/app/admin/orgs': typeof AppAdminOrgsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
@@ -507,6 +516,7 @@ export interface FileRouteTypes {
     | '/api/public/apply'
     | '/api/public/geo'
     | '/api/public/track'
+    | '/app/admin/clients'
     | '/app/admin/demos'
     | '/app/admin/orgs'
     | '/app/admin/payments'
@@ -558,6 +568,7 @@ export interface FileRouteTypes {
     | '/api/public/apply'
     | '/api/public/geo'
     | '/api/public/track'
+    | '/app/admin/clients'
     | '/app/admin/demos'
     | '/app/admin/orgs'
     | '/app/admin/payments'
@@ -611,6 +622,7 @@ export interface FileRouteTypes {
     | '/api/public/apply'
     | '/api/public/geo'
     | '/api/public/track'
+    | '/app/admin/clients'
     | '/app/admin/demos'
     | '/app/admin/orgs'
     | '/app/admin/payments'
@@ -855,6 +867,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminIndexRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/app/admin/clients': {
+      id: '/app/admin/clients'
+      path: '/clients'
+      fullPath: '/app/admin/clients'
+      preLoaderRoute: typeof AppAdminClientsRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/app/admin/demos': {
       id: '/app/admin/demos'
       path: '/demos'
@@ -1034,6 +1053,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppAdminRouteChildren {
+  AppAdminClientsRoute: typeof AppAdminClientsRoute
   AppAdminDemosRoute: typeof AppAdminDemosRoute
   AppAdminOrgsRoute: typeof AppAdminOrgsRoute
   AppAdminPaymentsRoute: typeof AppAdminPaymentsRoute
@@ -1046,6 +1066,7 @@ interface AppAdminRouteChildren {
 }
 
 const AppAdminRouteChildren: AppAdminRouteChildren = {
+  AppAdminClientsRoute: AppAdminClientsRoute,
   AppAdminDemosRoute: AppAdminDemosRoute,
   AppAdminOrgsRoute: AppAdminOrgsRoute,
   AppAdminPaymentsRoute: AppAdminPaymentsRoute,
