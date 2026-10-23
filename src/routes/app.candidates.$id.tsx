@@ -413,7 +413,7 @@ function CandidateDetail() {
             <h4 data-tour="cand-stage" className="mb-2 text-xs font-semibold uppercase text-muted-foreground">{t("Etapa")}</h4>
             <Select value={app.stage} onValueChange={setStage}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{STAGES.map(s => <SelectItem key={s} value={s}>{t(STAGE_LABEL[s])}</SelectItem>)}</SelectContent>
+              <SelectContent>{stageOptions.map(s => <SelectItem key={s} value={s}>{t(STAGE_LABEL[s])}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="rounded-2xl border border-border bg-card p-4">
