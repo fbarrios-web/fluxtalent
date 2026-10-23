@@ -917,10 +917,12 @@ function KanbanColumnBody({
   items,
   onCardClick,
   minMatch,
+  showReadTick = false,
 }: {
   items: any[];
   onCardClick: (id: string) => void;
   minMatch?: number;
+  showReadTick?: boolean;
 }) {
   const parentRef = useRef<HTMLDivElement>(null);
   const shouldVirtualize = items.length > 30;
@@ -953,7 +955,12 @@ function KanbanColumnBody({
         <div className="truncate text-sm font-medium">{a.first_name} {a.last_name}</div>
         <MatchPill score={a.match_score} minMatch={minMatch} aiStatus={a.ai_status} aiError={a.ai_last_error} />
       </div>
-      <div className="mt-1 truncate text-xs text-muted-foreground">{a.email}</div>
+      <div className="mt-1 flex items-center justify-between gap-2">
+        <span className="truncate text-xs text-muted-foreground">{a.email}</span>
+        {showReadTick && a.stage !== "received" && (
+          <CheckCheck className="h-4 w-4 shrink-0 text-emerald-600" aria-label="Leído" />
+        )}
+      </div>
     </div>
   );
 
