@@ -2,3 +2,5 @@
 - [x] Reset stale quota cycles on active-period renewal; make Mercado Pago and PayPal completed-payment handling atomic and idempotent.
 - [x] Pass seven rule tests and verify Bridge's signed-in dashboard shows 0/1,000 CVs, 0/10 vacancies and renewal on 21/11/2026.
 - [x] Restore Leídos for every account and remove the replacement ticks and read filter; build OK and signed-in preview shows the Read column (English session).
+- [ ] Add superadmin client tracking with automatic demo prospects, manual clients, meetings, transcripts, key events and dated tasks.
+- [ ] Verify admin access, persistent client updates and task completion in the signed-in preview.
