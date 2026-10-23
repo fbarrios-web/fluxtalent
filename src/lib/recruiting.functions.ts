@@ -267,29 +267,9 @@ export const markApplicationRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    // Orgs con legacy_read_column (Bridge) conservan la columna "Leídos":
-    // el resto no mueve la etapa, solo registra el evento de lectura.
-    const { data: appRow } = await context.supabase
-      .from("applications")
-      .select("org_id, stage")
-      .eq("id", data.id)
-      .maybeSingle();
-    if (!appRow || (appRow as any).stage !== "received") return { changed: false };
-    const { data: org } = await context.supabase
-      .from("organizations")
-      .select("custom_features")
-      .eq("id", (appRow as any).org_id)
-      .maybeSingle();
-    const legacy = (org as any)?.custom_features?.legacy_read_column === true;
-    if (!legacy) {
-      await context.supabase.from("application_events").insert({
-        application_id: data.id,
-        actor_id: context.userId,
-        type: "cv_read",
-        payload: { automatic: true },
-      });
-      return { changed: true, stageChanged: false };
-    }
+    // El estado "read" es la marca de leído (doble tilde). Las orgs con
+    // custom_features.legacy_read_column (Bridge) la ven como columna aparte;
+    // el resto la ve dentro de Recibidos con la doble tilde verde.
     const { data: updated, error } = await context.supabase
       .from("applications")
       .update({ stage: "read" })
