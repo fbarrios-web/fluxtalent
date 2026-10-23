@@ -106,6 +106,11 @@ function VacancyDetail() {
   const maxA = ageMax.trim() ? Number(ageMax) : null;
   const filteredApps = (apps ?? []).filter((a: any) => {
     if (term && ![a.first_name, a.last_name, a.email, a.phone].filter(Boolean).some((s: string) => String(s).toLowerCase().includes(term))) return false;
+    if (!legacyReadColumn && readFilter !== "all") {
+      const isRead = a.stage !== "received";
+      if (readFilter === "read" && !isRead) return false;
+      if (readFilter === "unread" && isRead) return false;
+    }
     if (birthFieldId && (minA != null || maxA != null)) {
       const age = applicationAge(a, birthFieldId);
       if (age == null) return false;
@@ -114,6 +119,9 @@ function VacancyDetail() {
     }
     return true;
   });
+
+  // Sin columna "Leídos": los leídos se muestran en Recibidos con doble tilde verde.
+  const visibleStages = legacyReadColumn ? STAGES : STAGES.filter(s => s.id !== "read");
 
 
   const applyUrl = vacancyPublicUrl(v);
