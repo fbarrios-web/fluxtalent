@@ -1,4 +1,4 @@
 - [x] Restore Bridge's Pro cycle with its 1,000-CV override based on the owner's payment confirmation; October payment was absent from system records.
 - [x] Reset stale quota cycles on active-period renewal; make Mercado Pago and PayPal completed-payment handling atomic and idempotent.
 - [x] Pass seven rule tests and verify Bridge's signed-in dashboard shows 0/1,000 CVs, 0/10 vacancies and renewal on 21/11/2026.
-- [ ] Restore Leídos for every account and remove the replacement ticks and read filter; verify the preview.
+- [x] Restore Leídos for every account and remove the replacement ticks and read filter; build OK and signed-in preview shows the Read column (English session).
