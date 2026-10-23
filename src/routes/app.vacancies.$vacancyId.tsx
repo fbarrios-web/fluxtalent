@@ -84,15 +84,20 @@ function VacancyDetail() {
     refetchInterval: 5000,
   });
 
-  const { data: birthFieldId } = useQuery<string | null>({
-    queryKey: ["vacancy-birth-field", v?.org_id],
+  const { data: orgCfg } = useQuery<{ birthFieldId: string | null; legacyReadColumn: boolean } | null>({
+    queryKey: ["vacancy-org-cfg", v?.org_id],
     enabled: !!v?.org_id,
     queryFn: async () => {
       const { data } = await supabase.from("organizations").select("custom_features, sensitive_fields").eq("id", v.org_id).maybeSingle();
-      if ((data as any)?.custom_features?.sensitive_fields !== true) return null;
-      return birthDateFieldId((data as any)?.sensitive_fields);
+      const cf = (data as any)?.custom_features ?? {};
+      return {
+        birthFieldId: cf.sensitive_fields === true ? birthDateFieldId((data as any)?.sensitive_fields) : null,
+        legacyReadColumn: cf.legacy_read_column === true,
+      };
     },
   });
+  const birthFieldId = orgCfg?.birthFieldId ?? null;
+  const legacyReadColumn = orgCfg?.legacyReadColumn ?? false;
 
   if (!v) return <div className="p-10 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /></div>;
 
