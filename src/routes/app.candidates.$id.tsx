@@ -95,7 +95,8 @@ function CandidateDetail() {
     },
   });
   const orgSensFields = orgCfg?.sensitiveFields;
-  const stageOptions = orgCfg?.legacyReadColumn ? STAGES : STAGES.filter(s => s !== "read");
+  const stageOptions = (orgCfg?.legacyReadColumn ? STAGES : STAGES.filter(s => s !== "read"));
+  if (app && !stageOptions.includes(app.stage)) stageOptions.push(app.stage);
 
   const [analyzing, setAnalyzing] = useState(false);
   const [emailKind, setEmailKind] = useState<"rejection" | "interview_invite" | "followup">("interview_invite");
