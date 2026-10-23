@@ -347,6 +347,101 @@ export type Database = {
           },
         ]
       }
+      crm_clients: {
+        Row: {
+          company: string
+          created_at: string
+          email: string
+          id: string
+          name: string
+          owner_name: string
+          phone: string
+          source: string
+          stage: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          company?: string
+          created_at?: string
+          email?: string
+          id?: string
+          name: string
+          owner_name?: string
+          phone?: string
+          source?: string
+          stage?: string
+          summary?: string
+          updated_at?: string
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          owner_name?: string
+          phone?: string
+          source?: string
+          stage?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      crm_records: {
+        Row: {
+          client_id: string
+          completed_at: string | null
+          content: string
+          created_at: string
+          created_by: string | null
+          due_date: string | null
+          id: string
+          kind: string
+          occurs_at: string | null
+          responsible: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          completed_at?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          id?: string
+          kind: string
+          occurs_at?: string | null
+          responsible?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          completed_at?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          id?: string
+          kind?: string
+          occurs_at?: string | null
+          responsible?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_records_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "crm_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demo_availability_rules: {
         Row: {
           created_at: string
@@ -407,6 +502,7 @@ export type Database = {
       demo_bookings: {
         Row: {
           created_at: string
+          crm_client_id: string | null
           email: string
           first_name: string
           google_event_id: string | null
@@ -420,6 +516,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          crm_client_id?: string | null
           email: string
           first_name: string
           google_event_id?: string | null
@@ -433,6 +530,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          crm_client_id?: string | null
           email?: string
           first_name?: string
           google_event_id?: string | null
@@ -445,6 +543,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "demo_bookings_crm_client_id_fkey"
+            columns: ["crm_client_id"]
+            isOneToOne: false
+            referencedRelation: "crm_clients"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "demo_bookings_slot_id_fkey"
             columns: ["slot_id"]
