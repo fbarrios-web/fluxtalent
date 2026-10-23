@@ -50,6 +50,13 @@
       "when": 1792674793650,
       "tag": "0006_atomic_paid_renewal_and_cycle_reset",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792788337328,
+      "tag": "0007_superadmin_client_tracking",
+      "breakpoints": true
     }
   ]
 }
