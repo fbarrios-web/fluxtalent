@@ -53,6 +53,14 @@ function eventColor(t: string): string {
 }
 
 export const Route = createFileRoute("/app/candidates/$id")({
+  head: () => ({ meta: [
+    { title: "Ficha del postulante | FLUX Talent" },
+    { name: "description", content: "Consultá el CV, las observaciones y la etapa del postulante en FLUX Talent." },
+    { property: "og:title", content: "Ficha del postulante | FLUX Talent" },
+    { property: "og:description", content: "Consultá el CV, las observaciones y la etapa del postulante en FLUX Talent." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: CandidateDetail,
 });
 
@@ -83,20 +91,18 @@ function CandidateDetail() {
     refetchInterval: (q: any) => (q.state.data?.ai_status === "running" || q.state.data?.ai_status === "pending" ? 3000 : false),
   });
 
-  const { data: orgCfg } = useQuery<{ sensitiveFields: any[]; legacyReadColumn: boolean }>({
+  const { data: orgCfg } = useQuery<{ sensitiveFields: any[] }>({
     queryKey: ["org-candidate-cfg", app?.org_id],
     enabled: !!app?.org_id,
     queryFn: async () => {
       const { data } = await supabase.from("organizations").select("sensitive_fields, custom_features").eq("id", app.org_id).maybeSingle();
       return {
         sensitiveFields: (((data as any)?.sensitive_fields ?? []) as any[]),
-        legacyReadColumn: (data as any)?.custom_features?.legacy_read_column === true,
       };
     },
   });
   const orgSensFields = orgCfg?.sensitiveFields;
-  const stageOptions = (orgCfg?.legacyReadColumn ? STAGES : STAGES.filter(s => s !== "read"));
-  if (app && !stageOptions.includes(app.stage)) stageOptions.push(app.stage);
+  const stageOptions = STAGES;
 
   const [analyzing, setAnalyzing] = useState(false);
   const [emailKind, setEmailKind] = useState<"rejection" | "interview_invite" | "followup">("interview_invite");
