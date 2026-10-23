@@ -5,7 +5,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { moveApplicationStage, updateVacancy, bulkCreateApplicationFromCv } from "@/lib/recruiting.functions";
-import { ArrowLeft, ExternalLink, Copy, Loader2, Download, ChevronLeft, ChevronRight, Pencil, ImageIcon, Sparkles, Upload, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, ExternalLink, Copy, Loader2, Download, ChevronLeft, ChevronRight, Pencil, ImageIcon, Sparkles, Upload, CheckCircle2, XCircle, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { IntegrationAlert } from "@/components/integration-alert";
@@ -61,6 +61,7 @@ function VacancyDetail() {
   const [tab, setTab] = useState("pipeline");
   const [ageMin, setAgeMin] = useState("");
   const [ageMax, setAgeMax] = useState("");
+  const [readFilter, setReadFilter] = useState<"all" | "read" | "unread">("all");
 
 
   const { data: v } = useQuery<any>({
