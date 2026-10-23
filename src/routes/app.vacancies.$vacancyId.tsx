@@ -349,7 +349,7 @@ function VacancyDetail() {
                   <tr key={a.id} className="cursor-pointer border-b border-border last:border-0 hover:bg-accent/30" onClick={() => nav({ to: "/app/candidates/$id", params: { id: a.id } })}>
                     <td className="px-4 py-3 font-medium">{a.first_name} {a.last_name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{a.email}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{a.stage}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{t(STAGE_LABEL[a.stage] ?? a.stage)}</td>
                     <td className="px-4 py-3"><MatchPill score={a.match_score} minMatch={v.min_match} aiStatus={a.ai_status} aiError={a.ai_last_error} /></td>
                   </tr>
                 ))}
