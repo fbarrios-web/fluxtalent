@@ -35,6 +35,7 @@ const STAGES = [
   { id: "rejected",    label: "No avanza",      color: "bg-red-200 text-red-800 dark:bg-red-500/20 dark:text-red-200" },
 ] as const;
 // NOTE: labels above are Spanish source keys; translate at render with t(s.label)
+const STAGE_LABEL: Record<string, string> = Object.fromEntries(STAGES.map(s => [s.id, s.label]));
 
 export const Route = createFileRoute("/app/vacancies/$vacancyId")({
   component: VacancyDetail,
