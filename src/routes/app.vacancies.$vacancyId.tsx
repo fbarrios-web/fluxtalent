@@ -250,8 +250,10 @@ function VacancyDetail() {
           <IntegrationAlert context="kanban" vacancyId={vacancyId} onGoToAgenda={() => setTab("scheduling")} />
           <div className="flex gap-3 overflow-x-auto overflow-y-hidden pb-4 max-h-[calc(100vh-320px)] md:max-h-[calc(100vh-220px)]">
 
-            {STAGES.map(s => {
-              const items = filteredApps.filter((a: any) => a.stage === s.id);
+            {visibleStages.map(s => {
+              const items = filteredApps.filter((a: any) =>
+                s.id === "received" && !legacyReadColumn ? a.stage === "received" || a.stage === "read" : a.stage === s.id
+              );
               const isCollapsed = !!collapsed[s.id];
               if (isCollapsed) {
                 return (
