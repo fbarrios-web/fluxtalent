@@ -21,9 +21,14 @@ export async function syncTrackingCalendar(id: string) {
     return;
   }
   if (!target?.google_refresh_token) throw new Error(`${row.responsible} debe conectar su cuenta ${email} en Integraciones para recibir este pendiente en Google Calendar.`);
-  const eventId = taskEventId(id, target.id);
-  const prepared = await supabaseAdmin.from('crm_records').update({ calendar_event_id: eventId, calendar_profile_id: target.id, calendar_status: 'pending', calendar_error: null }).eq('id', id);
+  // Google tombstones deleted IDs: reopening a completed task needs a new ID,
+  // persisted atomically so retries/concurrent saves still share one event.
+  const proposedId = `${taskEventId(id, target.id)}${crypto.randomUUID().replaceAll('-', '')}`;
+  const prepared = await supabaseAdmin.from('crm_records').update({ calendar_event_id: proposedId, calendar_profile_id: target.id, calendar_status: 'pending', calendar_error: null }).eq('id', id).is('calendar_event_id', null);
   if (prepared.error) throw new Error('No se pudo preparar el evento.');
+  const { data: linked } = await supabaseAdmin.from('crm_records').select('calendar_event_id, calendar_profile_id').eq('id', id).single();
+  if (!linked?.calendar_event_id || linked.calendar_profile_id !== target.id) throw new Error('El responsable cambió; sincronizá nuevamente el pendiente.');
+  const eventId = linked.calendar_event_id;
   const token = await refreshAccessToken(target.google_refresh_token);
   const client = row.crm_clients;
   const body = { summary: `Pendiente · ${client?.company || client?.name || 'Cliente'} · ${row.title}`, description: [row.content, `Responsable: ${row.responsible}`, client?.country && `País: ${client.country}`].filter(Boolean).join('\n\n'), ...taskCalendarDates(row), reminders: { useDefault: true } };
