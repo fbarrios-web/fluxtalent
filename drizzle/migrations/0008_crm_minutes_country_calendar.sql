@@ -1,0 +1,3 @@
+ALTER TABLE public.crm_clients ADD COLUMN country text NOT NULL DEFAULT '';
+ALTER TABLE public.crm_records ADD COLUMN minutes text NOT NULL DEFAULT '', ADD COLUMN minutes_status text NOT NULL DEFAULT 'none', ADD COLUMN minutes_error text, ADD COLUMN calendar_event_id text, ADD COLUMN calendar_profile_id uuid, ADD COLUMN calendar_status text NOT NULL DEFAULT 'none', ADD COLUMN calendar_error text;
+COMMENT ON COLUMN public.crm_records.calendar_event_id IS 'Stable Google event identifier persisted before writes to prevent duplicate task events.';

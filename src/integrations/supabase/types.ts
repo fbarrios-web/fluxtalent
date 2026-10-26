@@ -350,6 +350,7 @@ export type Database = {
       crm_clients: {
         Row: {
           company: string
+          country: string
           created_at: string
           email: string
           id: string
@@ -363,6 +364,7 @@ export type Database = {
         }
         Insert: {
           company?: string
+          country?: string
           created_at?: string
           email?: string
           id?: string
@@ -376,6 +378,7 @@ export type Database = {
         }
         Update: {
           company?: string
+          country?: string
           created_at?: string
           email?: string
           id?: string
@@ -391,6 +394,10 @@ export type Database = {
       }
       crm_records: {
         Row: {
+          calendar_error: string | null
+          calendar_event_id: string | null
+          calendar_profile_id: string | null
+          calendar_status: string
           client_id: string
           completed_at: string | null
           content: string
@@ -399,12 +406,19 @@ export type Database = {
           due_date: string | null
           id: string
           kind: string
+          minutes: string
+          minutes_error: string | null
+          minutes_status: string
           occurs_at: string | null
           responsible: string
           title: string
           updated_at: string
         }
         Insert: {
+          calendar_error?: string | null
+          calendar_event_id?: string | null
+          calendar_profile_id?: string | null
+          calendar_status?: string
           client_id: string
           completed_at?: string | null
           content?: string
@@ -413,12 +427,19 @@ export type Database = {
           due_date?: string | null
           id?: string
           kind: string
+          minutes?: string
+          minutes_error?: string | null
+          minutes_status?: string
           occurs_at?: string | null
           responsible?: string
           title: string
           updated_at?: string
         }
         Update: {
+          calendar_error?: string | null
+          calendar_event_id?: string | null
+          calendar_profile_id?: string | null
+          calendar_status?: string
           client_id?: string
           completed_at?: string | null
           content?: string
@@ -427,6 +448,9 @@ export type Database = {
           due_date?: string | null
           id?: string
           kind?: string
+          minutes?: string
+          minutes_error?: string | null
+          minutes_status?: string
           occurs_at?: string | null
           responsible?: string
           title?: string
