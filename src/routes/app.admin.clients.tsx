@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClientForm, RecordForm } from '@/components/client-tracking-forms';
-import { getClientTracking, completeTrackingTask, deleteTrackingRecord } from '@/lib/crm.functions';
+import { getClientTracking, completeTrackingTask, deleteTrackingRecord, retryTrackingRecord } from '@/lib/crm.functions';
 import { CLIENT_STAGES, RECORD_KINDS, trackingStatus, buenosAiresToday } from '@/lib/crm';
 import { cn } from '@/lib/utils';
 import type { Database } from '@/integrations/supabase/types';
@@ -35,6 +35,7 @@ function ClientTracking() {
   const get = useServerFn(getClientTracking);
   const complete = useServerFn(completeTrackingTask);
   const remove = useServerFn(deleteTrackingRecord);
+  const retry = useServerFn(retryTrackingRecord);
   const qc = useQueryClient();
   const { data, isLoading, error, refetch, isFetching } = useQuery({ queryKey: ['client-tracking'], queryFn: () => get(), refetchInterval: 60000 });
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -56,8 +57,14 @@ function ClientTracking() {
   const client = clients.find(c => c.id === selectedId) ?? filtered[0];
   const totals = { pending: clients.reduce((sum, c) => sum + c.health.pending, 0), overdue: clients.reduce((sum, c) => sum + c.health.overdue, 0), active: clients.filter(c => c.stage === 'client').length };
   async function toggleTask(record: RecordRow) {
-    setBusyId(record.id); try { await complete({ data: { id: record.id, completed: !record.completed_at } }); await refresh(); }
+    setBusyId(record.id); try { const result = await complete({ data: { id: record.id, completed: !record.completed_at } }); result.warnings.forEach(w => toast.warning(w)); await refresh(); }
     catch (e) { toast.error(e instanceof Error ? e.message : 'No se pudo actualizar.'); } finally { setBusyId(null); }
+  }
+  async function retryRecord(record: RecordRow, action: 'minutes' | 'calendar') {
+    setBusyId(record.id);
+    try { const result = await retry({ data: { id: record.id, action } }); if (result.warnings.length) result.warnings.forEach(w => toast.warning(w)); else toast.success(action === 'minutes' ? 'Minuta guardada.' : 'Calendario actualizado.'); await refresh(); }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'No se pudo actualizar.'); }
+    finally { setBusyId(null); }
   }
   async function deleteRecord(record: RecordRow) {
     if (!window.confirm(`¿Eliminar “${record.title}”?`)) return;
@@ -71,6 +78,9 @@ function ClientTracking() {
         <div className="flex flex-wrap items-center gap-2"><h4 className={cn('break-words font-medium', record.completed_at && 'text-muted-foreground line-through')}>{record.title}</h4><Badge variant="outline">{RECORD_KINDS[record.kind as keyof typeof RECORD_KINDS]}</Badge></div>
         <p className="mt-1 text-xs text-muted-foreground">{formatWhen(record.occurs_at ?? record.created_at)}{record.responsible && ` · ${record.responsible}`}{record.due_date && ` · Vence ${dateLabel(record.due_date)}`}</p>
         {record.content && <details className="mt-2"><summary className="cursor-pointer text-sm text-primary">{record.kind === 'transcript' ? 'Ver transcripción' : 'Ver detalle'}</summary><p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed">{record.content}</p></details>}
+        {record.kind === 'transcript' && <div className="mt-3 border-l-2 border-primary pl-3"><h5 className="text-sm font-semibold">Minuta</h5>{record.minutes && <div className="mt-2 space-y-2 break-words text-sm leading-relaxed">{record.minutes.split('\n').map((line, i) => <p key={i} className={/^#{1,6}\s/.test(line) ? 'pt-2 font-semibold' : ''}>{line.replace(/^#{1,6}\s/, '').replace(/\*\*(.*?)\*\*/g, '$1')}</p>)}</div>}{record.minutes_error && <p className="mt-2 break-words text-sm text-destructive">{record.minutes_error}</p>}<Button className="mt-2" size="sm" variant="outline" disabled={busyId === record.id} onClick={() => retryRecord(record, 'minutes')}>{busyId === record.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}{record.minutes ? 'Regenerar minuta' : 'Generar minuta'}</Button></div>}
+        {record.calendar_status === 'synced' && <p className="mt-2 flex items-center gap-1 text-xs text-success"><CalendarDays className="h-3 w-3" />En Calendar de {record.responsible}</p>}
+        {record.calendar_status === 'error' && <div className="mt-2"><p className="break-words text-sm text-destructive">{record.calendar_error}</p><Button className="mt-2" size="sm" variant="outline" disabled={busyId === record.id} onClick={() => retryRecord(record, 'calendar')}><RefreshCw className="h-4 w-4" />Sincronizar Calendar</Button></div>}
       </div><div className="flex shrink-0 gap-1">{record.kind === 'task' && <Button size="icon" variant="ghost" disabled={busyId === record.id} title={record.completed_at ? 'Reabrir pendiente' : 'Marcar como resuelto'} aria-label={record.completed_at ? 'Reabrir pendiente' : 'Marcar como resuelto'} onClick={() => toggleTask(record)}>{record.completed_at ? <CheckCircle2 className="h-4 w-4 text-success" /> : <Circle className="h-4 w-4" />}</Button>}<Button size="icon" variant="ghost" title="Editar registro" aria-label="Editar registro" onClick={() => setRecordForm({ kind: record.kind as keyof typeof RECORD_KINDS, record })}><Pencil className="h-4 w-4" /></Button><Button size="icon" variant="ghost" title="Eliminar registro" aria-label="Eliminar registro" disabled={busyId === record.id} onClick={() => deleteRecord(record)}><Trash2 className="h-4 w-4" /></Button></div></div>
     </article>;
   }
@@ -81,7 +91,7 @@ function ClientTracking() {
     {isLoading ? <div className="grid h-48 place-items-center"><Loader2 className="h-5 w-5 animate-spin" /></div> : error ? <div className="py-8 text-destructive">No se pudo cargar el seguimiento. <Button variant="outline" onClick={() => refetch()}>Reintentar</Button></div> : <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
       <aside className="space-y-2">{filtered.length === 0 && <p className="py-8 text-sm text-muted-foreground">No hay clientes que coincidan.</p>}{filtered.map(c => <Button key={c.id} variant="outline" onClick={() => setSelectedId(c.id)} className={cn('h-auto w-full flex-col items-start gap-2 whitespace-normal rounded-lg p-4 text-left', client?.id === c.id && 'border-primary bg-accent/40')}><div className="flex w-full items-start justify-between gap-2"><span className="min-w-0 break-words font-semibold">{c.company || c.name}</span><BriefcaseBusiness className="h-4 w-4 shrink-0 text-muted-foreground" /></div>{c.company && <span className="text-xs text-muted-foreground">{c.name}</span>}<div className="flex flex-wrap gap-2"><Badge variant="secondary">{stageLabel(c.stage)}</Badge><span className={cn('text-xs', c.health.overdue ? 'text-destructive' : c.health.pending ? 'text-muted-foreground' : 'text-success')}>{c.health.label}{c.health.pending > 0 && ` · ${c.health.pending}`}</span></div><span className="line-clamp-2 text-xs font-normal text-muted-foreground">{c.summary || (c.nextMeeting?.demo_slots?.start_at ? `Demo: ${formatWhen(c.nextMeeting.demo_slots.start_at)}` : c.email || 'Sin acuerdos registrados')}</span></Button>)}</aside>
       {client ? <div className="min-w-0 xl:border-l xl:border-border xl:pl-6"><header className="flex items-start justify-between gap-3"><div className="min-w-0"><h3 className="break-words text-2xl font-semibold">{client.company || client.name}</h3><p className="mt-1 text-sm text-muted-foreground">{client.company ? `${client.name} · ` : ''}{stageLabel(client.stage)}{client.owner_name && ` · ${client.owner_name}`}</p></div><Button size="icon" variant="outline" title="Editar cliente" aria-label="Editar cliente" onClick={() => setClientForm('edit')}><Pencil className="h-4 w-4" /></Button></header>
-        <div className="my-4 flex flex-wrap gap-4 text-sm">{client.email && <a className="flex min-w-0 items-center gap-2 text-primary" href={`mailto:${client.email}`}><Mail className="h-4 w-4 shrink-0" /><span className="break-all">{client.email}</span></a>}{client.phone && <span className="flex items-center gap-2"><Phone className="h-4 w-4" />{client.phone}</span>}<Badge variant="outline">{client.source === 'demo' ? 'Agenda de demos' : 'Carga manual'}</Badge></div>
+        <div className="my-4 flex flex-wrap gap-4 text-sm">{client.email && <a className="flex min-w-0 items-center gap-2 text-primary" href={`mailto:${client.email}`}><Mail className="h-4 w-4 shrink-0" /><span className="break-all">{client.email}</span></a>}{client.phone && <span className="flex items-center gap-2"><Phone className="h-4 w-4" />{client.phone}</span>}<span>País: {client.country || 'Sin informar'}</span><Badge variant="outline">{client.source === 'demo' ? 'Agenda de demos' : 'Carga manual'}</Badge></div>
         <div className="border-y border-border py-4"><div className="flex items-center justify-between gap-3"><h4 className="text-sm font-semibold">Resumen y acuerdos vigentes</h4><span className={cn('text-xs font-medium', client.health.overdue ? 'text-destructive' : client.health.pending ? 'text-muted-foreground' : 'text-success')}>{client.health.label}</span></div><p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">{client.summary || 'Sin acuerdos registrados.'}</p></div>
         <div className="my-4 flex flex-wrap gap-2"><Button size="sm" onClick={() => setRecordForm({ kind: 'note' })}><Plus className="h-4 w-4" />Agregar registro</Button><Button size="sm" variant="outline" onClick={() => setRecordForm({ kind: 'task' })}><Clock className="h-4 w-4" />Nuevo pendiente</Button></div>
         <Tabs key={client.id} defaultValue="history"><TabsList className="max-w-full"><TabsTrigger value="history">Historial</TabsTrigger><TabsTrigger value="tasks">Pendientes ({client.health.pending})</TabsTrigger><TabsTrigger value="meetings">Reuniones</TabsTrigger></TabsList>
