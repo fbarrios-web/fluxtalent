@@ -4,3 +4,4 @@
 - [x] Restore Leídos for every account and remove the replacement ticks and read filter; build OK and signed-in preview shows the Read column (English session).
 - [x] Add superadmin client tracking with automatic demo prospects, manual clients, meetings, transcripts, key events and dated tasks; four existing bookings linked successfully.
 - [x] Verify admin access, persistent client updates and task completion in the signed-in preview; four rule tests pass and build OK. Remove the internally created test contact afterward.
+- [ ] Generate minutes from client transcripts, show country in client summaries, restrict responsible choices and synchronize staff tasks to their own calendars; verify rules and signed-in flow.
