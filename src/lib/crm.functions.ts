@@ -10,6 +10,25 @@ async function assertAdmin(sb: SupabaseClient<Database>, userId: string) {
   if (error || !data) throw new Error('Solo los superadministradores pueden gestionar clientes.');
 }
 
+async function processRecord(sb: SupabaseClient<Database>, id: string, minutes: boolean) {
+  const warnings: string[] = [];
+  if (minutes) {
+    try { const { generateTrackingMinutes } = await import('./crm-minutes.server'); await generateTrackingMinutes(id); }
+    catch (e) {
+      const message = e instanceof Error ? e.message.slice(0, 500) : 'No se pudo generar la minuta.';
+      await sb.from('crm_records').update({ minutes_status: 'error', minutes_error: message }).eq('id', id);
+      warnings.push(`Transcripción guardada, pero la minuta no pudo generarse: ${message}`);
+    }
+  }
+  try { const { syncTrackingCalendar } = await import('./crm-calendar.server'); await syncTrackingCalendar(id); }
+  catch (e) {
+    const message = e instanceof Error ? e.message : 'No se pudo sincronizar Calendar.';
+    await sb.from('crm_records').update({ calendar_status: 'error', calendar_error: message }).eq('id', id);
+    warnings.push(`Registro guardado. ${message}`);
+  }
+  return { ok: true, warnings };
+}
+
 export const getClientTracking = createServerFn({ method: 'GET' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   await assertAdmin(context.supabase, context.userId);
   // Demos belong to platform operations, not the caller's recruiting organization.
@@ -38,22 +57,41 @@ export const saveTrackingRecord = createServerFn({ method: 'POST' }).middleware(
   await assertAdmin(context.supabase, context.userId);
   const { id, ...values } = data;
   const row = { ...values, updated_at: new Date().toISOString() };
-  const result = id ? await context.supabase.from('crm_records').update(row).eq('id', id).eq('client_id', data.client_id).select('id').single()
-    : await context.supabase.from('crm_records').insert({ ...row, created_by: context.userId }).select('id').single();
+  const { data: previous } = id ? await context.supabase.from('crm_records').select('content, kind').eq('id', id).single() : { data: null };
+  const needsMinutes = data.kind === 'transcript' && (!previous || previous.content !== data.content || previous.kind !== 'transcript');
+  const changes = needsMinutes ? { ...row, minutes: '', minutes_status: 'pending', minutes_error: null } : row;
+  const result = id ? await context.supabase.from('crm_records').update(changes).eq('id', id).eq('client_id', data.client_id).select('id').single()
+    : await context.supabase.from('crm_records').insert({ ...changes, created_by: context.userId }).select('id').single();
   if (result.error) throw new Error('No se pudo guardar el registro.');
-  return { ok: true };
+  return processRecord(context.supabase, result.data.id, needsMinutes);
 });
 
 export const completeTrackingTask = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).inputValidator((v: unknown) => z.object({ id: z.string().uuid(), completed: z.boolean() }).parse(v)).handler(async ({ context, data }) => {
   await assertAdmin(context.supabase, context.userId);
   const { error } = await context.supabase.from('crm_records').update({ completed_at: data.completed ? new Date().toISOString() : null, updated_at: new Date().toISOString() }).eq('id', data.id).eq('kind', 'task').select('id').single();
   if (error) throw new Error('No se pudo actualizar el pendiente.');
-  return { ok: true };
+  return processRecord(context.supabase, data.id, false);
 });
 
 export const deleteTrackingRecord = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).inputValidator((v: unknown) => z.object({ id: z.string().uuid() }).parse(v)).handler(async ({ context, data }) => {
   await assertAdmin(context.supabase, context.userId);
+  const { data: row } = await context.supabase.from('crm_records').select('calendar_event_id, calendar_profile_id').eq('id', data.id).single();
+  if (row?.calendar_event_id && row.calendar_profile_id) {
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { data: profile } = await supabaseAdmin.from('profiles').select('google_refresh_token').eq('id', row.calendar_profile_id).single();
+    if (!profile?.google_refresh_token) throw new Error('Reconectá el calendario del responsable antes de eliminar el pendiente.');
+    const { refreshAccessToken, cancelCalendarEvent } = await import('./google.server');
+    const token = await refreshAccessToken(profile.google_refresh_token);
+    await cancelCalendarEvent({ accessToken: token.access_token, eventId: row.calendar_event_id });
+  }
   const { error } = await context.supabase.from('crm_records').delete().eq('id', data.id);
   if (error) throw new Error('No se pudo eliminar el registro.');
   return { ok: true };
+});
+
+export const retryTrackingRecord = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).inputValidator((v: unknown) => z.object({ id: z.string().uuid(), action: z.enum(['minutes', 'calendar']) }).parse(v)).handler(async ({ context, data }) => {
+  await assertAdmin(context.supabase, context.userId);
+  const { data: row, error } = await context.supabase.from('crm_records').select('id').eq('id', data.id).single();
+  if (error || !row) throw new Error('Registro no encontrado.');
+  return processRecord(context.supabase, data.id, data.action === 'minutes');
 });
