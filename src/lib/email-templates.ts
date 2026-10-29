@@ -20,7 +20,7 @@ export function brandShellHtml(brand: BrandCtx, inner: string) {
       ${inner}
       <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/>
       <div style="font-size:13px;color:#6b7280;line-height:1.5">
-        ${brand.signatureHtml || `<strong>${escapeHtml(brand.consultancyName)}</strong>`}
+        ${sanitizeSignatureHtml(brand.signatureHtml) || `<strong>${escapeHtml(brand.consultancyName)}</strong>`}
         ${brand.contactEmail ? `<div style="margin-top:4px">Consultas: <a style="color:${color}" href="mailto:${brand.contactEmail}">${escapeHtml(brand.contactEmail)}</a></div>` : ""}
       </div>
     </div>
@@ -128,3 +128,27 @@ function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 }
 function escapeAttr(s: string) { return escapeHtml(s); }
+
+
+const SIG_TAGS = new Set(["b", "strong", "i", "em", "u", "br", "p", "div", "span", "a", "small"]);
+/** Allowlist sanitizer for org email signatures: keeps basic formatting tags, only safe href on links. */
+export function sanitizeSignatureHtml(html: string | null | undefined): string {
+  if (!html) return "";
+  const cleaned = html
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<(script|style|iframe|object|embed|svg|math|template)[\s\S]*?<\/\1\s*>/gi, "");
+  return cleaned.replace(/<[^>]*>?/g, (tag) => {
+    const m = /^<\s*(\/?)\s*([a-z0-9]+)([^>]*)>?$/i.exec(tag);
+    if (!m) return escapeHtml(tag);
+    const [, close, rawName, attrs] = m;
+    const name = rawName.toLowerCase();
+    if (!SIG_TAGS.has(name)) return "";
+    if (close) return `</${name}>`;
+    if (name === "a") {
+      const href = /href\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(attrs);
+      const url = (href?.[2] ?? href?.[3] ?? href?.[4] ?? "").trim();
+      return /^(https?:|mailto:|tel:)/i.test(url) ? `<a href="${escapeAttr(url)}">` : "<a>";
+    }
+    return `<${name}>`;
+  });
+}
