@@ -378,6 +378,19 @@ export const saveIdentity = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+const CV_ALLOWED: Record<string, string> = { pdf: "application/pdf", doc: "application/msword", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" };
+const CV_MAX_BYTES = 10 * 1024 * 1024;
+function validateCvUpload(b64: string, filename: string | null | undefined) {
+  const ext = (filename?.split(".").pop() || "pdf").toLowerCase();
+  const mime = CV_ALLOWED[ext];
+  if (!mime) throw new Error("Formato de CV no permitido (PDF, DOC o DOCX)");
+  if (b64.length > Math.ceil(CV_MAX_BYTES / 3) * 4 + 4) throw new Error("El CV supera los 10 MB");
+  const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  if (bin.length > CV_MAX_BYTES) throw new Error("El CV supera los 10 MB");
+  if (ext === "pdf" && !(bin[0] === 0x25 && bin[1] === 0x50 && bin[2] === 0x44 && bin[3] === 0x46)) throw new Error("El archivo no es un PDF válido");
+  return { ext, mime, bin };
+}
+
 // Manually create an application from the recruiter side (upload CV + trigger AI).
 export const manualCreateApplication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -404,11 +417,10 @@ export const manualCreateApplication = createServerFn({ method: "POST" })
     if (data.cv_base64) {
       // Use admin client to upload (cvs bucket has no authenticated INSERT policy)
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const ext = (data.cv_filename?.split(".").pop() || "pdf").toLowerCase();
+      const { ext, mime: cvMime, bin } = validateCvUpload(data.cv_base64, data.cv_filename);
       const path = `${vac.org_id}/${vac.id}/${crypto.randomUUID()}.${ext}`;
-      const bin = Uint8Array.from(atob(data.cv_base64), c => c.charCodeAt(0));
       const { error: upErr } = await supabaseAdmin.storage.from("cvs").upload(path, bin, {
-        contentType: data.cv_mime || "application/pdf", upsert: false,
+        contentType: cvMime, upsert: false,
       });
       if (upErr) throw new Error("Error al subir CV: " + upErr.message);
       cv_url = path;
@@ -474,7 +486,7 @@ export const bulkCreateApplicationFromCv = createServerFn({ method: "POST" })
 
     // Extract name + email via AI
     const { aiJSON } = await import("@/lib/ai-gateway.server");
-    const mime = data.cv_mime || "application/pdf";
+    const { ext, mime, bin } = validateCvUpload(data.cv_base64, data.cv_filename);
     let extracted: { first_name: string; last_name: string; email: string } = { first_name: "", last_name: "", email: "" };
     try {
       extracted = await aiJSON<{ first_name: string; last_name: string; email: string }>({
@@ -510,9 +522,7 @@ export const bulkCreateApplicationFromCv = createServerFn({ method: "POST" })
 
     // Upload CV (admin client, cvs bucket has no authenticated INSERT policy)
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const ext = (data.cv_filename.split(".").pop() || "pdf").toLowerCase();
     const path = `${vac.org_id}/${vac.id}/${crypto.randomUUID()}.${ext}`;
-    const bin = Uint8Array.from(atob(data.cv_base64), c => c.charCodeAt(0));
     const { error: upErr } = await supabaseAdmin.storage.from("cvs").upload(path, bin, {
       contentType: mime, upsert: false,
     });

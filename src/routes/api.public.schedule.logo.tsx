@@ -31,6 +31,7 @@ export const Route = createFileRoute("/api/public/schedule/logo")({
         const raw = org?.logo_url ?? null;
         if (!raw) return Response.json({ url: null });
         if (raw.startsWith("http")) return Response.json({ url: raw });
+        if (!raw.startsWith(`${orgId}/`) || raw.includes("..")) return Response.json({ url: null });
         const { data: signed } = await supabaseAdmin.storage
           .from("org-assets").createSignedUrl(raw, 60 * 60 * 24 * 7);
         return Response.json({ url: signed?.signedUrl ?? null });

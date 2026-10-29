@@ -729,7 +729,7 @@ export async function inviteForInterview(
     });
   } catch (e: any) {
     const message = e?.message ?? String(e);
-    console.error("[inviteForInterview] mail send failed", { provider, to: app.email, message });
+    console.error("[inviteForInterview] mail send failed", { provider, applicationId: app.id, message });
     if (/insufficient.*scope|invalid_scope|ACCESS_TOKEN_SCOPE_INSUFFICIENT|Mail\.Send|Calendars\.ReadWrite|OnlineMeetings\.ReadWrite/i.test(message)) {
       throw new Error(`Reconectá ${provider === "microsoft" ? "Microsoft" : "Google"} desde Integraciones para autorizar envío de mails y calendario.`);
     }

@@ -120,7 +120,7 @@ export const Route = createFileRoute("/api/public/mp/webhook")({
             payerEmail: p.payer?.email,
           });
           if (!orgId) {
-            console.error("[mp.webhook] no org for payment", dataId, p.external_reference, p.payer?.email);
+            console.error("[mp.webhook] no org for payment", dataId, p.external_reference);
             return new Response("Payment organization unresolved", { status: 503 });
           }
 

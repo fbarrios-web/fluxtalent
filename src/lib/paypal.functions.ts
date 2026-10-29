@@ -32,7 +32,8 @@ export const activatePaypalSubscription = createServerFn({ method: "POST" })
     let periodEnd = new Date(Date.now() + MONTH_MS).toISOString();
     let verified = false;
 
-    if (paypalConfigured()) {
+    if (!paypalConfigured()) throw new Error("PayPal no está disponible en este momento. Escribinos a soporte@fluxtalent.com.ar.");
+    {
       const sub = await getPaypalSubscription(data.subscriptionId);
       if (!sub) throw new Error("No pudimos verificar la suscripción con PayPal. Escribinos a soporte@fluxtalent.com.ar.");
       const expectedPlan = PAYPAL_PLAN_IDS[data.planId];

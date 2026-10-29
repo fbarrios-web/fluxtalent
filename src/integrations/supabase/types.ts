@@ -1785,6 +1785,7 @@ export type Database = {
         Returns: Json
       }
       root_org_id: { Args: { _org_id: string }; Returns: string }
+      verify_cv_queue_secret: { Args: { _secret: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "recruiter"
