@@ -64,6 +64,13 @@
       "when": 1793025732898,
       "tag": "0008_crm_minutes_country_calendar",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793285891248,
+      "tag": "0009_security_hardening_orgs_profiles_queue",
+      "breakpoints": true
     }
   ]
 }
