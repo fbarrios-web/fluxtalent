@@ -176,17 +176,21 @@ function VacancyDetail() {
             variant="outline"
             disabled={!apps?.length}
             onClick={async () => {
-              const { data: org } = await supabase.from("organizations").select("custom_features").eq("id", v.org_id).maybeSingle();
-              const withAnswers = (org as any)?.custom_features?.export_screening === true;
+              const { data: org } = await supabase.from("organizations").select("name, custom_features").eq("id", v.org_id).maybeSingle();
+              // Full export (all screening answers + form data) for every org except Freddo.
+              const isFreddo = /freddo/i.test(String((org as any)?.name ?? ""));
+              const withAnswers = !isFreddo || (org as any)?.custom_features?.export_screening === true;
+              const extra = !isFreddo;
               let answers: Record<string, Record<string, unknown>> = {};
               let qs: string[] = [];
+              const meta: Record<string, any> = {};
               if (withAnswers) {
                 const [{ data: sq }, { data: ans }] = await Promise.all([
                   supabase.from("screening_questions").select("question, position").eq("vacancy_id", v.id).order("position"),
-                  supabase.from("applications").select("id, screening_answers").eq("vacancy_id", v.id).limit(5000),
+                  supabase.from("applications").select("id, screening_answers, linkedin, created_at, source").eq("vacancy_id", v.id).limit(5000),
                 ]);
                 qs = (sq ?? []).map((q: any) => q.question);
-                for (const r of ans ?? []) answers[(r as any).id] = ((r as any).screening_answers ?? {}) as any;
+                for (const r of ans ?? []) { answers[(r as any).id] = ((r as any).screening_answers ?? {}) as any; meta[(r as any).id] = r; }
                 for (const a of Object.values(answers)) for (const k of Object.keys(a)) if (!qs.includes(k)) qs.push(k);
               }
               const fmt = (x: unknown) => x == null ? "" : Array.isArray(x) ? x.join(", ") : typeof x === "object" ? JSON.stringify(x) : String(x);
@@ -197,11 +201,16 @@ function VacancyDetail() {
                 a.cv_url ?? "",
                 a.stage ?? "",
                 a.match_score != null ? `${a.match_score}%` : "",
+                ...(extra ? [
+                  meta[a.id]?.linkedin ?? a.linkedin ?? "",
+                  (meta[a.id]?.created_at ?? a.created_at) ? new Date(meta[a.id]?.created_at ?? a.created_at).toLocaleString("es-AR") : "",
+                  meta[a.id]?.source ?? a.source ?? "",
+                ] : []),
                 ...qs.map(q => fmt(answers[a.id]?.[q])),
               ]);
               downloadCSV(
                 `postulantes-${v.public_slug ?? v.id}`,
-                [t("Postulante"), t("Email"), t("Teléfono"), t("CV"), t("Estado"), t("Match %"), ...qs],
+                [t("Postulante"), t("Email"), t("Teléfono"), t("CV"), t("Estado"), t("Match %"), ...(extra ? [t("LinkedIn"), t("Fecha de postulación"), t("Origen")] : []), ...qs],
                 rows,
               );
             }}
