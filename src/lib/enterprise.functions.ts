@@ -75,6 +75,7 @@ export const createSubOrgUser = createServerFn({ method: "POST" })
     }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    await requireManager(supabase, userId);
     const { data: profile } = await supabase.from("profiles").select("org_id").eq("id", userId).maybeSingle();
     if (!profile?.org_id) throw new Error("Sin organización");
 
@@ -145,7 +146,14 @@ export const setVacancyAssignees = createServerFn({ method: "POST" })
       user_ids: z.array(z.string().uuid()),
     }).parse(input))
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
+    await requireManager(supabase, userId);
+    const { data: vac } = await supabase.from("vacancies").select("id").eq("id", data.vacancy_id).maybeSingle();
+    if (!vac) throw new Error("Vacante no disponible");
+    if (data.user_ids.length) {
+      const { data: members } = await supabase.from("profiles").select("id").in("id", data.user_ids);
+      if ((members ?? []).length !== new Set(data.user_ids).size) throw new Error("Usuario inválido");
+    }
     await supabase.from("vacancy_assignees").delete().eq("vacancy_id", data.vacancy_id);
     if (data.user_ids.length) {
       const rows = data.user_ids.map(uid => ({ vacancy_id: data.vacancy_id, user_id: uid }));

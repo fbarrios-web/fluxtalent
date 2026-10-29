@@ -486,7 +486,7 @@ export const bulkCreateApplicationFromCv = createServerFn({ method: "POST" })
 
     // Extract name + email via AI
     const { aiJSON } = await import("@/lib/ai-gateway.server");
-    const mime = data.cv_mime || "application/pdf";
+    const { ext, mime, bin } = validateCvUpload(data.cv_base64, data.cv_filename);
     let extracted: { first_name: string; last_name: string; email: string } = { first_name: "", last_name: "", email: "" };
     try {
       extracted = await aiJSON<{ first_name: string; last_name: string; email: string }>({
@@ -522,9 +522,7 @@ export const bulkCreateApplicationFromCv = createServerFn({ method: "POST" })
 
     // Upload CV (admin client, cvs bucket has no authenticated INSERT policy)
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const ext = (data.cv_filename.split(".").pop() || "pdf").toLowerCase();
     const path = `${vac.org_id}/${vac.id}/${crypto.randomUUID()}.${ext}`;
-    const bin = Uint8Array.from(atob(data.cv_base64), c => c.charCodeAt(0));
     const { error: upErr } = await supabaseAdmin.storage.from("cvs").upload(path, bin, {
       contentType: mime, upsert: false,
     });

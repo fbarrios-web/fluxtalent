@@ -15,7 +15,7 @@ import { createFileRoute } from "@tanstack/react-router";
  *  - Concurrency is bounded so a single invocation respects the worker time
  *    budget. pg_cron fires every minute, so any backlog drains progressively.
  *
- * Auth: Supabase anon `apikey` header — same pattern as other public hooks.
+ * Auth: private `x-cron-secret` header checked against private.internal_secrets.
  */
 
 const BATCH_SIZE = 25;
@@ -28,10 +28,12 @@ export const Route = createFileRoute("/api/public/hooks/process-cv-queue")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const expected = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
-        const provided = request.headers.get("apikey") || request.headers.get("x-apikey");
-        if (!expected || !provided || provided !== expected) {
-          return new Response("Forbidden", { status: 403 });
+        const provided = request.headers.get("x-cron-secret");
+        if (!provided || provided.length < 32) return new Response("Forbidden", { status: 403 });
+        {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { data: ok } = await (supabaseAdmin as any).rpc("verify_cv_queue_secret", { _secret: provided });
+          if (ok !== true) return new Response("Forbidden", { status: 403 });
         }
 
         let limit = BATCH_SIZE;
