@@ -12,8 +12,12 @@ export async function generateTrackingMinutes(id: string) {
   if (failure) throw failure;
   const text = await result.text;
   if (!text.trim()) throw new Error('La IA no devolvió una minuta.');
-  const saved = await supabaseAdmin.from('crm_records').update({ minutes: text, minutes_status: 'ready', minutes_error: null }).eq('id', id).eq('content', row.content).select('id').single();
-  if (saved.error) throw new Error('La transcripción cambió; generá nuevamente la minuta.');
+  // Compare transcript server-side in JS: filtering by content would put the whole transcript in the request URL.
+  const current = await supabaseAdmin.from('crm_records').select('content').eq('id', id).single();
+  if (current.error) throw new Error('No se pudo guardar la minuta.');
+  if (current.data.content !== row.content) throw new Error('La transcripción cambió; generá nuevamente la minuta.');
+  const saved = await supabaseAdmin.from('crm_records').update({ minutes: text, minutes_status: 'ready', minutes_error: null }).eq('id', id).select('id').single();
+  if (saved.error) throw new Error('No se pudo guardar la minuta.');
   const usage = await result.totalUsage;
   await supabaseAdmin.from('ai_usage_log').insert({ feature: 'crm_minutes', model: 'openai/gpt-6-astra', org_id: null, prompt_tokens: usage.inputTokens ?? 0, completion_tokens: usage.outputTokens ?? 0 });
 }
