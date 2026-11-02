@@ -71,6 +71,13 @@
       "when": 1793285891248,
       "tag": "0009_security_hardening_orgs_profiles_queue",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793637441682,
+      "tag": "0010_revoke_public_internal_rpcs",
+      "breakpoints": true
     }
   ]
 }
