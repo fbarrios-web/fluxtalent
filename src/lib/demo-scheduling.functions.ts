@@ -148,8 +148,39 @@ export const deleteDemoBlockedPeriod = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: removed } = await supabaseAdmin.from("demo_blocked_periods").select("starts_at, ends_at").eq("id", data.id).maybeSingle();
     const { error } = await supabaseAdmin.from("demo_blocked_periods").delete().eq("id", data.id);
     if (error) throw error;
+    if (removed) {
+      // Restore rule-generated slots that the removed block had excluded.
+      const [{ data: config }, { data: rules }, { data: blocks }] = await Promise.all([
+        supabaseAdmin.from("demo_scheduling_config").select("duration_minutes").eq("id", true).maybeSingle(),
+        supabaseAdmin.from("demo_availability_rules").select("*"),
+        supabaseAdmin.from("demo_blocked_periods").select("starts_at, ends_at").gte("ends_at", new Date().toISOString()),
+      ]);
+      if (config && rules?.length) {
+        const { expandRulesToSlots, excludeBlockedSlots } = await import("@/lib/scheduling-overlap.server");
+        const start = new Date(removed.starts_at).getTime();
+        const end = new Date(removed.ends_at).getTime();
+        const now = Date.now();
+        const restored = excludeBlockedSlots(
+          expandRulesToSlots(rules.map((r: any) => ({
+            weekdays: [r.weekday], startTime: String(r.start_time).slice(0, 5), endTime: String(r.end_time).slice(0, 5),
+            effectiveFrom: r.effective_from ?? "", effectiveUntil: r.effective_until ?? "",
+          })) as any, config.duration_minutes, DEMO_TIMEZONE, 60),
+          (blocks ?? []).map(p => ({ startsAt: p.starts_at, endsAt: p.ends_at })),
+        ).filter(s => {
+          const s0 = new Date(s.start).getTime(), s1 = new Date(s.end).getTime();
+          return s0 > now && s0 < end && s1 > start;
+        });
+        if (restored.length) {
+          await supabaseAdmin.from("demo_slots").upsert(
+            restored.map(slot => ({ start_at: slot.start, end_at: slot.end, source: "rule", status: "open" })),
+            { onConflict: "start_at,end_at", ignoreDuplicates: true },
+          );
+        }
+      }
+    }
     return { ok: true };
   });
 async function organizerToken(supabaseAdmin: any) {
