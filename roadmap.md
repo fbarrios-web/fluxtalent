@@ -5,5 +5,5 @@
 - [x] Add superadmin client tracking with automatic demo prospects, manual clients, meetings, transcripts, key events and dated tasks; four existing bookings linked successfully.
 - [x] Verify admin access, persistent client updates and task completion in the signed-in preview; four rule tests pass and build OK. Remove the internally created test contact afterward.
 - [x] Generate minutes from client transcripts, show country in client summaries, restrict responsible choices and synchronize staff tasks to their own calendars; nine tests and signed-in minute/calendar lifecycle passed. Carla's tasks remain saved with a visible retry warning until she connects Google Calendar.
-- [ ] Add a key-protected JSON API for hired candidates only in fbarrios@fluxtalent.com.ar's organization, with contact, hiring date and saved report summary.
-- [ ] Verify API isolation, authentication and output; configure the shared access key.
+- [x] Add a key-protected JSON API for hired candidates only in fbarrios@fluxtalent.com.ar's organization, with contact, hiring date and saved report summary.
+- [x] Verify API isolation and authentication with six tests; configured-key request returns 200 with zero hired candidates in this account, absent/incorrect keys return 401; shared key saved and build OK. Real populated output and published external access remain unverified.
