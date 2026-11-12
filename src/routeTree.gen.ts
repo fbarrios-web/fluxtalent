@@ -19,6 +19,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TrustRouteImport } from './routes/trust'
 import { Route as VacantesRouteImport } from './routes/vacantes'
+import { Route as ApiHiredCandidatesRouteImport } from './routes/api.hired-candidates'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppAdminRouteImport } from './routes/app.admin'
 import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
@@ -110,6 +111,11 @@ const TrustRoute = TrustRouteImport.update({
 const VacantesRoute = VacantesRouteImport.update({
   id: '/vacantes',
   path: '/vacantes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHiredCandidatesRoute = ApiHiredCandidatesRouteImport.update({
+  id: '/api/hired-candidates',
+  path: '/api/hired-candidates',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -338,6 +344,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
   '/vacantes': typeof VacantesRoute
+  '/api/hired-candidates': typeof ApiHiredCandidatesRoute
   '/app/admin': typeof AppAdminRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
   '/app/enterprise': typeof AppEnterpriseRoute
@@ -391,6 +398,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
   '/vacantes': typeof VacantesRoute
+  '/api/hired-candidates': typeof ApiHiredCandidatesRoute
   '/app/dashboard': typeof AppDashboardRoute
   '/app/enterprise': typeof AppEnterpriseRoute
   '/app/integrations': typeof AppIntegrationsRoute
@@ -445,6 +453,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
   '/vacantes': typeof VacantesRoute
+  '/api/hired-candidates': typeof ApiHiredCandidatesRoute
   '/app/admin': typeof AppAdminRouteWithChildren
   '/app/dashboard': typeof AppDashboardRoute
   '/app/enterprise': typeof AppEnterpriseRoute
@@ -501,6 +510,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/trust'
     | '/vacantes'
+    | '/api/hired-candidates'
     | '/app/admin'
     | '/app/dashboard'
     | '/app/enterprise'
@@ -554,6 +564,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/trust'
     | '/vacantes'
+    | '/api/hired-candidates'
     | '/app/dashboard'
     | '/app/enterprise'
     | '/app/integrations'
@@ -607,6 +618,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/trust'
     | '/vacantes'
+    | '/api/hired-candidates'
     | '/app/admin'
     | '/app/dashboard'
     | '/app/enterprise'
@@ -662,6 +674,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   TrustRoute: typeof TrustRoute
   VacantesRoute: typeof VacantesRoute
+  ApiHiredCandidatesRoute: typeof ApiHiredCandidatesRoute
   ApplySlugRoute: typeof ApplySlugRoute
   ScheduleTokenRoute: typeof ScheduleTokenRoute
   ApiPublicAnalyzeRoute: typeof ApiPublicAnalyzeRoute
@@ -753,6 +766,13 @@ declare module '@tanstack/react-router' {
       path: '/vacantes'
       fullPath: '/vacantes'
       preLoaderRoute: typeof VacantesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/hired-candidates': {
+      id: '/api/hired-candidates'
+      path: '/api/hired-candidates'
+      fullPath: '/api/hired-candidates'
+      preLoaderRoute: typeof ApiHiredCandidatesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/': {
@@ -1135,6 +1155,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   TrustRoute: TrustRoute,
   VacantesRoute: VacantesRoute,
+  ApiHiredCandidatesRoute: ApiHiredCandidatesRoute,
   ApplySlugRoute: ApplySlugRoute,
   ScheduleTokenRoute: ScheduleTokenRoute,
   ApiPublicAnalyzeRoute: ApiPublicAnalyzeRoute,
