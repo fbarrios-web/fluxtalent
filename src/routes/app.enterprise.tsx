@@ -14,6 +14,7 @@ import { useT } from "@/lib/i18n";
 import { TeamAccessSection } from "@/components/TeamAccessSection";
 
 export const Route = createFileRoute("/app/enterprise")({
+  staticData: { sitemap: false },
   component: EnterprisePage,
   head: () => ({ meta: [{ title: "Multi-organización — FLUX Talent" }] }),
 });

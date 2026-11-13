@@ -12,6 +12,7 @@ import { useT } from "@/lib/i18n";
 
 
 export const Route = createFileRoute("/app/dashboard")({
+  staticData: { sitemap: false },
   component: Dashboard,
   head: () => ({ meta: [{ title: "Dashboard — FLUX Talent" }] }),
 });

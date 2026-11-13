@@ -7,6 +7,7 @@ const Schema = z.object({
 });
 
 export const Route = createFileRoute("/api/public/schedule/book")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       POST: async ({ request }) => {

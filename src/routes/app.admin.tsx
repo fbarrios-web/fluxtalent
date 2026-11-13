@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/app/admin")({
+  staticData: { sitemap: false },
   component: AdminLayout,
   head: () => ({ meta: [{ title: "Admin — FLUX Talent" }] }),
 });

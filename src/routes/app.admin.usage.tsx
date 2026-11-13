@@ -8,6 +8,7 @@ import { Loader2, RefreshCw, Sparkles, Mail, HardDrive, DollarSign, Calendar } f
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/app/admin/usage")({
+  staticData: { sitemap: false },
   component: UsagePage,
   head: () => ({ meta: [{ title: "Consumo — Admin · FLUX Talent" }] }),
 });

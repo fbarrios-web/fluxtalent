@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import type { Database } from '@/integrations/supabase/types';
 
 export const Route = createFileRoute('/app/admin/clients')({
+  staticData: { sitemap: false },
   component: ClientTracking,
   head: () => ({ meta: [
     { title: 'Seguimiento de clientes — FLUX Talent' },

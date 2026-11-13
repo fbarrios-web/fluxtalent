@@ -38,6 +38,7 @@ const STAGES = [
 const STAGE_LABEL: Record<string, string> = Object.fromEntries(STAGES.map(s => [s.id, s.label]));
 
 export const Route = createFileRoute("/app/vacancies/$vacancyId")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [
     { title: "Postulantes de la vacante | FLUX Talent" },
     { name: "description", content: "Gestioná las etapas y los postulantes de tu vacante en FLUX Talent." },

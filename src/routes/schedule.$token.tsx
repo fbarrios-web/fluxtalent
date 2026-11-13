@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/schedule/$token")({
+  staticData: { sitemap: false },
   component: SchedulePage,
   ssr: false,
   head: () => ({

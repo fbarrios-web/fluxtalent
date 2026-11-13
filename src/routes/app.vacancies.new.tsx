@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/app/vacancies/new")({
+  staticData: { sitemap: false },
   component: NewVacancy,
   head: () => ({ meta: [{ title: "Nueva vacante — FLUX Talent" }] }),
 });

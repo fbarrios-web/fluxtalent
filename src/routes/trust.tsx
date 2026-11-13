@@ -4,9 +4,12 @@ import { FluxLogo } from "@/components/flux-logo";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/trust")({
+  staticData: { sitemap: true },
   component: TrustPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Confianza y privacidad — FLUX Talent" },
       { name: "description", content: "Cómo FLUX Talent protege tu información, datos de candidatos y prácticas de privacidad." },
       { property: "og:title", content: "Confianza y privacidad — FLUX Talent" },

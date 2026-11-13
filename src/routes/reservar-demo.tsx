@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/reservar-demo")({
+  staticData: { sitemap: true },
   component: BookDemoPage,
   head: () => ({ meta: [
     { title: "Agenda Flux Talent" },

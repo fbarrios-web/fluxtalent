@@ -12,6 +12,7 @@ const schema = z.object({
 });
 
 export const Route = createFileRoute("/api/public/demo/book")({
+  staticData: { sitemap: false },
   server: { handlers: { POST: async ({ request }) => {
     const parsed = schema.safeParse(await request.json().catch(() => ({})));
     if (!parsed.success) return Response.json({ error: "Revisá los datos ingresados." }, { status: 400 });

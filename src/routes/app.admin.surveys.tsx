@@ -6,6 +6,7 @@ import { Loader2, Smile, TrendingUp, ThumbsUp, ThumbsDown, Minus } from "lucide-
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/app/admin/surveys")({
+  staticData: { sitemap: false },
   component: SurveysPage,
 });
 

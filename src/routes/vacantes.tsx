@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { MAIN_APP_HOST, vacancyPublicUrl } from "@/lib/vacancy-url";
 
 export const Route = createFileRoute("/vacantes")({
+  staticData: { sitemap: false },
   component: VacanciesBoard,
   head: () => ({
     meta: [

@@ -22,6 +22,7 @@ function str(v: unknown, max = 300) {
 }
 
 export const Route = createFileRoute("/api/public/track")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       GET: async () => ok({ ok: true, service: "web-track" }),

@@ -21,6 +21,7 @@ import { useAuth } from "@/lib/auth";
 import { useDefaultCurrency } from "@/lib/use-default-currency";
 
 export const Route = createFileRoute("/app/subscription")({
+  staticData: { sitemap: false },
   component: SubscriptionPage,
   head: () => ({ meta: [{ title: "Suscripción — FLUX Talent" }] }),
 });

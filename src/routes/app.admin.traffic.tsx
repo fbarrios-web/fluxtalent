@@ -7,6 +7,7 @@ import { Loader2, Users, Eye, UserPlus, Timer, TrendingDown, Percent } from "luc
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/app/admin/traffic")({
+  staticData: { sitemap: false },
   component: AdminTraffic,
 });
 

@@ -10,8 +10,9 @@ import { FluxLogo } from "@/components/flux-logo";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/reset-password")({
+  staticData: { sitemap: false },
   component: ResetPasswordPage,
-  head: () => ({ meta: [{ title: "Restablecer contraseña — FLUX Talent" }] }),
+  head: () => ({ meta: [{ title: "Restablecer contraseña — FLUX Talent" }, { name: "description", content: "Restablecé tu contraseña de FLUX Talent de forma segura." }, { property: "og:title", content: "Restablecer contraseña — FLUX Talent" }, { property: "og:description", content: "Restablecé tu contraseña de FLUX Talent de forma segura." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
 });
 
 function ResetPasswordPage() {

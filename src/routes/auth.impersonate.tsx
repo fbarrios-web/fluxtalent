@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { IMPERSONATION_KEY, IMPERSONATION_PENDING_KEY, type ImpersonationPendingState } from "@/components/impersonation-banner";
 
 export const Route = createFileRoute("/auth/impersonate")({
+  staticData: { sitemap: false },
   validateSearch: (search: Record<string, unknown>) => ({
     token_hash: typeof search.token_hash === "string" ? search.token_hash : "",
   }),

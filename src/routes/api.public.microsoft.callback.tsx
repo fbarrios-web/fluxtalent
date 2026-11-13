@@ -1,6 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/public/microsoft/callback")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       GET: async ({ request }) => {

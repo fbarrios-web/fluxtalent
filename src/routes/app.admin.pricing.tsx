@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/app/admin/pricing")({
+  staticData: { sitemap: false },
   component: AdminPricing,
 });
 

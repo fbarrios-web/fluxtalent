@@ -14,6 +14,7 @@ import { useT } from "@/lib/i18n";
 const MICROSOFT_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/microsoft/callback";
 
 export const Route = createFileRoute("/app/integrations")({
+  staticData: { sitemap: false },
   component: IntegrationsPage,
   validateSearch: (s: Record<string, unknown>): { ok?: string; ok_ms?: string; error?: string } => ({
     ok: typeof s.ok === "string" ? s.ok : undefined,
