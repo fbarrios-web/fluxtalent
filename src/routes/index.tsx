@@ -38,8 +38,9 @@ function Landing() {
       preview: new URLSearchParams(window.location.search).get("org") === "freddo",
     });
   }, []);
-  if (!entry) return <div className="min-h-screen bg-background" />;
-  if (entry.freddo) return <FreddoEntry preview={entry.preview} />;
+  // Render real content during SSR and the first client render; resolve the
+  // Freddo-specific experience after hydration without a blank homepage.
+  if (entry?.freddo) return <FreddoEntry preview={entry.preview} />;
   return <FluxLanding />;
 }
 
