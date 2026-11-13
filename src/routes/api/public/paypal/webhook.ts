@@ -47,6 +47,7 @@ async function handle(event: any) {
 }
 
 export const Route = createFileRoute("/api/public/paypal/webhook")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       GET: async () =>
