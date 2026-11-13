@@ -13,6 +13,7 @@ import { useT } from "@/lib/i18n";
 import { MAIN_APP_HOST } from "@/lib/vacancy-url";
 
 export const Route = createFileRoute("/apply/$slug")({
+  staticData: { sitemap: false },
   component: ApplyPage,
   head: () => ({ meta: [
     { title: "Postularme — FLUX Talent" },

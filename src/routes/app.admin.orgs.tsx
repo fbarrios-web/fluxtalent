@@ -19,6 +19,7 @@ import * as XLSX from "xlsx";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/app/admin/orgs")({
+  staticData: { sitemap: false },
   component: AdminOrgs,
 });
 

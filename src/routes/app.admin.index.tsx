@@ -13,6 +13,7 @@ const signupChartConfig = {
 } satisfies ChartConfig;
 
 export const Route = createFileRoute("/app/admin/")({
+  staticData: { sitemap: false },
   component: AdminMetrics,
 });
 

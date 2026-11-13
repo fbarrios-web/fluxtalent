@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 // Public endpoint to receive applications from the apply form.
 // FormData with: vacancy_id, first_name, last_name, email, phone, linkedin, answers (json), cv (File)
 export const Route = createFileRoute("/api/public/apply")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       OPTIONS: async () =>

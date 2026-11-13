@@ -18,6 +18,7 @@ import { ImpersonationBanner } from "@/components/impersonation-banner";
 
 
 export const Route = createFileRoute("/app")({
+  staticData: { sitemap: "exclude-subtree" },
   component: AppLayout,
 });
 

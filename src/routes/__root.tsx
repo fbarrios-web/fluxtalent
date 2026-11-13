@@ -74,6 +74,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -86,8 +87,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "FLUX Talent" },
       { name: "twitter:description", content: "Reclutamiento moderno con automatización inteligente y matching por IA." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/raQvicOUMvZOILkhEWp3fvpSgQH2/social-images/social-1782910883062-Logo_Flux_talent.webp" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/raQvicOUMvZOILkhEWp3fvpSgQH2/social-images/social-1782910883062-Logo_Flux_talent.webp" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

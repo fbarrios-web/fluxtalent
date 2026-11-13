@@ -13,8 +13,9 @@ import freddoLogo from "@/assets/freddo-logo.png.asset.json";
 
 
 export const Route = createFileRoute("/auth")({
+  staticData: { sitemap: false },
   component: AuthLayout,
-  head: () => ({ meta: [{ title: "Ingresar — FLUX Talent" }] }),
+  head: () => ({ meta: [{ title: "Ingresar — FLUX Talent" }, { name: "description", content: "Ingresá a tu cuenta de FLUX Talent para gestionar tus procesos de selección." }, { property: "og:title", content: "Ingresar — FLUX Talent" }, { property: "og:description", content: "Ingresá a tu cuenta de FLUX Talent para gestionar tus procesos de selección." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
 function AuthLayout() {

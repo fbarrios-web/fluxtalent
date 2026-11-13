@@ -3,9 +3,12 @@ import { FluxLogo } from "@/components/flux-logo";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/refunds")({
+  staticData: { sitemap: true },
   component: RefundsPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Política de Reembolsos — FLUX Talent" },
       { name: "description", content: "Membresía mensual con garantía de devolución de 14 días corridos desde la fecha del pago." },
       { property: "og:title", content: "Política de Reembolsos — FLUX Talent" },

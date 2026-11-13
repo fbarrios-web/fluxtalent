@@ -17,6 +17,7 @@ import { useDefaultCurrency } from "@/lib/use-default-currency";
 
 
 export const Route = createFileRoute("/")({
+  staticData: { sitemap: true },
   component: Landing,
   head: () => ({
     meta: [

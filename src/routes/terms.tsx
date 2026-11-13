@@ -3,9 +3,12 @@ import { FluxLogo } from "@/components/flux-logo";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/terms")({
+  staticData: { sitemap: true },
   component: TermsPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Términos y Condiciones — FLUX Talent" },
       { name: "description", content: "Términos y condiciones de uso del servicio FLUX Talent." },
       { property: "og:title", content: "Términos y Condiciones — FLUX Talent" },

@@ -3,9 +3,12 @@ import { FluxLogo } from "@/components/flux-logo";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/privacy")({
+  staticData: { sitemap: true },
   component: PrivacyPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Política de Privacidad — FLUX Talent" },
       { name: "description", content: "Cómo FLUX Talent recolecta, usa y protege sus datos personales." },
       { property: "og:title", content: "Política de Privacidad — FLUX Talent" },

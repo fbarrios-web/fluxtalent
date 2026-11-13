@@ -12,6 +12,7 @@ import { cancelDemoBooking, rescheduleDemoBooking, createDemoBlockedPeriod, crea
 import { zonedToUtc } from "@/lib/scheduling-overlap.server";
 
 export const Route = createFileRoute("/app/admin/demos")({
+  staticData: { sitemap: false },
   component: DemoSchedulingAdmin,
   head: () => ({ meta: [
     { title: "Agenda Flux Talent" },

@@ -19,6 +19,7 @@ import { SecurityPanel } from "@/components/security-panel";
 const MICROSOFT_CALLBACK_URL = "https://fluxtalent.lovable.app/api/public/microsoft/callback";
 
 export const Route = createFileRoute("/app/settings")({
+  staticData: { sitemap: false },
   component: Settings,
   validateSearch: (s: Record<string, unknown>): { tab?: "integraciones" } => ({
     tab: s.tab === "integraciones" ? "integraciones" : undefined,

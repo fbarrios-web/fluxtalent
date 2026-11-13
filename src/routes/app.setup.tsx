@@ -15,6 +15,7 @@ import { PaypalSubscribeButton } from "@/components/paypal-subscribe-button";
 import { useDefaultCurrency } from "@/lib/use-default-currency";
 
 export const Route = createFileRoute("/app/setup")({
+  staticData: { sitemap: false },
   component: SetupPage,
   head: () => ({ meta: [{ title: "Configurá tu cuenta — FLUX Talent" }] }),
 });

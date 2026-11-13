@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/public/schedule/logo")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       GET: async ({ request }) => {

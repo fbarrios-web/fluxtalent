@@ -38,6 +38,7 @@ function verifyMpSignature(opts: {
 }
 
 export const Route = createFileRoute("/api/public/mp/webhook")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       POST: async ({ request }) => {

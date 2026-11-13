@@ -53,6 +53,7 @@ function eventColor(t: string): string {
 }
 
 export const Route = createFileRoute("/app/candidates/$id")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [
     { title: "Ficha del postulante | FLUX Talent" },
     { name: "description", content: "Consultá el CV, las observaciones y la etapa del postulante en FLUX Talent." },

@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/app/admin/payments")({
+  staticData: { sitemap: false },
   component: AdminPayments,
 });
 

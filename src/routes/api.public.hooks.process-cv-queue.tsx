@@ -25,6 +25,7 @@ const MAX_ATTEMPTS = 5;
 const MAX_LIMIT = 50;
 
 export const Route = createFileRoute("/api/public/hooks/process-cv-queue")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       POST: async ({ request }) => {

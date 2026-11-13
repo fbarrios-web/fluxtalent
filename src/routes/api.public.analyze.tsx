@@ -10,6 +10,7 @@ function timingSafeEq(a: string, b: string): boolean {
 }
 
 export const Route = createFileRoute("/api/public/analyze")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       POST: async ({ request }) => {
