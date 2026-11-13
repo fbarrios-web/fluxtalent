@@ -16,6 +16,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RefundsRouteImport } from './routes/refunds'
 import { Route as ReservarDemoRouteImport } from './routes/reservar-demo'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TrustRouteImport } from './routes/trust'
 import { Route as VacantesRouteImport } from './routes/vacantes'
@@ -96,6 +97,11 @@ const ReservarDemoRoute = ReservarDemoRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -341,6 +347,7 @@ export interface FileRoutesByFullPath {
   '/refunds': typeof RefundsRoute
   '/reservar-demo': typeof ReservarDemoRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
   '/vacantes': typeof VacantesRoute
@@ -395,6 +402,7 @@ export interface FileRoutesByTo {
   '/refunds': typeof RefundsRoute
   '/reservar-demo': typeof ReservarDemoRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
   '/vacantes': typeof VacantesRoute
@@ -450,6 +458,7 @@ export interface FileRoutesById {
   '/refunds': typeof RefundsRoute
   '/reservar-demo': typeof ReservarDemoRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
   '/vacantes': typeof VacantesRoute
@@ -507,6 +516,7 @@ export interface FileRouteTypes {
     | '/refunds'
     | '/reservar-demo'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/terms'
     | '/trust'
     | '/vacantes'
@@ -561,6 +571,7 @@ export interface FileRouteTypes {
     | '/refunds'
     | '/reservar-demo'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/terms'
     | '/trust'
     | '/vacantes'
@@ -615,6 +626,7 @@ export interface FileRouteTypes {
     | '/refunds'
     | '/reservar-demo'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/terms'
     | '/trust'
     | '/vacantes'
@@ -671,6 +683,7 @@ export interface RootRouteChildren {
   RefundsRoute: typeof RefundsRoute
   ReservarDemoRoute: typeof ReservarDemoRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   TrustRoute: typeof TrustRoute
   VacantesRoute: typeof VacantesRoute
@@ -745,6 +758,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -1152,6 +1172,7 @@ const rootRouteChildren: RootRouteChildren = {
   RefundsRoute: RefundsRoute,
   ReservarDemoRoute: ReservarDemoRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   TrustRoute: TrustRoute,
   VacantesRoute: VacantesRoute,
