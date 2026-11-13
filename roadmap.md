@@ -7,5 +7,6 @@
 - [x] Generate minutes from client transcripts, show country in client summaries, restrict responsible choices and synchronize staff tasks to their own calendars; nine tests and signed-in minute/calendar lifecycle passed. Carla's tasks remain saved with a visible retry warning until she connects Google Calendar.
 - [x] Add a key-protected JSON API for hired candidates only in fbarrios@fluxtalent.com.ar's organization, with contact, hiring date and saved report summary.
 - [x] Verify API isolation and authentication with six tests; configured-key request returns 200 with zero hired candidates in this account, absent/incorrect keys return 401; shared key saved and build OK. Real populated output and published external access remain unverified.
-- [ ] Make the FLUX homepage readable in initial HTML while preserving Freddo candidate access.
-- [ ] Install a router-derived public sitemap and robots.txt; validate public-page inclusions and private exclusions.
+- [x] Make the FLUX homepage readable in initial HTML while preserving Freddo candidate access; initial HTML and desktop/mobile entry checked.
+- [x] Install a router-derived public sitemap and robots.txt; six public URLs verified, private exclusions tested and five tests pass.
+- [ ] Publish verification tag and sitemap, verify the site in Search Console and submit the live sitemap.

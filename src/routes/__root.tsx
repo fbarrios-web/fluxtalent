@@ -78,6 +78,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
+      { name: "google-site-verification", content: "qZ0Dvamc2psRMpj-nA9S8wcg6CObWQqU2_-1SeXs53c" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "FLUX Talent" },
       { name: "description", content: "Reclutamiento moderno con automatización inteligente y matching por IA." },
