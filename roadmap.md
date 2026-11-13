@@ -9,4 +9,4 @@
 - [x] Verify API isolation and authentication with six tests; configured-key request returns 200 with zero hired candidates in this account, absent/incorrect keys return 401; shared key saved and build OK. Real populated output and published external access remain unverified.
 - [x] Make the FLUX homepage readable in initial HTML while preserving Freddo candidate access; initial HTML and desktop/mobile entry checked.
 - [x] Install a router-derived public sitemap and robots.txt; six public URLs verified, private exclusions tested and five tests pass.
-- [ ] Publish verification tag and sitemap, verify the site in Search Console and submit the live sitemap.
+- [x] Publish verification tag and sitemap, verify https://fluxtalent.lovable.app/ in Search Console and submit the live sitemap; verification 200 and sitemap submission 204. Custom-domain properties and actual indexing remain outside this completed setup.
